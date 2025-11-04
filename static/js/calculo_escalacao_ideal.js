@@ -36,9 +36,14 @@ class CalculoEscalacaoIdeal {
             'tecnicos': 'tecnico'
         };
         
-        // Prioridades de escalação
+        // Prioridades de escalação (exatamente como no Python)
         this.prioridades = ['atacantes', 'laterais', 'meias', 'zagueiros', 'goleiros', 'tecnicos'];
+        // Ordem de desescalação (inversa das prioridades, como no Python)
         this.ordem_desescalacao = this.prioridades.slice().reverse();
+        
+        // top_n e top_n_reduzido (exatamente como no Python)
+        this.top_n = 10;  // Número de candidatos para atacantes, laterais, meias
+        this.top_n_reduzido = 5;  // Número de candidatos para goleiros, técnicos, zagueiros
         
         this.logCallback = null;
     }
@@ -240,450 +245,215 @@ class CalculoEscalacaoIdeal {
             // Para posição do capitão, buscar 1 a mais (reserva de luxo)
             const quantidade_busca = (posicao === posicaoCapitao && posicao !== 'tecnicos') ? (alvo + 1) : alvo;
             
-            // Buscar pelo menos 20 candidatos de cada posição (como solicitado)
-            // Isso garante que não faltem atletas para escolher
-            const quantidade_candidatos_buscar = Math.max(quantidade_busca * 2, 20);
+            // Buscar candidatos - EXATAMENTE como no Python: quantidade_busca * 2
             const candidatos = this.fetchMelhoresJogadoresPorPosicao(
                 this.plural_to_singular[posicao],
-                quantidade_candidatos_buscar,
+                quantidade_busca * 2,
                 null,
                 escalados_ids
             );
             
-            // Filtrar por orçamento - usar mesma lógica do Python
-            // Python: custo_temp = escalacao['custo_total'] e compara com patrimonio total
-            // IMPORTANTE: custo_temp começa do custo_total ATUAL que já foi atualizado pelas posições anteriores
-            const candidatos_validos = [];
-            let custo_temp = escalacao.custo_total;  // Começar do custo total atual (posições anteriores já escaladas)
+            // Filtrar por orçamento - EXATAMENTE como no Python
+            // Python: custo_temp = escalacao['custo_total']
+            // Python: for candidato in candidatos: if custo_temp + candidato['preco_num'] <= patrimonio and len(selecionados) < quantidade_busca
+            let candidatos_validos = [];
+            let custo_temp = escalacao.custo_total;  // Começar do custo total atual
+            let selecionados = [];
             
-            this.log(`\n========== PROCESSANDO ${posicao.toUpperCase()} (POSIÇÃO POR POSIÇÃO) ==========`);
-            this.log(`📋 Processando posição ${posicao} na ordem de prioridades`);
-            this.log(`Patrimônio total: R$ ${this.patrimonio.toFixed(2)}`);
-            this.log(`💰 Custo TOTAL atual (já escalado até agora): R$ ${custo_temp.toFixed(2)}`);
-            this.log(`💵 Orçamento disponível para esta posição: R$ ${(this.patrimonio - custo_temp).toFixed(2)}`);
-            this.log(`🎯 Quantidade necessária (alvo): ${alvo}`);
-            this.log(`🔍 Quantidade de candidatos buscados: ${quantidade_candidatos_buscar} (mínimo 20 por posição)`);
-            this.log(`📊 Total de candidatos encontrados no ranking: ${candidatos.length}`);
-            
-            // Mostrar custo acumulado até agora
-            this.log(`\n--- Resumo do que já foi escalado antes desta posição: ---`);
-            Object.keys(escalacao.titulares).forEach(pos => {
-                const jogadores = escalacao.titulares[pos] || [];
-                if (jogadores.length > 0 && pos !== posicao) {
-                    const custo_pos = jogadores.reduce((sum, j) => sum + this._getPreco(j), 0);
-                    this.log(`  ${pos}: ${jogadores.length} jogador(es) - Custo: R$ ${custo_pos.toFixed(2)}`);
-                }
-            });
-            
-            if (candidatos.length > 0) {
-                this.log(`\n--- Candidatos disponíveis (primeiros ${Math.min(10, candidatos.length)}): ---`);
-                candidatos.slice(0, Math.min(10, candidatos.length)).forEach((c, idx) => {
-                    const preco = this._getPreco(c);
-                    const caberia = custo_temp + preco <= this.patrimonio;
-                    this.log(`  ${idx + 1}. ${c.apelido} - Preço: R$ ${preco.toFixed(2)}, Pontuação: ${(c.pontuacao_total || 0).toFixed(2)}, Caberia: ${caberia ? 'SIM' : 'NÃO'} (custo_temp + preco = R$ ${(custo_temp + preco).toFixed(2)})`);
-                });
-            }
-            
-            this.log(`\n--- Processo de seleção: ---`);
-            let selecionados_count = 0;
+            // Filtrar candidatos - EXATAMENTE como no Python
+            // Python: for candidato in candidatos:
+            //   if custo_temp + candidato['preco_num'] <= patrimonio and len(selecionados) < quantidade_busca:
+            //       selecionados.append(candidato)
+            //       custo_temp += candidato['preco_num']
+            //   if len(selecionados) == quantidade_busca: break
+            // candidatos_validos = selecionados
             for (const candidato of candidatos) {
                 const preco_candidato = this._getPreco(candidato);
-                const novo_custo = custo_temp + preco_candidato;
-                const caberia = novo_custo <= this.patrimonio;
-                const precisa_mais = candidatos_validos.length < quantidade_busca;
-                
-                this.log(`  Candidato: ${candidato.apelido} - Preço: R$ ${preco_candidato.toFixed(2)}`);
-                this.log(`    Custo atual: R$ ${custo_temp.toFixed(2)} + Preço: R$ ${preco_candidato.toFixed(2)} = R$ ${novo_custo.toFixed(2)}`);
-                this.log(`    Cabe no orçamento? ${caberia ? 'SIM' : 'NÃO'} (${novo_custo.toFixed(2)} <= ${this.patrimonio.toFixed(2)})`);
-                this.log(`    Precisa de mais jogadores? ${precisa_mais ? 'SIM' : 'NÃO'} (${candidatos_validos.length} < ${quantidade_busca})`);
-                
-                // Comparar custo_temp + preco com patrimonio total (como no Python)
-                if (caberia && precisa_mais) {
-                    candidatos_validos.push(candidato);
+                if (custo_temp + preco_candidato <= this.patrimonio && selecionados.length < quantidade_busca) {
+                    selecionados.push(candidato);
                     custo_temp += preco_candidato;
-                    selecionados_count++;
-                    this.log(`    ✅ SELECIONADO! (${selecionados_count}/${quantidade_busca}) - Novo custo: R$ ${custo_temp.toFixed(2)}`);
-                } else {
-                    if (!caberia) {
-                        this.log(`    ❌ REJEITADO: Não cabe no orçamento`);
-                    } else if (!precisa_mais) {
-                        this.log(`    ❌ REJEITADO: Já temos quantidade suficiente`);
-                    }
                 }
-                
-                // Se já temos candidatos suficientes, parar
-                if (candidatos_validos.length >= quantidade_busca) {
-                    this.log(`  ⏹️ Parando seleção: quantidade suficiente atingida`);
+                if (selecionados.length === quantidade_busca) {
                     break;
                 }
             }
+            candidatos_validos = selecionados;
             
-            this.log(`\n--- Resultado da seleção: ---`);
-            this.log(`Candidatos selecionados: ${candidatos_validos.length}`);
-            this.log(`Custo após seleção: R$ ${custo_temp.toFixed(2)}`);
-            if (candidatos_validos.length > 0) {
-                candidatos_validos.forEach((c, idx) => {
-                    this.log(`  ${idx + 1}. ${c.apelido} - R$ ${this._getPreco(c).toFixed(2)}`);
-                });
-            }
-            this.log(`==========================================\n`);
-            
-            if (candidatos_validos.length < alvo) {
-                const orcamento_restante = this.patrimonio - escalacao.custo_total;
-                this.log(`\n❌❌❌ ERRO AO ESCALAR ${posicao.toUpperCase()} ❌❌❌`);
-                this.log(`Não há jogadores suficientes para ${posicao}`);
-                this.log(`  Necessários: ${alvo}`);
-                this.log(`  Encontrados: ${candidatos_validos.length}`);
-                this.log(`  Quantidade buscada: ${quantidade_busca}`);
-                this.log(`\n--- Estado atual da escalação: ---`);
-                this.log(`Patrimônio total: R$ ${this.patrimonio.toFixed(2)}`);
-                this.log(`Custo atual da escalação: R$ ${escalacao.custo_total.toFixed(2)}`);
-                this.log(`Orçamento restante: R$ ${orcamento_restante.toFixed(2)}`);
-                this.log(`\n--- Análise dos candidatos: ---`);
-                this.log(`Total de candidatos no ranking: ${candidatos.length}`);
-                if (candidatos.length > 0) {
-                    const top10 = candidatos.slice(0, Math.min(10, candidatos.length));
-                    const preco_medio = top10.reduce((sum, j) => sum + this._getPreco(j), 0) / top10.length;
-                    const precos = top10.map(j => this._getPreco(j));
-                    const preco_min = Math.min(...precos);
-                    const preco_max = Math.max(...precos);
-                    this.log(`Preço médio dos top 10 candidatos: R$ ${preco_medio.toFixed(2)}`);
-                    this.log(`Preço mínimo: R$ ${preco_min.toFixed(2)}`);
-                    this.log(`Preço máximo: R$ ${preco_max.toFixed(2)}`);
-                    this.log(`\n--- Detalhamento dos top 10 candidatos: ---`);
-                    top10.forEach((c, idx) => {
-                        const preco = this._getPreco(c);
-                        const caberia = preco <= orcamento_restante;
-                        this.log(`  ${idx + 1}. ${c.apelido} - Preço: R$ ${preco.toFixed(2)}, Pontuação: ${(c.pontuacao_total || 0).toFixed(2)}, Cabe no orçamento restante: ${caberia ? 'SIM' : 'NÃO'}`);
-                    });
-                    // Ver quantos jogadores cabem no orçamento
-                    let qtd_cabem = 0;
-                    for (const c of top10) {
-                        if (this._getPreco(c) <= orcamento_restante) {
-                            qtd_cabem++;
-                        }
-                    }
-                    this.log(`\nQuantos dos top 10 cabem no orçamento restante: ${qtd_cabem}`);
-                    this.log(`Custo total dos top ${alvo} candidatos: R$ ${top10.slice(0, alvo).reduce((sum, j) => sum + this._getPreco(j), 0).toFixed(2)}`);
-                } else {
-                    this.log(`Nenhum candidato encontrado no ranking para ${posicao}`);
-                }
-                this.log(`\n--- Escalação atual (antes do erro): ---`);
-                Object.keys(escalacao.titulares).forEach(pos => {
-                    const jogadores = escalacao.titulares[pos] || [];
-                    if (jogadores.length > 0) {
-                        const custo_pos = jogadores.reduce((sum, j) => sum + this._getPreco(j), 0);
-                        this.log(`  ${pos}: ${jogadores.length} jogador(es) - Custo: R$ ${custo_pos.toFixed(2)}`);
-                        jogadores.forEach(j => {
-                            this.log(`    - ${j.apelido} (R$ ${this._getPreco(j).toFixed(2)})`);
-                        });
-                    }
-                });
-                this.log(`Custo total atual: R$ ${escalacao.custo_total.toFixed(2)}`);
-                this.log(`❌❌❌ FIM DO ERRO ❌❌❌\n`);
+            // Verificar se há candidatos suficientes - EXATAMENTE como no Python
+            // Python: needed_check = alvo
+            // Python: if len(candidatos_validos) < needed_check: return None
+            const needed_check = alvo;
+            if (candidatos_validos.length < needed_check) {
+                this.log(`Não há jogadores suficientes para ${posicao} (necessários: ${needed_check}) dentro do orçamento.`);
                 return null;
             }
             
-            // Atribuir titulares e reserva de luxo (se aplicável)
-            if (posicao === posicaoCapitao && posicao !== 'tecnicos' && candidatos_validos.length >= alvo) {
-                // Ordenar por preço (mais caros primeiro para titulares)
+            // Atribuir titulares e reserva de luxo - EXATAMENTE como no Python
+            if (posicao === posicaoCapitao && posicao !== 'tecnicos' && candidatos_validos.length >= needed_check) {
+                // Python: candidatos_validos.sort(key=lambda x: x['preco_num'], reverse=True)
                 candidatos_validos.sort((a, b) => this._getPreco(b) - this._getPreco(a));
                 
-                if (existentes.length > 0) {
-                    escalacao.titulares[posicao] = [...existentes, ...candidatos_validos.slice(0, alvo)];
+                // Python: escalacao['titulares'][posicao] = candidatos_validos[:needed_check]
+                if (existentes.length > 0 && restantes !== null) {
+                    const novos = candidatos_validos.slice(0, needed_check);
+                    escalacao.titulares[posicao] = [...existentes, ...novos];
+                    if (candidatos_validos.length > needed_check) {
+                        escalacao.reservas[posicao] = [candidatos_validos[needed_check]];
+                    }
                 } else {
-                    escalacao.titulares[posicao] = candidatos_validos.slice(0, alvo);
-                }
-                
-                // Reserva de luxo é o próximo candidato (mais caro que não foi titular)
-                if (candidatos_validos.length > alvo) {
-                    escalacao.reservas[posicao] = [candidatos_validos[alvo]];
+                    escalacao.titulares[posicao] = candidatos_validos.slice(0, needed_check);
+                    if (candidatos_validos.length > needed_check) {
+                        escalacao.reservas[posicao] = [candidatos_validos[needed_check]];
+                    }
                 }
             } else {
-                // Posição normal, sem reserva de luxo
-                if (existentes.length > 0) {
-                    escalacao.titulares[posicao] = [...existentes, ...candidatos_validos.slice(0, alvo)];
+                // Python: escalacao['titulares'][posicao] = candidatos_validos[:needed_check]
+                if (existentes.length > 0 && restantes !== null) {
+                    const novos = candidatos_validos.slice(0, needed_check);
+                    escalacao.titulares[posicao] = [...existentes, ...novos];
                 } else {
-                    escalacao.titulares[posicao] = candidatos_validos.slice(0, alvo);
+                    escalacao.titulares[posicao] = candidatos_validos.slice(0, needed_check);
                 }
             }
             
-            // Calcular custo da posição e atualizar custo total (como no Python)
-            // IMPORTANTE: No Python, calcula o custo APENAS dos titulares finais, não dos candidatos_validos
-            // Isso é porque candidatos_validos pode incluir reserva de luxo que não entra no custo_total
+            // Calcular custo da posição - EXATAMENTE como no Python
+            // Python: custo_posicao = sum(j['preco_num'] for j in escalacao['titulares'][posicao])
+            // Python: escalacao['custo_total'] += custo_posicao
             const custo_posicao = escalacao.titulares[posicao].reduce((sum, j) => sum + this._getPreco(j), 0);
-            const custo_antes = escalacao.custo_total;
-            escalacao.custo_total += custo_posicao;  // Atualiza o custo total para a próxima posição
+            escalacao.custo_total += custo_posicao;
             escalados_ids.push(...escalacao.titulares[posicao].map(j => j.atleta_id));
-            
-            this.log(`\n✅ ${posicao.toUpperCase()} ESCALADO COM SUCESSO (ATUALIZANDO CUSTO TOTAL):`);
-            this.log(`  💰 Custo ANTES desta posição: R$ ${custo_antes.toFixed(2)}`);
-            this.log(`  💵 Custo DESTA posição: R$ ${custo_posicao.toFixed(2)}`);
-            this.log(`  💰 Custo TOTAL AGORA (após ${posicao}): R$ ${escalacao.custo_total.toFixed(2)}`);
-            this.log(`  💵 Orçamento restante: R$ ${(this.patrimonio - escalacao.custo_total).toFixed(2)}`);
-            this.log(`  👥 Jogadores escalados:`);
-            escalacao.titulares[posicao].forEach((j, idx) => {
-                this.log(`    ${idx + 1}. ${j.apelido} - R$ ${this._getPreco(j).toFixed(2)} (Pontuação: ${(j.pontuacao_total || 0).toFixed(2)})`);
-            });
-            if (escalacao.reservas[posicao] && escalacao.reservas[posicao].length > 0) {
-                this.log(`  ⭐ Reserva de luxo: ${escalacao.reservas[posicao][0].apelido} - R$ ${this._getPreco(escalacao.reservas[posicao][0]).toFixed(2)}`);
-            }
-            this.log(`  📝 IDs escalados até agora: ${escalados_ids.length} jogadores`);
-            this.log(`  ➡️ Próxima posição na ordem: ${this.prioridades[this.prioridades.indexOf(posicao) + 1] || 'FIM'}\n`);
         }
         
-        // Processar posições desescaladas (se houver)
-        const efetivas_desescaladas = posicoes_desescaladas.filter(pos => {
-            const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
-            return (escalacao.titulares[pos] || []).length < qt;
-        });
+        // Tentar combinações para posições desescaladas - EXATAMENTE como no Python
+        const orcamento_restante = this.patrimonio - escalacao.custo_total;
         
-        if (efetivas_desescaladas.length > 0) {
-            // Buscar candidatos para posições desescaladas
-            // Buscar pelo menos 20 de cada posição para garantir opções suficientes
-            const candidatos = {};
-            for (const pos of efetivas_desescaladas) {
-                const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
-                // Buscar pelo menos 20 candidatos de cada posição
-                const quantidade_candidatos = Math.max(20, qt * 4); // Pelo menos 20, ou 4x a quantidade necessária
-                
-                candidatos[pos] = this.fetchMelhoresJogadoresPorPosicao(
-                    this.plural_to_singular[pos],
-                    quantidade_candidatos,
-                    null,
-                    escalados_ids
-                );
-                
-                this.log(`Busca de candidatos para ${pos} (desescalada): ${candidatos[pos].length} encontrados`);
+        // Remover das desescaladas as posições que já estão completas - EXATAMENTE como no Python
+        const efetivas_desescaladas = [];
+        for (const pos of posicoes_desescaladas) {
+            const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
+            if ((escalacao.titulares[pos] || []).length < qt) {
+                efetivas_desescaladas.push(pos);
             }
+        }
+        
+        // Se não há posições desescaladas, todas as posições já foram escaladas - EXATAMENTE como no Python
+        if (efetivas_desescaladas.length === 0) {
+            return escalacao;
+        }
+        
+        // Buscar candidatos para posições desescaladas - EXATAMENTE como no Python
+        // Python: quantidade_candidatos = top_n_reduzido if pos in ['goleiros', 'tecnicos', 'zagueiros'] else top_n
+        const candidatos = {};
+        for (const pos of efetivas_desescaladas) {
+            const quantidade_candidatos = ['goleiros', 'tecnicos', 'zagueiros'].includes(pos) ? this.top_n_reduzido : this.top_n;
+            candidatos[pos] = this.fetchMelhoresJogadoresPorPosicao(
+                this.plural_to_singular[pos],
+                quantidade_candidatos,
+                null,
+                escalados_ids
+            );
+        }
+        
+        // Gerar combinações - EXATAMENTE como no Python
+        // Python: combos_pos = list(combinations(candidatos[pos], qt))
+        // Python: combos_posicoes.append([(pos, combo) for combo in combos_pos])
+        // Python: for combo_outras in product(*combos_posicoes):
+        
+        // Função auxiliar para gerar combinações (equivalente ao Python combinations)
+        const gerarCombinacoes = (items, qt) => {
+            if (qt === 0) return [[]];
+            if (qt > items.length) return [];
+            if (qt === 1) return items.map(item => [item]);
             
-            // Gerar combinações considerando orçamento restante
-            const orcamento_restante = this.patrimonio - escalacao.custo_total;
-            this.log(`\n💼 Orçamento restante para posições desescaladas: R$ ${orcamento_restante.toFixed(2)}`);
-            
-            // Função auxiliar para gerar combinações de uma posição (similar ao Python combinations)
-            const gerarCombinacoes = (items, qt) => {
-                if (qt === 0) return [[]];
-                if (qt > items.length) return [];
-                if (qt === 1) return items.map(item => [item]);
-                
-                const combinacoes = [];
-                for (let i = 0; i <= items.length - qt; i++) {
-                    const subCombinacoes = gerarCombinacoes(items.slice(i + 1), qt - 1);
-                    for (const sub of subCombinacoes) {
-                        combinacoes.push([items[i], ...sub]);
-                    }
-                }
-                return combinacoes;
-            };
-            
-            // Função auxiliar para gerar produto cartesiano de combinações (similar ao Python product)
-            const produtoCartesiano = (arrays) => {
-                if (arrays.length === 0) return [[]];
-                if (arrays.length === 1) return arrays[0].map(item => [item]);
-                
-                const [first, ...rest] = arrays;
-                const restProduct = produtoCartesiano(rest);
-                const result = [];
-                
-                for (const item of first) {
-                    for (const restCombo of restProduct) {
-                        result.push([item, ...restCombo]);
-                    }
-                }
-                return result;
-            };
-            
-            // Gerar combinações por posição (similar ao Python)
-            const combos_posicoes = [];
-            for (const pos of efetivas_desescaladas) {
-                const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
-                const faltam = qt - (escalacao.titulares[pos] || []).length;
-                
-                if (faltam > 0 && candidatos[pos].length >= faltam) {
-                    // Filtrar candidatos que cabem individualmente no orçamento restante
-                    // Se houver muitos candidatos baratos, usar apenas os top por pontuação
-                    // Se houver poucos candidatos baratos, usar mais candidatos para aumentar chances
-                    const candidatos_baratos = candidatos[pos].filter(j => {
-                        const preco = this._getPreco(j);
-                        return preco <= orcamento_restante;
-                    });
-                    
-                    // Se há poucos candidatos baratos, tentar também candidatos um pouco mais caros
-                    // mas que ainda podem caber em combinação
-                    let candidatos_para_combinacao = candidatos_baratos;
-                    if (candidatos_baratos.length < faltam * 3) {
-                        // Estender para incluir candidatos até 2x o orçamento restante por posição
-                        // Ou até 80% do orçamento restante total, o que for maior
-                        const limite_por_posicao = Math.max(
-                            orcamento_restante / efetivas_desescaladas.length * 2,
-                            orcamento_restante * 0.8
-                        );
-                        candidatos_para_combinacao = candidatos[pos].filter(j => {
-                            const preco = this._getPreco(j);
-                            return preco <= limite_por_posicao;
-                        });
-                        this.log(`Posição ${pos}: Expandindo busca para ${candidatos_para_combinacao.length} candidatos (limite: R$ ${limite_por_posicao.toFixed(2)} por posição)`);
-                    }
-                    
-                    // Usar top_n ou top_n_reduzido conforme posição (como no Python)
-                    // Mas usar mais candidatos se o orçamento é muito baixo
-                    const top_n = ['goleiros', 'tecnicos', 'zagueiros'].includes(pos) ? 5 : 10;
-                    // Se há poucos candidatos baratos, usar mais para aumentar chances
-                    const max_candidatos = Math.max(top_n, candidatos_para_combinacao.length < faltam * 2 ? 20 : top_n);
-                    const candidatos_limitados = candidatos_para_combinacao.slice(0, Math.min(max_candidatos, candidatos_para_combinacao.length));
-                    
-                    this.log(`Posição ${pos}: Usando ${candidatos_limitados.length} candidatos para gerar combinações (necessários: ${faltam})`);
-                    
-                    if (candidatos_limitados.length >= faltam) {
-                        const combinacoes_pos = gerarCombinacoes(candidatos_limitados, faltam);
-                        this.log(`Posição ${pos}: ${combinacoes_pos.length} combinações geradas`);
-                        
-                        combos_posicoes.push(combinacoes_pos.map(combo => ({ pos, combo })));
-                    } else {
-                        this.log(`Posição ${pos}: Não há candidatos suficientes após filtrar por orçamento (necessários: ${faltam}, disponíveis: ${candidatos_limitados.length})`);
-                        combos_posicoes.push([]);
-                    }
-                } else {
-                    this.log(`Posição ${pos}: Não há candidatos suficientes (necessários: ${faltam}, disponíveis: ${candidatos[pos].length})`);
-                    combos_posicoes.push([]);
+            const combinacoes = [];
+            for (let i = 0; i <= items.length - qt; i++) {
+                const subCombinacoes = gerarCombinacoes(items.slice(i + 1), qt - 1);
+                for (const sub of subCombinacoes) {
+                    combinacoes.push([items[i], ...sub]);
                 }
             }
+            return combinacoes;
+        };
+        
+        // Função auxiliar para gerar produto cartesiano (equivalente ao Python product)
+        const produtoCartesiano = function*(arrays) {
+            if (arrays.length === 0) {
+                yield [];
+                return;
+            }
+            if (arrays.length === 1) {
+                for (const item of arrays[0]) {
+                    yield [item];
+                }
+                return;
+            }
             
-            // Verificar se todas as posições têm combinações
-            if (combos_posicoes.every(arr => arr.length > 0)) {
-                // Ordenar combinações de cada posição por custo (mais baratas primeiro)
-                // Isso ajuda a encontrar uma combinação válida mais rapidamente
-                for (let i = 0; i < combos_posicoes.length; i++) {
-                    combos_posicoes[i].sort((a, b) => {
-                        const custo_a = a.combo.reduce((sum, j) => sum + this._getPreco(j), 0);
-                        const custo_b = b.combo.reduce((sum, j) => sum + this._getPreco(j), 0);
-                        return custo_a - custo_b;
-                    });
+            const [first, ...rest] = arrays;
+            const restProduct = produtoCartesiano(rest);
+            
+            for (const item of first) {
+                for (const restCombo of restProduct) {
+                    yield [item, ...restCombo];
                 }
+            }
+        };
+        
+        // Gerar combinações por posição - EXATAMENTE como no Python
+        const combos_posicoes = [];
+        for (const pos of efetivas_desescaladas) {
+            const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
+            const combos_pos = gerarCombinacoes(candidatos[pos], qt);
+            combos_posicoes.push(combos_pos.map(combo => ({ pos, combo })));
+        }
+        
+        // Gerar produto cartesiano e avaliar combinações - EXATAMENTE como no Python
+        // Python: for combo_outras in product(*combos_posicoes):
+        // Python:   jogadores_outras = []
+        // Python:   for pos, combo_pos in combo_outras: jogadores_outras.extend(combo_pos)
+        // Python:   combinacoes.append(jogadores_outras)
+        // Python: for combo in combinacoes:
+        // Python:   if custo_combo <= orcamento_restante: melhor_combinacao = combo; break
+        
+        let melhor_combinacao = null;
+        for (const combo_outras of produtoCartesiano(combos_posicoes)) {
+            const jogadores_outras = [];
+            for (const { combo } of combo_outras) {
+                jogadores_outras.push(...combo);
+            }
+            
+            const custo_combo = jogadores_outras.reduce((sum, j) => sum + this._getPreco(j), 0);
+            
+            if (custo_combo <= orcamento_restante) {
+                melhor_combinacao = jogadores_outras;
+                break; // Usar primeira válida (como no Python)
+            }
+        }
+        
+        if (melhor_combinacao) {
+            // Aplicar combinação - EXATAMENTE como no Python
+            // Python: for pos in efetivas_desescaladas:
+            // Python:   jogadores = [j for j in melhor_combinacao if j in candidatos[pos]][:qt]
+            // Python:   escalacao['titulares'][pos] = jogadores
+            for (const pos of efetivas_desescaladas) {
+                const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
+                const jogadores = melhor_combinacao.filter(j => candidatos[pos].includes(j)).slice(0, qt);
                 
-                // Gerar produto cartesiano de todas as combinações (similar ao Python product)
-                // Mas limitar o número de combinações tentadas para performance
-                const MAX_COMBINACOES_TENTAR = 1000; // Limite para evitar travamento
-                let todas_combinacoes = [];
-                let tentativas = 0;
-                
-                // Gerar combinações de forma lazy (uma de cada vez) até encontrar uma válida
-                const gerarCombinacoesLazy = function*() {
-                    // Começar tentando primeiras combinações de cada posição (mais baratas)
-                    const indices = new Array(combos_posicoes.length).fill(0);
-                    
-                    while (tentativas < MAX_COMBINACOES_TENTAR) {
-                        const combo_outras = combos_posicoes.map((arr, idx) => arr[indices[idx]]);
-                        yield combo_outras;
-                        
-                        // Avançar para próxima combinação
-                        let idx = combos_posicoes.length - 1;
-                        while (idx >= 0) {
-                            indices[idx]++;
-                            if (indices[idx] < combos_posicoes[idx].length) {
-                                break;
-                            }
-                            indices[idx] = 0;
-                            idx--;
-                        }
-                        
-                        if (idx < 0) break; // Todas as combinações foram tentadas
-                        tentativas++;
-                    }
-                };
-                
-                this.log(`Tentando encontrar combinação válida (máximo ${MAX_COMBINACOES_TENTAR} tentativas)...`);
-                
-                // Tentar encontrar primeira combinação válida que cabe no orçamento
-                let melhor_combo = null;
-                let tentativas_realizadas = 0;
-                
-                for (const combo_outras of gerarCombinacoesLazy()) {
-                    tentativas_realizadas++;
-                    
-                    // Aplanar a combinação (extrair jogadores de cada posição)
-                    const jogadores_outras = [];
-                    for (const { combo } of combo_outras) {
-                        jogadores_outras.push(...combo);
-                    }
-                    
-                    const custo_combo = jogadores_outras.reduce((sum, j) => sum + this._getPreco(j), 0);
-                    
-                    if (custo_combo <= orcamento_restante) {
-                        melhor_combo = combo_outras;
-                        this.log(`✅ Combinação válida encontrada após ${tentativas_realizadas} tentativas! Custo: R$ ${custo_combo.toFixed(2)}, Orçamento restante: R$ ${orcamento_restante.toFixed(2)}`);
-                        break; // Usar primeira válida (como no Python)
-                    }
-                }
-                
-                if (!melhor_combo && tentativas_realizadas >= MAX_COMBINACOES_TENTAR) {
-                    this.log(`⚠️ Limite de tentativas atingido (${MAX_COMBINACOES_TENTAR}). Tentando estratégia alternativa...`);
-                    // Tentar estratégia alternativa: pegar apenas as combinações mais baratas de cada posição
-                    const combo_mais_barata = combos_posicoes.map(arr => arr[0]);
-                    const jogadores_baratos = [];
-                    for (const { combo } of combo_mais_barata) {
-                        jogadores_baratos.push(...combo);
-                    }
-                    const custo_barato = jogadores_baratos.reduce((sum, j) => sum + this._getPreco(j), 0);
-                    
-                    if (custo_barato <= orcamento_restante) {
-                        melhor_combo = combo_mais_barata;
-                        this.log(`✅ Combinação mais barata válida! Custo: R$ ${custo_barato.toFixed(2)}`);
-                    } else {
-                        this.log(`❌ Mesmo a combinação mais barata não cabe no orçamento (R$ ${custo_barato.toFixed(2)} > R$ ${orcamento_restante.toFixed(2)})`);
-                    }
-                }
-                
-                if (melhor_combo) {
-                    // Aplicar a combinação encontrada
-                    for (const { pos, combo } of melhor_combo) {
-                        const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
-                        const faltam = qt - (escalacao.titulares[pos] || []).length;
-                        
-                        if (faltam > 0 && combo.length === faltam) {
-                            if (escalacao.titulares[pos].length > 0) {
-                                escalacao.titulares[pos] = [...escalacao.titulares[pos], ...combo];
-                            } else {
-                                escalacao.titulares[pos] = combo;
-                            }
-                            
-                            const custo_pos = combo.reduce((sum, j) => sum + this._getPreco(j), 0);
-                            escalacao.custo_total += custo_pos;
-                            escalados_ids.push(...combo.map(j => j.atleta_id));
-                            
-                            this.log(`Reescalado ${pos}: ${combo.map(j => j.apelido).join(', ')} (Preço total: R$ ${custo_pos.toFixed(2)})`);
-                        }
-                    }
-                } else {
-                    this.log(`❌ Nenhuma combinação válida encontrada. Tentou ${todas_combinacoes.length} combinações.`);
+                if (jogadores.length !== qt) {
+                    this.log(`Erro: Combinação não contém ${qt} jogadores para ${pos}. Jogadores encontrados: ${jogadores.length}`);
                     return null;
                 }
-            } else {
-                this.log(`❌ Nem todas as posições têm combinações válidas`);
-                this.log(`Orçamento restante: R$ ${orcamento_restante.toFixed(2)}`);
-                for (const pos of efetivas_desescaladas) {
-                    const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
-                    const faltam = qt - (escalacao.titulares[pos] || []).length;
-                    const cand = candidatos[pos] || [];
-                    this.log(`Posição ${pos}: faltam ${faltam}, candidatos disponíveis: ${cand.length}`);
-                    if (cand.length > 0) {
-                        const custo_cand = cand.slice(0, faltam).reduce((sum, j) => sum + this._getPreco(j), 0);
-                        this.log(`Custo dos primeiros ${faltam} candidatos: R$ ${custo_cand.toFixed(2)}`);
-                    }
-                }
-                return null;
+                
+                escalacao.titulares[pos] = jogadores;
             }
-        }
-        
-        // Validar número de jogadores
-        for (const pos of Object.keys(this.posicao_ids)) {
-            const qt_esperada = this.formacao[`qt_${this.plural_to_singular[pos]}`];
-            const qt_atual = (escalacao.titulares[pos] || []).length;
-            if (qt_atual !== qt_esperada) {
-                this.log(`Erro: Quantidade inválida para ${pos}. Esperado: ${qt_esperada}, Encontrado: ${qt_atual}`);
-                return null;
-            }
+            
+            const custo_posicao = melhor_combinacao.reduce((sum, j) => sum + this._getPreco(j), 0);
+            escalacao.custo_total += custo_posicao;
+            escalados_ids.push(...melhor_combinacao.map(j => j.atleta_id));
+            
+            return escalacao;
+        } else {
+            this.log("Nenhuma combinação válida encontrada.");
+            return null;
         }
         
         // Selecionar reservas para outras posições (exceto posição do capitão e técnicos)
@@ -804,34 +574,28 @@ class CalculoEscalacaoIdeal {
                     const preco_medio = top5.reduce((sum, j) => sum + this._getPreco(j), 0) / top5.length;
                     const preco_total_top5 = top5.reduce((sum, j) => sum + this._getPreco(j), 0);
                     debug_info.push(`${pos}: ${ranking.length} jogadores, preço médio top 5: R$ ${preco_medio.toFixed(2)}, custo total top 5: R$ ${preco_total_top5.toFixed(2)}`);
-                    this.log(`\n${pos}:`);
-                    this.log(`  Total de jogadores: ${ranking.length}`);
-                    this.log(`  Top 5 jogadores:`);
-                    top5.forEach((j, idx) => {
-                        this.log(`    ${idx + 1}. ${j.apelido} - R$ ${this._getPreco(j).toFixed(2)} (Pontuação: ${(j.pontuacao_total || 0).toFixed(2)})`);
-                    });
-                    this.log(`  Preço médio top 5: R$ ${preco_medio.toFixed(2)}`);
-                    this.log(`  Custo total top 5: R$ ${preco_total_top5.toFixed(2)}`);
                 } else {
                     debug_info.push(`${pos}: Nenhum jogador disponível`);
-                    this.log(`\n${pos}: Nenhum jogador disponível`);
                 }
             }
-            this.log('\n--- Resumo: ---');
-            this.log(`Informações de debug:\n${debug_info.join('\n')}`);
-            this.log('\nPossíveis causas:');
-            this.log('- Patrimônio insuficiente para escalar os jogadores disponíveis');
-            this.log('- Rankings não têm jogadores suficientes');
-            this.log('- Tente calcular os rankings novamente ou verificar se o patrimônio está correto');
-            this.log('❌❌❌ FIM DO ERRO FINAL ❌❌❌\n');
             
             const msg = `Não foi possível encontrar uma escalação válida mesmo após desescalar todas as posições.\n\n` +
                        `Informações de debug:\n${debug_info.join('\n')}\n\n` +
                        `Possíveis causas:\n` +
                        `- Patrimônio insuficiente para escalar os jogadores disponíveis\n` +
                        `- Rankings não têm jogadores suficientes\n` +
-                       `- Tente calcular os rankings novamente ou verificar se o patrimônio está correto`;
+                       `- Tente calcular os rankings novamente ou verificar se o patrimônio está correto.`;
             throw new Error(msg);
+        }
+        
+        // Validar número de jogadores por posição - EXATAMENTE como no Python
+        for (const posicao of Object.keys(this.posicao_ids)) {
+            const qt_esperada = this.formacao[`qt_${this.plural_to_singular[posicao]}`];
+            const qt_atual = (escalacao.titulares[posicao] || []).length;
+            if (qt_atual !== qt_esperada) {
+                this.log(`Erro: Quantidade inválida de jogadores para ${posicao}. Esperado: ${qt_esperada}, Encontrado: ${qt_atual}`);
+                throw new Error(`Quantidade inválida de jogadores para ${posicao}. Esperado: ${qt_esperada}, Encontrado: ${qt_atual}`);
+            }
         }
         
         // Selecionar capitão
