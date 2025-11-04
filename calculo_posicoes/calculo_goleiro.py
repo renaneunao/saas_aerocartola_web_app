@@ -1,3 +1,12 @@
+"""
+ATENÇÃO: Este arquivo é apenas uma REFERÊNCIA e NÃO é mais usado pela aplicação.
+
+Os cálculos de posições agora são feitos completamente em JavaScript no frontend.
+Ver: static/js/calculo_*.js
+
+Este arquivo foi mantido apenas como referência de lógica, mas não deve ser executado.
+"""
+
 import sys
 from pathlib import Path
 
