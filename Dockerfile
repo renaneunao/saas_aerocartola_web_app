@@ -5,18 +5,21 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install system dependencies in one layer
+# Cache é gerenciado pelo GitHub Actions, então não precisa --mount
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
+# Esta camada será cacheada se requirements.txt não mudar
 COPY requirements.txt .
 
 # Install Python dependencies
+# Esta camada será cacheada se requirements.txt não mudar
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Copy application code (última camada - muda com mais frequência)
 COPY . .
 
 # Expose port
