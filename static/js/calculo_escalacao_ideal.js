@@ -238,19 +238,19 @@ class CalculoEscalacaoIdeal {
                 escalados_ids
             );
             
-            // Filtrar por orçamento
+            // Filtrar por orçamento - usar mesma lógica do Python
+            // Python: custo_temp = escalacao['custo_total'] e compara com patrimonio total
             const candidatos_validos = [];
-            const orcamento_restante = this.patrimonio - escalacao.custo_total;
-            let custo_acumulado = 0;
+            let custo_temp = escalacao.custo_total;  // Começar do custo total atual (como no Python)
             
-            this.log(`Buscando ${alvo} jogadores para ${posicao} (quantidade_busca: ${quantidade_busca}, orçamento restante: R$ ${orcamento_restante.toFixed(2)})...`);
+            this.log(`Filtrando jogadores para ${posicao} com custo total atual: R$ ${custo_temp.toFixed(2)}`);
             
             for (const candidato of candidatos) {
                 const preco_candidato = this._getPreco(candidato);
-                // Verificar se adicionar este candidato ainda mantém dentro do orçamento
-                if (custo_acumulado + preco_candidato <= orcamento_restante && candidatos_validos.length < quantidade_busca) {
+                // Comparar custo_temp + preco com patrimonio total (como no Python)
+                if (custo_temp + preco_candidato <= this.patrimonio && candidatos_validos.length < quantidade_busca) {
                     candidatos_validos.push(candidato);
-                    custo_acumulado += preco_candidato;
+                    custo_temp += preco_candidato;  // Atualizar custo temporário acumulado
                 }
                 // Se já temos candidatos suficientes, parar
                 if (candidatos_validos.length >= quantidade_busca) {
@@ -259,6 +259,7 @@ class CalculoEscalacaoIdeal {
             }
             
             if (candidatos_validos.length < alvo) {
+                const orcamento_restante = this.patrimonio - escalacao.custo_total;
                 this.log(`[ERRO] Não há jogadores suficientes para ${posicao} (necessários: ${alvo}, encontrados: ${candidatos_validos.length})`);
                 this.log(`Custo atual da escalação: R$ ${escalacao.custo_total.toFixed(2)}`);
                 this.log(`Orçamento restante: R$ ${orcamento_restante.toFixed(2)}`);
@@ -306,10 +307,12 @@ class CalculoEscalacaoIdeal {
                 }
             }
             
+            // Calcular custo da posição e atualizar custo total (como no Python)
             const custo_posicao = escalacao.titulares[posicao].reduce((sum, j) => sum + this._getPreco(j), 0);
             escalacao.custo_total += custo_posicao;
             escalados_ids.push(...escalacao.titulares[posicao].map(j => j.atleta_id));
             
+            this.log(`Custo da posição ${posicao}: R$ ${custo_posicao.toFixed(2)}. IDs escalados: ${escalados_ids.join(', ')}`);
             this.log(`Escalados ${alvo} titulares para ${posicao}: ${escalacao.titulares[posicao].map(j => j.apelido).join(', ')}`);
         }
         
