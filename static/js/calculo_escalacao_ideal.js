@@ -126,7 +126,7 @@ class CalculoEscalacaoIdeal {
         const escalacao = {
             titulares: {},
             reservas: {},
-            custo_total: 0,
+            custo_total: 0,  // Começa do zero e vai incrementando posição por posição
             pontuacao_total: 0
         };
         
@@ -140,6 +140,11 @@ class CalculoEscalacaoIdeal {
         
         let escalados_ids = [];
         const predefinido_defesa = { goleiros: [], zagueiros: [], laterais: [] };
+        
+        this.log(`\n🔧 Iniciando tentativa de escalação`);
+        this.log(`Posições desescaladas: ${posicoes_desescaladas.length > 0 ? posicoes_desescaladas.join(', ') : 'Nenhuma'}`);
+        this.log(`Ordem de prioridades: ${this.prioridades.join(' → ')}`);
+        this.log(`Custo inicial: R$ ${escalacao.custo_total.toFixed(2)}\n`);
         
         // Fechar defesa se solicitado
         if (fecharDefesa && this.clubes_sg.length > 0) {
@@ -201,16 +206,20 @@ class CalculoEscalacaoIdeal {
             }
         }
         
-        // Escalar outras posições
+        // Escalar posições que não foram desescaladas (como no Python)
+        // Processa posição por posição na ordem de prioridades
         for (const posicao of this.prioridades) {
             if (posicoes_desescaladas.includes(posicao)) {
-                // Se defesa foi pré-definida e está completa, continuar
+                // Se for defesa com pré-definição pela estratégia 2, não pular: vamos completar as vagas
                 if (fecharDefesa && ['goleiros', 'zagueiros', 'laterais'].includes(posicao)) {
                     const qt = this.formacao[`qt_${this.plural_to_singular[posicao]}`];
                     if (escalacao.titulares[posicao].length >= qt) {
+                        this.log(`⏭️ Pulando ${posicao}: já completa pelos pré-definidos`);
                         continue;
                     }
                 } else {
+                    // Pular posições que serão tratadas nas combinações
+                    this.log(`⏭️ Pulando ${posicao}: será tratada nas combinações`);
                     continue;
                 }
             }
@@ -240,16 +249,28 @@ class CalculoEscalacaoIdeal {
             
             // Filtrar por orçamento - usar mesma lógica do Python
             // Python: custo_temp = escalacao['custo_total'] e compara com patrimonio total
+            // IMPORTANTE: custo_temp começa do custo_total ATUAL que já foi atualizado pelas posições anteriores
             const candidatos_validos = [];
-            let custo_temp = escalacao.custo_total;  // Começar do custo total atual (como no Python)
+            let custo_temp = escalacao.custo_total;  // Começar do custo total atual (posições anteriores já escaladas)
             
-            this.log(`\n========== FILTRANDO ${posicao.toUpperCase()} ==========`);
+            this.log(`\n========== PROCESSANDO ${posicao.toUpperCase()} (POSIÇÃO POR POSIÇÃO) ==========`);
+            this.log(`📋 Processando posição ${posicao} na ordem de prioridades`);
             this.log(`Patrimônio total: R$ ${this.patrimonio.toFixed(2)}`);
-            this.log(`Custo atual da escalação: R$ ${custo_temp.toFixed(2)}`);
-            this.log(`Orçamento disponível: R$ ${(this.patrimonio - custo_temp).toFixed(2)}`);
-            this.log(`Quantidade de candidatos buscados: ${quantidade_busca}`);
-            this.log(`Quantidade necessária (alvo): ${alvo}`);
-            this.log(`Total de candidatos no ranking: ${candidatos.length}`);
+            this.log(`💰 Custo TOTAL atual (já escalado até agora): R$ ${custo_temp.toFixed(2)}`);
+            this.log(`💵 Orçamento disponível para esta posição: R$ ${(this.patrimonio - custo_temp).toFixed(2)}`);
+            this.log(`🎯 Quantidade necessária (alvo): ${alvo}`);
+            this.log(`🔍 Quantidade de candidatos buscados: ${quantidade_busca}`);
+            this.log(`📊 Total de candidatos no ranking: ${candidatos.length}`);
+            
+            // Mostrar custo acumulado até agora
+            this.log(`\n--- Resumo do que já foi escalado antes desta posição: ---`);
+            Object.keys(escalacao.titulares).forEach(pos => {
+                const jogadores = escalacao.titulares[pos] || [];
+                if (jogadores.length > 0 && pos !== posicao) {
+                    const custo_pos = jogadores.reduce((sum, j) => sum + this._getPreco(j), 0);
+                    this.log(`  ${pos}: ${jogadores.length} jogador(es) - Custo: R$ ${custo_pos.toFixed(2)}`);
+                }
+            });
             
             if (candidatos.length > 0) {
                 this.log(`\n--- Candidatos disponíveis (primeiros ${Math.min(10, candidatos.length)}): ---`);
@@ -385,24 +406,27 @@ class CalculoEscalacaoIdeal {
             }
             
             // Calcular custo da posição e atualizar custo total (como no Python)
+            // IMPORTANTE: No Python, calcula o custo APENAS dos titulares finais, não dos candidatos_validos
+            // Isso é porque candidatos_validos pode incluir reserva de luxo que não entra no custo_total
             const custo_posicao = escalacao.titulares[posicao].reduce((sum, j) => sum + this._getPreco(j), 0);
             const custo_antes = escalacao.custo_total;
-            escalacao.custo_total += custo_posicao;
+            escalacao.custo_total += custo_posicao;  // Atualiza o custo total para a próxima posição
             escalados_ids.push(...escalacao.titulares[posicao].map(j => j.atleta_id));
             
-            this.log(`\n✅ ${posicao.toUpperCase()} ESCALADO COM SUCESSO:`);
-            this.log(`  Custo antes: R$ ${custo_antes.toFixed(2)}`);
-            this.log(`  Custo da posição: R$ ${custo_posicao.toFixed(2)}`);
-            this.log(`  Custo após: R$ ${escalacao.custo_total.toFixed(2)}`);
-            this.log(`  Orçamento restante: R$ ${(this.patrimonio - escalacao.custo_total).toFixed(2)}`);
-            this.log(`  Jogadores escalados:`);
+            this.log(`\n✅ ${posicao.toUpperCase()} ESCALADO COM SUCESSO (ATUALIZANDO CUSTO TOTAL):`);
+            this.log(`  💰 Custo ANTES desta posição: R$ ${custo_antes.toFixed(2)}`);
+            this.log(`  💵 Custo DESTA posição: R$ ${custo_posicao.toFixed(2)}`);
+            this.log(`  💰 Custo TOTAL AGORA (após ${posicao}): R$ ${escalacao.custo_total.toFixed(2)}`);
+            this.log(`  💵 Orçamento restante: R$ ${(this.patrimonio - escalacao.custo_total).toFixed(2)}`);
+            this.log(`  👥 Jogadores escalados:`);
             escalacao.titulares[posicao].forEach((j, idx) => {
                 this.log(`    ${idx + 1}. ${j.apelido} - R$ ${this._getPreco(j).toFixed(2)} (Pontuação: ${(j.pontuacao_total || 0).toFixed(2)})`);
             });
             if (escalacao.reservas[posicao] && escalacao.reservas[posicao].length > 0) {
-                this.log(`  Reserva de luxo: ${escalacao.reservas[posicao][0].apelido} - R$ ${this._getPreco(escalacao.reservas[posicao][0]).toFixed(2)}`);
+                this.log(`  ⭐ Reserva de luxo: ${escalacao.reservas[posicao][0].apelido} - R$ ${this._getPreco(escalacao.reservas[posicao][0]).toFixed(2)}`);
             }
-            this.log(`  IDs escalados: ${escalados_ids.join(', ')}\n`);
+            this.log(`  📝 IDs escalados até agora: ${escalados_ids.length} jogadores`);
+            this.log(`  ➡️ Próxima posição na ordem: ${this.prioridades[this.prioridades.indexOf(posicao) + 1] || 'FIM'}\n`);
         }
         
         // Processar posições desescaladas (se houver)
