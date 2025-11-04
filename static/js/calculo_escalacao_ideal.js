@@ -457,59 +457,210 @@ class CalculoEscalacaoIdeal {
                 this.log(`Busca de candidatos para ${pos} (desescalada): ${candidatos[pos].length} encontrados`);
             }
             
-            // Gerar combinações (simplificado - apenas primeira válida)
+            // Gerar combinações considerando orçamento restante
             const orcamento_restante = this.patrimonio - escalacao.custo_total;
+            this.log(`\n💼 Orçamento restante para posições desescaladas: R$ ${orcamento_restante.toFixed(2)}`);
             
-            // Tentar primeira combinação válida (simplificado - apenas primeira válida)
-            // Gerar todas as combinações possíveis (simplificado para performance)
-            let melhor_combo = null;
-            let melhor_score = -1;
+            // Função auxiliar para gerar combinações de uma posição (similar ao Python combinations)
+            const gerarCombinacoes = (items, qt) => {
+                if (qt === 0) return [[]];
+                if (qt > items.length) return [];
+                if (qt === 1) return items.map(item => [item]);
+                
+                const combinacoes = [];
+                for (let i = 0; i <= items.length - qt; i++) {
+                    const subCombinacoes = gerarCombinacoes(items.slice(i + 1), qt - 1);
+                    for (const sub of subCombinacoes) {
+                        combinacoes.push([items[i], ...sub]);
+                    }
+                }
+                return combinacoes;
+            };
             
-            // Gerar combinações simples (primeira válida)
-            const combos_por_pos = {};
+            // Função auxiliar para gerar produto cartesiano de combinações (similar ao Python product)
+            const produtoCartesiano = (arrays) => {
+                if (arrays.length === 0) return [[]];
+                if (arrays.length === 1) return arrays[0].map(item => [item]);
+                
+                const [first, ...rest] = arrays;
+                const restProduct = produtoCartesiano(rest);
+                const result = [];
+                
+                for (const item of first) {
+                    for (const restCombo of restProduct) {
+                        result.push([item, ...restCombo]);
+                    }
+                }
+                return result;
+            };
+            
+            // Gerar combinações por posição (similar ao Python)
+            const combos_posicoes = [];
             for (const pos of efetivas_desescaladas) {
                 const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
                 const faltam = qt - (escalacao.titulares[pos] || []).length;
+                
                 if (faltam > 0 && candidatos[pos].length >= faltam) {
-                    // Usar apenas a primeira combinação válida
-                    combos_por_pos[pos] = candidatos[pos].slice(0, faltam);
+                    // Filtrar candidatos que cabem individualmente no orçamento restante
+                    // Se houver muitos candidatos baratos, usar apenas os top por pontuação
+                    // Se houver poucos candidatos baratos, usar mais candidatos para aumentar chances
+                    const candidatos_baratos = candidatos[pos].filter(j => {
+                        const preco = this._getPreco(j);
+                        return preco <= orcamento_restante;
+                    });
+                    
+                    // Se há poucos candidatos baratos, tentar também candidatos um pouco mais caros
+                    // mas que ainda podem caber em combinação
+                    let candidatos_para_combinacao = candidatos_baratos;
+                    if (candidatos_baratos.length < faltam * 3) {
+                        // Estender para incluir candidatos até 2x o orçamento restante por posição
+                        // Ou até 80% do orçamento restante total, o que for maior
+                        const limite_por_posicao = Math.max(
+                            orcamento_restante / efetivas_desescaladas.length * 2,
+                            orcamento_restante * 0.8
+                        );
+                        candidatos_para_combinacao = candidatos[pos].filter(j => {
+                            const preco = this._getPreco(j);
+                            return preco <= limite_por_posicao;
+                        });
+                        this.log(`Posição ${pos}: Expandindo busca para ${candidatos_para_combinacao.length} candidatos (limite: R$ ${limite_por_posicao.toFixed(2)} por posição)`);
+                    }
+                    
+                    // Usar top_n ou top_n_reduzido conforme posição (como no Python)
+                    // Mas usar mais candidatos se o orçamento é muito baixo
+                    const top_n = ['goleiros', 'tecnicos', 'zagueiros'].includes(pos) ? 5 : 10;
+                    // Se há poucos candidatos baratos, usar mais para aumentar chances
+                    const max_candidatos = Math.max(top_n, candidatos_para_combinacao.length < faltam * 2 ? 20 : top_n);
+                    const candidatos_limitados = candidatos_para_combinacao.slice(0, Math.min(max_candidatos, candidatos_para_combinacao.length));
+                    
+                    this.log(`Posição ${pos}: Usando ${candidatos_limitados.length} candidatos para gerar combinações (necessários: ${faltam})`);
+                    
+                    if (candidatos_limitados.length >= faltam) {
+                        const combinacoes_pos = gerarCombinacoes(candidatos_limitados, faltam);
+                        this.log(`Posição ${pos}: ${combinacoes_pos.length} combinações geradas`);
+                        
+                        combos_posicoes.push(combinacoes_pos.map(combo => ({ pos, combo })));
+                    } else {
+                        this.log(`Posição ${pos}: Não há candidatos suficientes após filtrar por orçamento (necessários: ${faltam}, disponíveis: ${candidatos_limitados.length})`);
+                        combos_posicoes.push([]);
+                    }
+                } else {
+                    this.log(`Posição ${pos}: Não há candidatos suficientes (necessários: ${faltam}, disponíveis: ${candidatos[pos].length})`);
+                    combos_posicoes.push([]);
                 }
             }
             
             // Verificar se todas as posições têm combinações
-            if (Object.keys(combos_por_pos).length === efetivas_desescaladas.length) {
-                const combo = [];
-                for (const pos of efetivas_desescaladas) {
-                    combo.push(...combos_por_pos[pos]);
+            if (combos_posicoes.every(arr => arr.length > 0)) {
+                // Ordenar combinações de cada posição por custo (mais baratas primeiro)
+                // Isso ajuda a encontrar uma combinação válida mais rapidamente
+                for (let i = 0; i < combos_posicoes.length; i++) {
+                    combos_posicoes[i].sort((a, b) => {
+                        const custo_a = a.combo.reduce((sum, j) => sum + this._getPreco(j), 0);
+                        const custo_b = b.combo.reduce((sum, j) => sum + this._getPreco(j), 0);
+                        return custo_a - custo_b;
+                    });
                 }
                 
-                const custo_combo = combo.reduce((sum, j) => sum + this._getPreco(j), 0);
+                // Gerar produto cartesiano de todas as combinações (similar ao Python product)
+                // Mas limitar o número de combinações tentadas para performance
+                const MAX_COMBINACOES_TENTAR = 1000; // Limite para evitar travamento
+                let todas_combinacoes = [];
+                let tentativas = 0;
                 
-                if (custo_combo <= orcamento_restante) {
-                    melhor_combo = combo;
-                }
-            }
-            
-            if (melhor_combo) {
-                // Aplicar combinação
-                for (const pos of efetivas_desescaladas) {
-                    const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
-                    const faltam = qt - (escalacao.titulares[pos] || []).length;
-                    if (faltam > 0 && combos_por_pos[pos]) {
-                        const jogadores = combos_por_pos[pos];
+                // Gerar combinações de forma lazy (uma de cada vez) até encontrar uma válida
+                const gerarCombinacoesLazy = function*() {
+                    // Começar tentando primeiras combinações de cada posição (mais baratas)
+                    const indices = new Array(combos_posicoes.length).fill(0);
+                    
+                    while (tentativas < MAX_COMBINACOES_TENTAR) {
+                        const combo_outras = combos_posicoes.map((arr, idx) => arr[indices[idx]]);
+                        yield combo_outras;
                         
-                        if (escalacao.titulares[pos].length > 0) {
-                            escalacao.titulares[pos] = [...escalacao.titulares[pos], ...jogadores];
-                        } else {
-                            escalacao.titulares[pos] = jogadores;
+                        // Avançar para próxima combinação
+                        let idx = combos_posicoes.length - 1;
+                        while (idx >= 0) {
+                            indices[idx]++;
+                            if (indices[idx] < combos_posicoes[idx].length) {
+                                break;
+                            }
+                            indices[idx] = 0;
+                            idx--;
                         }
                         
-                        escalacao.custo_total += jogadores.reduce((sum, j) => sum + this._getPreco(j), 0);
-                        escalados_ids.push(...jogadores.map(j => j.atleta_id));
+                        if (idx < 0) break; // Todas as combinações foram tentadas
+                        tentativas++;
+                    }
+                };
+                
+                this.log(`Tentando encontrar combinação válida (máximo ${MAX_COMBINACOES_TENTAR} tentativas)...`);
+                
+                // Tentar encontrar primeira combinação válida que cabe no orçamento
+                let melhor_combo = null;
+                let tentativas_realizadas = 0;
+                
+                for (const combo_outras of gerarCombinacoesLazy()) {
+                    tentativas_realizadas++;
+                    
+                    // Aplanar a combinação (extrair jogadores de cada posição)
+                    const jogadores_outras = [];
+                    for (const { combo } of combo_outras) {
+                        jogadores_outras.push(...combo);
+                    }
+                    
+                    const custo_combo = jogadores_outras.reduce((sum, j) => sum + this._getPreco(j), 0);
+                    
+                    if (custo_combo <= orcamento_restante) {
+                        melhor_combo = combo_outras;
+                        this.log(`✅ Combinação válida encontrada após ${tentativas_realizadas} tentativas! Custo: R$ ${custo_combo.toFixed(2)}, Orçamento restante: R$ ${orcamento_restante.toFixed(2)}`);
+                        break; // Usar primeira válida (como no Python)
                     }
                 }
+                
+                if (!melhor_combo && tentativas_realizadas >= MAX_COMBINACOES_TENTAR) {
+                    this.log(`⚠️ Limite de tentativas atingido (${MAX_COMBINACOES_TENTAR}). Tentando estratégia alternativa...`);
+                    // Tentar estratégia alternativa: pegar apenas as combinações mais baratas de cada posição
+                    const combo_mais_barata = combos_posicoes.map(arr => arr[0]);
+                    const jogadores_baratos = [];
+                    for (const { combo } of combo_mais_barata) {
+                        jogadores_baratos.push(...combo);
+                    }
+                    const custo_barato = jogadores_baratos.reduce((sum, j) => sum + this._getPreco(j), 0);
+                    
+                    if (custo_barato <= orcamento_restante) {
+                        melhor_combo = combo_mais_barata;
+                        this.log(`✅ Combinação mais barata válida! Custo: R$ ${custo_barato.toFixed(2)}`);
+                    } else {
+                        this.log(`❌ Mesmo a combinação mais barata não cabe no orçamento (R$ ${custo_barato.toFixed(2)} > R$ ${orcamento_restante.toFixed(2)})`);
+                    }
+                }
+                
+                if (melhor_combo) {
+                    // Aplicar a combinação encontrada
+                    for (const { pos, combo } of melhor_combo) {
+                        const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
+                        const faltam = qt - (escalacao.titulares[pos] || []).length;
+                        
+                        if (faltam > 0 && combo.length === faltam) {
+                            if (escalacao.titulares[pos].length > 0) {
+                                escalacao.titulares[pos] = [...escalacao.titulares[pos], ...combo];
+                            } else {
+                                escalacao.titulares[pos] = combo;
+                            }
+                            
+                            const custo_pos = combo.reduce((sum, j) => sum + this._getPreco(j), 0);
+                            escalacao.custo_total += custo_pos;
+                            escalados_ids.push(...combo.map(j => j.atleta_id));
+                            
+                            this.log(`Reescalado ${pos}: ${combo.map(j => j.apelido).join(', ')} (Preço total: R$ ${custo_pos.toFixed(2)})`);
+                        }
+                    }
+                } else {
+                    this.log(`❌ Nenhuma combinação válida encontrada. Tentou ${todas_combinacoes.length} combinações.`);
+                    return null;
+                }
             } else {
-                this.log(`[ERRO] Nenhuma combinação válida encontrada para posições desescaladas: ${efetivas_desescaladas.join(', ')}`);
+                this.log(`❌ Nem todas as posições têm combinações válidas`);
                 this.log(`Orçamento restante: R$ ${orcamento_restante.toFixed(2)}`);
                 for (const pos of efetivas_desescaladas) {
                     const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
