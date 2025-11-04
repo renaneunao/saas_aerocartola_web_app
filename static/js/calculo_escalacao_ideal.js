@@ -240,9 +240,12 @@ class CalculoEscalacaoIdeal {
             // Para posição do capitão, buscar 1 a mais (reserva de luxo)
             const quantidade_busca = (posicao === posicaoCapitao && posicao !== 'tecnicos') ? (alvo + 1) : alvo;
             
+            // Buscar pelo menos 20 candidatos de cada posição (como solicitado)
+            // Isso garante que não faltem atletas para escolher
+            const quantidade_candidatos_buscar = Math.max(quantidade_busca * 2, 20);
             const candidatos = this.fetchMelhoresJogadoresPorPosicao(
                 this.plural_to_singular[posicao],
-                quantidade_busca * 2,
+                quantidade_candidatos_buscar,
                 null,
                 escalados_ids
             );
@@ -259,8 +262,8 @@ class CalculoEscalacaoIdeal {
             this.log(`💰 Custo TOTAL atual (já escalado até agora): R$ ${custo_temp.toFixed(2)}`);
             this.log(`💵 Orçamento disponível para esta posição: R$ ${(this.patrimonio - custo_temp).toFixed(2)}`);
             this.log(`🎯 Quantidade necessária (alvo): ${alvo}`);
-            this.log(`🔍 Quantidade de candidatos buscados: ${quantidade_busca}`);
-            this.log(`📊 Total de candidatos no ranking: ${candidatos.length}`);
+            this.log(`🔍 Quantidade de candidatos buscados: ${quantidade_candidatos_buscar} (mínimo 20 por posição)`);
+            this.log(`📊 Total de candidatos encontrados no ranking: ${candidatos.length}`);
             
             // Mostrar custo acumulado até agora
             this.log(`\n--- Resumo do que já foi escalado antes desta posição: ---`);
@@ -437,10 +440,12 @@ class CalculoEscalacaoIdeal {
         
         if (efetivas_desescaladas.length > 0) {
             // Buscar candidatos para posições desescaladas
+            // Buscar pelo menos 20 de cada posição para garantir opções suficientes
             const candidatos = {};
             for (const pos of efetivas_desescaladas) {
                 const qt = this.formacao[`qt_${this.plural_to_singular[pos]}`];
-                const quantidade_candidatos = ['goleiros', 'tecnicos', 'zagueiros'].includes(pos) ? 5 : 10;
+                // Buscar pelo menos 20 candidatos de cada posição
+                const quantidade_candidatos = Math.max(20, qt * 4); // Pelo menos 20, ou 4x a quantidade necessária
                 
                 candidatos[pos] = this.fetchMelhoresJogadoresPorPosicao(
                     this.plural_to_singular[pos],
@@ -448,6 +453,8 @@ class CalculoEscalacaoIdeal {
                     null,
                     escalados_ids
                 );
+                
+                this.log(`Busca de candidatos para ${pos} (desescalada): ${candidatos[pos].length} encontrados`);
             }
             
             // Gerar combinações (simplificado - apenas primeira válida)
