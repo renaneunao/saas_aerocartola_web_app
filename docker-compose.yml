@@ -22,12 +22,12 @@ services:
     networks:
       - infra_network
 
-  api-service:
+  web-app:
     build:
       context: .
       dockerfile: Dockerfile
-    image: renaneunao/saas-cartola-api-service:latest
-    container_name: cartola-aero-api-service-container
+    image: renaneunao/saas-cartola-web-app:latest
+    container_name: cartola-aero-web-app-container
     restart: unless-stopped
     env_file:
       - .env
@@ -37,10 +37,12 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-      CORS_ORIGINS: ${CORS_ORIGINS:-*}
       SECRET_KEY: ${SECRET_KEY:-change-me-to-a-secure-random-value-in-production}
+      FLASK_ENV: ${FLASK_ENV:-production}
     ports:
-      - "8000:8000"
+      - "5000:5000"
+    volumes:
+      - ./logs:/app/logs
     logging:
       driver: "json-file"
       options:
@@ -48,6 +50,8 @@ services:
         max-file: "3"
     networks:
       - infra_network
+    depends_on:
+      - calculador
 
 networks:
   infra_network:
