@@ -243,43 +243,120 @@ class CalculoEscalacaoIdeal {
             const candidatos_validos = [];
             let custo_temp = escalacao.custo_total;  // Começar do custo total atual (como no Python)
             
-            this.log(`Filtrando jogadores para ${posicao} com custo total atual: R$ ${custo_temp.toFixed(2)}`);
+            this.log(`\n========== FILTRANDO ${posicao.toUpperCase()} ==========`);
+            this.log(`Patrimônio total: R$ ${this.patrimonio.toFixed(2)}`);
+            this.log(`Custo atual da escalação: R$ ${custo_temp.toFixed(2)}`);
+            this.log(`Orçamento disponível: R$ ${(this.patrimonio - custo_temp).toFixed(2)}`);
+            this.log(`Quantidade de candidatos buscados: ${quantidade_busca}`);
+            this.log(`Quantidade necessária (alvo): ${alvo}`);
+            this.log(`Total de candidatos no ranking: ${candidatos.length}`);
             
+            if (candidatos.length > 0) {
+                this.log(`\n--- Candidatos disponíveis (primeiros ${Math.min(10, candidatos.length)}): ---`);
+                candidatos.slice(0, Math.min(10, candidatos.length)).forEach((c, idx) => {
+                    const preco = this._getPreco(c);
+                    const caberia = custo_temp + preco <= this.patrimonio;
+                    this.log(`  ${idx + 1}. ${c.apelido} - Preço: R$ ${preco.toFixed(2)}, Pontuação: ${(c.pontuacao_total || 0).toFixed(2)}, Caberia: ${caberia ? 'SIM' : 'NÃO'} (custo_temp + preco = R$ ${(custo_temp + preco).toFixed(2)})`);
+                });
+            }
+            
+            this.log(`\n--- Processo de seleção: ---`);
+            let selecionados_count = 0;
             for (const candidato of candidatos) {
                 const preco_candidato = this._getPreco(candidato);
+                const novo_custo = custo_temp + preco_candidato;
+                const caberia = novo_custo <= this.patrimonio;
+                const precisa_mais = candidatos_validos.length < quantidade_busca;
+                
+                this.log(`  Candidato: ${candidato.apelido} - Preço: R$ ${preco_candidato.toFixed(2)}`);
+                this.log(`    Custo atual: R$ ${custo_temp.toFixed(2)} + Preço: R$ ${preco_candidato.toFixed(2)} = R$ ${novo_custo.toFixed(2)}`);
+                this.log(`    Cabe no orçamento? ${caberia ? 'SIM' : 'NÃO'} (${novo_custo.toFixed(2)} <= ${this.patrimonio.toFixed(2)})`);
+                this.log(`    Precisa de mais jogadores? ${precisa_mais ? 'SIM' : 'NÃO'} (${candidatos_validos.length} < ${quantidade_busca})`);
+                
                 // Comparar custo_temp + preco com patrimonio total (como no Python)
-                if (custo_temp + preco_candidato <= this.patrimonio && candidatos_validos.length < quantidade_busca) {
+                if (caberia && precisa_mais) {
                     candidatos_validos.push(candidato);
-                    custo_temp += preco_candidato;  // Atualizar custo temporário acumulado
+                    custo_temp += preco_candidato;
+                    selecionados_count++;
+                    this.log(`    ✅ SELECIONADO! (${selecionados_count}/${quantidade_busca}) - Novo custo: R$ ${custo_temp.toFixed(2)}`);
+                } else {
+                    if (!caberia) {
+                        this.log(`    ❌ REJEITADO: Não cabe no orçamento`);
+                    } else if (!precisa_mais) {
+                        this.log(`    ❌ REJEITADO: Já temos quantidade suficiente`);
+                    }
                 }
+                
                 // Se já temos candidatos suficientes, parar
                 if (candidatos_validos.length >= quantidade_busca) {
+                    this.log(`  ⏹️ Parando seleção: quantidade suficiente atingida`);
                     break;
                 }
             }
             
+            this.log(`\n--- Resultado da seleção: ---`);
+            this.log(`Candidatos selecionados: ${candidatos_validos.length}`);
+            this.log(`Custo após seleção: R$ ${custo_temp.toFixed(2)}`);
+            if (candidatos_validos.length > 0) {
+                candidatos_validos.forEach((c, idx) => {
+                    this.log(`  ${idx + 1}. ${c.apelido} - R$ ${this._getPreco(c).toFixed(2)}`);
+                });
+            }
+            this.log(`==========================================\n`);
+            
             if (candidatos_validos.length < alvo) {
                 const orcamento_restante = this.patrimonio - escalacao.custo_total;
-                this.log(`[ERRO] Não há jogadores suficientes para ${posicao} (necessários: ${alvo}, encontrados: ${candidatos_validos.length})`);
+                this.log(`\n❌❌❌ ERRO AO ESCALAR ${posicao.toUpperCase()} ❌❌❌`);
+                this.log(`Não há jogadores suficientes para ${posicao}`);
+                this.log(`  Necessários: ${alvo}`);
+                this.log(`  Encontrados: ${candidatos_validos.length}`);
+                this.log(`  Quantidade buscada: ${quantidade_busca}`);
+                this.log(`\n--- Estado atual da escalação: ---`);
+                this.log(`Patrimônio total: R$ ${this.patrimonio.toFixed(2)}`);
                 this.log(`Custo atual da escalação: R$ ${escalacao.custo_total.toFixed(2)}`);
                 this.log(`Orçamento restante: R$ ${orcamento_restante.toFixed(2)}`);
+                this.log(`\n--- Análise dos candidatos: ---`);
                 this.log(`Total de candidatos no ranking: ${candidatos.length}`);
                 if (candidatos.length > 0) {
-                    const preco_medio = candidatos.slice(0, Math.min(10, candidatos.length)).reduce((sum, j) => sum + this._getPreco(j), 0) / Math.min(10, candidatos.length);
-                    const preco_min = Math.min(...candidatos.slice(0, 10).map(j => this._getPreco(j)));
-                    const preco_max = Math.max(...candidatos.slice(0, 10).map(j => this._getPreco(j)));
-                    this.log(`Preço médio dos top 10 candidatos: R$ ${preco_medio.toFixed(2)} (min: R$ ${preco_min.toFixed(2)}, max: R$ ${preco_max.toFixed(2)})`);
+                    const top10 = candidatos.slice(0, Math.min(10, candidatos.length));
+                    const preco_medio = top10.reduce((sum, j) => sum + this._getPreco(j), 0) / top10.length;
+                    const precos = top10.map(j => this._getPreco(j));
+                    const preco_min = Math.min(...precos);
+                    const preco_max = Math.max(...precos);
+                    this.log(`Preço médio dos top 10 candidatos: R$ ${preco_medio.toFixed(2)}`);
+                    this.log(`Preço mínimo: R$ ${preco_min.toFixed(2)}`);
+                    this.log(`Preço máximo: R$ ${preco_max.toFixed(2)}`);
+                    this.log(`\n--- Detalhamento dos top 10 candidatos: ---`);
+                    top10.forEach((c, idx) => {
+                        const preco = this._getPreco(c);
+                        const caberia = preco <= orcamento_restante;
+                        this.log(`  ${idx + 1}. ${c.apelido} - Preço: R$ ${preco.toFixed(2)}, Pontuação: ${(c.pontuacao_total || 0).toFixed(2)}, Cabe no orçamento restante: ${caberia ? 'SIM' : 'NÃO'}`);
+                    });
                     // Ver quantos jogadores cabem no orçamento
                     let qtd_cabem = 0;
-                    for (const c of candidatos.slice(0, 10)) {
+                    for (const c of top10) {
                         if (this._getPreco(c) <= orcamento_restante) {
                             qtd_cabem++;
                         }
                     }
-                    this.log(`Quantos dos top 10 cabem no orçamento: ${qtd_cabem}`);
+                    this.log(`\nQuantos dos top 10 cabem no orçamento restante: ${qtd_cabem}`);
+                    this.log(`Custo total dos top ${alvo} candidatos: R$ ${top10.slice(0, alvo).reduce((sum, j) => sum + this._getPreco(j), 0).toFixed(2)}`);
                 } else {
                     this.log(`Nenhum candidato encontrado no ranking para ${posicao}`);
                 }
+                this.log(`\n--- Escalação atual (antes do erro): ---`);
+                Object.keys(escalacao.titulares).forEach(pos => {
+                    const jogadores = escalacao.titulares[pos] || [];
+                    if (jogadores.length > 0) {
+                        const custo_pos = jogadores.reduce((sum, j) => sum + this._getPreco(j), 0);
+                        this.log(`  ${pos}: ${jogadores.length} jogador(es) - Custo: R$ ${custo_pos.toFixed(2)}`);
+                        jogadores.forEach(j => {
+                            this.log(`    - ${j.apelido} (R$ ${this._getPreco(j).toFixed(2)})`);
+                        });
+                    }
+                });
+                this.log(`Custo total atual: R$ ${escalacao.custo_total.toFixed(2)}`);
+                this.log(`❌❌❌ FIM DO ERRO ❌❌❌\n`);
                 return null;
             }
             
@@ -309,11 +386,23 @@ class CalculoEscalacaoIdeal {
             
             // Calcular custo da posição e atualizar custo total (como no Python)
             const custo_posicao = escalacao.titulares[posicao].reduce((sum, j) => sum + this._getPreco(j), 0);
+            const custo_antes = escalacao.custo_total;
             escalacao.custo_total += custo_posicao;
             escalados_ids.push(...escalacao.titulares[posicao].map(j => j.atleta_id));
             
-            this.log(`Custo da posição ${posicao}: R$ ${custo_posicao.toFixed(2)}. IDs escalados: ${escalados_ids.join(', ')}`);
-            this.log(`Escalados ${alvo} titulares para ${posicao}: ${escalacao.titulares[posicao].map(j => j.apelido).join(', ')}`);
+            this.log(`\n✅ ${posicao.toUpperCase()} ESCALADO COM SUCESSO:`);
+            this.log(`  Custo antes: R$ ${custo_antes.toFixed(2)}`);
+            this.log(`  Custo da posição: R$ ${custo_posicao.toFixed(2)}`);
+            this.log(`  Custo após: R$ ${escalacao.custo_total.toFixed(2)}`);
+            this.log(`  Orçamento restante: R$ ${(this.patrimonio - escalacao.custo_total).toFixed(2)}`);
+            this.log(`  Jogadores escalados:`);
+            escalacao.titulares[posicao].forEach((j, idx) => {
+                this.log(`    ${idx + 1}. ${j.apelido} - R$ ${this._getPreco(j).toFixed(2)} (Pontuação: ${(j.pontuacao_total || 0).toFixed(2)})`);
+            });
+            if (escalacao.reservas[posicao] && escalacao.reservas[posicao].length > 0) {
+                this.log(`  Reserva de luxo: ${escalacao.reservas[posicao][0].apelido} - R$ ${this._getPreco(escalacao.reservas[posicao][0]).toFixed(2)}`);
+            }
+            this.log(`  IDs escalados: ${escalados_ids.join(', ')}\n`);
         }
         
         // Processar posições desescaladas (se houver)
@@ -463,11 +552,15 @@ class CalculoEscalacaoIdeal {
      */
     async calcular(hackGoleiro = false, fecharDefesa = false, posicaoCapitao = 'atacantes') {
         this.posicaoCapitao = posicaoCapitao; // Armazenar para uso em outros métodos
-        this.log('Iniciando cálculo da escalação ideal...');
+        this.log('\n═══════════════════════════════════════════════════════════');
+        this.log('🚀 INICIANDO CÁLCULO DA ESCALAÇÃO IDEAL');
+        this.log('═══════════════════════════════════════════════════════════');
+        this.log(`Patrimônio disponível: R$ ${this.patrimonio.toFixed(2)}`);
         this.log(`Hack do goleiro: ${hackGoleiro ? 'Sim' : 'Não'}`);
         this.log(`Fechar defesa: ${fecharDefesa ? 'Sim' : 'Não'}`);
         this.log(`Posição do capitão: ${posicaoCapitao}`);
-        this.log(`Patrimônio disponível: R$ ${this.patrimonio.toFixed(2)}`);
+        this.log(`Formação: ${JSON.stringify(this.formacao)}`);
+        this.log('═══════════════════════════════════════════════════════════\n');
         
         // Verificar se há rankings suficientes
         const posicoes_necessarias = ['goleiro', 'zagueiro', 'lateral', 'meia', 'atacante', 'treinador'];
@@ -516,18 +609,40 @@ class CalculoEscalacaoIdeal {
         
         if (!escalacao) {
             // Tentar fornecer mais informações sobre o problema
+            this.log('\n❌❌❌ ERRO FINAL: NÃO FOI POSSÍVEL ENCONTRAR ESCALAÇÃO VÁLIDA ❌❌❌');
+            this.log(`Tentativas realizadas: ${tentativa}`);
+            this.log(`Posições desescaladas: ${posicoes_desescaladas.join(', ')}`);
+            this.log('\n--- Informações de debug detalhadas: ---');
             let debug_info = [];
             debug_info.push(`Patrimônio: R$ ${this.patrimonio.toFixed(2)}`);
             for (const pos of posicoes_necessarias) {
                 const ranking = this.rankings_por_posicao[pos] || [];
                 if (ranking.length > 0) {
-                    const preco_medio = ranking.slice(0, 5).reduce((sum, j) => sum + this._getPreco(j), 0) / Math.min(5, ranking.length);
-                    const preco_total_top5 = ranking.slice(0, 5).reduce((sum, j) => sum + this._getPreco(j), 0);
+                    const top5 = ranking.slice(0, 5);
+                    const preco_medio = top5.reduce((sum, j) => sum + this._getPreco(j), 0) / top5.length;
+                    const preco_total_top5 = top5.reduce((sum, j) => sum + this._getPreco(j), 0);
                     debug_info.push(`${pos}: ${ranking.length} jogadores, preço médio top 5: R$ ${preco_medio.toFixed(2)}, custo total top 5: R$ ${preco_total_top5.toFixed(2)}`);
+                    this.log(`\n${pos}:`);
+                    this.log(`  Total de jogadores: ${ranking.length}`);
+                    this.log(`  Top 5 jogadores:`);
+                    top5.forEach((j, idx) => {
+                        this.log(`    ${idx + 1}. ${j.apelido} - R$ ${this._getPreco(j).toFixed(2)} (Pontuação: ${(j.pontuacao_total || 0).toFixed(2)})`);
+                    });
+                    this.log(`  Preço médio top 5: R$ ${preco_medio.toFixed(2)}`);
+                    this.log(`  Custo total top 5: R$ ${preco_total_top5.toFixed(2)}`);
                 } else {
                     debug_info.push(`${pos}: Nenhum jogador disponível`);
+                    this.log(`\n${pos}: Nenhum jogador disponível`);
                 }
             }
+            this.log('\n--- Resumo: ---');
+            this.log(`Informações de debug:\n${debug_info.join('\n')}`);
+            this.log('\nPossíveis causas:');
+            this.log('- Patrimônio insuficiente para escalar os jogadores disponíveis');
+            this.log('- Rankings não têm jogadores suficientes');
+            this.log('- Tente calcular os rankings novamente ou verificar se o patrimônio está correto');
+            this.log('❌❌❌ FIM DO ERRO FINAL ❌❌❌\n');
+            
             const msg = `Não foi possível encontrar uma escalação válida mesmo após desescalar todas as posições.\n\n` +
                        `Informações de debug:\n${debug_info.join('\n')}\n\n` +
                        `Possíveis causas:\n` +
@@ -562,7 +677,24 @@ class CalculoEscalacaoIdeal {
         }
         
         escalacao.patrimonio = this.patrimonio;
-        this.log(`Escalação calculada com sucesso! Custo: R$ ${escalacao.custo_total.toFixed(2)}, Pontuação: ${escalacao.pontuacao_total.toFixed(2)}`);
+        
+        this.log('\n═══════════════════════════════════════════════════════════');
+        this.log('✅ ESCALAÇÃO CALCULADA COM SUCESSO!');
+        this.log('═══════════════════════════════════════════════════════════');
+        this.log(`Custo total: R$ ${escalacao.custo_total.toFixed(2)}`);
+        this.log(`Patrimônio: R$ ${this.patrimonio.toFixed(2)}`);
+        this.log(`Orçamento restante: R$ ${(this.patrimonio - escalacao.custo_total).toFixed(2)}`);
+        this.log(`Pontuação total: ${escalacao.pontuacao_total.toFixed(2)}`);
+        this.log('\n--- Resumo por posição: ---');
+        Object.keys(escalacao.titulares).forEach(pos => {
+            const jogadores = escalacao.titulares[pos] || [];
+            if (jogadores.length > 0) {
+                const custo_pos = jogadores.reduce((sum, j) => sum + this._getPreco(j), 0);
+                const pontuacao_pos = jogadores.reduce((sum, j) => sum + (j.pontuacao_total || 0), 0);
+                this.log(`  ${pos}: ${jogadores.length} jogador(es) - Custo: R$ ${custo_pos.toFixed(2)}, Pontuação: ${pontuacao_pos.toFixed(2)}`);
+            }
+        });
+        this.log('═══════════════════════════════════════════════════════════\n');
         
         return escalacao;
     }
