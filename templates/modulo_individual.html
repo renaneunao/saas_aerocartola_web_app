@@ -1,0 +1,1289 @@
+{% extends "base.html" %}
+{% block title %}{{ info.nome }} - Módulos{% endblock %}
+
+{% block content %}
+<script>
+console.log('[DEBUG] Módulo detectado:', '{{ modulo }}');
+console.log('[DEBUG] Tipo do módulo:', typeof '{{ modulo }}');
+console.log('[DEBUG] Comparação lateral:', '{{ modulo }}' === 'lateral');
+console.log('[DEBUG] Condição genérica:', '{{ modulo }}' in ['goleiro', 'zagueiro', 'meia', 'treinador']);
+</script>
+<!-- Page Header -->
+<div class="text-center mb-8">
+    <div class="flex items-center justify-center space-x-3 mb-4">
+        <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg animate-pulse-glow">
+            <i class="{{ info.icon }} text-2xl text-white"></i>
+        </div>
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+            {{ info.nome }}
+        </h1>
+    </div>
+    <div class="flex items-center justify-center space-x-2 text-dark-blue-200">
+        <i class="fas fa-calendar-alt"></i>
+        <span class="text-lg">Rodada {{ rodada_atual }}</span>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="mb-6">
+    <nav class="flex space-x-2">
+        <a href="{{ url_for('modulos') }}" 
+           class="inline-flex items-center px-4 py-2 text-sm font-medium text-dark-blue-300 hover:text-white hover:bg-dark-blue-700/50 rounded-lg transition-all duration-200">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar aos Módulos
+        </a>
+        <a href="{{ url_for('recalcular_modulo', modulo=modulo) }}" 
+           class="inline-flex items-center px-4 py-2 text-sm font-medium text-green-300 hover:text-white hover:bg-green-600/50 rounded-lg transition-all duration-200">
+            <i class="fas fa-sync mr-2"></i>
+            Recalcular
+        </a>
+    </nav>
+</div>
+
+<!-- Painel de Configuração de Pesos (apenas para módulos de posição) -->
+<script>
+console.log('[DEBUG] Verificando painel de pesos para módulo:', '{{ modulo }}');
+console.log('[DEBUG] Módulo lateral incluído?', '{{ modulo }}' === 'lateral');
+</script>
+{% if modulo in ['goleiro', 'lateral', 'zagueiro', 'meia', 'atacante', 'treinador'] %}
+<script>
+console.log('[DEBUG] Painel de pesos será exibido para:', '{{ modulo }}');
+</script>
+<div class="mb-8">
+    <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 backdrop-blur-sm rounded-2xl border border-purple-500/50 shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-700/80 to-indigo-800/80 p-4 border-b border-purple-500/50">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg">
+                    <i class="fas fa-cogs text-white text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Configuração de Pesos</h3>
+                    <p class="text-purple-200 text-sm">Ajuste os pesos específicos para {{ info.nome }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <form method="POST" class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {% for key, value in pesos_atuais.items() %}
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-purple-200">
+                        {{ key.replace('_', ' ').title() }}
+                    </label>
+                    <input type="number" 
+                           name="f_{{ key }}" 
+                           value="{{ value }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="flex items-center justify-between mt-6 pt-4 border-t border-purple-500/30">
+                <div class="text-sm text-purple-300">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Alterações serão aplicadas ao salvar
+                </div>
+                <div class="flex space-x-3">
+                    <button type="submit" 
+                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105">
+                        <i class="fas fa-save mr-2"></i>
+                        Salvar Pesos
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
+
+<!-- Module Content -->
+<div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-2xl overflow-hidden">
+    <!-- Section Header -->
+    <div class="bg-gradient-to-r from-dark-blue-700/80 to-dark-blue-800/80 p-6 border-b border-dark-blue-700/50">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg">
+                    <i class="{{ info.icon }} text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">{{ info.nome }} - Rodada {{ rodada_atual }}</h2>
+                    <p class="text-dark-blue-200 text-sm">Análise detalhada com pesos personalizados</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-2xl font-bold text-white">{{ dados|length }}</div>
+                <div class="text-dark-blue-200 text-sm">registros</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Content -->
+    <div id="dataContainer" class="p-6">
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-12">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4 animate-pulse">
+                <i class="fas fa-spinner fa-spin text-blue-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Carregando dados...</h3>
+            <p class="text-dark-blue-400">Calculando rankings para {{ info.nome }}</p>
+        </div>
+        
+        <!-- Error State -->
+        <div id="errorState" class="text-center py-12 hidden">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
+                <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Erro ao carregar dados</h3>
+            <p class="text-dark-blue-400 mb-4" id="errorMessage"></p>
+            <button onclick="carregarDados()" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200">
+                <i class="fas fa-redo mr-2"></i>
+                Tentar Novamente
+            </button>
+        </div>
+        
+        <!-- Data Content (será preenchido via JS) -->
+        <div id="dataContent" class="hidden">
+        {% if modulo == 'goleiro' %}
+        <!-- Tabela para goleiros -->
+        <div class="overflow-x-auto">
+            <table id="tabelaGoleiros" class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-dark-blue-700/50">
+                        <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Rank</th>
+                        <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Jogador</th>
+                        <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Clube</th>
+                        <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Adversário</th>
+                        <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Pontuação</th>
+                        <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média</th>
+                        <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Jogos</th>
+                        <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
+                        <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média de Pontos</th>
+                        <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Escalações</th>
+                        <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Preço</th>
+                        <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dados serão preenchidos via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        {% if modulo == 'atacante' %}
+        <!-- Tabela especial para atacantes com todas as colunas -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="border-b border-dark-blue-700/50">
+                        <th class="text-left py-2 px-1 text-dark-blue-200 font-medium">Rank</th>
+                        <th class="text-left py-2 px-1 text-dark-blue-200 font-medium">Nome</th>
+                        <th class="text-left py-2 px-1 text-dark-blue-200 font-medium">ID</th>
+                        <th class="text-left py-2 px-1 text-dark-blue-200 font-medium">Clube</th>
+                        <th class="text-left py-2 px-1 text-dark-blue-200 font-medium">Adversário</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Pontuação</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Peso Jogo</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média DS</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">DS Cedidos</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média FF</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média FS</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média FD</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média G</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média A</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Peso Esc</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for jogador in dados %}
+                    <tr class="border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 {% if jogador.rank <= 3 %}bg-gradient-to-r {% if jogador.rank == 1 %}from-yellow-900/20 to-yellow-800/20{% elif jogador.rank == 2 %}from-gray-800/20 to-gray-700/20{% elif jogador.rank == 3 %}from-orange-900/20 to-orange-800/20{% endif %}{% endif %}">
+                        <td class="py-3 px-1">
+                            {% if jogador.rank <= 3 %}
+                            <div class="flex items-center justify-center w-6 h-6 rounded-full {% if jogador.rank == 1 %}bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900{% elif jogador.rank == 2 %}bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800{% elif jogador.rank == 3 %}bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900{% endif %} shadow-lg">
+                                {% if jogador.rank == 1 %}
+                                    <i class="fas fa-crown text-xs"></i>
+                                {% elif jogador.rank == 2 %}
+                                    <i class="fas fa-medal text-xs"></i>
+                                {% elif jogador.rank == 3 %}
+                                    <i class="fas fa-award text-xs"></i>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <div class="flex items-center justify-center w-6 h-6 rounded-full bg-dark-blue-700/50 text-dark-blue-200 font-bold text-xs">
+                                {{ jogador.rank }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-1">
+                            <div class="flex items-center space-x-1">
+                                <!-- Imagem do jogador -->
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
+                                    <img id="player-img-{{ jogador.atleta_id }}" src="" alt="{{ jogador.apelido }}" class="w-full h-full object-cover" >
+                                    <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                                        <span class="text-white font-bold text-xs">{{ jogador.apelido[:2] }}</span>
+                                    </div>
+                                </div>
+                                <!-- Escudo do clube -->
+                                <div class="w-4 h-4 rounded-full flex items-center justify-center overflow-hidden">
+                                    <img src="{{ jogador.clube_escudo or '' }}" alt="{{ jogador.clube_nome }}" class="w-full h-full object-cover" >
+                                    <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                                        <span class="text-white font-bold text-xs">{{ jogador.clube_abrev }}</span>
+                                    </div>
+                                </div>
+                                <div class="font-bold text-white text-xs">{{ jogador.apelido }}</div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-1">
+                            <div class="text-xs text-dark-blue-400">{{ jogador.atleta_id }}</div>
+                        </td>
+                        <td class="py-3 px-1">
+                            <div class="font-medium text-white text-xs">{{ jogador.clube_nome }}</div>
+                        </td>
+                        <td class="py-3 px-1">
+                            <div class="font-medium text-white text-xs">{{ jogador.adversario_nome }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-bold text-yellow-400 text-xs">{{ "%.2f"|format(jogador.pontuacao_total) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-blue-400 text-xs">{{ "%.2f"|format(jogador.media) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium {% if jogador.peso_jogo > 0 %}text-green-400{% elif jogador.peso_jogo < 0 %}text-red-400{% else %}text-gray-400{% endif %} text-xs">
+                                {{ "%.2f"|format(jogador.peso_jogo) }}
+                            </div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-purple-400 text-xs">{{ "%.2f"|format(jogador.media_ds) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-purple-300 text-xs">{{ "%.2f"|format(jogador.media_ds_cedidos) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-orange-400 text-xs">{{ "%.2f"|format(jogador.media_ff) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-orange-300 text-xs">{{ "%.2f"|format(jogador.media_fs) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-orange-200 text-xs">{{ "%.2f"|format(jogador.media_fd) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-green-400 text-xs">{{ "%.2f"|format(jogador.media_g) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-green-300 text-xs">{{ "%.2f"|format(jogador.media_a) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-cyan-400 text-xs">{{ "%.4f"|format(jogador.peso_escalacao) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <button onclick="{% if modulo == 'goleiro' %}openGoleiroModal{% elif modulo == 'lateral' %}openLateralModal{% elif modulo == 'zagueiro' %}openZagueiroModal{% elif modulo == 'meia' %}openMeiaModal{% elif modulo == 'atacante' %}openAtacanteModal{% elif modulo == 'treinador' %}openTreinadorModal{% else %}openGoleiroModal{% endif %}('{{ jogador.atleta_id }}')" 
+                                    class="inline-flex items-center px-2 py-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
+                                <i class="fas fa-eye mr-1"></i>
+                                Detalhes
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        {% if modulo == 'lateral' %}
+        <script>
+        console.log('[DEBUG] Entrando na seção específica de LATERAL');
+        console.log('[DEBUG] Dados disponíveis:', '{{ dados|length }}');
+        </script>
+        <!-- Tabela especial para laterais com todas as colunas -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+                <thead>
+                    <tr class="border-b border-dark-blue-700/50">
+                        <th class="text-left py-2 px-1 text-dark-blue-200 font-medium">Rank</th>
+                        <th class="text-left py-2 px-1 text-dark-blue-200 font-medium">Nome</th>
+                        <th class="text-left py-2 px-1 text-dark-blue-200 font-medium">ID</th>
+                        <th class="text-left py-2 px-1 text-dark-blue-200 font-medium">Clube</th>
+                        <th class="text-left py-2 px-1 text-dark-blue-200 font-medium">Adversário</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Pontuação</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Peso Jogo</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média de Pontos</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média DS</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">DS Cedidos</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média FF</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média FS</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média FD</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média G</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Média A</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Peso Esc</th>
+                        <th class="text-center py-2 px-1 text-dark-blue-200 font-medium">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for jogador in dados %}
+                    <tr class="border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 {% if jogador.rank <= 3 %}bg-gradient-to-r {% if jogador.rank == 1 %}from-yellow-900/20 to-yellow-800/20{% elif jogador.rank == 2 %}from-gray-800/20 to-gray-700/20{% elif jogador.rank == 3 %}from-orange-900/20 to-orange-800/20{% endif %}{% endif %}">
+                        <td class="py-3 px-1">
+                            {% if jogador.rank <= 3 %}
+                            <div class="flex items-center justify-center w-6 h-6 rounded-full {% if jogador.rank == 1 %}bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900{% elif jogador.rank == 2 %}bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800{% elif jogador.rank == 3 %}bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900{% endif %} shadow-lg">
+                                {% if jogador.rank == 1 %}
+                                    <i class="fas fa-crown text-xs"></i>
+                                {% elif jogador.rank == 2 %}
+                                    <i class="fas fa-medal text-xs"></i>
+                                {% elif jogador.rank == 3 %}
+                                    <i class="fas fa-award text-xs"></i>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <div class="flex items-center justify-center w-6 h-6 rounded-full bg-dark-blue-700/50 text-dark-blue-200 font-bold text-xs">
+                                {{ jogador.rank }}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-1">
+                            <div class="flex items-center space-x-1">
+                                <!-- Imagem do jogador -->
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
+                                    <img id="player-img-{{ jogador.atleta_id }}" src="" alt="{{ jogador.apelido }}" class="w-full h-full object-cover" >
+                                    <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                                        <span class="text-white font-bold text-xs">{{ jogador.apelido[:2] }}</span>
+                                    </div>
+                                </div>
+                                <!-- Escudo do clube -->
+                                <div class="w-4 h-4 rounded-full flex items-center justify-center overflow-hidden">
+                                    <img src="{{ jogador.clube_escudo or '' }}" alt="{{ jogador.clube_nome }}" class="w-full h-full object-cover" >
+                                    <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                                        <span class="text-white font-bold text-xs">{{ jogador.clube_abrev }}</span>
+                                    </div>
+                                </div>
+                                <div class="font-bold text-white text-xs">{{ jogador.apelido }}</div>
+                            </div>
+                        </td>
+                        <td class="py-3 px-1">
+                            <div class="text-xs text-dark-blue-400">{{ jogador.atleta_id }}</div>
+                        </td>
+                        <td class="py-3 px-1">
+                            <div class="font-medium text-white text-xs">{{ jogador.clube_nome }}</div>
+                        </td>
+                        <td class="py-3 px-1">
+                            <div class="font-medium text-white text-xs">{{ jogador.adversario_nome }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-bold text-yellow-400 text-xs">{{ "%.2f"|format(jogador.pontuacao_total) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-blue-400 text-xs">{{ "%.2f"|format(jogador.media) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium {% if jogador.peso_jogo > 0 %}text-green-400{% elif jogador.peso_jogo < 0 %}text-red-400{% else %}text-gray-400{% endif %} text-xs">
+                                {{ "%.2f"|format(jogador.peso_jogo) }}
+                            </div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium {% if jogador.peso_sg > 0 %}text-green-400{% elif jogador.peso_sg < 0 %}text-red-400{% else %}text-gray-400{% endif %} text-xs">
+                                {{ "%.2f"|format(jogador.peso_sg) }}
+                            </div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-purple-400 text-xs">{{ "%.2f"|format(jogador.media_ds) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-purple-300 text-xs">{{ "%.2f"|format(jogador.media_ds_cedidos) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-orange-400 text-xs">{{ "%.2f"|format(jogador.media_ff) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-orange-300 text-xs">{{ "%.2f"|format(jogador.media_fs) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-orange-200 text-xs">{{ "%.2f"|format(jogador.media_fd) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-green-400 text-xs">{{ "%.2f"|format(jogador.media_g) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-green-300 text-xs">{{ "%.2f"|format(jogador.media_a) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <div class="font-medium text-cyan-400 text-xs">{{ "%.4f"|format(jogador.peso_escalacao) }}</div>
+                        </td>
+                        <td class="py-3 px-1 text-center">
+                            <button onclick="openLateralModal('{{ jogador.atleta_id }}')" 
+                                    class="inline-flex items-center px-2 py-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
+                                <i class="fas fa-eye mr-1"></i>
+                                Detalhes
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+        
+        {% if modulo == 'peso_jogo' %}
+        <!-- Tabela para peso de jogo -->
+        <div class="overflow-x-auto">
+                           <table class="w-full text-sm">
+                               <thead>
+                                   <tr class="border-b border-dark-blue-700/50">
+                                       <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Time Favorito</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Favorito</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Adversário</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Final</th>
+                                       <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Adversário</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Aprov. Favorito</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Aprov. Adversário</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Situação</th>
+                                   </tr>
+                               </thead>
+                               <tbody>
+                                   {% for match in dados %}
+                                   <tr class="border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200">
+                                       <td class="py-4 px-2">
+                                           <div class="flex items-center space-x-2">
+                                               <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+                                                   <img src="{{ match.clube_favorito_escudo or '' }}" alt="{{ match.time_favorito }}" class="w-full h-full object-cover" >
+                                                   <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                                                       <span class="text-white font-bold text-xs">{{ match.time_favorito[:3] }}</span>
+                                                   </div>
+                                               </div>
+                                               <div class="font-bold text-white">{{ match.time_favorito }}</div>
+                                           </div>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <div class="font-medium {% if match.peso_favorito > 0 %}text-green-400{% elif match.peso_favorito < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+                                               {{ "%.2f"|format(match.peso_favorito) }}
+                                           </div>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <div class="font-medium {% if match.peso_adversario > 0 %}text-green-400{% elif match.peso_adversario < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+                                               {{ "%.2f"|format(match.peso_adversario) }}
+                                           </div>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <div class="font-bold {% if match.peso_final > 1 %}text-yellow-400{% elif match.peso_final > 0.5 %}text-orange-400{% elif match.peso_final > 0 %}text-green-400{% elif match.peso_final < -1 %}text-red-400{% elif match.peso_final < -0.5 %}text-orange-400{% else %}text-gray-400{% endif %}">
+                                               {{ "%.2f"|format(match.peso_final) }}
+                                           </div>
+                                       </td>
+                                       <td class="py-4 px-2">
+                                           <div class="flex items-center space-x-2">
+                                               <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+                                                   <img src="{{ match.clube_adversario_escudo or '' }}" alt="{{ match.time_adversario }}" class="w-full h-full object-cover" >
+                                                   <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                                                       <span class="text-white font-bold text-xs">{{ match.time_adversario[:3] }}</span>
+                                                   </div>
+                                               </div>
+                                               <div class="font-bold text-white">{{ match.time_adversario }}</div>
+                                           </div>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <div class="font-medium text-blue-300">
+                                               {{ "%.2f"|format(match.aprov_favorito) }}
+                                           </div>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <div class="font-medium text-blue-300">
+                                               {{ "%.2f"|format(match.aprov_adversario) }}
+                                           </div>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <span class="px-2 py-1 text-xs font-medium rounded-full {% if match.situacao == 'Casa' %}bg-green-500/20 text-green-300 border border-green-500/50{% else %}bg-blue-500/20 text-blue-300 border border-blue-500/50{% endif %}">
+                                               {{ match.situacao }}
+                                           </span>
+                                       </td>
+                                   </tr>
+                                   {% endfor %}
+                               </tbody>
+                           </table>
+        </div>
+        {% endif %}
+        
+        {% if modulo == 'peso_sg' %}
+        <!-- Tabela para peso SG -->
+        <div class="overflow-x-auto">
+                           <table class="w-full text-sm">
+                               <thead>
+                                   <tr class="border-b border-dark-blue-700/50">
+                                       <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Time Favorito</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">SG Favorito</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">SG Adversário</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Diferença SG</th>
+                                       <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Adversário</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Gols Sofridos</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Gols Feitos</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média Sofridos</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média Feitos</th>
+                                       <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Situação</th>
+                                   </tr>
+                               </thead>
+                               <tbody>
+                                   {% for match in dados %}
+                                   <tr class="border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200">
+                                       <td class="py-4 px-2">
+                                           <div class="flex items-center space-x-2">
+                                               <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+                                                   <img src="{{ match.clube_favorito_escudo or '' }}" alt="{{ match.time_favorito }}" class="w-full h-full object-cover" >
+                                                   <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                                                       <span class="text-white font-bold text-xs">{{ match.time_favorito[:3] }}</span>
+                                                   </div>
+                                               </div>
+                                               <button onclick="openModal('time-favorito-{{ loop.index }}', event)" 
+                                                       class="font-bold text-white hover:text-blue-300 transition-colors cursor-pointer text-left px-3 py-2 rounded-lg border-2
+                                                       {% if match.sg_favorito >= 0.4 %}bg-green-500/20 border-green-500/50 text-green-300
+                                                       {% elif match.sg_favorito >= 0.3 %}bg-green-400/20 border-green-400/50 text-green-200
+                                                       {% elif match.sg_favorito >= 0.25 %}bg-yellow-500/20 border-yellow-500/50 text-yellow-300
+                                                   {% elif match.sg_favorito >= 0.2 %}bg-orange-500/20 border-orange-500/50 text-orange-300
+                                                   {% elif match.sg_favorito >= 0.15 %}bg-red-400/20 border-red-400/50 text-red-300
+                                                   {% else %}bg-red-500/20 border-red-500/50 text-red-400{% endif %}"
+                                                   data-time-favorito="{{ match.time_favorito }}"
+                                                   data-time-adversario="{{ match.time_adversario }}"
+                                                   data-sg-favorito="{{ match.sg_favorito }}"
+                                                   data-sg-adversario="{{ match.sg_adversario }}"
+                                                   data-situacao="{{ match.situacao }}"
+                                                   data-peso-jogo-favorito="{{ match.peso_jogo_favorito }}"
+                                                   data-peso-jogo-adversario="{{ match.peso_jogo_adversario }}"
+                                                   data-gols-sofridos-favorito="{{ match.gols_sofridos_favorito }}"
+                                                   data-gols-feitos-favorito="{{ match.gols_feitos_favorito }}"
+                                                   data-gols-sofridos-adversario="{{ match.gols_sofridos_adversario }}"
+                                                   data-gols-feitos-adversario="{{ match.gols_feitos_adversario }}"
+                                                   data-media-sofridos-favorito="{{ match.media_sofridos_favorito }}"
+                                                   data-media-feitos-favorito="{{ match.media_feitos_favorito }}"
+                                                   data-media-sofridos-adversario="{{ match.media_sofridos_adversario }}"
+                                                   data-media-feitos-adversario="{{ match.media_feitos_adversario }}"
+                                                   data-ultimas-partidas="{{ ultimas_partidas }}"
+                                                   data-situacao="{{ match.situacao }}">
+                                               {{ match.time_favorito }}
+                                           </button>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <div class="font-medium px-2 py-1 rounded-lg
+                                               {% if match.sg_favorito >= 0.4 %}bg-green-500/20 text-green-300 border border-green-500/50
+                                               {% elif match.sg_favorito >= 0.3 %}bg-green-400/20 text-green-200 border border-green-400/50
+                                               {% elif match.sg_favorito >= 0.25 %}bg-yellow-500/20 text-yellow-300 border border-yellow-500/50
+                                               {% elif match.sg_favorito >= 0.2 %}bg-orange-500/20 text-orange-300 border border-orange-500/50
+                                               {% elif match.sg_favorito >= 0.15 %}bg-red-400/20 text-red-300 border border-red-400/50
+                                               {% else %}bg-red-500/20 text-red-400 border border-red-500/50{% endif %}">
+                                               {{ "%.2f"|format(match.sg_favorito) }}
+                                           </div>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <div class="font-medium px-2 py-1 rounded-lg
+                                               {% if match.sg_adversario >= 0.4 %}bg-green-500/20 text-green-300 border border-green-500/50
+                                               {% elif match.sg_adversario >= 0.3 %}bg-green-400/20 text-green-200 border border-green-400/50
+                                               {% elif match.sg_adversario >= 0.25 %}bg-yellow-500/20 text-yellow-300 border border-yellow-500/50
+                                               {% elif match.sg_adversario >= 0.2 %}bg-orange-500/20 text-orange-300 border border-orange-500/50
+                                               {% elif match.sg_adversario >= 0.15 %}bg-red-400/20 text-red-300 border border-red-400/50
+                                               {% else %}bg-red-500/20 text-red-400 border border-red-500/50{% endif %}">
+                                               {{ "%.2f"|format(match.sg_adversario) }}
+                                           </div>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <div class="font-bold {% if match.diferenca_sg > 0.1 %}text-yellow-400{% elif match.diferenca_sg > 0.05 %}text-orange-400{% else %}text-gray-400{% endif %}">
+                                               {{ "%.2f"|format(match.diferenca_sg) }}
+                                           </div>
+                                       </td>
+                                       <td class="py-4 px-2">
+                                           <div class="font-medium text-white">{{ match.time_adversario }}</div>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <button onclick="openModal('peso-jogo-{{ loop.index }}', event)" 
+                                                   class="text-xs bg-blue-500/20 hover:bg-blue-500/30 px-2 py-1 rounded transition-colors"
+                                                   data-time-favorito="{{ match.time_favorito }}"
+                                                   data-time-adversario="{{ match.time_adversario }}"
+                                                   data-peso-jogo-favorito="{{ match.peso_jogo_favorito }}"
+                                                   data-peso-jogo-adversario="{{ match.peso_jogo_adversario }}"
+                                                   data-ultimas-partidas="{{ ultimas_partidas }}">
+                                               <div class="font-medium {% if match.peso_jogo_favorito > 0 %}text-green-400{% elif match.peso_jogo_favorito < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+                                                   F: {{ "%.1f"|format(match.peso_jogo_favorito) }}
+                                               </div>
+                                               <div class="font-medium {% if match.peso_jogo_adversario > 0 %}text-green-400{% elif match.peso_jogo_adversario < 0 %}text-red-400{% else %}text-gray-400{% endif %}">
+                                                   A: {{ "%.1f"|format(match.peso_jogo_adversario) }}
+                                               </div>
+                                           </button>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <button onclick="openModal('gols-sofridos-{{ loop.index }}', event)" 
+                                                   class="text-xs bg-red-500/20 hover:bg-red-500/30 px-2 py-1 rounded transition-colors"
+                                                   data-time-favorito="{{ match.time_favorito }}"
+                                                   data-time-adversario="{{ match.time_adversario }}"
+                                                   data-gols-sofridos-favorito="{{ match.gols_sofridos_favorito }}"
+                                                   data-gols-sofridos-adversario="{{ match.gols_sofridos_adversario }}"
+                                                   data-ultimas-partidas="{{ ultimas_partidas }}">
+                                               <div class="font-medium text-red-300">
+                                                   F: {{ match.gols_sofridos_favorito }}
+                                               </div>
+                                               <div class="font-medium text-red-300">
+                                                   A: {{ match.gols_sofridos_adversario }}
+                                               </div>
+                                           </button>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <button onclick="openModal('gols-feitos-{{ loop.index }}', event)" 
+                                                   class="text-xs bg-green-500/20 hover:bg-green-500/30 px-2 py-1 rounded transition-colors"
+                                                   data-time-favorito="{{ match.time_favorito }}"
+                                                   data-time-adversario="{{ match.time_adversario }}"
+                                                   data-gols-feitos-favorito="{{ match.gols_feitos_favorito }}"
+                                                   data-gols-feitos-adversario="{{ match.gols_feitos_adversario }}"
+                                                   data-ultimas-partidas="{{ ultimas_partidas }}">
+                                               <div class="font-medium text-green-300">
+                                                   F: {{ match.gols_feitos_favorito }}
+                                               </div>
+                                               <div class="font-medium text-green-300">
+                                                   A: {{ match.gols_feitos_adversario }}
+                                               </div>
+                                           </button>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <button onclick="openModal('media-sofridos-{{ loop.index }}', event)" 
+                                                   class="text-xs bg-orange-500/20 hover:bg-orange-500/30 px-2 py-1 rounded transition-colors"
+                                                   data-time-favorito="{{ match.time_favorito }}"
+                                                   data-time-adversario="{{ match.time_adversario }}"
+                                                   data-media-sofridos-favorito="{{ match.media_sofridos_favorito }}"
+                                                   data-media-sofridos-adversario="{{ match.media_sofridos_adversario }}"
+                                                   data-ultimas-partidas="{{ ultimas_partidas }}">
+                                               <div class="font-medium text-red-300">
+                                                   F: {{ "%.1f"|format(match.media_sofridos_favorito) }}
+                                               </div>
+                                               <div class="font-medium text-red-300">
+                                                   A: {{ "%.1f"|format(match.media_sofridos_adversario) }}
+                                               </div>
+                                           </button>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <button onclick="openModal('media-feitos-{{ loop.index }}', event)" 
+                                                   class="text-xs bg-emerald-500/20 hover:bg-emerald-500/30 px-2 py-1 rounded transition-colors"
+                                                   data-time-favorito="{{ match.time_favorito }}"
+                                                   data-time-adversario="{{ match.time_adversario }}"
+                                                   data-media-feitos-favorito="{{ match.media_feitos_favorito }}"
+                                                   data-media-feitos-adversario="{{ match.media_feitos_adversario }}"
+                                                   data-ultimas-partidas="{{ ultimas_partidas }}">
+                                               <div class="font-medium text-green-300">
+                                                   F: {{ "%.1f"|format(match.media_feitos_favorito) }}
+                                               </div>
+                                               <div class="font-medium text-green-300">
+                                                   A: {{ "%.1f"|format(match.media_feitos_adversario) }}
+                                               </div>
+                                           </button>
+                                       </td>
+                                       <td class="py-4 px-2 text-center">
+                                           <span class="px-2 py-1 text-xs font-medium rounded-full {% if match.situacao == 'Casa' %}bg-green-500/20 text-green-300 border border-green-500/50{% else %}bg-blue-500/20 text-blue-300 border border-blue-500/50{% endif %}">
+                                               {{ match.situacao }}
+                                           </span>
+                                       </td>
+                                   </tr>
+                                   {% endfor %}
+                               </tbody>
+                           </table>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Info Section -->
+<div class="mt-8">
+    <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/50">
+        <div class="flex items-start space-x-4">
+            <div class="p-2 bg-purple-500/20 rounded-lg">
+                <i class="fas fa-info-circle text-purple-400 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-white mb-4">Sobre este módulo</h3>
+                <div class="grid md:grid-cols-2 gap-4 text-purple-200">
+                    {% if modulo in ['goleiro', 'zagueiro', 'meia', 'atacante', 'treinador'] %}
+                    <div>
+                        <h4 class="font-medium text-purple-100 mb-2">
+                            <i class="fas fa-cogs text-purple-400 mr-2"></i>
+                            Configuração Integrada
+                        </h4>
+                        <p class="text-sm">Ajuste os pesos diretamente nesta página. As alterações são salvas e aplicadas imediatamente.</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-purple-100 mb-2">
+                            <i class="fas fa-sync text-purple-400 mr-2"></i>
+                            Recalcular
+                        </h4>
+                        <p class="text-sm">Use o botão "Recalcular Módulo" para aplicar os novos pesos e atualizar os dados.</p>
+                    </div>
+                    {% else %}
+                    <div>
+                        <h4 class="font-medium text-purple-100 mb-2">
+                            <i class="fas fa-chart-line text-purple-400 mr-2"></i>
+                            Análise de Confrontos
+                        </h4>
+                        <p class="text-sm">Este módulo mostra a análise de confrontos entre times com base nos pesos calculados.</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-purple-100 mb-2">
+                            <i class="fas fa-sync text-purple-400 mr-2"></i>
+                            Atualização Automática
+                        </h4>
+                        <p class="text-sm">Os dados são atualizados automaticamente a cada execução do sistema.</p>
+                    </div>
+                    {% endif %}
+                    
+                    <div>
+                        <h4 class="font-medium text-purple-100 mb-2">
+                            <i class="fas fa-chart-bar text-purple-400 mr-2"></i>
+                            Análise Detalhada
+                        </h4>
+                        <p class="text-sm">Visualize todos os dados utilizados no cálculo, incluindo médias, pesos de jogo, pesos SG e estatísticas específicas.</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-purple-100 mb-2">
+                            <i class="fas fa-arrow-left text-purple-400 mr-2"></i>
+                            Navegação
+                        </h4>
+                        <p class="text-sm">Use o botão "Voltar aos Módulos" para acessar outros módulos ou a sidebar para navegar.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para detalhes das estatísticas -->
+<div id="statsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-gradient-to-br from-dark-blue-800 to-dark-blue-900 rounded-2xl border border-dark-blue-700/50 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-dark-blue-700/80 to-dark-blue-800/80 p-6 border-b border-dark-blue-700/50 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg">
+                            <i class="fas fa-chart-bar text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white" id="modalTitle">Detalhes da Estatística</h3>
+                            <p class="text-dark-blue-200 text-sm" id="modalSubtitle">Explicação dos valores</p>
+                        </div>
+                    </div>
+                    <button onclick="closeModal()" class="p-2 hover:bg-dark-blue-700/50 rounded-lg transition-colors">
+                        <i class="fas fa-times text-dark-blue-300 text-lg"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="p-6" id="modalContent">
+                <!-- Conteúdo será preenchido dinamicamente -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function openModal(statType, event) {
+    const modal = document.getElementById('statsModal');
+    const title = document.getElementById('modalTitle');
+    const subtitle = document.getElementById('modalSubtitle');
+    const content = document.getElementById('modalContent');
+    
+    // Encontrar o botão clicado para obter os dados
+    const clickedButton = event.target.closest('button');
+    if (!clickedButton) {
+        console.error('Botão não encontrado');
+        return;
+    }
+    
+    // Extrair dados dos data attributes
+    const rowData = {
+        time_favorito: clickedButton.getAttribute('data-time-favorito') || 'N/A',
+        time_adversario: clickedButton.getAttribute('data-time-adversario') || 'N/A',
+        ultimas_partidas: clickedButton.getAttribute('data-ultimas-partidas') || 5,
+        peso_jogo_favorito: clickedButton.getAttribute('data-peso-jogo-favorito') || 0,
+        peso_jogo_adversario: clickedButton.getAttribute('data-peso-jogo-adversario') || 0,
+        gols_sofridos_favorito: clickedButton.getAttribute('data-gols-sofridos-favorito') || 0,
+        gols_sofridos_adversario: clickedButton.getAttribute('data-gols-sofridos-adversario') || 0,
+        gols_feitos_favorito: clickedButton.getAttribute('data-gols-feitos-favorito') || 0,
+        gols_feitos_adversario: clickedButton.getAttribute('data-gols-feitos-adversario') || 0,
+        media_sofridos_favorito: clickedButton.getAttribute('data-media-sofridos-favorito') || 0,
+        media_sofridos_adversario: clickedButton.getAttribute('data-media-sofridos-adversario') || 0,
+        media_feitos_favorito: clickedButton.getAttribute('data-media-feitos-favorito') || 0,
+        media_feitos_adversario: clickedButton.getAttribute('data-media-feitos-adversario') || 0,
+        sg_favorito: clickedButton.getAttribute('data-sg-favorito') || 0,
+        sg_adversario: clickedButton.getAttribute('data-sg-adversario') || 0,
+        situacao: clickedButton.getAttribute('data-situacao') || 'N/A'
+    };
+    
+    // Debug: verificar se os dados estão sendo capturados
+    console.log('Dados capturados:', rowData);
+    console.log('Tipo de estatística:', statType);
+    console.log('SG Favorito:', rowData.sg_favorito);
+    console.log('SG Adversário:', rowData.sg_adversario);
+    console.log('Situação:', rowData.situacao);
+    
+    // Extrair informações do tipo de estatística
+    // Para "peso-jogo-1", queremos "peso-jogo" como tipo e "1" como índice
+    const parts = statType.split('-');
+    let type, index;
+    
+    if (parts.length >= 3) {
+        // Para casos como "peso-jogo-1", "gols-sofridos-1", etc.
+        type = parts.slice(0, -1).join('-'); // "peso-jogo"
+        index = parts[parts.length - 1]; // "1"
+    } else {
+        // Para casos simples
+        type = parts[0];
+        index = parts[1] || '';
+    }
+    
+    console.log('Tipo extraído:', type);
+    console.log('Índice extraído:', index);
+    
+    let modalData = {};
+    
+    switch(type) {
+        case 'time-favorito':
+            console.log('Executando case time-favorito');
+            modalData = {
+                title: 'Análise do Saldo de Gols (SG)',
+                subtitle: 'Capacidade defensiva e chance de não tomar gol',
+                content: '<div class="space-y-6">' +
+                    '<div class="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-lg p-4">' +
+                        '<h4 class="font-bold text-blue-300 mb-3">📊 Resumo do Confronto</h4>' +
+                        '<div class="grid grid-cols-2 gap-4">' +
+                            '<div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3">' +
+                                '<div class="font-bold text-green-300">' + rowData.time_favorito + '</div>' +
+                                '<div class="text-sm text-green-200">SG: ' + rowData.sg_favorito + '</div>' +
+                                '<div class="text-sm text-green-200">Peso Jogo: ' + rowData.peso_jogo_favorito + '</div>' +
+                                '<div class="text-xs text-green-100">Situação: ' + rowData.situacao + '</div>' +
+                            '</div>' +
+                            '<div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3">' +
+                                '<div class="font-bold text-red-300">' + rowData.time_adversario + '</div>' +
+                                '<div class="text-sm text-red-200">SG: ' + rowData.sg_adversario + '</div>' +
+                                '<div class="text-sm text-red-200">Peso Jogo: ' + rowData.peso_jogo_adversario + '</div>' +
+                                '<div class="text-xs text-red-100">Adversário</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">' +
+                        '<h4 class="font-bold text-orange-300 mb-3">⚽ Estatísticas de Gols (Últimas ' + rowData.ultimas_partidas + ' partidas)</h4>' +
+                        '<div class="grid grid-cols-2 gap-4">' +
+                            '<div class="space-y-2">' +
+                                '<div class="font-bold text-orange-200">' + rowData.time_favorito + '</div>' +
+                                '<div class="text-sm text-orange-100">Gols Sofridos: ' + rowData.gols_sofridos_favorito + ' (média: ' + rowData.media_sofridos_favorito + ')</div>' +
+                                '<div class="text-sm text-orange-100">Gols Feitos: ' + rowData.gols_feitos_favorito + ' (média: ' + rowData.media_feitos_favorito + ')</div>' +
+                            '</div>' +
+                            '<div class="space-y-2">' +
+                                '<div class="font-bold text-orange-200">' + rowData.time_adversario + '</div>' +
+                                '<div class="text-sm text-orange-100">Gols Sofridos: ' + rowData.gols_sofridos_adversario + ' (média: ' + rowData.media_sofridos_adversario + ')</div>' +
+                                '<div class="text-sm text-orange-100">Gols Feitos: ' + rowData.gols_feitos_adversario + ' (média: ' + rowData.media_feitos_adversario + ')</div>' +
+                            '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">' +
+                        '<h4 class="font-bold text-purple-300 mb-3">🛡️ Análise do SG de ' + rowData.time_favorito + '</h4>' +
+                        '<div class="space-y-2 text-sm text-purple-200">' +
+                            '<div>• <strong>SG Atual:</strong> ' + rowData.time_favorito + ' tem SG de ' + rowData.sg_favorito + ' (baseado nas últimas ' + rowData.ultimas_partidas + ' partidas)</div>' +
+                            '<div>• <strong>Defesa em ' + rowData.situacao + ':</strong> Sofreu apenas ' + rowData.gols_sofridos_favorito + ' gols (média ' + rowData.media_sofridos_favorito + '/jogo)</div>' +
+                            '<div>• <strong>Adversário ' + rowData.time_adversario + ':</strong> Fez ' + rowData.gols_feitos_adversario + ' gols fora de casa (média ' + rowData.media_feitos_adversario + '/jogo)</div>' +
+                            '<div>• <strong>Conclusão:</strong> ' + (rowData.sg_favorito > 0.2 ? 'SG positivo indica defesa sólida contra ataque adversário' : 'SG baixo indica vulnerabilidade defensiva') + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            };
+            break;
+            
+        case 'peso-jogo':
+            console.log('Executando case peso-jogo');
+            console.log('Dados para peso-jogo:', {
+                time_favorito: rowData.time_favorito,
+                time_adversario: rowData.time_adversario,
+                peso_jogo_favorito: rowData.peso_jogo_favorito,
+                peso_jogo_adversario: rowData.peso_jogo_adversario
+            });
+            modalData = {
+                title: 'Peso de Jogo',
+                subtitle: 'Análise de favoritismo baseada em performance',
+                content: '<div class="space-y-4">' +
+                    '<div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">' +
+                        '<h4 class="font-bold text-blue-300 mb-2">O que é Peso de Jogo?</h4>' +
+                        '<p class="text-sm text-blue-200">' +
+                            'O peso de jogo é calculado baseado na performance dos atletas, considerando:<br>' +
+                            '• Média de pontuação dos jogadores<br>' +
+                            '• Índice de aproveitamento do time<br>' +
+                            '• Força do adversário' +
+                        '</p>' +
+                    '</div>' +
+                    '<div class="grid grid-cols-2 gap-4">' +
+                        '<div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3">' +
+                            '<div class="font-bold text-green-300">Favorito: ' + rowData.time_favorito + '</div>' +
+                            '<div class="text-sm text-green-200">Peso: ' + rowData.peso_jogo_favorito + '</div>' +
+                            '<div class="text-xs text-green-100">Valor positivo indica favoritismo</div>' +
+                        '</div>' +
+                        '<div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3">' +
+                            '<div class="font-bold text-red-300">Adversário: ' + rowData.time_adversario + '</div>' +
+                            '<div class="text-sm text-red-200">Peso: ' + rowData.peso_jogo_adversario + '</div>' +
+                            '<div class="text-xs text-red-100">Valor negativo indica desvantagem</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            };
+            break;
+            
+        case 'gols-sofridos':
+            console.log('Executando case gols-sofridos');
+            modalData = {
+                title: 'Gols Sofridos',
+                subtitle: 'Total de gols que cada time sofreu nas últimas partidas',
+                content: '<div class="space-y-4">' +
+                    '<div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4">' +
+                        '<h4 class="font-bold text-red-300 mb-2">O que são Gols Sofridos?</h4>' +
+                        '<p class="text-sm text-red-200">' +
+                            'Total de gols que cada time sofreu nas últimas ' + rowData.ultimas_partidas + ' partidas.<br>' +
+                            '• Valores menores indicam melhor defesa<br>' +
+                            '• Considera apenas partidas válidas' +
+                        '</p>' +
+                    '</div>' +
+                    '<div class="grid grid-cols-2 gap-4">' +
+                        '<div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3">' +
+                            '<div class="font-bold text-green-300">' + rowData.time_favorito + '</div>' +
+                            '<div class="text-2xl font-bold text-green-200">' + rowData.gols_sofridos_favorito + '</div>' +
+                            '<div class="text-xs text-green-100">gols sofridos</div>' +
+                        '</div>' +
+                        '<div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3">' +
+                            '<div class="font-bold text-red-300">' + rowData.time_adversario + '</div>' +
+                            '<div class="text-2xl font-bold text-red-200">' + rowData.gols_sofridos_adversario + '</div>' +
+                            '<div class="text-xs text-red-100">gols sofridos</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            };
+            break;
+            
+        case 'gols-feitos':
+            console.log('Executando case gols-feitos');
+            modalData = {
+                title: 'Gols Feitos',
+                subtitle: 'Total de gols que cada time marcou nas últimas partidas',
+                content: '<div class="space-y-4">' +
+                    '<div class="bg-green-500/10 border border-green-500/30 rounded-lg p-4">' +
+                        '<h4 class="font-bold text-green-300 mb-2">O que são Gols Feitos?</h4>' +
+                        '<p class="text-sm text-green-200">' +
+                            'Total de gols que cada time marcou nas últimas ' + rowData.ultimas_partidas + ' partidas.<br>' +
+                            '• Valores maiores indicam melhor ataque<br>' +
+                            '• Considera apenas partidas válidas' +
+                        '</p>' +
+                    '</div>' +
+                    '<div class="grid grid-cols-2 gap-4">' +
+                        '<div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3">' +
+                            '<div class="font-bold text-green-300">' + rowData.time_favorito + '</div>' +
+                            '<div class="text-2xl font-bold text-green-200">' + rowData.gols_feitos_favorito + '</div>' +
+                            '<div class="text-xs text-green-100">gols marcados</div>' +
+                        '</div>' +
+                        '<div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3">' +
+                            '<div class="font-bold text-red-300">' + rowData.time_adversario + '</div>' +
+                            '<div class="text-2xl font-bold text-red-200">' + rowData.gols_feitos_adversario + '</div>' +
+                            '<div class="text-xs text-red-100">gols marcados</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            };
+            break;
+            
+        case 'media-sofridos':
+            console.log('Executando case media-sofridos');
+            modalData = {
+                title: 'Média de Gols Sofridos',
+                subtitle: 'Média de gols sofridos por partida',
+                content: '<div class="space-y-4">' +
+                    '<div class="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">' +
+                        '<h4 class="font-bold text-orange-300 mb-2">O que é Média de Gols Sofridos?</h4>' +
+                        '<p class="text-sm text-orange-200">' +
+                            'Média de gols sofridos por partida nas últimas ' + rowData.ultimas_partidas + ' partidas.<br>' +
+                            '• Valores menores indicam defesa mais sólida<br>' +
+                            '• Calculado dividindo total de gols sofridos pelo número de partidas' +
+                        '</p>' +
+                    '</div>' +
+                    '<div class="grid grid-cols-2 gap-4">' +
+                        '<div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3">' +
+                            '<div class="font-bold text-green-300">' + rowData.time_favorito + '</div>' +
+                            '<div class="text-2xl font-bold text-green-200">' + rowData.media_sofridos_favorito + '</div>' +
+                            '<div class="text-xs text-green-100">gols/partida</div>' +
+                        '</div>' +
+                        '<div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3">' +
+                            '<div class="font-bold text-red-300">' + rowData.time_adversario + '</div>' +
+                            '<div class="text-2xl font-bold text-red-200">' + rowData.media_sofridos_adversario + '</div>' +
+                            '<div class="text-xs text-red-100">gols/partida</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            };
+            break;
+            
+        case 'media-feitos':
+            console.log('Executando case media-feitos');
+            modalData = {
+                title: 'Média de Gols Feitos',
+                subtitle: 'Média de gols marcados por partida',
+                content: '<div class="space-y-4">' +
+                    '<div class="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-4">' +
+                        '<h4 class="font-bold text-emerald-300 mb-2">O que é Média de Gols Feitos?</h4>' +
+                        '<p class="text-sm text-emerald-200">' +
+                            'Média de gols marcados por partida nas últimas ' + rowData.ultimas_partidas + ' partidas.<br>' +
+                            '• Valores maiores indicam ataque mais eficiente<br>' +
+                            '• Calculado dividindo total de gols marcados pelo número de partidas' +
+                        '</p>' +
+                    '</div>' +
+                    '<div class="grid grid-cols-2 gap-4">' +
+                        '<div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3">' +
+                            '<div class="font-bold text-green-300">' + rowData.time_favorito + '</div>' +
+                            '<div class="text-2xl font-bold text-green-200">' + rowData.media_feitos_favorito + '</div>' +
+                            '<div class="text-xs text-green-100">gols/partida</div>' +
+                        '</div>' +
+                        '<div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3">' +
+                            '<div class="font-bold text-red-300">' + rowData.time_adversario + '</div>' +
+                            '<div class="text-2xl font-bold text-red-200">' + rowData.media_feitos_adversario + '</div>' +
+                            '<div class="text-xs text-red-100">gols/partida</div>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>'
+            };
+            break;
+    }
+    
+    console.log('Modal data final:', modalData);
+    console.log('Título:', modalData.title);
+    console.log('Subtítulo:', modalData.subtitle);
+    console.log('Conteúdo:', modalData.content);
+    
+    title.textContent = modalData.title;
+    subtitle.textContent = modalData.subtitle;
+    content.innerHTML = modalData.content;
+    
+    console.log('Modal exibido com sucesso');
+    modal.classList.remove('hidden');
+}
+
+function closeModal() {
+    const modal = document.getElementById('statsModal');
+    modal.classList.add('hidden');
+}
+
+
+// Fechar modal ao clicar fora dele
+document.getElementById('statsModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+
+// Funções duplicadas removidas - estão nos arquivos modais separados
+
+
+
+
+
+
+
+
+
+</script>
+
+<!-- Carregar script de cálculo do módulo -->
+{% if modulo == 'goleiro' %}
+<script src="{{ url_for('static', filename='js/calculo_goleiro.js') }}"></script>
+{% endif %}
+
+<script>
+const MODULO_ATUAL = '{{ modulo }}';
+
+// Função para carregar dados da API e fazer cálculos
+async function carregarDados() {
+    const loadingState = document.getElementById('loadingState');
+    const errorState = document.getElementById('errorState');
+    const dataContent = document.getElementById('dataContent');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    // Mostrar loading
+    loadingState.classList.remove('hidden');
+    errorState.classList.add('hidden');
+    dataContent.classList.add('hidden');
+    
+    try {
+        const response = await fetch(`/api/modulos/${MODULO_ATUAL}/dados`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Erro ao carregar dados');
+        }
+        
+        // Calcular rankings baseado no módulo
+        let resultados = [];
+        
+        {% if modulo == 'goleiro' %}
+        const calculo = new CalculoGoleiro(data);
+        resultados = calculo.calcularMelhoresGoleiros(20);
+        
+        // Adicionar ranking
+        resultados.forEach((resultado, index) => {
+            resultado.rank = index + 1;
+        });
+        
+        // Renderizar tabela de goleiros
+        renderizarTabelaGoleiros(resultados);
+        {% else %}
+        // Outros módulos serão implementados depois
+        throw new Error('Módulo ainda não implementado em JavaScript');
+        {% endif %}
+        
+        // Esconder loading e mostrar conteúdo
+        loadingState.classList.add('hidden');
+        dataContent.classList.remove('hidden');
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        loadingState.classList.add('hidden');
+        errorState.classList.remove('hidden');
+        errorMessage.textContent = error.message;
+    }
+}
+
+// Função para renderizar tabela de goleiros
+function renderizarTabelaGoleiros(resultados) {
+    const tbody = document.querySelector('#tabelaGoleiros tbody');
+    if (!tbody) {
+        console.error('Tabela de goleiros não encontrada');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    resultados.forEach((jogador) => {
+        const tr = document.createElement('tr');
+        tr.className = `border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 ${jogador.rank <= 3 ? `bg-gradient-to-r ${jogador.rank == 1 ? 'from-yellow-900/20 to-yellow-800/20' : jogador.rank == 2 ? 'from-gray-800/20 to-gray-700/20' : 'from-orange-900/20 to-orange-800/20'}` : ''}`;
+        
+        tr.innerHTML = `
+            <td class="py-4 px-2">
+                ${jogador.rank <= 3 ? `
+                <div class="flex items-center justify-center w-8 h-8 rounded-full ${jogador.rank == 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' : jogador.rank == 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' : 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'} shadow-lg">
+                    ${jogador.rank == 1 ? '<i class="fas fa-crown text-sm"></i>' : jogador.rank == 2 ? '<i class="fas fa-medal text-sm"></i>' : '<i class="fas fa-award text-sm"></i>'}
+                </div>
+                ` : `
+                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-dark-blue-700/50 text-dark-blue-200 font-bold text-sm">
+                    ${jogador.rank}
+                </div>
+                `}
+            </td>
+            <td class="py-4 px-2">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+                        <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover">
+                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                            <span class="text-white font-bold text-xs">${jogador.apelido.substring(0, 2)}</span>
+                        </div>
+                    </div>
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
+                        <img src="${jogador.clube_escudo_url || ''}" alt="${jogador.clube_nome}" class="w-full h-full object-cover">
+                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                            <span class="text-white font-bold text-xs">${jogador.clube_abrev}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="font-bold text-white">${jogador.apelido}</div>
+                        <div class="text-xs text-dark-blue-400">ID: ${jogador.atleta_id}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="py-4 px-2">
+                <div class="font-medium text-white">${jogador.clube_nome}</div>
+            </td>
+            <td class="py-4 px-2">
+                <div class="font-medium text-orange-300">${jogador.adversario_nome || 'N/A'}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="text-lg font-bold ${jogador.pontuacao_total >= 10 ? 'text-green-400' : jogador.pontuacao_total >= 5 ? 'text-yellow-400' : 'text-red-400'}">
+                    ${jogador.pontuacao_total.toFixed(2)}
+                </div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${jogador.media.toFixed(2)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${jogador.jogos}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium ${jogador.peso_jogo > 0 ? 'text-green-400' : jogador.peso_jogo < 0 ? 'text-red-400' : 'text-gray-400'}">
+                    ${jogador.peso_jogo.toFixed(2)}
+                </div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium ${jogador.peso_sg > 0 ? 'text-green-400' : jogador.peso_sg < 0 ? 'text-red-400' : 'text-gray-400'}">
+                    ${jogador.peso_sg.toFixed(2)}
+                </div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-blue-400">0</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-green-400">R$ ${jogador.preco.toFixed(2)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <button onclick="openGoleiroModal('${jogador.atleta_id}')" 
+                        class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
+                    <i class="fas fa-eye mr-1"></i>
+                    Detalhes
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+    });
+}
+
+// Carregar dados quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    if (MODULO_ATUAL === 'goleiro') {
+        carregarDados();
+    }
+});
+</script>
+
+<!-- Incluir todos os modais de jogadores -->
+{% include 'modals/all_modals.html' %}
+
+<script>
+// Carregar imagens dos jogadores quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    // Aguardar um pouco para garantir que o script foi carregado
+    setTimeout(function() {
+        // Buscar todas as imagens de jogadores
+        const playerImages = document.querySelectorAll('[id^="player-img-"]');
+        
+        playerImages.forEach(function(img) {
+            const atletaId = img.id.replace('player-img-', '');
+            const imageUrl = getPlayerImage(parseInt(atletaId));
+            
+            if (imageUrl) {
+                // Remover o onerror temporariamente
+                img.onerror = null;
+                img.src = imageUrl;
+                
+                // Adicionar listener para mostrar a imagem quando carregar
+                img.onload = function() {
+                    this.style.display = 'block';
+                    this.nextElementSibling.style.display = 'none';
+                };
+                
+                // Se falhar, mostrar fallback
+                img.onerror = function() {
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                };
+            }
+        });
+    }, 100);
+});
+</script>
+{% endblock %}

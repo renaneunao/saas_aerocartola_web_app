@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% block title %}Meus Times - Cartola Manager{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="text-center mb-8">
+    <div class="flex items-center justify-center space-x-3 mb-4">
+        <div class="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg animate-pulse-glow">
+            <i class="fas fa-users text-2xl text-white"></i>
+        </div>
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-orange-200 bg-clip-text text-transparent">
+            Meus Times
+        </h1>
+    </div>
+    <p class="text-xl text-dark-blue-200">Gerencie seus times do Cartola FC</p>
+</div>
+
+<div class="max-w-6xl mx-auto">
+    <!-- Botão para adicionar novo time -->
+    <div class="mb-6 flex justify-end">
+        <a href="{{ url_for('associar_credenciais') }}" 
+           class="inline-flex items-center space-x-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg">
+            <i class="fas fa-plus"></i>
+            <span>Adicionar Novo Time</span>
+        </a>
+    </div>
+
+    {% if all_times and all_times|length > 0 %}
+    <!-- Lista de Times -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for time in all_times %}
+        <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 {% if session.get('selected_team_id') == time.id %}ring-2 ring-blue-500{% endif %}">
+            <div class="bg-gradient-to-r from-orange-700/80 to-orange-800/80 p-4 border-b border-dark-blue-700/50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        {% if time.team_shield_url %}
+                        <img src="{{ time.team_shield_url }}" alt="Escudo" class="w-12 h-12 rounded-lg object-cover border-2 border-white/20 shadow-lg">
+                        {% else %}
+                        <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg flex items-center justify-center">
+                            <i class="fas fa-futbol text-white text-xl"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h3 class="text-lg font-bold text-white">
+                                {% if time.team_name %}{{ time.team_name }}{% else %}Time #{{ time.id }}{% endif %}
+                            </h3>
+                            {% if session.get('selected_team_id') == time.id %}
+                            <p class="text-orange-200 text-xs flex items-center">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                Time Selecionado
+                            </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 space-y-3">
+                <!-- Access Token -->
+                <div>
+                    <label class="block text-xs font-medium text-dark-blue-400 mb-1">
+                        <i class="fas fa-key text-green-400 mr-1"></i>
+                        Access Token
+                    </label>
+                    <div class="bg-dark-blue-800/30 rounded-lg p-2">
+                        <code class="text-green-300 text-xs break-all">{{ time.access_token[:30] }}...</code>
+                    </div>
+                </div>
+
+                <!-- Refresh Token -->
+                <div>
+                    <label class="block text-xs font-medium text-dark-blue-400 mb-1">
+                        <i class="fas fa-sync text-blue-400 mr-1"></i>
+                        Refresh Token
+                    </label>
+                    <div class="bg-dark-blue-800/30 rounded-lg p-2">
+                        <code class="text-blue-300 text-xs break-all">{{ time.refresh_token[:30] }}...</code>
+                    </div>
+                </div>
+
+                <!-- Timestamps -->
+                <div class="grid grid-cols-2 gap-2 pt-2 border-t border-dark-blue-700/50">
+                    <div>
+                        <label class="block text-xs font-medium text-dark-blue-400 mb-1">Criado</label>
+                        <div class="text-dark-blue-300 text-xs">
+                            {{ time.created_at.strftime('%d/%m/%Y') if time.created_at else 'N/A' }}
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-dark-blue-400 mb-1">Atualizado</label>
+                        <div class="text-dark-blue-300 text-xs">
+                            {{ time.updated_at.strftime('%d/%m/%Y') if time.updated_at else 'N/A' }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ações -->
+                <div class="flex flex-col space-y-2 pt-2 border-t border-dark-blue-700/50">
+                    <div class="flex space-x-2">
+                        {% if session.get('selected_team_id') != time.id %}
+                        <button onclick="selecionarTime({{ time.id }})" 
+                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1">
+                            <i class="fas fa-check"></i>
+                            <span>Selecionar</span>
+                        </button>
+                        {% endif %}
+                        <a href="{{ url_for('editar_credenciais', time_id=time.id) }}" 
+                           class="flex-1 bg-dark-blue-700 hover:bg-dark-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1">
+                            <i class="fas fa-edit"></i>
+                            <span>Editar</span>
+                        </a>
+                    </div>
+                    <button onclick="atualizarTokens({{ time.id }})" 
+                            id="btn-atualizar-{{ time.id }}"
+                            class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Atualizar Token</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Nenhuma Credencial -->
+    <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-lg p-8 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-orange-500/20 rounded-full mb-4">
+            <i class="fas fa-key text-orange-400 text-3xl"></i>
+        </div>
+        <h3 class="text-2xl font-bold text-white mb-2">Nenhum time associado</h3>
+        <p class="text-dark-blue-300 mb-6">Associe suas credenciais do Cartola FC para começar a usar o sistema</p>
+        <a href="{{ url_for('associar_credenciais') }}" 
+           class="inline-flex items-center space-x-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105">
+            <i class="fas fa-plus"></i>
+            <span>Adicionar Primeiro Time</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function selecionarTime(timeId) {
+    try {
+        const response = await fetch('/api/time/selecionar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                team_id: timeId
+            })
+        });
+        
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            const errorData = await response.json();
+            alert('Erro ao selecionar time: ' + (errorData.error || 'Erro desconhecido'));
+        }
+    } catch (error) {
+        console.error('Erro ao selecionar time:', error);
+        alert('Erro ao selecionar time');
+    }
+}
+
+async function atualizarTokens(timeId) {
+    const btn = document.getElementById(`btn-atualizar-${timeId}`);
+    if (!btn) return;
+    
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Atualizando...</span>';
+    
+    try {
+        const response = await fetch(`/api/time/atualizar-tokens/${timeId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('Tokens atualizados com sucesso!');
+            window.location.reload();
+        } else {
+            alert('Erro ao atualizar tokens: ' + (data.error || 'Erro desconhecido'));
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar tokens:', error);
+        alert('Erro ao atualizar tokens');
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    }
+}
+</script>
+{% endblock %}

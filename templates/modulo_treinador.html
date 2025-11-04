@@ -1,0 +1,858 @@
+{% extends "base.html" %}
+{% block title %}Treinadores - Módulos{% endblock %}
+
+{% block content %}
+<style>
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}
+</style>
+<!-- Page Header -->
+<div class="text-center mb-8">
+    <div class="flex items-center justify-center space-x-3 mb-4">
+        <div class="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg animate-pulse-glow">
+            <i class="fas fa-clipboard-list text-2xl text-white"></i>
+        </div>
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-indigo-200 bg-clip-text text-transparent">
+            Treinadores
+        </h1>
+    </div>
+    <div class="flex items-center justify-center space-x-2 text-dark-blue-200">
+        <i class="fas fa-calendar-alt"></i>
+        <span class="text-lg">Rodada {{ rodada_atual }}</span>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="mb-6">
+    <nav class="flex space-x-2">
+        <a href="{{ url_for('modulos') }}" 
+           class="inline-flex items-center px-4 py-2 text-sm font-medium text-dark-blue-300 hover:text-white hover:bg-dark-blue-700/50 rounded-lg transition-all duration-200">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar aos Módulos
+        </a>
+        <button onclick="recalcularTreinadores()" 
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-green-300 hover:text-white hover:bg-green-600/50 rounded-lg transition-all duration-200">
+            <i class="fas fa-sync mr-2"></i>
+            Recalcular
+        </button>
+    </nav>
+</div>
+
+<!-- Painel de Configuração de Pesos -->
+<div class="mb-8">
+    <div class="bg-gradient-to-br from-indigo-900/50 to-indigo-900/50 backdrop-blur-sm rounded-2xl border border-indigo-500/50 shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-700/80 to-indigo-800/80 p-4 border-b border-indigo-500/50">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg shadow-lg">
+                    <i class="fas fa-cogs text-white text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Configuração de Pesos</h3>
+                    <p class="text-indigo-200 text-sm">Ajuste os pesos específicos para treinadores</p>
+                </div>
+            </div>
+        </div>
+        
+        <form id="pesosForm" class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-indigo-200">
+                        FATOR_PESO_JOGO
+                    </label>
+                    <input type="number" 
+                           id="FATOR_PESO_JOGO"
+                           name="FATOR_PESO_JOGO" 
+                           value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 1.0) }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-indigo-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between mt-6 pt-4 border-t border-indigo-500/30">
+                <div class="text-sm text-indigo-300">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Alterações serão aplicadas ao recalcular
+                </div>
+                <div class="flex space-x-3">
+                    <button type="button" onclick="salvarPesos()"
+                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105">
+                        <i class="fas fa-save mr-2"></i>
+                        Salvar Pesos
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Module Content -->
+<div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-2xl overflow-hidden">
+    <!-- Section Header -->
+    <div class="bg-gradient-to-r from-dark-blue-700/80 to-dark-blue-800/80 p-6 border-b border-dark-blue-700/50">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg shadow-lg">
+                    <i class="fas fa-clipboard-list text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Treinadores - Rodada {{ rodada_atual }}</h2>
+                    <p class="text-dark-blue-200 text-sm">Análise detalhada com pesos personalizados</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-2xl font-bold text-white" id="totalRegistros">-</div>
+                <div class="text-dark-blue-200 text-sm">treinadores</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Content -->
+    <div id="dataContainer" class="p-6">
+        <!-- Loading State com Progresso (inicialmente visível para carregar ranking salvo) -->
+        <div id="loadingState" class="text-center py-12">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4 animate-pulse">
+                <i class="fas fa-spinner fa-spin text-blue-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-4">Calculando rankings para treinadores</h3>
+            
+            <!-- Barra de Progresso -->
+            <div class="max-w-2xl mx-auto mb-4">
+                <div class="bg-dark-blue-700/50 rounded-full h-3 overflow-hidden">
+                    <div id="progressBar" class="bg-gradient-to-r from-indigo-500 to-blue-500 h-full transition-all duration-300 rounded-full" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between items-center mt-2">
+                    <span id="progressText" class="text-sm text-dark-blue-300">0%</span>
+                    <span id="progressDetails" class="text-sm text-dark-blue-300">Iniciando...</span>
+                </div>
+            </div>
+            
+            <!-- Logs de Progresso -->
+            <div id="progressLogs" class="max-w-2xl mx-auto mt-6 bg-dark-blue-800/50 rounded-lg p-4 text-left max-h-64 overflow-y-auto">
+                <div class="space-y-2 text-sm"></div>
+            </div>
+        </div>
+        
+        <!-- Error State -->
+        <div id="errorState" class="text-center py-12 hidden">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
+                <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Erro ao carregar dados</h3>
+            <p class="text-dark-blue-400 mb-4" id="errorMessage"></p>
+            <button onclick="carregarDados(false)" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200">
+                <i class="fas fa-redo mr-2"></i>
+                Tentar Novamente
+            </button>
+        </div>
+        
+        <!-- Data Content (será preenchido via JS) -->
+        <div id="dataContent" class="hidden">
+            <!-- Tabela para treinadores -->
+            <div class="overflow-x-auto">
+                <table id="tabelaTreinadores" class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-dark-blue-700/50">
+                            <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Rank</th>
+                            <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Jogador</th>
+                            <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Clube</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Pontuação</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Jogos</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso SG</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Preço</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dados serão preenchidos via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Carregar script de cálculo do treinador -->
+<script src="{{ url_for('static', filename='js/calculo_treinador.js') }}"></script>
+
+<script>
+// Função para adicionar log visual
+function addProgressLog(message, type = 'info') {
+    const logsContainer = document.getElementById('progressLogs');
+    if (!logsContainer) return;
+    
+    const iconMap = {
+        'info': 'fa-info-circle text-blue-400',
+        'success': 'fa-check-circle text-green-400',
+        'warning': 'fa-exclamation-circle text-yellow-400',
+        'error': 'fa-times-circle text-red-400'
+    };
+    
+    const logItem = document.createElement('div');
+    logItem.className = `text-dark-blue-200 flex items-start space-x-2 animate-fade-in`;
+    logItem.innerHTML = `
+        <i class="fas ${iconMap[type]} mt-1 flex-shrink-0"></i>
+        <span>${message}</span>
+    `;
+    
+    logsContainer.querySelector('.space-y-2').appendChild(logItem);
+    logsContainer.scrollTop = logsContainer.scrollHeight;
+}
+
+// Função para atualizar progresso
+function updateProgress(percent, message) {
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const progressDetails = document.getElementById('progressDetails');
+    const logMessage = document.getElementById('logMessage');
+    
+    if (progressBar) {
+        progressBar.style.width = percent + '%';
+    }
+    if (progressText) {
+        progressText.textContent = percent + '%';
+    }
+    if (progressDetails) {
+        progressDetails.textContent = message;
+    }
+    if (logMessage) {
+        logMessage.textContent = message;
+    }
+}
+
+// Flag para evitar cálculos duplicados
+let calculando = false;
+let chamadaIdCounter = 0;
+
+// Inicializar bloqueador como false no início
+if (typeof window.BLOQUEAR_CALCULO_TREINADOR === 'undefined') {
+    window.BLOQUEAR_CALCULO_TREINADOR = false;
+}
+
+// Função para carregar dados da API e fazer cálculos
+async function carregarDados(forcarRecalculo = false) {
+    console.log(`[DEBUG] 🟢 FUNÇÃO carregarDados CHAMADA - Arquivo: modulo_treinador.html (ID: ${chamadaIdCounter + 1})`);
+    console.trace('[DEBUG] Stack trace da chamada:');
+    console.log(`[DEBUG] 🔍 Estado inicial do bloqueador: ${window.BLOQUEAR_CALCULO_TREINADOR}`);
+    console.log(`[DEBUG] 🔍 forcarRecalculo: ${forcarRecalculo}`);
+    
+    // Se forçar recálculo, desativar bloqueador
+    if (forcarRecalculo) {
+        console.log(`[DEBUG] 🔄 Forçar recálculo solicitado, desativando bloqueador`);
+        window.BLOQUEAR_CALCULO_TREINADOR = false;
+    }
+    
+    // Prevenir múltiplas execuções simultâneas
+    if (calculando) {
+        console.log('[DEBUG] ⚠️ carregarDados já está executando, ignorando chamada duplicada');
+        console.trace('[DEBUG] Stack trace da chamada duplicada:');
+        return;
+    }
+    
+    calculando = true;
+    const chamadaId = ++chamadaIdCounter;
+    let loadingState = document.getElementById('loadingState');
+    let errorState = document.getElementById('errorState');
+    let dataContent = document.getElementById('dataContent');
+    let errorMessage = document.getElementById('errorMessage');
+    const totalRegistros = document.getElementById('totalRegistros');
+    
+    // Se os elementos não existem, significa que estamos na tela inicial - restaurar estrutura
+    if (!loadingState || !errorState || !dataContent) {
+        const dataContainer = document.getElementById('dataContainer');
+        dataContainer.innerHTML = `
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-12">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4 animate-pulse">
+                    <i class="fas fa-spinner fa-spin text-blue-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Carregando dados...</h3>
+                <p class="text-dark-blue-400">Calculando rankings para treinadores</p>
+            </div>
+            
+            <!-- Error State -->
+            <div id="errorState" class="text-center py-12 hidden">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Erro ao carregar dados</h3>
+                <p class="text-dark-blue-400 mb-4" id="errorMessage"></p>
+                <button onclick="carregarDados(false)" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200">
+                    <i class="fas fa-redo mr-2"></i>
+                    Tentar Novamente
+                </button>
+            </div>
+            
+            <!-- Data Content (será preenchido via JS) -->
+            <div id="dataContent" class="hidden">
+                <!-- Tabela para treinadores -->
+                <div class="overflow-x-auto">
+                    <table id="tabelaTreinadores" class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-dark-blue-700/50">
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Rank</th>
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Jogador</th>
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Clube</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Pontuação</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Jogos</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso SG</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Preço</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dados serão preenchidos via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        // Recuperar elementos após recriar HTML
+        loadingState = document.getElementById('loadingState');
+        errorState = document.getElementById('errorState');
+        dataContent = document.getElementById('dataContent');
+        errorMessage = document.getElementById('errorMessage');
+    }
+    
+    // Limpar logs anteriores
+    const logsContainer = document.getElementById('progressLogs');
+    if (logsContainer) {
+        const logsSpace = logsContainer.querySelector('.space-y-2');
+        if (logsSpace) {
+            logsSpace.innerHTML = '';
+        }
+        logsContainer.classList.remove('hidden');
+    }
+    
+    // Inicializar barra de progresso
+    updateProgress(0, 'Iniciando...');
+    
+    // Mostrar loading
+    loadingState.classList.remove('hidden');
+    errorState.classList.add('hidden');
+    dataContent.classList.add('hidden');
+    
+    updateProgress(5, 'Conectando ao servidor...');
+    
+    try {
+        // PRIMEIRO: Verificar rapidamente se há ranking salvo (sem buscar todos os dados)
+        if (!forcarRecalculo) {
+            console.log(`[DEBUG] 🔍 VERIFICANDO RANKING SALVO ANTES DO FETCH (ID: ${chamadaId})`);
+            updateProgress(10, 'Verificando ranking salvo...');
+            addProgressLog('🔍 Verificando se há ranking salvo...', 'info');
+            
+                    try {
+                        const checkResponse = await fetch('/api/modulos/treinador/verificar-ranking');
+                        const checkData = await checkResponse.json();
+                        
+                        console.log(`[DEBUG] 🔍 Resultado verificação rápida:`, checkData);
+                        
+                        if (checkData.has_ranking) {
+                            console.log(`[DEBUG] ✅✅✅ RANKING SALVO ENCONTRADO NA VERIFICAÇÃO RÁPIDA (ID: ${chamadaId})`);
+                            console.log(`[DEBUG] 🚫🚫🚫 ATIVANDO BLOQUEADOR IMEDIATAMENTE! (ID: ${chamadaId})`);
+                            
+                            // ATIVAR BLOQUEADOR IMEDIATAMENTE quando detectar ranking salvo
+                            window.BLOQUEAR_CALCULO_TREINADOR = true;
+                            
+                            // Se tem ranking, buscar apenas os dados completos
+                            updateProgress(20, 'Ranking encontrado, carregando dados...');
+                            addProgressLog(`💾 Ranking salvo encontrado! Carregando dados...`, 'success');
+                        } else {
+                            console.log(`[DEBUG] ❌ Nenhum ranking salvo na verificação rápida (ID: ${chamadaId})`);
+                            // Garantir que o bloqueador NÃO está ativo se não há ranking
+                            window.BLOQUEAR_CALCULO_TREINADOR = false;
+                        }
+                    } catch (checkError) {
+                        console.error('[DEBUG] Erro na verificação rápida:', checkError);
+                        // Se houver erro, desativar bloqueador para permitir cálculo
+                        window.BLOQUEAR_CALCULO_TREINADOR = false;
+                    }
+                } else {
+                    // Se forçarRecalculo for true, desativar bloqueador
+                    window.BLOQUEAR_CALCULO_TREINADOR = false;
+                }
+        
+        // VERIFICAÇÃO CRÍTICA: Se o bloqueador estiver ativo após a verificação rápida, fazer fetch mas com flag
+        let apenasRankingSalvo = false;
+        if (!forcarRecalculo && window.BLOQUEAR_CALCULO_TREINADOR === true) {
+            console.log(`[DEBUG] 🚫🚫🚫 BLOQUEADOR ATIVO APÓS VERIFICAÇÃO RÁPIDA - BUSCANDO APENAS RANKING SALVO (ID: ${chamadaId})`);
+            apenasRankingSalvo = true;
+            updateProgress(30, 'Carregando ranking salvo...');
+            addProgressLog('📡 Buscando ranking salvo...', 'info');
+        } else {
+            console.log(`[DEBUG] 🔵 INÍCIO DO FETCH COMPLETO (ID: ${chamadaId})`);
+            updateProgress(30, 'Carregando dados do servidor...');
+            addProgressLog('📡 Buscando dados de atletas e configurações...', 'info');
+        }
+        
+        console.log(`[DEBUG] 🔵 ANTES DO AWAIT FETCH (ID: ${chamadaId}) - Bloqueador: ${window.BLOQUEAR_CALCULO_TREINADOR}, apenasRankingSalvo: ${apenasRankingSalvo}`);
+        
+        // Se apenasRankingSalvo for true, adicionar parâmetro na URL para indicar ao servidor
+        const url = apenasRankingSalvo ? '/api/modulos/treinador/dados?apenas_ranking=true' : '/api/modulos/treinador/dados';
+        const response = await fetch(url);
+        console.log(`[DEBUG] 🔵 DEPOIS DO FETCH, ANTES DO JSON (ID: ${chamadaId})`);
+        const data = await response.json();
+        console.log(`[DEBUG] 🔵 DEPOIS DO JSON, VERIFICANDO RANKING (ID: ${chamadaId})`);
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Erro ao carregar dados');
+        }
+        
+        // VERIFICAÇÃO IMEDIATA: Se bloqueador ativo, EXIBIR RANKING DIRETAMENTE E RETORNAR
+        if (window.BLOQUEAR_CALCULO_TREINADOR === true) {
+            console.log(`[DEBUG] 🚫🚫🚫 BLOQUEADOR AINDA ATIVO APÓS FETCH - EXIBINDO RANKING DIRETAMENTE (ID: ${chamadaId})`);
+            
+            // Verificar se temos ranking salvo nos dados
+            if (data.ranking_salvo !== null && data.ranking_salvo !== undefined && 
+                Array.isArray(data.ranking_salvo) && data.ranking_salvo.length > 0) {
+                
+                console.log(`[DEBUG] ✅✅✅ EXIBINDO RANKING SALVO DIRETAMENTE (ID: ${chamadaId}) - ${data.ranking_salvo.length} itens`);
+                updateProgress(80, 'Exibindo ranking salvo...');
+                addProgressLog('💾 Exibindo ranking salvo...', 'success');
+                
+                // Renderizar ranking salvo diretamente
+                const resultados = data.ranking_salvo.map((r, i) => ({ ...r, rank: i + 1 }));
+                renderizarTabelaTreinadores(resultados);
+                
+                const totalRegistrosEl = document.getElementById('totalRegistros');
+                if (totalRegistrosEl) {
+                    totalRegistrosEl.textContent = resultados.length;
+                }
+                
+                updateProgress(100, 'Concluído!');
+                addProgressLog(`✨ Ranking salvo exibido com sucesso! (${resultados.length} treinadores)`, 'success');
+                
+                // Esconder loading e mostrar conteúdo
+                setTimeout(() => {
+                    loadingState.classList.add('hidden');
+                    dataContent.classList.remove('hidden');
+                    if (logsContainer) {
+                        logsContainer.classList.add('hidden');
+                    }
+                }, 500);
+                
+                console.log(`[DEBUG] ✅✅✅ RANKING EXIBIDO - RETORNANDO IMEDIATAMENTE (ID: ${chamadaId})`);
+                calculando = false;
+                return; // RETORNAR IMEDIATAMENTE - NÃO EXECUTAR MAIS NADA
+            } else {
+                console.error(`[DEBUG] ❌❌❌ ERRO: Bloqueador ativo mas ranking_salvo inválido! (ID: ${chamadaId})`);
+                // Se bloqueador ativo mas sem ranking, desativar bloqueador e continuar
+                window.BLOQUEAR_CALCULO_TREINADOR = false;
+            }
+        }
+        
+        updateProgress(50, 'Dados carregados, verificando ranking salvo...');
+        if (data.atletas && data.atletas.length) {
+            addProgressLog(`✅ Dados carregados: ${data.atletas.length} treinadores encontrados`, 'success');
+        }
+        if (data.rodada_atual) {
+            addProgressLog(`📊 Rodada: ${data.rodada_atual}, Perfil Jogo: ${data.perfil_peso_jogo}, Perfil SG: ${data.perfil_peso_sg}`, 'info');
+        }
+        
+        // Verificar se há ranking salvo (verificar se existe e é um array com itens)
+        // Se forcarRecalculo for true, ignorar ranking salvo
+        console.log(`[DEBUG] ========== VERIFICAÇÃO FINAL DE RANKING SALVO (ID: ${chamadaId}) ==========`);
+        console.log('[DEBUG] forcarRecalculo:', forcarRecalculo);
+        console.log('[DEBUG] Ranking salvo RAW:', data.ranking_salvo);
+        console.log('[DEBUG] Tipo:', typeof data.ranking_salvo);
+        console.log('[DEBUG] É null?', data.ranking_salvo === null);
+        console.log('[DEBUG] É undefined?', data.ranking_salvo === undefined);
+        console.log('[DEBUG] É array?', Array.isArray(data.ranking_salvo));
+        console.log('[DEBUG] Tamanho:', data.ranking_salvo?.length);
+        let temRankingSalvo = false;
+        
+        if (!forcarRecalculo && data.ranking_salvo !== null && data.ranking_salvo !== undefined) {
+            if (Array.isArray(data.ranking_salvo) && data.ranking_salvo.length > 0) {
+                temRankingSalvo = true;
+                console.log(`[DEBUG] ✅✅✅ RANKING SALVO CONFIRMADO (ID: ${chamadaId})`);
+            } else {
+                console.log(`[DEBUG] ⚠️ Ranking salvo inválido (ID: ${chamadaId})`);
+            }
+        } else {
+            if (forcarRecalculo) {
+                console.log(`[DEBUG] ⚠️ forcarRecalculo=true, ignorando ranking (ID: ${chamadaId})`);
+            } else {
+                console.log(`[DEBUG] ⚠️ Ranking salvo é null/undefined (ID: ${chamadaId})`);
+            }
+        }
+        
+        if (temRankingSalvo) {
+            // Se há ranking salvo, apenas exibir (não calcular)
+            console.log(`[DEBUG] ✅✅✅ ENTROU NO IF DO RANKING SALVO - BLOQUEANDO QUALQUER CÁLCULO (ID: ${chamadaId})`);
+            
+            // BLOQUEAR qualquer tentativa de cálculo
+            window.BLOQUEAR_CALCULO_TREINADOR = true;
+            console.log(`[DEBUG] 🚫 BLOQUEADOR DE CÁLCULO ATIVADO (ID: ${chamadaId})`);
+            
+            addProgressLog('💾 Ranking salvo encontrado! Carregando resultados...', 'success');
+            updateProgress(50, 'Ranking salvo encontrado!');
+            addProgressLog('💾 Ranking salvo encontrado! Exibindo resultados salvos...', 'success');
+            updateProgress(80, 'Preparando dados salvos...');
+            
+            // Renderizar ranking salvo diretamente
+            const resultados = data.ranking_salvo.map((r, i) => ({ ...r, rank: i + 1 }));
+            
+            updateProgress(90, 'Renderizando tabela...');
+            renderizarTabelaTreinadores(resultados);
+            
+            const totalRegistrosEl = document.getElementById('totalRegistros');
+            if (totalRegistrosEl) {
+                totalRegistrosEl.textContent = resultados.length;
+            }
+            
+            updateProgress(100, 'Concluído!');
+            addProgressLog(`✨ Ranking salvo exibido com sucesso! (${resultados.length} treinadores)`, 'success');
+            
+            // Esconder loading e mostrar conteúdo após um pequeno delay
+            setTimeout(() => {
+                loadingState.classList.add('hidden');
+                dataContent.classList.remove('hidden');
+                if (logsContainer) {
+                    logsContainer.classList.add('hidden');
+                }
+            }, 500);
+            
+            console.log(`[DEBUG] ✅✅✅ RETORNANDO - NÃO DEVE CALCULAR (ID: ${chamadaId})`);
+            calculando = false; // Liberar flag
+            console.log(`[DEBUG] ✅✅✅ FLAG LIBERADA, RETORNANDO AGORA (ID: ${chamadaId})`);
+            
+            // Retornar e PARAR completamente
+            return; // Return simples deve ser suficiente
+        }
+        
+        // Este código só deve executar se não houver ranking salvo
+        // VERIFICAÇÃO EXTRA: Se o bloqueador estiver ativo, NÃO calcular
+        if (window.BLOQUEAR_CALCULO_TREINADOR === true) {
+            console.log(`[DEBUG] 🚫🚫🚫 BLOQUEADOR ATIVO - CÁLCULO IMPEDIDO! (ID: ${chamadaId})`);
+            calculando = false;
+            return;
+        }
+        
+        console.log(`[DEBUG] ❌❌❌ NÃO ENTROU NO IF - VAI CALCULAR (ID: ${chamadaId})`);
+        console.log('[DEBUG] ⚠️ ATENÇÃO: Se você vê esta mensagem, significa que o return não funcionou ou não há ranking salvo!');
+        console.trace(`[DEBUG] Stack trace do cálculo (ID: ${chamadaId}):`);
+        
+        // Se não tem ranking salvo, calcular automaticamente
+        addProgressLog('🔄 Nenhum ranking salvo encontrado. Iniciando cálculo de treinadores...', 'info');
+        
+        updateProgress(40, 'Calculando pontuações...');
+        addProgressLog('⚙️ Iniciando cálculos de pontuação para cada treinador...', 'info');
+        
+        // Calcular rankings com progresso
+        console.log(`[DEBUG] ⚠️⚠️⚠️ INICIANDO CÁLCULO (ID: ${chamadaId}) - Isso NÃO deveria acontecer se há ranking salvo!`);
+        console.log(`[DEBUG] ⚠️⚠️⚠️ CRIANDO INSTÂNCIA CalculoTreinador (ID: ${chamadaId})`);
+        
+        // VERIFICAÇÃO FINAL antes de criar a instância
+        if (window.BLOQUEAR_CALCULO_TREINADOR === true) {
+            console.log(`[DEBUG] 🚫🚫🚫 BLOQUEADOR ATIVO ANTES DE CRIAR INSTÂNCIA - CANCELANDO! (ID: ${chamadaId})`);
+            calculando = false;
+            return;
+        }
+        
+        const calculo = new CalculoTreinador(data);
+        console.log(`[DEBUG] ⚠️⚠️⚠️ INSTÂNCIA CRIADA, INICIANDO CÁLCULO (ID: ${chamadaId})`);
+        
+        // Sobrescrever o método para mostrar progresso
+        const calcularComProgresso = function(topN = 20) {
+            const resultados = [];
+            const total = this.atletas.length;
+            let processados = 0;
+
+            for (const atleta of this.atletas) {
+                processados++;
+                const resultado = this.calcularPontuacao(atleta);
+                resultados.push(resultado);
+                
+                // Atualizar progresso a cada 5 treinadores ou no último
+                if (processados % 5 === 0 || processados === total) {
+                    const percent = 40 + Math.floor((processados / total) * 45);
+                    updateProgress(percent, `Calculando treinador ${processados}/${total}...`);
+                    if (processados % 10 === 0) {
+                        addProgressLog(`⚙️ Processando treinador ${processados}/${total}...`, 'info');
+                    }
+                }
+            }
+
+            resultados.sort((a, b) => b.pontuacao_total - a.pontuacao_total);
+            return resultados.slice(0, topN);
+        };
+        
+        // Usar cálculo com progresso
+        calculo.calcularMelhoresTreinadores = calcularComProgresso.bind(calculo);
+        const resultados = calculo.calcularMelhoresTreinadores(20);
+        
+        updateProgress(85, 'Ordenando resultados...');
+        addProgressLog(`✅ Cálculo concluído: ${resultados.length} treinadores processados`, 'success');
+        
+        // Adicionar ranking
+        resultados.forEach((resultado, index) => {
+            resultado.rank = index + 1;
+        });
+        
+        updateProgress(90, 'Salvando ranking...');
+        addProgressLog('💾 Salvando ranking no banco de dados...', 'info');
+        
+        // Salvar ranking no servidor
+        try {
+            const saveResponse = await fetch('/api/modulos/treinador/salvar-ranking', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ranking_data: resultados,
+                    rodada_atual: data.rodada_atual,
+                    configuration_id: data.configuration_id
+                })
+            });
+            
+            if (saveResponse.ok) {
+                addProgressLog('✅ Ranking salvo com sucesso!', 'success');
+            } else {
+                addProgressLog('⚠️ Aviso: Não foi possível salvar o ranking', 'warning');
+            }
+        } catch (saveError) {
+            console.error('Erro ao salvar ranking:', saveError);
+            addProgressLog('⚠️ Aviso: Erro ao salvar ranking', 'warning');
+        }
+        
+        // Atualizar total de registros (se o elemento existir)
+        const totalRegistrosEl = document.getElementById('totalRegistros');
+        if (totalRegistrosEl) {
+            totalRegistrosEl.textContent = resultados.length;
+        }
+        
+        updateProgress(95, 'Renderizando tabela...');
+        addProgressLog('📋 Gerando tabela de resultados...', 'info');
+        
+        // Renderizar tabela de treinadores
+        renderizarTabelaTreinadores(resultados);
+        
+        updateProgress(100, 'Concluído!');
+        addProgressLog(`✨ Top ${resultados.length} treinadores exibidos com sucesso!`, 'success');
+        
+        // Esconder loading e mostrar conteúdo após um pequeno delay
+        setTimeout(() => {
+            loadingState.classList.add('hidden');
+            dataContent.classList.remove('hidden');
+            if (logsContainer) {
+                logsContainer.classList.add('hidden');
+            }
+        }, 500);
+        
+        calculando = false; // Liberar flag ao finalizar (cálculo normal)
+        console.log('[DEBUG] ========== FINALIZANDO carregarDados (cálculo) ==========');
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        loadingState.classList.add('hidden');
+        errorState.classList.remove('hidden');
+        errorMessage.textContent = error.message;
+        calculando = false; // Liberar flag em caso de erro
+        console.log('[DEBUG] ========== FINALIZANDO carregarDados (erro) ==========');
+    }
+}
+
+// Função para renderizar tabela de treinadores
+function renderizarTabelaTreinadores(resultados) {
+    const tbody = document.querySelector('#tabelaTreinadores tbody');
+    if (!tbody) {
+                console.error('Tabela de treinadores não encontrada');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    resultados.forEach((jogador) => {
+        const tr = document.createElement('tr');
+        tr.className = `border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 ${jogador.rank <= 3 ? `bg-gradient-to-r ${jogador.rank == 1 ? 'from-yellow-900/20 to-yellow-800/20' : jogador.rank == 2 ? 'from-gray-800/20 to-gray-700/20' : 'from-orange-900/20 to-orange-800/20'}` : ''}`;
+        
+        tr.innerHTML = `
+            <td class="py-4 px-2">
+                ${jogador.rank <= 3 ? `
+                <div class="flex items-center justify-center w-8 h-8 rounded-full ${jogador.rank == 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' : jogador.rank == 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' : 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'} shadow-lg">
+                    ${jogador.rank == 1 ? '<i class="fas fa-crown text-sm"></i>' : jogador.rank == 2 ? '<i class="fas fa-medal text-sm"></i>' : '<i class="fas fa-award text-sm"></i>'}
+                </div>
+                ` : `
+                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-dark-blue-700/50 text-dark-blue-200 font-bold text-sm">
+                    ${jogador.rank}
+                </div>
+                `}
+            </td>
+            <td class="py-4 px-2">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+                        <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover">
+                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                            <span class="text-white font-bold text-xs">${jogador.apelido.substring(0, 2)}</span>
+                        </div>
+                    </div>
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
+                        <img src="${jogador.clube_escudo_url || ''}" alt="${jogador.clube_nome}" class="w-full h-full object-cover">
+                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                            <span class="text-white font-bold text-xs">${jogador.clube_abrev}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="font-bold text-white">${jogador.apelido}</div>
+                        <div class="text-xs text-dark-blue-400">ID: ${jogador.atleta_id}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="py-4 px-2">
+                <div class="font-medium text-white">${jogador.clube_nome}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="text-lg font-bold ${jogador.pontuacao_total >= 10 ? 'text-green-400' : jogador.pontuacao_total >= 5 ? 'text-yellow-400' : 'text-red-400'}">
+                    ${jogador.pontuacao_total.toFixed(2)}
+                </div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${jogador.media.toFixed(2)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${jogador.jogos}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium ${jogador.peso_jogo > 0 ? 'text-green-400' : jogador.peso_jogo < 0 ? 'text-red-400' : 'text-gray-400'}">
+                    ${jogador.peso_jogo.toFixed(2)}
+                </div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium ${jogador.peso_sg > 0 ? 'text-green-400' : jogador.peso_sg < 0 ? 'text-red-400' : 'text-gray-400'}">
+                    ${jogador.peso_sg.toFixed(2)}
+                </div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-green-400">R$ ${jogador.preco.toFixed(2)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <button onclick="openTreinadorModal('${jogador.atleta_id}')" 
+                        class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
+                    <i class="fas fa-eye mr-1"></i>
+                    Detalhes
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+    });
+}
+
+// Função para salvar pesos
+async function salvarPesos() {
+    const form = document.getElementById('pesosForm');
+    const formData = new FormData(form);
+    
+    const pesos = {};
+    for (const [key, value] of formData.entries()) {
+        pesos[key] = parseFloat(value);
+    }
+    
+    try {
+        const response = await fetch('/api/modulos/treinador/pesos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(pesos)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao salvar pesos');
+        }
+        
+        // Recarregar dados com novos pesos (forçar recálculo)
+        await carregarDados(true);
+        
+        // Mostrar mensagem de sucesso
+        alert('Pesos salvos com sucesso!');
+    } catch (error) {
+        console.error('Erro ao salvar pesos:', error);
+        alert('Erro ao salvar pesos: ' + error.message);
+    }
+}
+
+// Função para recalcular (chamada pelo botão)
+function recalcularTreinadores() {
+    // Restaurar estrutura de containers antes de carregar
+    const dataContainer = document.getElementById('dataContainer');
+    if (!dataContainer.querySelector('#loadingState')) {
+        dataContainer.innerHTML = `
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-12">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4 animate-pulse">
+                    <i class="fas fa-spinner fa-spin text-blue-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Carregando dados...</h3>
+                <p class="text-dark-blue-400">Calculando rankings para treinadores</p>
+            </div>
+            
+            <!-- Error State -->
+            <div id="errorState" class="text-center py-12 hidden">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Erro ao carregar dados</h3>
+                <p class="text-dark-blue-400 mb-4" id="errorMessage"></p>
+                <button onclick="carregarDados(false)" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200">
+                    <i class="fas fa-redo mr-2"></i>
+                    Tentar Novamente
+                </button>
+            </div>
+            
+            <!-- Data Content (será preenchido via JS) -->
+            <div id="dataContent" class="hidden">
+                <!-- Tabela para treinadores -->
+                <div class="overflow-x-auto">
+                    <table id="tabelaTreinadores" class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-dark-blue-700/50">
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Rank</th>
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Jogador</th>
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Clube</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Pontuação</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Jogos</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso SG</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Preço</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dados serão preenchidos via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+    carregarDados(true); // Forçar recálculo quando chamado pelo botão de recalcular
+}
+
+// Carregar automaticamente ao abrir a página (primeiro tenta carregar salvo, se não tiver, permite calcular)
+document.addEventListener('DOMContentLoaded', function() {
+    // Tentar carregar ranking salvo automaticamente (não forçar recálculo)
+    carregarDados(false);
+});
+</script>
+
+<!-- Modal placeholder - será implementado conforme necessário -->
+{% endblock %}
+

@@ -1,0 +1,452 @@
+{% extends "base.html" %}
+{% block title %}Escalação Ideal - Módulos{% endblock %}
+
+{% block content %}
+<style>
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #4a5568;
+    transition: .4s;
+    border-radius: 34px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: #10b981;
+}
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+</style>
+
+<!-- Page Header -->
+<div class="text-center mb-8">
+    <div class="flex items-center justify-center space-x-3 mb-4">
+        <div class="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg animate-pulse-glow">
+            <i class="fas fa-trophy text-2xl text-white"></i>
+        </div>
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-yellow-200 bg-clip-text text-transparent">
+            Escalação Ideal
+        </h1>
+    </div>
+    <p class="text-dark-blue-200 text-lg">Calcule seu time ideal baseado nos rankings de cada posição</p>
+</div>
+
+<!-- Navigation -->
+<div class="mb-6">
+    <nav class="flex space-x-2">
+        <a href="{{ url_for('modulos') }}" 
+           class="inline-flex items-center px-4 py-2 text-sm font-medium text-dark-blue-300 hover:text-white hover:bg-dark-blue-700/50 rounded-lg transition-all duration-200">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar aos Módulos
+        </a>
+    </nav>
+</div>
+
+<!-- Painel de Configuração -->
+<div class="mb-8">
+    <div class="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 backdrop-blur-sm rounded-2xl border border-yellow-500/50 shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-yellow-700/80 to-orange-800/80 p-4 border-b border-yellow-500/50">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg">
+                    <i class="fas fa-cogs text-white text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Configurações de Escalação</h3>
+                    <p class="text-yellow-200 text-sm">Configure as opções de escalação</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <!-- Layout compacto: Formação e Posição do Capitão lado a lado -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <!-- Formação -->
+                <div class="bg-dark-blue-800/30 rounded-lg border border-yellow-500/30 p-3">
+                    <label class="text-sm font-semibold text-white mb-1 block">Formação</label>
+                    <select id="formationSelect" class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        <option value="4-3-3">4-3-3</option>
+                        <option value="4-4-2">4-4-2</option>
+                        <option value="3-5-2">3-5-2</option>
+                        <option value="3-4-3">3-4-3</option>
+                        <option value="4-5-1">4-5-1</option>
+                        <option value="5-4-1">5-4-1</option>
+                    </select>
+                </div>
+
+                <!-- Posição do Capitão -->
+                <div class="bg-dark-blue-800/30 rounded-lg border border-yellow-500/30 p-3">
+                    <label class="text-sm font-semibold text-white mb-1 block">Posição do Capitão</label>
+                    <select id="posicaoCapitao" class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500">
+                        <option value="atacantes">Atacantes</option>
+                        <option value="meias">Meias</option>
+                        <option value="laterais">Laterais</option>
+                        <option value="zagueiros">Zagueiros</option>
+                        <option value="goleiros">Goleiros</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Toggles lado a lado -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Hack do Goleiro -->
+                <div class="flex items-center justify-between p-3 bg-dark-blue-800/30 rounded-lg border border-yellow-500/30">
+                    <div class="flex-1 mr-3">
+                        <label class="text-sm font-semibold text-white mb-1 block">Hack do Goleiro</label>
+                        <p class="text-yellow-200 text-xs">Escala goleiro que não joga como titular</p>
+                    </div>
+                    <label class="toggle-switch flex-shrink-0">
+                        <input type="checkbox" id="hackGoleiroToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <!-- Fechar Defesa -->
+                <div class="flex items-center justify-between p-3 bg-dark-blue-800/30 rounded-lg border border-yellow-500/30">
+                    <div class="flex-1 mr-3">
+                        <label class="text-sm font-semibold text-white mb-1 block">Fechar Defesa</label>
+                        <p class="text-yellow-200 text-xs">Fecha defesa do melhor clube por SG primeiro</p>
+                    </div>
+                    <label class="toggle-switch flex-shrink-0">
+                        <input type="checkbox" id="fecharDefesaToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between mt-6 pt-4 border-t border-yellow-500/30">
+                <div class="text-sm text-yellow-300">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    As configurações são salvas automaticamente
+                </div>
+                <button type="button" onclick="salvarConfiguracoes()"
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105">
+                    <i class="fas fa-save mr-2"></i>
+                    Salvar Configurações
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Painel de Resultados -->
+<div id="resultadoPanel" class="hidden mb-8">
+    <div class="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 backdrop-blur-sm rounded-2xl border border-yellow-500/50 shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-yellow-700/80 to-orange-800/80 p-4 border-b border-yellow-500/50">
+            <h3 class="text-lg font-bold text-white">Escalação Calculada</h3>
+        </div>
+        <div id="escalacaoContent" class="p-6">
+            <!-- Conteúdo será preenchido via JavaScript -->
+        </div>
+    </div>
+</div>
+
+<!-- Loading State -->
+<div id="loadingState" class="hidden mb-8">
+    <div class="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 backdrop-blur-sm rounded-2xl border border-yellow-500/50 shadow-xl p-8 text-center">
+        <div class="flex flex-col items-center justify-center space-y-4">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-yellow-500"></div>
+            <p class="text-yellow-200 text-lg font-medium">Calculando escalação ideal...</p>
+            <div id="progressLog" class="text-yellow-300 text-sm mt-4 space-y-1 text-left max-w-2xl w-full">
+                <!-- Logs de progresso serão adicionados aqui -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error State -->
+<div id="errorState" class="hidden mb-8">
+    <div class="bg-gradient-to-br from-red-900/50 to-red-800/50 backdrop-blur-sm rounded-2xl border border-red-500/50 shadow-xl p-8 text-center">
+        <div class="flex flex-col items-center justify-center space-y-4">
+            <i class="fas fa-exclamation-triangle text-red-400 text-4xl"></i>
+            <p class="text-red-200 text-lg font-medium" id="errorMessage">Erro ao calcular escalação</p>
+            <button onclick="calcularEscalacao()" 
+                    class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-medium rounded-lg transition-all duration-200">
+                <i class="fas fa-redo mr-2"></i>
+                Tentar Novamente
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Botão de Calcular -->
+<div class="text-center mb-8">
+    <button onclick="calcularEscalacao()" 
+            id="calcularBtn"
+            class="inline-flex items-center px-8 py-4 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white text-lg font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-xl">
+        <i class="fas fa-calculator mr-3"></i>
+        Calcular Escalação Ideal
+    </button>
+</div>
+
+<script src="{{ url_for('static', filename='js/calculo_escalacao_ideal.js') }}"></script>
+<script>
+let configCarregada = false;
+
+// Carregar configurações ao carregar a página
+document.addEventListener('DOMContentLoaded', async function() {
+    await carregarConfiguracoes();
+});
+
+async function carregarConfiguracoes() {
+    try {
+        const response = await fetch('/api/escalacao-ideal/config');
+        const config = await response.json();
+        
+        document.getElementById('formationSelect').value = config.formation || '4-3-3';
+        document.getElementById('hackGoleiroToggle').checked = config.hack_goleiro || false;
+        document.getElementById('fecharDefesaToggle').checked = config.fechar_defesa || false;
+        document.getElementById('posicaoCapitao').value = config.posicao_capitao || 'atacantes';
+        
+        configCarregada = true;
+    } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+    }
+}
+
+async function salvarConfiguracoes() {
+    const formation = document.getElementById('formationSelect').value;
+    const hackGoleiro = document.getElementById('hackGoleiroToggle').checked;
+    const fecharDefesa = document.getElementById('fecharDefesaToggle').checked;
+    const posicaoCapitao = document.getElementById('posicaoCapitao').value;
+    
+    try {
+        const response = await fetch('/api/escalacao-ideal/config', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                formation: formation,
+                hack_goleiro: hackGoleiro,
+                fechar_defesa: fecharDefesa,
+                posicao_capitao: posicaoCapitao
+            })
+        });
+        
+        if (response.ok) {
+            // Configurações salvas com sucesso
+            console.log('Configurações salvas com sucesso');
+        }
+    } catch (error) {
+        console.error('Erro ao salvar configurações:', error);
+        alert('Erro ao salvar configurações');
+    }
+}
+
+async function calcularEscalacao() {
+    const hackGoleiro = document.getElementById('hackGoleiroToggle').checked;
+    const fecharDefesa = document.getElementById('fecharDefesaToggle').checked;
+    const posicaoCapitao = document.getElementById('posicaoCapitao').value;
+    
+    // Salvar configurações antes de calcular
+    await salvarConfiguracoes();
+    
+    // Limpar logs anteriores
+    const logContainer = document.getElementById('progressLog');
+    logContainer.innerHTML = '';
+    
+    // Mostrar loading
+    document.getElementById('loadingState').classList.remove('hidden');
+    document.getElementById('errorState').classList.add('hidden');
+    document.getElementById('resultadoPanel').classList.add('hidden');
+    document.getElementById('calcularBtn').disabled = true;
+    
+    try {
+        // Buscar dados (usa time selecionado na sessão)
+        const response = await fetch('/api/escalacao-ideal/dados');
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
+        // Criar instância do calculador
+        const calculador = new CalculoEscalacaoIdeal(data);
+        
+        // Configurar callback de logs
+        const logContainer = document.getElementById('progressLog');
+        calculador.setLogCallback((message) => {
+            const logEntry = document.createElement('div');
+            logEntry.textContent = message;
+            logEntry.className = 'text-yellow-300 text-sm';
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        });
+        
+        // Calcular escalação
+        const resultado = await calculador.calcular(hackGoleiro, fecharDefesa, posicaoCapitao);
+        
+        // Exibir resultado
+        exibirResultado(resultado);
+        
+    } catch (error) {
+        console.error('Erro ao calcular escalação:', error);
+        document.getElementById('errorMessage').textContent = error.message || 'Erro ao calcular escalação';
+        document.getElementById('errorState').classList.remove('hidden');
+        document.getElementById('loadingState').classList.add('hidden');
+    } finally {
+        document.getElementById('calcularBtn').disabled = false;
+    }
+}
+
+function exibirResultado(resultado) {
+    const panel = document.getElementById('resultadoPanel');
+    const content = document.getElementById('escalacaoContent');
+    
+    let html = '<div class="space-y-6">';
+    
+    // Resumo
+    html += `
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-dark-blue-800/30 rounded-lg p-4 border border-yellow-500/30">
+                <div class="text-yellow-300 text-sm mb-1">Custo Total</div>
+                <div class="text-white text-2xl font-bold">R$ ${resultado.custo_total?.toFixed(2) || '0.00'}</div>
+            </div>
+            <div class="bg-dark-blue-800/30 rounded-lg p-4 border border-yellow-500/30">
+                <div class="text-yellow-300 text-sm mb-1">Pontuação Total</div>
+                <div class="text-white text-2xl font-bold">${resultado.pontuacao_total?.toFixed(2) || '0.00'}</div>
+            </div>
+            <div class="bg-dark-blue-800/30 rounded-lg p-4 border border-yellow-500/30">
+                <div class="text-yellow-300 text-sm mb-1">Orçamento Restante</div>
+                <div class="text-white text-2xl font-bold">R$ ${(resultado.patrimonio - resultado.custo_total)?.toFixed(2) || '0.00'}</div>
+            </div>
+        </div>
+    `;
+    
+    // Titulares
+    html += '<h4 class="text-xl font-bold text-white mb-4">Titulares</h4>';
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">';
+    
+    const posicoes = ['goleiros', 'zagueiros', 'laterais', 'meias', 'atacantes', 'tecnicos'];
+    const posicoesNames = {
+        'goleiros': 'Goleiros',
+        'zagueiros': 'Zagueiros',
+        'laterais': 'Laterais',
+        'meias': 'Meias',
+        'atacantes': 'Atacantes',
+        'tecnicos': 'Técnicos'
+    };
+    
+    for (const pos of posicoes) {
+        if (resultado.titulares && resultado.titulares[pos] && resultado.titulares[pos].length > 0) {
+            html += `
+                <div class="bg-dark-blue-800/30 rounded-lg p-4 border border-yellow-500/30">
+                    <h5 class="text-yellow-300 font-semibold mb-2">${posicoesNames[pos]}</h5>
+                    <ul class="space-y-1">
+            `;
+            for (const jogador of resultado.titulares[pos]) {
+                const capitaoBadge = jogador.eh_capitao ? '<span class="ml-2 px-2 py-1 bg-yellow-500 text-yellow-900 text-xs font-bold rounded">C</span>' : '';
+                html += `
+                    <li class="text-white text-sm">
+                        ${jogador.apelido} ${capitaoBadge}
+                        <span class="text-yellow-300 ml-2">R$ ${jogador.preco_num?.toFixed(2) || '0.00'}</span>
+                    </li>
+                `;
+            }
+            html += '</ul></div>';
+        }
+    }
+    
+    html += '</div>';
+    
+    // Reservas
+    if (resultado.reservas && Object.keys(resultado.reservas).length > 0) {
+        html += '<h4 class="text-xl font-bold text-white mb-4">Reservas</h4>';
+        html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+        
+        for (const [pos, jogadores] of Object.entries(resultado.reservas)) {
+            if (jogadores && jogadores.length > 0) {
+                html += `
+                    <div class="bg-dark-blue-800/30 rounded-lg p-4 border border-yellow-500/30">
+                        <h5 class="text-yellow-300 font-semibold mb-2">${posicoesNames[pos] || pos}</h5>
+                        <ul class="space-y-1">
+                `;
+                for (const jogador of jogadores) {
+                    const luxoBadge = jogador.eh_reserva_luxo ? '<span class="ml-2 px-2 py-1 bg-orange-500 text-orange-900 text-xs font-bold rounded">L</span>' : '';
+                    html += `
+                        <li class="text-white text-sm">
+                            ${jogador.apelido} ${luxoBadge}
+                            <span class="text-yellow-300 ml-2">R$ ${jogador.preco_num?.toFixed(2) || '0.00'}</span>
+                        </li>
+                    `;
+                }
+                html += '</ul></div>';
+            }
+        }
+        
+        html += '</div>';
+    }
+    
+    html += '</div>';
+    
+    content.innerHTML = html;
+    panel.classList.remove('hidden');
+    document.getElementById('loadingState').classList.add('hidden');
+}
+
+// Salvar automaticamente quando os toggles mudarem
+document.getElementById('formationSelect').addEventListener('change', function() {
+    if (configCarregada) {
+        salvarConfiguracoes();
+    }
+});
+
+document.getElementById('hackGoleiroToggle').addEventListener('change', function() {
+    if (configCarregada) {
+        salvarConfiguracoes();
+    }
+});
+
+document.getElementById('fecharDefesaToggle').addEventListener('change', function() {
+    if (configCarregada) {
+        salvarConfiguracoes();
+    }
+});
+
+document.getElementById('posicaoCapitao').addEventListener('change', function() {
+    if (configCarregada) {
+        salvarConfiguracoes();
+    }
+});
+</script>
+{% endblock %}
+

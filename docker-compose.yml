@@ -1,0 +1,55 @@
+services:
+  calculador:
+    image: renaneunao/saas-cartola-calculador:latest
+    container_name: cartola-aero-calculador-container
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      CALCULATION_INTERVAL_MINUTES: ${CALCULATION_INTERVAL_MINUTES:-15}
+    volumes:
+      - ./logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - infra_network
+
+  api-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: renaneunao/saas-cartola-api-service:latest
+    container_name: cartola-aero-api-service-container
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      SECRET_KEY: ${SECRET_KEY:-change-me-to-a-secure-random-value-in-production}
+    ports:
+      - "8000:8000"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - infra_network
+
+networks:
+  infra_network:
+    external: true
+

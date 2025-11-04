@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Módulos - Cartola FC Manager{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="text-center mb-8">
+    <div class="flex items-center justify-center space-x-3 mb-4">
+        <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg animate-pulse-glow">
+            <i class="fas fa-cogs text-2xl text-white"></i>
+        </div>
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
+            Módulos Individuais
+        </h1>
+    </div>
+    <p class="text-dark-blue-200 text-lg">Análise detalhada de cada posição e cálculo</p>
+</div>
+
+<!-- Módulos Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    <!-- Goleiros -->
+    <a href="{{ url_for('modulo_individual', modulo='goleiro') }}" 
+       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    <i class="fas fa-hand-paper text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white group-hover:text-green-300 transition-colors duration-300">Goleiros</h3>
+                    <p class="text-dark-blue-300 text-sm">Análise de goleiros</p>
+                </div>
+            </div>
+            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de goleiros com pesos personalizados</p>
+        </div>
+        <div class="px-6 py-3 bg-gradient-to-r from-green-500/10 to-green-600/10 border-t border-green-500/20">
+            <div class="flex items-center justify-between">
+                <span class="text-green-300 text-sm font-medium">Ver Análise</span>
+                <i class="fas fa-arrow-right text-green-400 group-hover:translate-x-1 transition-transform duration-300"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Laterais -->
+    <a href="{{ url_for('modulo_individual', modulo='lateral') }}" 
+       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    <i class="fas fa-running text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white group-hover:text-blue-300 transition-colors duration-300">Laterais</h3>
+                    <p class="text-dark-blue-300 text-sm">Análise de laterais</p>
+                </div>
+            </div>
+            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de laterais com pesos personalizados</p>
+        </div>
+        <div class="px-6 py-3 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border-t border-blue-500/20">
+            <div class="flex items-center justify-between">
+                <span class="text-blue-300 text-sm font-medium">Ver Análise</span>
+                <i class="fas fa-arrow-right text-blue-400 group-hover:translate-x-1 transition-transform duration-300"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Zagueiros -->
+    <a href="{{ url_for('modulo_individual', modulo='zagueiro') }}" 
+       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    <i class="fas fa-shield-alt text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white group-hover:text-red-300 transition-colors duration-300">Zagueiros</h3>
+                    <p class="text-dark-blue-300 text-sm">Análise de zagueiros</p>
+                </div>
+            </div>
+            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de zagueiros com pesos personalizados</p>
+        </div>
+        <div class="px-6 py-3 bg-gradient-to-r from-red-500/10 to-red-600/10 border-t border-red-500/20">
+            <div class="flex items-center justify-between">
+                <span class="text-red-300 text-sm font-medium">Ver Análise</span>
+                <i class="fas fa-arrow-right text-red-400 group-hover:translate-x-1 transition-transform duration-300"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Meias -->
+    <a href="{{ url_for('modulo_individual', modulo='meia') }}" 
+       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    <i class="fas fa-futbol text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white group-hover:text-purple-300 transition-colors duration-300">Meias</h3>
+                    <p class="text-dark-blue-300 text-sm">Análise de meias</p>
+                </div>
+            </div>
+            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de meias com pesos personalizados</p>
+        </div>
+        <div class="px-6 py-3 bg-gradient-to-r from-purple-500/10 to-purple-600/10 border-t border-purple-500/20">
+            <div class="flex items-center justify-between">
+                <span class="text-purple-300 text-sm font-medium">Ver Análise</span>
+                <i class="fas fa-arrow-right text-purple-400 group-hover:translate-x-1 transition-transform duration-300"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Atacantes -->
+    <a href="{{ url_for('modulo_individual', modulo='atacante') }}" 
+       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    <i class="fas fa-bullseye text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white group-hover:text-orange-300 transition-colors duration-300">Atacantes</h3>
+                    <p class="text-dark-blue-300 text-sm">Análise de atacantes</p>
+                </div>
+            </div>
+            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de atacantes com pesos personalizados</p>
+        </div>
+        <div class="px-6 py-3 bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-t border-orange-500/20">
+            <div class="flex items-center justify-between">
+                <span class="text-orange-300 text-sm font-medium">Ver Análise</span>
+                <i class="fas fa-arrow-right text-orange-400 group-hover:translate-x-1 transition-transform duration-300"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Treinadores -->
+    <a href="{{ url_for('modulo_individual', modulo='treinador') }}" 
+       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    <i class="fas fa-user-tie text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white group-hover:text-indigo-300 transition-colors duration-300">Técnicos</h3>
+                    <p class="text-dark-blue-300 text-sm">Análise de treinadores</p>
+                </div>
+            </div>
+            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de treinadores com pesos personalizados</p>
+        </div>
+        <div class="px-6 py-3 bg-gradient-to-r from-indigo-500/10 to-indigo-600/10 border-t border-indigo-500/20">
+            <div class="flex items-center justify-between">
+                <span class="text-indigo-300 text-sm font-medium">Ver Análise</span>
+                <i class="fas fa-arrow-right text-indigo-400 group-hover:translate-x-1 transition-transform duration-300"></i>
+            </div>
+        </div>
+    </a>
+
+    <!-- Escalação Ideal -->
+    <a href="{{ url_for('modulo_escalacao_ideal') }}" 
+       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+        <div class="p-6">
+            <div class="flex items-center space-x-4 mb-4">
+                <div class="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                    <i class="fas fa-trophy text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold text-white group-hover:text-yellow-300 transition-colors duration-300">Escalação Ideal</h3>
+                    <p class="text-dark-blue-300 text-sm">Calcule seu time ideal</p>
+                </div>
+            </div>
+            <p class="text-dark-blue-400 text-sm">Calcule a escalação ideal baseada nos rankings de cada posição</p>
+        </div>
+        <div class="px-6 py-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border-t border-yellow-500/20">
+            <div class="flex items-center justify-between">
+                <span class="text-yellow-300 text-sm font-medium">Calcular Escalação</span>
+                <i class="fas fa-arrow-right text-yellow-400 group-hover:translate-x-1 transition-transform duration-300"></i>
+            </div>
+        </div>
+    </a>
+
+</div>
+
+<!-- Info Section -->
+<div class="mt-12">
+    <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/50">
+        <div class="flex items-start space-x-4">
+            <div class="p-2 bg-purple-500/20 rounded-lg">
+                <i class="fas fa-info-circle text-purple-400 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-semibold text-white mb-4">Como funcionam os módulos</h3>
+                <div class="grid md:grid-cols-2 gap-4 text-purple-200">
+                    <div>
+                        <h4 class="font-medium text-purple-100 mb-2">
+                            <i class="fas fa-cogs text-purple-400 mr-2"></i>
+                            Módulos de Posição
+                        </h4>
+                        <p class="text-sm">Cada posição (goleiro, lateral, zagueiro, meia, atacante, treinador) tem seu próprio módulo com pesos específicos configurados na página de configuração.</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-purple-100 mb-2">
+                            <i class="fas fa-balance-scale text-purple-400 mr-2"></i>
+                            Pesos Personalizados
+                        </h4>
+                        <p class="text-sm">Cada módulo utiliza os pesos configurados individualmente, permitindo ajustes específicos para cada posição.</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-purple-100 mb-2">
+                            <i class="fas fa-chart-bar text-purple-400 mr-2"></i>
+                            Análise Detalhada
+                        </h4>
+                        <p class="text-sm">Visualize todos os dados utilizados no cálculo, incluindo médias, pesos de jogo, pesos SG e estatísticas específicas.</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-purple-100 mb-2">
+                            <i class="fas fa-sync text-purple-400 mr-2"></i>
+                            Atualização Automática
+                        </h4>
+                        <p class="text-sm">Os dados são atualizados automaticamente a cada execução do sistema, garantindo informações sempre atuais.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

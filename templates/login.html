@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Cartola Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-blue': {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'bounce-subtle': 'bounceSubtle 2s infinite',
+                        'pulse-glow': 'pulseGlow 2s ease-in-out infinite alternate',
+                        'float': 'float 6s ease-in-out infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(100%)' },
+                            '100%': { transform: 'translateY(0)' }
+                        },
+                        bounceSubtle: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' }
+                        },
+                        pulseGlow: {
+                            '0%': { boxShadow: '0 0 5px rgba(14, 165, 233, 0.5)' },
+                            '100%': { boxShadow: '0 0 20px rgba(14, 165, 233, 0.8)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-full bg-gradient-to-br from-dark-blue-950 via-dark-blue-900 to-slate-900 text-white">
+    <!-- Background Elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <!-- Floating Soccer Balls -->
+        <div class="absolute top-20 left-10 text-dark-blue-800/30 text-4xl animate-float">
+            <i class="fas fa-futbol"></i>
+        </div>
+        <div class="absolute top-40 right-16 text-dark-blue-800/20 text-6xl animate-float" style="animation-delay: -2s;">
+            <i class="fas fa-futbol"></i>
+        </div>
+        <div class="absolute bottom-32 left-20 text-dark-blue-800/25 text-5xl animate-float" style="animation-delay: -4s;">
+            <i class="fas fa-futbol"></i>
+        </div>
+        <div class="absolute bottom-20 right-8 text-dark-blue-800/20 text-3xl animate-float" style="animation-delay: -1s;">
+            <i class="fas fa-futbol"></i>
+        </div>
+        
+        <!-- Geometric Shapes -->
+        <div class="absolute top-1/4 left-1/4 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-full blur-xl animate-pulse"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-48 h-48 bg-gradient-to-br from-purple-500/10 to-purple-600/10 rounded-full blur-2xl animate-pulse" style="animation-delay: -1s;"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="max-w-md w-full space-y-8">
+            <!-- Header -->
+            <div class="text-center animate-fade-in">
+                <div class="flex justify-center mb-6">
+                    <div class="p-4 bg-gradient-to-br from-dark-blue-500 to-dark-blue-600 rounded-2xl shadow-2xl animate-pulse-glow">
+                        <i class="fas fa-futbol text-4xl text-white"></i>
+                    </div>
+                </div>
+                <h1 class="text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-blue-200 bg-clip-text text-transparent mb-2">
+                    Cartola Manager
+                </h1>
+                <p class="text-lg text-dark-blue-200 mb-2">Bem-vindo de volta!</p>
+                <p class="text-sm text-dark-blue-300">Faça login para acessar sua conta</p>
+            </div>
+
+            <!-- Login Form -->
+            <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-dark-blue-700/50 p-8 animate-fade-in">
+                <form method="post" class="space-y-6" id="loginForm">
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="space-y-3 mb-6">
+                                {% for category, message in messages %}
+                                <div class="animate-fade-in p-4 rounded-lg border-l-4 {% if category == 'error' or category == 'danger' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'success' %}bg-green-900/50 border-green-500 text-green-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% else %}bg-blue-900/50 border-blue-500 text-blue-200{% endif %} backdrop-blur-sm shadow-lg">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fas {% if category == 'error' or category == 'danger' %}fa-exclamation-triangle{% elif category == 'success' %}fa-check-circle{% elif category == 'warning' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                                        <span>{{ message }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Username/Email Field -->
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-dark-blue-200 mb-2">
+                            <i class="fas fa-user text-blue-400 mr-2"></i>
+                            Usuário ou Email
+                        </label>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="username" 
+                                   name="username" 
+                                   required
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-lg"
+                                   placeholder="Digite seu usuário ou email">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-user text-dark-blue-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-dark-blue-200 mb-2">
+                            <i class="fas fa-lock text-green-400 mr-2"></i>
+                            Senha
+                        </label>
+                        <div class="relative">
+                            <input type="password" 
+                                   id="password" 
+                                   name="password" 
+                                   required
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 pr-12 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-lg"
+                                   placeholder="Digite sua senha">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-dark-blue-400"></i>
+                            </div>
+                            <button type="button" 
+                                    onclick="togglePassword()"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
+                                <i class="fas fa-eye" id="toggleIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Remember Me & Forgot Password -->
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="checkbox" 
+                                   id="remember" 
+                                   name="remember"
+                                   class="w-4 h-4 bg-dark-blue-800/50 border-dark-blue-600/50 rounded focus:ring-2 focus:ring-blue-500 text-blue-600 transition-colors duration-200">
+                            <label for="remember" class="ml-2 text-sm text-dark-blue-300 cursor-pointer">
+                                Lembrar de mim
+                            </label>
+                        </div>
+                        <a href="#" class="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                            Esqueceu a senha?
+                        </a>
+                    </div>
+
+                    <!-- Login Button -->
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>Entrar</span>
+                    </button>
+
+                    <!-- Divider -->
+                    <div class="relative my-6">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-dark-blue-700/50"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-4 bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 text-dark-blue-300">
+                                ou continue com
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Social Login Buttons -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" 
+                                class="bg-dark-blue-800/50 border border-dark-blue-600/50 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:bg-dark-blue-700/50 hover:border-dark-blue-500/50 flex items-center justify-center space-x-2">
+                            <i class="fab fa-google text-red-400"></i>
+                            <span class="text-sm">Google</span>
+                        </button>
+                        <button type="button" 
+                                class="bg-dark-blue-800/50 border border-dark-blue-600/50 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:bg-dark-blue-700/50 hover:border-dark-blue-500/50 flex items-center justify-center space-x-2">
+                            <i class="fab fa-github text-gray-300"></i>
+                            <span class="text-sm">GitHub</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Sign Up Link -->
+            <div class="text-center animate-fade-in">
+                <p class="text-dark-blue-300">
+                    Não tem uma conta? 
+                    <a href="#" class="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200">
+                        Cadastre-se aqui
+                    </a>
+                </p>
+            </div>
+
+            <!-- Footer Links -->
+            <div class="text-center text-xs text-dark-blue-400 space-x-4 animate-fade-in">
+                <a href="#" class="hover:text-dark-blue-200 transition-colors duration-200">Termos de Uso</a>
+                <span>•</span>
+                <a href="#" class="hover:text-dark-blue-200 transition-colors duration-200">Privacidade</a>
+                <span>•</span>
+                <a href="#" class="hover:text-dark-blue-200 transition-colors duration-200">Suporte</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+
+        // Form submission with loading state
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Entrando...';
+            submitBtn.disabled = true;
+            
+            // Re-enable after 5 seconds as fallback
+            setTimeout(() => {
+                submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Entrar';
+                submitBtn.disabled = false;
+            }, 5000);
+        });
+
+        // Input focus effects
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.02)';
+                this.parentElement.style.transition = 'transform 0.2s ease';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+                e.preventDefault();
+                const form = document.getElementById('loginForm');
+                const inputs = form.querySelectorAll('input[required]');
+                const currentIndex = Array.from(inputs).indexOf(e.target);
+                
+                if (currentIndex < inputs.length - 1) {
+                    inputs[currentIndex + 1].focus();
+                } else {
+                    form.querySelector('button[type="submit"]').click();
+                }
+            }
+        });
+
+        // Auto-hide flash messages after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('[class*="bg-red-900"], [class*="bg-green-900"], [class*="bg-yellow-900"], [class*="bg-blue-900"]');
+            alerts.forEach(function(alert) {
+                if (alert.parentElement) {
+                    alert.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateX(100%)';
+                    setTimeout(function() {
+                        if (alert.parentElement) {
+                            alert.remove();
+                        }
+                    }, 500);
+                }
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

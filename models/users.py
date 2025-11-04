@@ -1,0 +1,385 @@
+"""
+Modelo para gerenciamento de usuários do sistema
+"""
+
+import psycopg2
+import hashlib
+import secrets
+from datetime import datetime, timedelta
+from database import get_db_connection, close_db_connection, execute_query, execute_query
+
+
+def create_users_table():
+    """Cria a tabela de usuários se não existir"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS acw_users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(50) UNIQUE NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL,
+                salt VARCHAR(32) NOT NULL,
+                full_name VARCHAR(100),
+                is_active BOOLEAN DEFAULT TRUE,
+                is_admin BOOLEAN DEFAULT FALSE,
+                last_login TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        # Criar índices para melhor performance
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_username ON acw_users (username)')
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_email ON acw_users (email)')
+        
+        conn.commit()
+        print("✅ Tabela de usuários criada com sucesso!")
+        
+    except psycopg2.Error as e:
+        print(f"Erro ao criar tabelas: {e}")
+        conn.rollback()
+    finally:
+        close_db_connection(conn)
+
+
+def hash_password(password: str) -> tuple:
+    """Gera hash da senha com salt"""
+    salt = secrets.token_hex(16)
+    password_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+    return password_hash.hex(), salt
+
+
+def verify_password(password: str, password_hash: str, salt: str) -> bool:
+    """Verifica se a senha está correta"""
+    computed_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+    return computed_hash.hex() == password_hash
+
+
+def create_user(username: str, email: str, password: str, full_name: str = None, is_admin: bool = False) -> dict:
+    """Cria um novo usuário"""
+    conn = get_db_connection()
+    if not conn:
+        return {'success': False, 'error': 'Erro ao conectar ao banco de dados'}
+    
+    cursor = conn.cursor()
+    
+    try:
+        # Verificar se usuário ou email já existem
+        cursor.execute('SELECT id FROM acw_users WHERE username = %s OR email = %s', (username, email))
+        if cursor.fetchone():
+            return {'success': False, 'error': 'Usuário ou email já existem'}
+        
+        # Gerar hash da senha
+        password_hash, salt = hash_password(password)
+        
+        # Inserir usuário
+        cursor.execute('''
+            INSERT INTO acw_users (username, email, password_hash, salt, full_name, is_admin)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id
+        ''', (username, email, password_hash, salt, full_name, is_admin))
+        
+        user_id = cursor.fetchone()[0]
+        conn.commit()
+        
+        return {
+            'success': True, 
+            'user_id': user_id,
+            'message': 'Usuário criado com sucesso!'
+        }
+        
+    except psycopg2.Error as e:
+        conn.rollback()
+        return {'success': False, 'error': f'Erro ao criar usuário: {str(e)}'}
+    
+    finally:
+        close_db_connection(conn)
+
+
+def authenticate_user(username_or_email: str, password: str) -> dict:
+    """Autentica um usuário"""
+    conn = get_db_connection()
+    if not conn:
+        return {'success': False, 'error': 'Erro ao conectar ao banco de dados'}
+    
+    cursor = conn.cursor()
+    
+    try:
+        # Buscar usuário por username ou email
+        cursor.execute('''
+            SELECT id, username, email, password_hash, salt, full_name, is_active, is_admin
+            FROM acw_users 
+            WHERE (username = %s OR email = %s) AND is_active = TRUE
+        ''', (username_or_email, username_or_email))
+        
+        user = cursor.fetchone()
+        if not user:
+            return {'success': False, 'error': 'Usuário não encontrado ou inativo'}
+        
+        user_id, username, email, stored_hash, salt, full_name, is_active, is_admin = user
+        
+        # Verificar senha
+        if not verify_password(password, stored_hash, salt):
+            return {'success': False, 'error': 'Senha incorreta'}
+        
+        # Atualizar último login
+        cursor.execute('UPDATE acw_users SET last_login = CURRENT_TIMESTAMP WHERE id = %s', (user_id,))
+        conn.commit()
+        
+        return {
+            'success': True,
+            'user': {
+                'id': user_id,
+                'username': username,
+                'email': email,
+                'full_name': full_name,
+                'is_admin': is_admin
+            }
+        }
+        
+    except psycopg2.Error as e:
+        return {'success': False, 'error': f'Erro na autenticação: {str(e)}'}
+    
+    finally:
+        close_db_connection(conn)
+
+
+def create_session(user_id: int, user_agent: str = None, ip_address: str = None, remember_me: bool = False) -> str:
+    """Cria uma sessão para o usuário"""
+    conn = get_db_connection()
+    if not conn:
+        return None
+    
+    cursor = conn.cursor()
+    
+    try:
+        # Gerar token único
+        session_token = secrets.token_urlsafe(32)
+        
+        # Definir expiração (7 dias se remember_me, senão 1 dia)
+        expires_at = datetime.now() + timedelta(days=7 if remember_me else 1)
+        
+        # Inserir sessão
+        cursor.execute('''
+            INSERT INTO acw_sessions (user_id, session_token, expires_at, user_agent, ip_address)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (user_id, session_token, expires_at, user_agent, ip_address))
+        
+        conn.commit()
+        return session_token
+        
+    except psycopg2.Error as e:
+        print(f"Erro ao criar sessão: {e}")
+        return None
+    
+    finally:
+        close_db_connection(conn)
+
+
+def get_user_by_session(session_token: str) -> dict:
+    """Busca usuário por token de sessão"""
+    conn = get_db_connection()
+    if not conn:
+        return None
+    
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+            SELECT u.id, u.username, u.email, u.full_name, u.is_admin, s.expires_at
+            FROM acw_users u
+            JOIN acw_sessions s ON u.id = s.user_id
+            WHERE s.session_token = %s AND s.expires_at > CURRENT_TIMESTAMP AND u.is_active = TRUE
+        ''', (session_token,))
+        
+        result = cursor.fetchone()
+        if not result:
+            return None
+        
+        user_id, username, email, full_name, is_admin, expires_at = result
+        
+        return {
+            'id': user_id,
+            'username': username,
+            'email': email,
+            'full_name': full_name,
+            'is_admin': is_admin,
+            'session_expires': expires_at
+        }
+        
+    except psycopg2.Error as e:
+        print(f"Erro ao buscar usuário por sessão: {e}")
+        return None
+    
+    finally:
+        close_db_connection(conn)
+
+
+def delete_session(session_token: str) -> bool:
+    """Remove uma sessão (logout)"""
+    conn = get_db_connection()
+    if not conn:
+        return False
+    
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('DELETE FROM acw_sessions WHERE session_token = %s', (session_token,))
+        conn.commit()
+        return cursor.rowcount > 0
+        
+    except psycopg2.Error as e:
+        print(f"Erro ao deletar sessão: {e}")
+        return False
+    
+    finally:
+        close_db_connection(conn)
+
+
+def cleanup_expired_sessions():
+    """Remove sessões expiradas"""
+    conn = get_db_connection()
+    if not conn:
+        return 0
+    
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('DELETE FROM acw_sessions WHERE expires_at < CURRENT_TIMESTAMP')
+        deleted_count = cursor.rowcount
+        conn.commit()
+        
+        if deleted_count > 0:
+            print(f"🧹 {deleted_count} sessões expiradas removidas")
+        
+        return deleted_count
+        
+    except psycopg2.Error as e:
+        print(f"Erro ao limpar sessões expiradas: {e}")
+        return 0
+    
+    finally:
+        close_db_connection(conn)
+
+
+def get_all_users() -> list:
+    """Lista todos os usuários (para admin)"""
+    conn = get_db_connection()
+    if not conn:
+        return []
+    
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+            SELECT id, username, email, full_name, is_active, is_admin, last_login, created_at
+            FROM acw_users
+            ORDER BY created_at DESC
+        ''')
+        
+        users = []
+        for row in cursor.fetchall():
+            users.append({
+                'id': row[0],
+                'username': row[1],
+                'email': row[2],
+                'full_name': row[3],
+                'is_active': bool(row[4]),
+                'is_admin': bool(row[5]),
+                'last_login': row[6],
+                'created_at': row[7]
+            })
+        
+        return users
+        
+    except psycopg2.Error as e:
+        print(f"Erro ao listar usuários: {e}")
+        return []
+    
+    finally:
+        close_db_connection(conn)
+
+
+def create_default_users():
+    """Cria usuários padrão se não existirem"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        created_users = []
+        
+        # Verificar se admin existe
+        cursor.execute('SELECT COUNT(*) FROM acw_users WHERE username = %s', ('admin',))
+        if cursor.fetchone()[0] == 0:
+            result = create_user(
+                username='admin',
+                email='admin@cartolamanager.com',
+                password='admin123',
+                full_name='Administrador',
+                is_admin=True
+            )
+            if result['success']:
+                created_users.append({'username': 'admin', 'password': 'admin123'})
+        
+        # Verificar se renaneunao existe
+        cursor.execute('SELECT COUNT(*) FROM acw_users WHERE username = %s', ('renaneunao',))
+        if cursor.fetchone()[0] == 0:
+            result = create_user(
+                username='renaneunao',
+                email='renan@cartolamanager.com',
+                password='!Senhas123',
+                full_name='Renan',
+                is_admin=True
+            )
+            if result['success']:
+                created_users.append({'username': 'renaneunao', 'password': '!Senhas123'})
+        
+        if created_users:
+            print("🔐 Usuários padrão criados:")
+            for user in created_users:
+                print(f"   Username: {user['username']}")
+                print(f"   Password: {user['password']}")
+            print("   ⚠️  ALTERE AS SENHAS APÓS O PRIMEIRO LOGIN!")
+        
+    except psycopg2.Error as e:
+        print(f"Erro ao criar usuários padrão: {e}")
+    
+    finally:
+        close_db_connection(conn)
+
+
+def update_user_password(user_id: int, new_password: str) -> bool:
+    """Atualiza a senha de um usuário"""
+    conn = get_db_connection()
+    if not conn:
+        return False
+    
+    cursor = conn.cursor()
+    
+    try:
+        password_hash, salt = hash_password(new_password)
+        
+        cursor.execute('''
+            UPDATE acw_users 
+            SET password_hash = %s, salt = %s, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        ''', (password_hash, salt, user_id))
+        
+        conn.commit()
+        return cursor.rowcount > 0
+        
+    except psycopg2.Error as e:
+        print(f"Erro ao atualizar senha: {e}")
+        return False
+    
+    finally:
+        close_db_connection(conn)
+
+
+if __name__ == "__main__":
+    # Teste das funções
+    create_users_table()
+    create_default_admin()

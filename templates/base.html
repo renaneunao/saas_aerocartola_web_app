@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cartola Manager{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Player Images -->
+    <script src="{{ url_for('static', filename='cartola_imgs/player_images_by_id.js') }}"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-blue': {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49'
+                        }
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.3s ease-out',
+                        'pulse-glow': 'pulseGlow 2s ease-in-out infinite alternate'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' }
+                        },
+                        pulseGlow: {
+                            '0%': { boxShadow: '0 0 5px rgba(59, 130, 246, 0.5)' },
+                            '100%': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.8)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom Scrollbar Styles -->
+    <style>
+        /* Sidebar Scrollbar - Azul Neon Estiloso */
+        .sidebar-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: #0ea5e9 #1e293b;
+        }
+        
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 3px;
+        }
+        
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #0ea5e9, #3b82f6, #06b6d4);
+            border-radius: 3px;
+            box-shadow: 0 0 6px rgba(14, 165, 233, 0.4);
+        }
+        
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(45deg, #0284c7, #2563eb, #0891b2);
+            box-shadow: 0 0 8px rgba(14, 165, 233, 0.6);
+        }
+        
+        /* Animação de brilho para a barra de rolagem */
+        .sidebar-scroll::-webkit-scrollbar-thumb:active {
+            box-shadow: 0 0 12px rgba(14, 165, 233, 0.8);
+        }
+        
+        /* Mobile: Garantir que o sidebar tenha altura fixa e scroll próprio */
+        @media (max-width: 1023px) {
+            #sidebar {
+                height: 100vh;
+                max-height: 100vh;
+                overflow: hidden;
+            }
+            
+            .sidebar-scroll {
+                max-height: calc(100vh - 200px); /* Altura total menos header e footer */
+                overflow-y: auto;
+            }
+        }
+        
+        /* Desktop: Manter comportamento normal */
+        @media (min-width: 1024px) {
+            .sidebar-scroll {
+                max-height: none;
+            }
+        }
+    </style>
+  </head>
+<body class="h-full bg-gradient-to-br from-dark-blue-950 via-dark-blue-900 to-slate-900 text-white overflow-x-hidden">
+    <!-- Sidebar -->
+    <div class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-dark-blue-900 to-dark-blue-950 shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out" id="sidebar">
+        <!-- Sidebar Header -->
+        <div class="flex items-center justify-between h-16 px-6 border-b border-dark-blue-700/50">
+            <a href="{{ url_for('index') }}" class="flex items-center space-x-3 text-white hover:text-dark-blue-200 transition-colors duration-200">
+                <div class="p-2 bg-gradient-to-br from-dark-blue-500 to-dark-blue-600 rounded-lg shadow-lg animate-pulse-glow">
+                    <i class="fas fa-futbol text-lg"></i>
+                </div>
+                <span class="text-lg font-bold bg-gradient-to-r from-white to-dark-blue-200 bg-clip-text text-transparent">
+                    Cartola Manager
+                </span>
+            </a>
+            <!-- Close button for mobile -->
+            <button type="button" id="sidebar-close" class="lg:hidden text-dark-blue-300 hover:text-white transition-colors duration-200">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+        </div>
+
+        <!-- User Section -->
+        <div class="px-6 py-4 border-b border-dark-blue-700/50">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-white"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-white truncate">
+                        {% if session.get('username') %}{{ session.get('username') }}{% else %}Usuário{% endif %}
+                    </p>
+                    <p class="text-xs text-dark-blue-300">Administrador</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto sidebar-scroll">
+            <!-- Main Navigation -->
+            <div class="space-y-1">
+                <p class="px-3 text-xs font-semibold text-dark-blue-400 uppercase tracking-wider">Principal</p>
+                
+                <a href="{{ url_for('index') }}" 
+                   class="{% if request.path == url_for('index') %}bg-dark-blue-700 text-white border-r-2 border-blue-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
+                    <i class="fas fa-home mr-3 text-blue-400"></i>
+                    Dashboard
+                </a>
+
+                <a href="{{ url_for('pagina_inicial') }}" 
+                   class="{% if request.path.startswith('/pagina-inicial') %}bg-dark-blue-700 text-white border-r-2 border-green-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
+                    <i class="fas fa-cog mr-3 text-green-400"></i>
+                    Configurar Perfis
+                </a>
+            </div>
+
+            <!-- Modules Section -->
+            <div class="space-y-1 pt-6">
+                <p class="px-3 text-xs font-semibold text-dark-blue-400 uppercase tracking-wider">Módulos</p>
+                
+                <a href="{{ url_for('modulos') }}" 
+                   class="{% if request.path.startswith('/modulos') %}bg-dark-blue-700 text-white border-r-2 border-purple-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
+                    <i class="fas fa-cogs mr-3 text-purple-400"></i>
+                    Calcular Posições
+                </a>
+            </div>
+
+            <!-- Credentials Section -->
+            <div class="space-y-1 pt-6">
+                <p class="px-3 text-xs font-semibold text-dark-blue-400 uppercase tracking-wider">Configurações</p>
+                
+                <a href="{{ url_for('credenciais') }}" 
+                   class="{% if request.path.startswith('/credenciais') or request.path.startswith('/associar-credenciais') %}bg-dark-blue-700 text-white border-r-2 border-orange-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
+                    <i class="fas fa-users mr-3 text-orange-400"></i>
+                    Meus Times
+                </a>
+            </div>
+
+            <!-- Times Selection Section -->
+            <div class="space-y-1 pt-6 border-t border-dark-blue-700/50 mt-4">
+                <p class="px-3 text-xs font-semibold text-dark-blue-400 uppercase tracking-wider mb-2">Selecionar Time</p>
+                <div id="timesList" class="space-y-1 max-h-64 overflow-y-auto sidebar-scroll">
+                    <div class="px-3 py-2 text-xs text-dark-blue-400">Carregando times...</div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Sidebar Footer -->
+        <div class="px-4 py-4 border-t border-dark-blue-700/50">
+            <a href="{{ url_for('logout') }}" 
+               class="flex items-center px-3 py-2 text-sm font-medium text-red-300 hover:text-white hover:bg-red-600/20 rounded-lg transition-all duration-200 group">
+                <i class="fas fa-sign-out-alt mr-3 text-red-400"></i>
+                Sair
+                <i class="fas fa-arrow-right ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Mobile Overlay -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" id="sidebar-overlay"></div>
+
+    <!-- Top Bar (Mobile) -->
+    <div class="lg:hidden bg-dark-blue-800 border-b border-dark-blue-700/50 px-4 py-3 flex items-center justify-between">
+        <button type="button" id="sidebar-toggle" class="text-dark-blue-200 hover:text-white transition-colors duration-200">
+            <i class="fas fa-bars text-lg"></i>
+        </button>
+        <span class="text-lg font-bold text-white">Cartola Manager</span>
+        <div class="w-6"></div> <!-- Spacer for centering -->
+    </div>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-8 pt-20 lg:pt-8">
+        <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+                <div class="mb-6 space-y-3">
+          {% for category, message in messages %}
+                    <div class="{% if category == 'error' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% elif category == 'info' %}bg-blue-900/50 border-blue-500 text-blue-200{% else %}bg-green-900/50 border-green-500 text-green-200{% endif %} border-l-4 p-4 rounded-r-lg backdrop-blur-sm">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                  {% if category == 'error' %}
+                                <i class="fas fa-exclamation-triangle text-red-400"></i>
+                  {% elif category == 'warning' %}
+                                <i class="fas fa-exclamation-circle text-yellow-400"></i>
+                  {% elif category == 'info' %}
+                                <i class="fas fa-info-circle text-blue-400"></i>
+                  {% else %}
+                                <i class="fas fa-check-circle text-green-400"></i>
+                  {% endif %}
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium">{{ message }}</p>
+                            </div>
+                        </div>
+                    </div>
+          {% endfor %}
+                </div>
+        {% endif %}
+      {% endwith %}
+
+        <!-- Page Content -->
+        <div class="animate-fade-in">
+      {% block content %}{% endblock %}
+        </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="lg:ml-64 mt-16 border-t border-dark-blue-800/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-2 mb-4">
+                    <div class="p-2 bg-gradient-to-br from-dark-blue-500 to-dark-blue-600 rounded-lg shadow-lg">
+                        <i class="fas fa-futbol text-lg text-white"></i>
+                    </div>
+                    <span class="text-xl font-bold bg-gradient-to-r from-white to-dark-blue-200 bg-clip-text text-transparent">
+                        Cartola Manager
+                    </span>
+                </div>
+                <p class="text-dark-blue-300 text-sm">
+                    Sistema de gerenciamento de times do Cartola FC
+                </p>
+                <div class="mt-4 flex items-center justify-center space-x-6 text-dark-blue-400 text-sm">
+                    <a href="#" class="hover:text-white transition-colors duration-200 flex items-center space-x-1">
+                        <i class="fas fa-code"></i>
+                        <span>Desenvolvido com ❤️</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Sidebar toggle functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebarClose = document.getElementById('sidebar-close');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            // Toggle sidebar on mobile
+            function toggleSidebar() {
+                const isOpen = !sidebar.classList.contains('-translate-x-full');
+                
+                sidebar.classList.toggle('-translate-x-full');
+                sidebarOverlay.classList.toggle('hidden');
+                
+                // Prevenir scroll da página quando sidebar estiver aberto no mobile
+                if (window.innerWidth < 1024) {
+                    if (isOpen) {
+                        // Fechando sidebar - liberar scroll da página
+                        document.body.style.overflow = '';
+                    } else {
+                        // Abrindo sidebar - bloquear scroll da página
+                        document.body.style.overflow = 'hidden';
+                    }
+                }
+            }
+
+            // Close sidebar
+            function closeSidebar() {
+                sidebar.classList.add('-translate-x-full');
+                sidebarOverlay.classList.add('hidden');
+                
+                // Liberar scroll da página quando fechar sidebar no mobile
+                if (window.innerWidth < 1024) {
+                    document.body.style.overflow = '';
+                }
+            }
+
+            // Event listeners
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', toggleSidebar);
+            }
+            
+            if (sidebarClose) {
+                sidebarClose.addEventListener('click', closeSidebar);
+            }
+            
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', closeSidebar);
+            }
+
+            // Close sidebar on window resize if screen becomes large
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024) { // lg breakpoint
+                    closeSidebar();
+                    // Garantir que o scroll da página seja liberado ao redimensionar
+                    document.body.style.overflow = '';
+                }
+            });
+
+            // Auto-close sidebar on mobile when clicking a link
+            const sidebarLinks = sidebar.querySelectorAll('a[href]');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 1024) { // Only on mobile
+                        setTimeout(closeSidebar, 100); // Small delay for better UX
+                    }
+                });
+            });
+
+            // Smooth scrolling for anchor links
+            const anchorLinks = document.querySelectorAll('a[href^="#"]');
+            anchorLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+
+            // Carregar lista de times
+            carregarTimesSidebar();
+        });
+
+        // Função para carregar times na sidebar
+        async function carregarTimesSidebar() {
+            try {
+                const response = await fetch('/api/credenciais/lista');
+                const data = await response.json();
+                const timesList = document.getElementById('timesList');
+                
+                if (!timesList) return;
+                
+                timesList.innerHTML = '';
+                
+                if (!data.times || data.times.length === 0) {
+                    timesList.innerHTML = '<div class="px-3 py-2 text-xs text-dark-blue-400">Nenhum time cadastrado</div>';
+                    return;
+                }
+                
+                data.times.forEach(time => {
+                    const timeItem = document.createElement('div');
+                    timeItem.className = `px-3 py-2 text-sm rounded-l-lg cursor-pointer transition-all duration-200 ${
+                        time.selected 
+                            ? 'bg-dark-blue-700 text-white border-r-2 border-blue-500' 
+                            : 'text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white'
+                    }`;
+                    timeItem.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="w-6 h-6 rounded mr-2 flex items-center justify-center team-shield-sidebar" data-team-id="${time.id}">
+                                <i class="fas fa-futbol text-xs ${time.selected ? 'text-blue-400' : 'text-dark-blue-400'}"></i>
+                            </div>
+                            <span class="flex-1 truncate">${time.team_name}</span>
+                            ${time.selected ? '<i class="fas fa-check text-blue-400 ml-2"></i>' : ''}
+                        </div>
+                    `;
+                    
+                    // Carregar escudo dinamicamente
+                    if (time.team_shield_url) {
+                        const shieldContainer = timeItem.querySelector('.team-shield-sidebar');
+                        if (shieldContainer) {
+                            shieldContainer.innerHTML = '';
+                            const img = document.createElement('img');
+                            img.src = time.team_shield_url;
+                            img.alt = 'Escudo';
+                            img.className = 'w-6 h-6 rounded object-cover border border-white/20';
+                            shieldContainer.appendChild(img);
+                        }
+                    }
+                    timeItem.addEventListener('click', async () => {
+                        await selecionarTime(time.id);
+                    });
+                    timesList.appendChild(timeItem);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar times:', error);
+                const timesList = document.getElementById('timesList');
+                if (timesList) {
+                    timesList.innerHTML = '<div class="px-3 py-2 text-xs text-red-400">Erro ao carregar times</div>';
+                }
+            }
+        }
+
+        // Função para selecionar time
+        async function selecionarTime(timeId) {
+            try {
+                const response = await fetch('/api/time/selecionar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        team_id: timeId
+                    })
+                });
+                
+                if (response.ok) {
+                    // Recarregar lista de times para atualizar visual
+                    await carregarTimesSidebar();
+                    
+                    // Recarregar página se estiver em página que depende do time
+                    const currentPath = window.location.pathname;
+                    if (currentPath.includes('/modulos/') || currentPath.includes('/escalacao-ideal')) {
+                        window.location.reload();
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao selecionar time:', error);
+                alert('Erro ao selecionar time');
+            }
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

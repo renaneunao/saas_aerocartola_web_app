@@ -1,0 +1,915 @@
+{% extends "base.html" %}
+{% block title %}Laterais - Módulos{% endblock %}
+
+{% block content %}
+<style>
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+}
+</style>
+<!-- Page Header -->
+<div class="text-center mb-8">
+    <div class="flex items-center justify-center space-x-3 mb-4">
+        <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg animate-pulse-glow">
+            <i class="fas fa-running text-2xl text-white"></i>
+        </div>
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+            Laterais
+        </h1>
+    </div>
+    <div class="flex items-center justify-center space-x-2 text-dark-blue-200">
+        <i class="fas fa-calendar-alt"></i>
+        <span class="text-lg">Rodada {{ rodada_atual }}</span>
+    </div>
+</div>
+
+<!-- Navigation -->
+<div class="mb-6">
+    <nav class="flex space-x-2">
+        <a href="{{ url_for('modulos') }}" 
+           class="inline-flex items-center px-4 py-2 text-sm font-medium text-dark-blue-300 hover:text-white hover:bg-dark-blue-700/50 rounded-lg transition-all duration-200">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar aos Módulos
+        </a>
+        <button onclick="recalcularLaterais()" 
+                class="inline-flex items-center px-4 py-2 text-sm font-medium text-green-300 hover:text-white hover:bg-green-600/50 rounded-lg transition-all duration-200">
+            <i class="fas fa-sync mr-2"></i>
+            Recalcular
+        </button>
+    </nav>
+</div>
+
+<!-- Painel de Configuração de Pesos -->
+<div class="mb-8">
+    <div class="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 backdrop-blur-sm rounded-2xl border border-blue-500/50 shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-700/80 to-cyan-800/80 p-4 border-b border-blue-500/50">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg">
+                    <i class="fas fa-cogs text-white text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Configuração de Pesos</h3>
+                    <p class="text-blue-200 text-sm">Ajuste os pesos específicos para laterais</p>
+                </div>
+            </div>
+        </div>
+        
+        <form id="pesosForm" class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-blue-200">
+                        FATOR_MEDIA
+                    </label>
+                    <input type="number" 
+                           id="FATOR_MEDIA"
+                           name="FATOR_MEDIA" 
+                           value="{{ pesos_atuais.get('FATOR_MEDIA', 3.0) }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-blue-200">
+                        FATOR_DS
+                    </label>
+                    <input type="number" 
+                           id="FATOR_DS"
+                           name="FATOR_DS" 
+                           value="{{ pesos_atuais.get('FATOR_DS', 8.0) }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-blue-200">
+                        FATOR_SG
+                    </label>
+                    <input type="number" 
+                           id="FATOR_SG"
+                           name="FATOR_SG" 
+                           value="{{ pesos_atuais.get('FATOR_SG', 2.0) }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-blue-200">
+                        FATOR_ESCALACAO
+                    </label>
+                    <input type="number" 
+                           id="FATOR_ESCALACAO"
+                           name="FATOR_ESCALACAO" 
+                           value="{{ pesos_atuais.get('FATOR_ESCALACAO', 10.0) }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-blue-200">
+                        FATOR_FF
+                    </label>
+                    <input type="number" 
+                           id="FATOR_FF"
+                           name="FATOR_FF" 
+                           value="{{ pesos_atuais.get('FATOR_FF', 2.0) }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-blue-200">
+                        FATOR_FS
+                    </label>
+                    <input type="number" 
+                           id="FATOR_FS"
+                           name="FATOR_FS" 
+                           value="{{ pesos_atuais.get('FATOR_FS', 1.0) }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-blue-200">
+                        FATOR_FD
+                    </label>
+                    <input type="number" 
+                           id="FATOR_FD"
+                           name="FATOR_FD" 
+                           value="{{ pesos_atuais.get('FATOR_FD', 2.0) }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-blue-200">
+                        FATOR_G
+                    </label>
+                    <input type="number" 
+                           id="FATOR_G"
+                           name="FATOR_G" 
+                           value="{{ pesos_atuais.get('FATOR_G', 4.0) }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-blue-200">
+                        FATOR_A
+                    </label>
+                    <input type="number" 
+                           id="FATOR_A"
+                           name="FATOR_A" 
+                           value="{{ pesos_atuais.get('FATOR_A', 4.0) }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                </div>
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-blue-200">
+                        FATOR_PESO_JOGO
+                    </label>
+                    <input type="number" 
+                           id="FATOR_PESO_JOGO"
+                           name="FATOR_PESO_JOGO" 
+                           value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 1.0) }}" 
+                           step="0.1" 
+                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                </div>
+            </div>
+            
+            <div class="flex items-center justify-between mt-6 pt-4 border-t border-blue-500/30">
+                <div class="text-sm text-blue-300">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Alterações serão aplicadas ao recalcular
+                </div>
+                <div class="flex space-x-3">
+                    <button type="button" onclick="salvarPesos()"
+                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105">
+                        <i class="fas fa-save mr-2"></i>
+                        Salvar Pesos
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Module Content -->
+<div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-2xl overflow-hidden">
+    <!-- Section Header -->
+    <div class="bg-gradient-to-r from-dark-blue-700/80 to-dark-blue-800/80 p-6 border-b border-dark-blue-700/50">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg">
+                    <i class="fas fa-running text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Laterais - Rodada {{ rodada_atual }}</h2>
+                    <p class="text-dark-blue-200 text-sm">Análise detalhada com pesos personalizados</p>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-2xl font-bold text-white" id="totalRegistros">-</div>
+                <div class="text-dark-blue-200 text-sm">laterais</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Content -->
+    <div id="dataContainer" class="p-6">
+        <!-- Loading State com Progresso (inicialmente visível para carregar ranking salvo) -->
+        <div id="loadingState" class="text-center py-12">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4 animate-pulse">
+                <i class="fas fa-spinner fa-spin text-blue-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-4">Calculando rankings para laterais</h3>
+            
+            <!-- Barra de Progresso -->
+            <div class="max-w-2xl mx-auto mb-4">
+                <div class="bg-dark-blue-700/50 rounded-full h-3 overflow-hidden">
+                    <div id="progressBar" class="bg-gradient-to-r from-blue-500 to-cyan-500 h-full transition-all duration-300 rounded-full" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between items-center mt-2">
+                    <span id="progressText" class="text-sm text-dark-blue-300">0%</span>
+                    <span id="progressDetails" class="text-sm text-dark-blue-300">Iniciando...</span>
+                </div>
+            </div>
+            
+            <!-- Logs de Progresso -->
+            <div id="progressLogs" class="max-w-2xl mx-auto mt-6 bg-dark-blue-800/50 rounded-lg p-4 text-left max-h-64 overflow-y-auto">
+                <div class="space-y-2 text-sm"></div>
+            </div>
+        </div>
+        
+        <!-- Error State -->
+        <div id="errorState" class="text-center py-12 hidden">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
+                <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">Erro ao carregar dados</h3>
+            <p class="text-dark-blue-400 mb-4" id="errorMessage"></p>
+            <button onclick="carregarDados(false)" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200">
+                <i class="fas fa-redo mr-2"></i>
+                Tentar Novamente
+            </button>
+        </div>
+        
+        <!-- Data Content (será preenchido via JS) -->
+        <div id="dataContent" class="hidden">
+            <!-- Tabela para laterais -->
+            <div class="overflow-x-auto">
+                <table id="tabelaLaterais" class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-dark-blue-700/50">
+                            <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Rank</th>
+                            <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Jogador</th>
+                            <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Clube</th>
+                            <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Adversário</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Pontuação</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Jogos</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso SG</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média DS</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">DS Cedidos</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">FF</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">FS</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">FD</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">G</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">A</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Preço</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Dados serão preenchidos via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Carregar script de cálculo do lateral -->
+<script src="{{ url_for('static', filename='js/calculo_lateral.js') }}"></script>
+
+<script>
+// Função para adicionar log visual
+function addProgressLog(message, type = 'info') {
+    const logsContainer = document.getElementById('progressLogs');
+    if (!logsContainer) return;
+    
+    const iconMap = {
+        'info': 'fa-info-circle text-blue-400',
+        'success': 'fa-check-circle text-green-400',
+        'warning': 'fa-exclamation-circle text-yellow-400',
+        'error': 'fa-times-circle text-red-400'
+    };
+    
+    const logItem = document.createElement('div');
+    logItem.className = `text-dark-blue-200 flex items-start space-x-2 animate-fade-in`;
+    logItem.innerHTML = `
+        <i class="fas ${iconMap[type]} mt-1 flex-shrink-0"></i>
+        <span>${message}</span>
+    `;
+    
+    logsContainer.querySelector('.space-y-2').appendChild(logItem);
+    logsContainer.scrollTop = logsContainer.scrollHeight;
+}
+
+// Função para atualizar progresso
+function updateProgress(percent, message) {
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const progressDetails = document.getElementById('progressDetails');
+    const logMessage = document.getElementById('logMessage');
+    
+    if (progressBar) {
+        progressBar.style.width = percent + '%';
+    }
+    if (progressText) {
+        progressText.textContent = percent + '%';
+    }
+    if (progressDetails) {
+        progressDetails.textContent = message;
+    }
+    if (logMessage) {
+        logMessage.textContent = message;
+    }
+}
+
+// Flag para evitar cálculos duplicados
+let calculando = false;
+let chamadaIdCounter = 0;
+
+// Inicializar bloqueador como false no início
+if (typeof window.BLOQUEAR_CALCULO_LATERAL === 'undefined') {
+    window.BLOQUEAR_CALCULO_LATERAL = false;
+}
+
+// Função para carregar dados da API e fazer cálculos
+async function carregarDados(forcarRecalculo = false) {
+    // Se forçar recálculo, desativar bloqueador
+    if (forcarRecalculo) {
+        window.BLOQUEAR_CALCULO_LATERAL = false;
+    }
+    
+    // Prevenir múltiplas execuções simultâneas
+    if (calculando) {
+        return;
+    }
+    
+    calculando = true;
+    const chamadaId = ++chamadaIdCounter;
+    let loadingState = document.getElementById('loadingState');
+    let errorState = document.getElementById('errorState');
+    let dataContent = document.getElementById('dataContent');
+    let errorMessage = document.getElementById('errorMessage');
+    const totalRegistros = document.getElementById('totalRegistros');
+    
+    // Se os elementos não existem, significa que estamos na tela inicial - restaurar estrutura
+    if (!loadingState || !errorState || !dataContent) {
+        const dataContainer = document.getElementById('dataContainer');
+        dataContainer.innerHTML = `
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-12">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4 animate-pulse">
+                    <i class="fas fa-spinner fa-spin text-blue-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Carregando dados...</h3>
+                <p class="text-dark-blue-400">Calculando rankings para laterais</p>
+            </div>
+            
+            <!-- Error State -->
+            <div id="errorState" class="text-center py-12 hidden">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Erro ao carregar dados</h3>
+                <p class="text-dark-blue-400 mb-4" id="errorMessage"></p>
+                <button onclick="carregarDados(false)" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200">
+                    <i class="fas fa-redo mr-2"></i>
+                    Tentar Novamente
+                </button>
+            </div>
+            
+            <!-- Data Content (será preenchido via JS) -->
+            <div id="dataContent" class="hidden">
+                <!-- Tabela para laterais -->
+                <div class="overflow-x-auto">
+                    <table id="tabelaLaterais" class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-dark-blue-700/50">
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Rank</th>
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Jogador</th>
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Clube</th>
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Adversário</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Pontuação</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Jogos</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso SG</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Preço</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dados serão preenchidos via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        // Recuperar elementos após recriar HTML
+        loadingState = document.getElementById('loadingState');
+        errorState = document.getElementById('errorState');
+        dataContent = document.getElementById('dataContent');
+        errorMessage = document.getElementById('errorMessage');
+    }
+    
+    // Limpar logs anteriores
+    const logsContainer = document.getElementById('progressLogs');
+    if (logsContainer) {
+        const logsSpace = logsContainer.querySelector('.space-y-2');
+        if (logsSpace) {
+            logsSpace.innerHTML = '';
+        }
+        logsContainer.classList.remove('hidden');
+    }
+    
+    // Inicializar barra de progresso
+    updateProgress(0, 'Iniciando...');
+    
+    // Mostrar loading
+    loadingState.classList.remove('hidden');
+    errorState.classList.add('hidden');
+    dataContent.classList.add('hidden');
+    
+    updateProgress(5, 'Conectando ao servidor...');
+    
+    try {
+        // Verificar rapidamente se há ranking salvo
+        if (!forcarRecalculo) {
+            updateProgress(10, 'Verificando ranking salvo...');
+            addProgressLog('🔍 Verificando se há ranking salvo...', 'info');
+            
+            try {
+                const checkResponse = await fetch('/api/modulos/lateral/verificar-ranking');
+                const checkData = await checkResponse.json();
+                
+                if (checkData.has_ranking) {
+                    window.BLOQUEAR_CALCULO_LATERAL = true;
+                    updateProgress(20, 'Ranking encontrado, carregando dados...');
+                    addProgressLog(`💾 Ranking salvo encontrado! Carregando dados...`, 'success');
+                } else {
+                    window.BLOQUEAR_CALCULO_LATERAL = false;
+                }
+            } catch (checkError) {
+                console.error('Erro na verificação rápida:', checkError);
+                window.BLOQUEAR_CALCULO_LATERAL = false;
+            }
+        } else {
+            window.BLOQUEAR_CALCULO_LATERAL = false;
+        }
+        
+        // Se bloqueador ativo, buscar apenas ranking salvo
+        let apenasRankingSalvo = false;
+        if (!forcarRecalculo && window.BLOQUEAR_CALCULO_LATERAL === true) {
+            apenasRankingSalvo = true;
+            updateProgress(30, 'Carregando ranking salvo...');
+            addProgressLog('📡 Buscando ranking salvo...', 'info');
+        } else {
+            updateProgress(30, 'Carregando dados do servidor...');
+            addProgressLog('📡 Buscando dados de atletas e configurações...', 'info');
+        }
+        
+        const url = apenasRankingSalvo ? '/api/modulos/lateral/dados?apenas_ranking=true' : '/api/modulos/lateral/dados';
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Erro ao carregar dados');
+        }
+        
+        // Se bloqueador ativo, exibir ranking diretamente
+        if (window.BLOQUEAR_CALCULO_LATERAL === true) {
+            if (data.ranking_salvo !== null && data.ranking_salvo !== undefined && 
+                Array.isArray(data.ranking_salvo) && data.ranking_salvo.length > 0) {
+                
+                updateProgress(80, 'Exibindo ranking salvo...');
+                addProgressLog('💾 Exibindo ranking salvo...', 'success');
+                
+                const resultados = data.ranking_salvo.map((r, i) => ({ ...r, rank: i + 1 }));
+                renderizarTabelaLaterais(resultados);
+                
+                const totalRegistrosEl = document.getElementById('totalRegistros');
+                if (totalRegistrosEl) {
+                    totalRegistrosEl.textContent = resultados.length;
+                }
+                
+                updateProgress(100, 'Concluído!');
+                addProgressLog(`✨ Ranking salvo exibido com sucesso! (${resultados.length} laterais)`, 'success');
+                
+                setTimeout(() => {
+                    loadingState.classList.add('hidden');
+                    dataContent.classList.remove('hidden');
+                    if (logsContainer) {
+                        logsContainer.classList.add('hidden');
+                    }
+                }, 500);
+                
+                calculando = false;
+                return;
+            } else {
+                window.BLOQUEAR_CALCULO_LATERAL = false;
+            }
+        }
+        
+        updateProgress(50, 'Dados carregados, verificando ranking salvo...');
+        if (data.atletas && data.atletas.length) {
+            addProgressLog(`✅ Dados carregados: ${data.atletas.length} laterais encontrados`, 'success');
+        }
+        if (data.rodada_atual) {
+            addProgressLog(`📊 Rodada: ${data.rodada_atual}, Perfil Jogo: ${data.perfil_peso_jogo}, Perfil SG: ${data.perfil_peso_sg}`, 'info');
+        }
+        
+        // Verificar se há ranking salvo
+        let temRankingSalvo = false;
+        if (!forcarRecalculo && data.ranking_salvo !== null && data.ranking_salvo !== undefined) {
+            if (Array.isArray(data.ranking_salvo) && data.ranking_salvo.length > 0) {
+                temRankingSalvo = true;
+            }
+        }
+        
+        if (temRankingSalvo) {
+            window.BLOQUEAR_CALCULO_LATERAL = true;
+            addProgressLog('💾 Ranking salvo encontrado! Carregando resultados...', 'success');
+            updateProgress(50, 'Ranking salvo encontrado!');
+            updateProgress(80, 'Preparando dados salvos...');
+            
+            const resultados = data.ranking_salvo.map((r, i) => ({ ...r, rank: i + 1 }));
+            updateProgress(90, 'Renderizando tabela...');
+            renderizarTabelaLaterais(resultados);
+            
+            const totalRegistrosEl = document.getElementById('totalRegistros');
+            if (totalRegistrosEl) {
+                totalRegistrosEl.textContent = resultados.length;
+            }
+            
+            updateProgress(100, 'Concluído!');
+            addProgressLog(`✨ Ranking salvo exibido com sucesso! (${resultados.length} laterais)`, 'success');
+            
+            setTimeout(() => {
+                loadingState.classList.add('hidden');
+                dataContent.classList.remove('hidden');
+                if (logsContainer) {
+                    logsContainer.classList.add('hidden');
+                }
+            }, 500);
+            
+            calculando = false;
+            return;
+        }
+        
+        // Se bloqueador ativo, não calcular
+        if (window.BLOQUEAR_CALCULO_LATERAL === true) {
+            calculando = false;
+            return;
+        }
+        
+        // Calcular automaticamente
+        addProgressLog('🔄 Nenhum ranking salvo encontrado. Iniciando cálculo de laterais...', 'info');
+        updateProgress(40, 'Calculando pontuações...');
+        addProgressLog('⚙️ Iniciando cálculos de pontuação para cada lateral...', 'info');
+        
+        if (window.BLOQUEAR_CALCULO_LATERAL === true) {
+            calculando = false;
+            return;
+        }
+        
+        const calculo = new CalculoLateral(data);
+        const totalEscalacoes = calculo.calcularTotalEscalacoes();
+        
+        // Calcular com progresso customizado
+        const resultados = [];
+        const total = calculo.atletas.length;
+        let processados = 0;
+
+        for (const atleta of calculo.atletas) {
+            processados++;
+            const resultado = calculo.calcularPontuacao(atleta, totalEscalacoes);
+            resultados.push(resultado);
+            
+            // Atualizar progresso a cada 5 laterais ou no último
+            if (processados % 5 === 0 || processados === total) {
+                const percent = 40 + Math.floor((processados / total) * 45);
+                updateProgress(percent, `Calculando lateral ${processados}/${total}...`);
+                if (processados % 10 === 0) {
+                    addProgressLog(`⚙️ Processando lateral ${processados}/${total}...`, 'info');
+                }
+            }
+        }
+
+        resultados.sort((a, b) => b.pontuacao_total - a.pontuacao_total);
+        const topResultados = resultados.slice(0, 20);
+        
+        // Adicionar ranking aos resultados
+        topResultados.forEach((resultado, index) => {
+            resultado.rank = index + 1;
+        });
+        
+        updateProgress(85, 'Ordenando resultados...');
+        addProgressLog(`✅ Cálculo concluído: ${topResultados.length} laterais processados`, 'success');
+        
+        updateProgress(90, 'Salvando ranking...');
+        addProgressLog('💾 Salvando ranking no banco de dados...', 'info');
+        
+        // Salvar ranking no servidor
+        try {
+            const saveResponse = await fetch('/api/modulos/lateral/salvar-ranking', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ranking_data: topResultados,
+                    rodada_atual: data.rodada_atual,
+                    configuration_id: data.configuration_id
+                })
+            });
+            
+            if (saveResponse.ok) {
+                addProgressLog('✅ Ranking salvo com sucesso!', 'success');
+            } else {
+                addProgressLog('⚠️ Aviso: Não foi possível salvar o ranking', 'warning');
+            }
+        } catch (saveError) {
+            console.error('Erro ao salvar ranking:', saveError);
+            addProgressLog('⚠️ Aviso: Erro ao salvar ranking', 'warning');
+        }
+        
+        // Atualizar total de registros (se o elemento existir)
+        const totalRegistrosEl = document.getElementById('totalRegistros');
+        if (totalRegistrosEl) {
+            totalRegistrosEl.textContent = topResultados.length;
+        }
+        
+        updateProgress(95, 'Renderizando tabela...');
+        addProgressLog('📋 Gerando tabela de resultados...', 'info');
+        
+        // Renderizar tabela de laterais
+        renderizarTabelaLaterais(topResultados);
+        
+        updateProgress(100, 'Concluído!');
+        addProgressLog(`✨ Top ${topResultados.length} laterais exibidos com sucesso!`, 'success');
+        
+        // Esconder loading e mostrar conteúdo após um pequeno delay
+        setTimeout(() => {
+            loadingState.classList.add('hidden');
+            dataContent.classList.remove('hidden');
+            if (logsContainer) {
+                logsContainer.classList.add('hidden');
+            }
+        }, 500);
+        
+        calculando = false;
+        
+    } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+        loadingState.classList.add('hidden');
+        errorState.classList.remove('hidden');
+        errorMessage.textContent = error.message;
+        calculando = false;
+    }
+}
+
+// Função auxiliar para formatar números com segurança
+function formatNumber(num, decimals = 2) {
+    if (num === null || num === undefined || isNaN(num)) {
+        return (0).toFixed(decimals);
+    }
+    return parseFloat(num).toFixed(decimals);
+}
+
+// Função para renderizar tabela de laterais
+function renderizarTabelaLaterais(resultados) {
+    const tbody = document.querySelector('#tabelaLaterais tbody');
+    if (!tbody) {
+        console.error('Tabela de laterais não encontrada');
+        return;
+    }
+    
+    tbody.innerHTML = '';
+    
+    resultados.forEach((jogador) => {
+        const tr = document.createElement('tr');
+        tr.className = `border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 ${jogador.rank <= 3 ? `bg-gradient-to-r ${jogador.rank == 1 ? 'from-yellow-900/20 to-yellow-800/20' : jogador.rank == 2 ? 'from-gray-800/20 to-gray-700/20' : 'from-orange-900/20 to-orange-800/20'}` : ''}`;
+        
+        tr.innerHTML = `
+            <td class="py-4 px-2">
+                ${jogador.rank <= 3 ? `
+                <div class="flex items-center justify-center w-8 h-8 rounded-full ${jogador.rank == 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' : jogador.rank == 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' : 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'} shadow-lg">
+                    ${jogador.rank == 1 ? '<i class="fas fa-crown text-sm"></i>' : jogador.rank == 2 ? '<i class="fas fa-medal text-sm"></i>' : '<i class="fas fa-award text-sm"></i>'}
+                </div>
+                ` : `
+                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-dark-blue-700/50 text-dark-blue-200 font-bold text-sm">
+                    ${jogador.rank}
+                </div>
+                `}
+            </td>
+            <td class="py-4 px-2">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+                        <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover">
+                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                            <span class="text-white font-bold text-xs">${jogador.apelido.substring(0, 2)}</span>
+                        </div>
+                    </div>
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
+                        <img src="${jogador.clube_escudo_url || ''}" alt="${jogador.clube_nome}" class="w-full h-full object-cover">
+                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
+                            <span class="text-white font-bold text-xs">${jogador.clube_abrev}</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="font-bold text-white">${jogador.apelido}</div>
+                        <div class="text-xs text-dark-blue-400">ID: ${jogador.atleta_id}</div>
+                    </div>
+                </div>
+            </td>
+            <td class="py-4 px-2">
+                <div class="font-medium text-white">${jogador.clube_nome}</div>
+            </td>
+            <td class="py-4 px-2">
+                <div class="font-medium text-orange-300">${jogador.adversario_nome || 'N/A'}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="text-lg font-bold ${(jogador.pontuacao_total || 0) >= 10 ? 'text-green-400' : (jogador.pontuacao_total || 0) >= 5 ? 'text-yellow-400' : 'text-red-400'}">
+                    ${formatNumber(jogador.pontuacao_total)}
+                </div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${formatNumber(jogador.media)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${jogador.jogos || 0}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium ${(jogador.peso_jogo || 0) > 0 ? 'text-green-400' : (jogador.peso_jogo || 0) < 0 ? 'text-red-400' : 'text-gray-400'}">
+                    ${formatNumber(jogador.peso_jogo)}
+                </div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium ${(jogador.peso_sg || 0) > 0 ? 'text-green-400' : (jogador.peso_sg || 0) < 0 ? 'text-red-400' : 'text-gray-400'}">
+                    ${formatNumber(jogador.peso_sg)}
+                </div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${(jogador.media_ds || 0).toFixed(2)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${(jogador.media_ds_cedidos || 0).toFixed(2)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${(jogador.media_ff || 0).toFixed(2)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${(jogador.media_fs || 0).toFixed(2)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${(jogador.media_fd || 0).toFixed(2)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${(jogador.media_g || 0).toFixed(2)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-white">${(jogador.media_a || 0).toFixed(2)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <div class="font-medium text-green-400">R$ ${formatNumber(jogador.preco)}</div>
+            </td>
+            <td class="py-4 px-2 text-center">
+                <button onclick="openLateralModal('${jogador.atleta_id}')" 
+                        class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
+                    <i class="fas fa-eye mr-1"></i>
+                    Detalhes
+                </button>
+            </td>
+        `;
+        
+        tbody.appendChild(tr);
+    });
+}
+
+// Função para salvar pesos
+async function salvarPesos() {
+    const form = document.getElementById('pesosForm');
+    const formData = new FormData(form);
+    
+    const pesos = {};
+    for (const [key, value] of formData.entries()) {
+        pesos[key] = parseFloat(value);
+    }
+    
+    try {
+        const response = await fetch('/api/modulos/lateral/pesos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(pesos)
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao salvar pesos');
+        }
+        
+        // Recarregar dados com novos pesos (forçar recálculo)
+        await carregarDados(true);
+        
+        // Mostrar mensagem de sucesso
+        alert('Pesos salvos com sucesso!');
+    } catch (error) {
+        console.error('Erro ao salvar pesos:', error);
+        alert('Erro ao salvar pesos: ' + error.message);
+    }
+}
+
+// Função para recalcular (chamada pelo botão)
+function recalcularLaterais() {
+    // Restaurar estrutura de containers antes de carregar
+    const dataContainer = document.getElementById('dataContainer');
+    if (!dataContainer.querySelector('#loadingState')) {
+        dataContainer.innerHTML = `
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center py-12">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4 animate-pulse">
+                    <i class="fas fa-spinner fa-spin text-blue-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Carregando dados...</h3>
+                <p class="text-dark-blue-400">Calculando rankings para laterais</p>
+            </div>
+            
+            <!-- Error State -->
+            <div id="errorState" class="text-center py-12 hidden">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-red-500/20 rounded-full mb-4">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">Erro ao carregar dados</h3>
+                <p class="text-dark-blue-400 mb-4" id="errorMessage"></p>
+                <button onclick="carregarDados(false)" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200">
+                    <i class="fas fa-redo mr-2"></i>
+                    Tentar Novamente
+                </button>
+            </div>
+            
+            <!-- Data Content (será preenchido via JS) -->
+            <div id="dataContent" class="hidden">
+                <!-- Tabela para laterais -->
+                <div class="overflow-x-auto">
+                    <table id="tabelaLaterais" class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-dark-blue-700/50">
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Rank</th>
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Jogador</th>
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Clube</th>
+                                <th class="text-left py-3 px-2 text-dark-blue-200 font-medium">Adversário</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Pontuação</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Jogos</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso SG</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média DS</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">DS Cedidos</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">FF</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">FS</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">FD</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">G</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">A</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Preço</th>
+                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Dados serão preenchidos via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+    carregarDados(true); // Forçar recálculo quando chamado pelo botão de recalcular
+}
+
+// Carregar automaticamente ao abrir a página (primeiro tenta carregar salvo, se não tiver, permite calcular)
+document.addEventListener('DOMContentLoaded', function() {
+    // Tentar carregar ranking salvo automaticamente (não forçar recálculo)
+    carregarDados(false);
+});
+</script>
+
+<!-- Modal placeholder - será implementado conforme necessário -->
+{% endblock %}
+
