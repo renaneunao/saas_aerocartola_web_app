@@ -27,7 +27,7 @@ def calcular_melhores_treinadores(rodada_atual, top_n=100, usar_provaveis_cartol
     # NOTA: Para técnicos, sempre usamos status_id = 7 (Cartola) pois a API provaveis_cartola não tem dados de técnicos
     cursor.execute('''
         SELECT a.atleta_id, a.apelido, c.nome, a.pontos_num, a.media_num, a.preco_num, a.jogos_num, 
-               a.peso_jogo, a.peso_sg, a.clube_id
+               a.clube_id
         FROM acf_atletas a
         JOIN acf_clubes c ON a.clube_id = c.id
         WHERE a.posicao_id = 6 AND a.jogos_num > 0 AND a.status_id = 7
@@ -36,10 +36,51 @@ def calcular_melhores_treinadores(rodada_atual, top_n=100, usar_provaveis_cartol
 
     printdbg(f"Total de treinadores encontrados: {len(treinadores)}")
 
+    # Buscar peso_jogo e peso_sg das tabelas de perfis (usando perfil padrão 1 e 2)
+    perfil_peso_jogo_padrao = 1
+    perfil_peso_sg_padrao = 2
+    
+    # Coletar todos os clube_ids únicos
+    clube_ids = list(set([t[7] for t in treinadores]))
+    peso_jogo_dict = {}
+    peso_sg_dict = {}
+    
+    if clube_ids:
+        placeholders = ','.join(['%s'] * len(clube_ids))
+        # Buscar peso_jogo
+        try:
+            cursor.execute(f'''
+                SELECT clube_id, peso_jogo
+                FROM acp_peso_jogo_perfis
+                WHERE perfil_id = %s AND rodada_atual = %s AND clube_id IN ({placeholders})
+            ''', [perfil_peso_jogo_padrao, rodada_atual] + clube_ids)
+            for row in cursor.fetchall():
+                if row and len(row) >= 2:
+                    clube_id, peso_jogo = row
+                    peso_jogo_dict[clube_id] = float(peso_jogo) if peso_jogo else 0
+        except Exception as e:
+            printdbg(f"Erro ao buscar peso_jogo: {e}")
+        
+        # Buscar peso_sg
+        try:
+            cursor.execute(f'''
+                SELECT clube_id, peso_sg
+                FROM acp_peso_sg_perfis
+                WHERE perfil_id = %s AND rodada_atual = %s AND clube_id IN ({placeholders})
+            ''', [perfil_peso_sg_padrao, rodada_atual] + clube_ids)
+            for row in cursor.fetchall():
+                if row and len(row) >= 2:
+                    clube_id, peso_sg = row
+                    peso_sg_dict[clube_id] = float(peso_sg) if peso_sg else 0
+        except Exception as e:
+            printdbg(f"Erro ao buscar peso_sg: {e}")
+
     # Calcular pontuação total
     resultados = []
     for treinador in treinadores:
-        atleta_id, apelido, clube_nome, pontos, media, preco, jogos, peso_jogo, peso_sg, clube_id = treinador
+        atleta_id, apelido, clube_nome, pontos, media, preco, jogos, clube_id = treinador
+        peso_jogo = peso_jogo_dict.get(clube_id, 0)
+        peso_sg = peso_sg_dict.get(clube_id, 0)
 
         printdbg(f"\nProcessando treinador: {apelido} (ID: {atleta_id}, Clube: {clube_nome})")
         printdbg(f"  Peso Jogo (original): {peso_jogo if peso_jogo is not None else 'N/A'}")
@@ -63,15 +104,22 @@ def calcular_melhores_treinadores(rodada_atual, top_n=100, usar_provaveis_cartol
             adversario_id = clube_visitante_id if clube_id == clube_casa_id else clube_casa_id
             printdbg(f"  Partida encontrada: Clube {clube_nome} vs Adversário ID {adversario_id}")
 
-            # Obter peso_sg do adversário
-            cursor.execute('''
-                SELECT AVG(a.peso_sg)
-                FROM acf_atletas a
-                WHERE a.clube_id = %s AND a.posicao_id IN (1, 2, 3) AND a.status_id = 7
-            ''', (adversario_id,))
-            peso_sg_adversario_result = cursor.fetchone()[0]
-            peso_sg_adversario = float(peso_sg_adversario_result) if peso_sg_adversario_result is not None else 0.0
-            printdbg(f"  Peso SG Adversário (média): {peso_sg_adversario:.2f}")
+            # Obter peso_sg do adversário da tabela de perfis
+            try:
+                cursor.execute('''
+                    SELECT peso_sg
+                    FROM acp_peso_sg_perfis
+                    WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
+                ''', (perfil_peso_sg_padrao, rodada_atual, adversario_id))
+                peso_sg_adversario_result = cursor.fetchone()
+                if peso_sg_adversario_result:
+                    peso_sg_adversario = float(peso_sg_adversario_result[0]) if peso_sg_adversario_result[0] is not None else 0.0
+                else:
+                    peso_sg_adversario = 0.0
+                printdbg(f"  Peso SG Adversário: {peso_sg_adversario:.2f}")
+            except Exception as e:
+                printdbg(f"  Erro ao buscar peso_sg do adversário: {e}")
+                peso_sg_adversario = 0.0
         else:
             printdbg("  Nenhuma partida encontrada para este treinador na rodada atual. Usando peso_sg_adversario = 0.")
             peso_jogo = 0
