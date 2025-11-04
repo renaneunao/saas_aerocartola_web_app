@@ -105,7 +105,7 @@ def create_user_configuration(
     pesos_posicao: dict,
     is_default: bool = False
 ) -> int:
-    """Cria uma nova configuração de pesos para um time"""
+    """Cria ou atualiza uma configuração de pesos para um time"""
     cursor = conn.cursor()
     
     # Se for padrão, remover padrão de outras configurações do mesmo time
@@ -116,9 +116,18 @@ def create_user_configuration(
             WHERE user_id = %s AND team_id = %s
         ''', (user_id, team_id))
     
+    # Usar UPSERT (INSERT ... ON CONFLICT UPDATE) para atualizar se já existir
     cursor.execute('''
         INSERT INTO acw_weight_configurations (user_id, team_id, name, perfil_peso_jogo, perfil_peso_sg, pesos_posicao, is_default)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (user_id, team_id) 
+        DO UPDATE SET
+            name = EXCLUDED.name,
+            perfil_peso_jogo = EXCLUDED.perfil_peso_jogo,
+            perfil_peso_sg = EXCLUDED.perfil_peso_sg,
+            pesos_posicao = EXCLUDED.pesos_posicao,
+            is_default = EXCLUDED.is_default,
+            updated_at = CURRENT_TIMESTAMP
         RETURNING id
     ''', (user_id, team_id, name, perfil_peso_jogo, perfil_peso_sg, json.dumps(pesos_posicao), is_default))
     
