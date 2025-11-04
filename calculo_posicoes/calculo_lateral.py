@@ -80,7 +80,7 @@ def calcular_melhores_laterais(top_n=10, rodada_atual=6, min_jogos_pref=3, rodad
         printdbg("Usando dados do Joga 10 para jogadores prováveis")
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.pontos_num, a.media_num, 
-                   a.preco_num, a.jogos_num, a.peso_jogo, a.peso_sg, c.nome
+                   a.preco_num, a.jogos_num, c.nome
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             JOIN provaveis_cartola p ON a.atleta_id = p.atleta_id
@@ -91,7 +91,7 @@ def calcular_melhores_laterais(top_n=10, rodada_atual=6, min_jogos_pref=3, rodad
         printdbg("Usando dados do Cartola para jogadores prováveis")
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.pontos_num, a.media_num, 
-                   a.preco_num, a.jogos_num, a.peso_jogo, a.peso_sg, c.nome
+                   a.preco_num, a.jogos_num, c.nome
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             WHERE a.posicao_id = 2 AND a.jogos_num >= %s AND a.status_id = 7
@@ -99,6 +99,45 @@ def calcular_melhores_laterais(top_n=10, rodada_atual=6, min_jogos_pref=3, rodad
     laterais = cursor.fetchall()
 
     printdbg(f"Total de laterais encontrados: {len(laterais)}")
+
+    # Buscar peso_jogo e peso_sg das tabelas de perfis (usando perfil padrão 1 e 2)
+    perfil_peso_jogo_padrao = 1
+    perfil_peso_sg_padrao = 2
+    
+    # Coletar todos os clube_ids únicos
+    clube_ids = list(set([l[2] for l in laterais]))
+    peso_jogo_dict = {}
+    peso_sg_dict = {}
+    
+    if clube_ids:
+        placeholders = ','.join(['%s'] * len(clube_ids))
+        # Buscar peso_jogo
+        try:
+            cursor.execute(f'''
+                SELECT clube_id, peso_jogo
+                FROM acp_peso_jogo_perfis
+                WHERE perfil_id = %s AND rodada_atual = %s AND clube_id IN ({placeholders})
+            ''', [perfil_peso_jogo_padrao, rodada_atual] + clube_ids)
+            for row in cursor.fetchall():
+                if row and len(row) >= 2:
+                    clube_id, peso_jogo = row
+                    peso_jogo_dict[clube_id] = float(peso_jogo) if peso_jogo else 0
+        except Exception as e:
+            printdbg(f"Erro ao buscar peso_jogo: {e}")
+        
+        # Buscar peso_sg
+        try:
+            cursor.execute(f'''
+                SELECT clube_id, peso_sg
+                FROM acp_peso_sg_perfis
+                WHERE perfil_id = %s AND rodada_atual = %s AND clube_id IN ({placeholders})
+            ''', [perfil_peso_sg_padrao, rodada_atual] + clube_ids)
+            for row in cursor.fetchall():
+                if row and len(row) >= 2:
+                    clube_id, peso_sg = row
+                    peso_sg_dict[clube_id] = float(peso_sg) if peso_sg else 0
+        except Exception as e:
+            printdbg(f"Erro ao buscar peso_sg: {e}")
 
     # Obter os 20 jogadores mais escalados na tabela destaques
     cursor.execute('''
@@ -117,15 +156,17 @@ def calcular_melhores_laterais(top_n=10, rodada_atual=6, min_jogos_pref=3, rodad
     # Calcular pontuação total
     resultados = []
     for lateral in laterais:
-        atleta_id, apelido, clube_id, pontos, media, preco, jogos, peso_jogo, peso_sg, clube_nome = lateral
+        atleta_id, apelido, clube_id, pontos, media, preco, jogos, clube_nome = lateral
+        peso_jogo = peso_jogo_dict.get(clube_id, 0)
+        peso_sg = peso_sg_dict.get(clube_id, 0)
 
         printdbg(f"\nProcessando lateral: {apelido} (ID: {atleta_id}, Clube: {clube_nome})")
         printdbg(f"  Média: {media:.2f}, Peso Jogo (original): {peso_jogo if peso_jogo is not None else 'N/A'}, "
                  f"Peso SG: {peso_sg if peso_sg is not None else 'N/A'}")
 
         # Validar pesos do banco de dados
-        peso_sg = max(peso_sg if peso_sg is not None else 0, 0)  # Garantir não negativo
-        peso_jogo_original = max(peso_jogo if peso_jogo is not None else 0, 0)  # Garantir não negativo
+        peso_sg = max(peso_sg, 0)  # Garantir não negativo
+        peso_jogo_original = max(peso_jogo, 0)  # Garantir não negativo
 
         # Fator 1: Média do jogador
         pontos_media = media * FATOR_MEDIA

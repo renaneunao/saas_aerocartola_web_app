@@ -1,3 +1,12 @@
+"""
+ATENÇÃO: Este arquivo é apenas uma REFERÊNCIA e NÃO é mais usado pela aplicação.
+
+Os cálculos de posições agora são feitos completamente em JavaScript no frontend.
+Ver: static/js/calculo_*.js
+
+Este arquivo foi mantido apenas como referência de lógica, mas não deve ser executado.
+"""
+
 import sys
 from pathlib import Path
 
@@ -66,7 +75,7 @@ def calcular_melhores_goleiros(top_n=10, rodada_atual=5, min_jogos_pref=3, rodad
         printdbg("Usando dados da API de prováveis para jogadores prováveis")
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.pontos_num, a.media_num, 
-                   a.preco_num, a.jogos_num, a.peso_jogo, a.peso_sg, c.nome
+                   a.preco_num, a.jogos_num, c.nome
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             JOIN provaveis_cartola p ON a.atleta_id = p.atleta_id
@@ -77,7 +86,7 @@ def calcular_melhores_goleiros(top_n=10, rodada_atual=5, min_jogos_pref=3, rodad
         printdbg("Usando dados do Cartola para jogadores prováveis")
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.pontos_num, a.media_num, 
-                   a.preco_num, a.jogos_num, a.peso_jogo, a.peso_sg, c.nome
+                   a.preco_num, a.jogos_num, c.nome
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             WHERE a.posicao_id = 1 AND a.jogos_num >= %s AND a.status_id = 7
@@ -86,10 +95,52 @@ def calcular_melhores_goleiros(top_n=10, rodada_atual=5, min_jogos_pref=3, rodad
 
     printdbg(f"Total de goleiros encontrados: {len(goleiros)}")
 
+    # Buscar peso_jogo e peso_sg das tabelas de perfis (usando perfil padrão 1 e 2)
+    # Como não temos perfil do usuário aqui, vamos usar os perfis padrão
+    perfil_peso_jogo_padrao = 1
+    perfil_peso_sg_padrao = 2
+    
+    # Coletar todos os clube_ids únicos
+    clube_ids = list(set([g[2] for g in goleiros]))
+    peso_jogo_dict = {}
+    peso_sg_dict = {}
+    
+    if clube_ids:
+        placeholders = ','.join(['%s'] * len(clube_ids))
+        # Buscar peso_jogo
+        try:
+            cursor.execute(f'''
+                SELECT clube_id, peso_jogo
+                FROM acp_peso_jogo_perfis
+                WHERE perfil_id = %s AND rodada_atual = %s AND clube_id IN ({placeholders})
+            ''', [perfil_peso_jogo_padrao, rodada_atual] + clube_ids)
+            for row in cursor.fetchall():
+                if row and len(row) >= 2:
+                    clube_id, peso_jogo = row
+                    peso_jogo_dict[clube_id] = float(peso_jogo) if peso_jogo else 0
+        except Exception as e:
+            printdbg(f"Erro ao buscar peso_jogo: {e}")
+        
+        # Buscar peso_sg
+        try:
+            cursor.execute(f'''
+                SELECT clube_id, peso_sg
+                FROM acp_peso_sg_perfis
+                WHERE perfil_id = %s AND rodada_atual = %s AND clube_id IN ({placeholders})
+            ''', [perfil_peso_sg_padrao, rodada_atual] + clube_ids)
+            for row in cursor.fetchall():
+                if row and len(row) >= 2:
+                    clube_id, peso_sg = row
+                    peso_sg_dict[clube_id] = float(peso_sg) if peso_sg else 0
+        except Exception as e:
+            printdbg(f"Erro ao buscar peso_sg: {e}")
+
     # Calcular pontuação total
     resultados = []
     for goleiro in goleiros:
-        atleta_id, apelido, clube_id, pontos, media, preco, jogos, peso_jogo, peso_sg, clube_nome = goleiro
+        atleta_id, apelido, clube_id, pontos, media, preco, jogos, clube_nome = goleiro
+        peso_jogo = peso_jogo_dict.get(clube_id, 0)
+        peso_sg = peso_sg_dict.get(clube_id, 0)
 
         printdbg(f"\nProcessando goleiro: {apelido} (ID: {atleta_id}, Clube: {clube_nome})")
         printdbg(f"  Média: {media:.2f}, Peso Jogo (original): {peso_jogo if peso_jogo is not None else 'N/A'}, "
@@ -101,7 +152,7 @@ def calcular_melhores_goleiros(top_n=10, rodada_atual=5, min_jogos_pref=3, rodad
 
         # Default values if weights are missing
         peso_sg = peso_sg if peso_sg is not None else 0
-        peso_jogo_original = peso_jogo if peso_jogo is not None else 0
+        peso_jogo_original = peso_jogo
 
         # Encontrar o adversário na rodada atual
         cursor.execute('''

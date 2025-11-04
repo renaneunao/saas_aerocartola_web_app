@@ -185,7 +185,7 @@ input:checked + .slider:before {
         <div class="flex flex-col items-center justify-center space-y-4">
             <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-yellow-500"></div>
             <p class="text-yellow-200 text-lg font-medium">Calculando escalação ideal...</p>
-            <div id="progressLog" class="text-yellow-300 text-sm mt-4 space-y-1 text-left max-w-2xl w-full">
+            <div id="progressLog" class="text-yellow-300 text-sm mt-4 space-y-1 text-left max-w-full w-full bg-dark-blue-900/50 p-4 rounded-lg border border-yellow-500/30 max-h-96 overflow-y-auto font-mono">
                 <!-- Logs de progresso serão adicionados aqui -->
             </div>
         </div>
@@ -302,13 +302,18 @@ async function calcularEscalacao() {
         // Criar instância do calculador
         const calculador = new CalculoEscalacaoIdeal(data);
         
-        // Configurar callback de logs
+        // Configurar callback de logs - exibir passo a passo detalhado
         const logContainer = document.getElementById('progressLog');
+        logContainer.innerHTML = ''; // Limpar logs anteriores
+        
         calculador.setLogCallback((message) => {
             const logEntry = document.createElement('div');
             logEntry.textContent = message;
-            logEntry.className = 'text-yellow-300 text-sm';
+            // Manter espaçamento para logs detalhados
+            logEntry.className = 'text-yellow-300 text-sm font-mono whitespace-pre-wrap break-words';
+            logEntry.style.marginBottom = '2px';
             logContainer.appendChild(logEntry);
+            // Scroll automático para acompanhar os logs
             logContainer.scrollTop = logContainer.scrollHeight;
         });
         
@@ -320,6 +325,15 @@ async function calcularEscalacao() {
         
     } catch (error) {
         console.error('Erro ao calcular escalação:', error);
+        // Exibir erro também nos logs detalhados
+        const logContainer = document.getElementById('progressLog');
+        if (logContainer) {
+            const errorLog = document.createElement('div');
+            errorLog.textContent = `\n❌ ERRO: ${error.message || 'Erro ao calcular escalação'}`;
+            errorLog.className = 'text-red-400 text-sm font-mono font-bold mt-2';
+            logContainer.appendChild(errorLog);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
         document.getElementById('errorMessage').textContent = error.message || 'Erro ao calcular escalação';
         document.getElementById('errorState').classList.remove('hidden');
         document.getElementById('loadingState').classList.add('hidden');

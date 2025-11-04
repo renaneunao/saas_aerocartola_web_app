@@ -1,3 +1,12 @@
+"""
+ATENÇÃO: Este arquivo é apenas uma REFERÊNCIA e NÃO é mais usado pela aplicação.
+
+O cálculo da escalação ideal agora é feito completamente em JavaScript no frontend.
+Ver: static/js/calculo_escalacao_ideal.js
+
+Este arquivo foi mantido apenas como referência de lógica, mas não deve ser executado.
+"""
+
 from database import get_db_connection, close_db_connection
 from utils.utilidades import printdbg, is_debug
 from api_cartola import fetch_status_data, fetch_team_data, salvar_time_no_cartola
