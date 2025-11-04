@@ -1843,15 +1843,15 @@ def api_escalacao_dados():
                 traceback.print_exc()
                 patrimonio_error = f"Erro ao buscar patrimônio: {str(e)}"
         
-        # Buscar clubes para obter informações de SG
+        # Buscar clubes para obter informações de SG - usar o perfil configurado pelo usuário
+        perfil_peso_sg = config.get('perfil_peso_sg', 2)  # Usar perfil 2 como padrão
         cursor.execute('''
-            SELECT DISTINCT a.clube_id, MAX(a.peso_sg) as club_sg
-            FROM acf_atletas a
-            WHERE a.peso_sg IS NOT NULL
-            GROUP BY a.clube_id
-            ORDER BY club_sg DESC
+            SELECT clube_id, peso_sg as club_sg
+            FROM acp_peso_sg_perfis
+            WHERE perfil_id = %s AND rodada_atual = %s
+            ORDER BY peso_sg DESC
             LIMIT 10
-        ''')
+        ''', (perfil_peso_sg, rodada_atual))
         clubes_sg = [{'clube_id': row[0], 'sg': float(row[1])} for row in cursor.fetchall()]
         
         response_data = {

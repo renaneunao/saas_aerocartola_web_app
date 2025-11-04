@@ -157,14 +157,15 @@ def calcular_escalacao_ideal(rodada_atual, posicao_capitao='atacantes', access_t
         predefinido_defesa = { 'goleiros': [], 'zagueiros': [], 'laterais': [] }
         if estrategia == 2:
             cursor = conn.cursor()
-            # clubes com maior peso_sg (valor único por clube)
+            # clubes com maior peso_sg (valor único por clube) - buscar da tabela de perfis
+            # Usar perfil 2 como padrão (padrão do sistema)
+            perfil_peso_sg_padrao = 2
             cursor.execute('''
-                SELECT a.clube_id, MAX(a.peso_sg) as club_sg
-                FROM acf_atletas a
-                WHERE a.peso_sg IS NOT NULL
-                GROUP BY a.clube_id
-                ORDER BY club_sg DESC
-            ''')
+                SELECT clube_id, peso_sg as club_sg
+                FROM acp_peso_sg_perfis
+                WHERE perfil_id = %s AND rodada_atual = %s
+                ORDER BY peso_sg DESC
+            ''', (perfil_peso_sg_padrao, rodada_atual))
             clubes_rank = cursor.fetchall()
 
             # Mostrar um resumo claro da escolha do melhor SG (sempre visível)
