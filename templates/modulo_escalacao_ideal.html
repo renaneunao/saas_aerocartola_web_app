@@ -179,16 +179,35 @@ input:checked + .slider:before {
     </div>
 </div>
 
-<!-- Loading State -->
-<div id="loadingState" class="hidden mb-8">
-    <div class="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 backdrop-blur-sm rounded-2xl border border-yellow-500/50 shadow-xl p-8 text-center">
-        <div class="flex flex-col items-center justify-center space-y-4">
-            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-yellow-500"></div>
-            <p class="text-yellow-200 text-lg font-medium">Calculando escalação ideal...</p>
-            <div id="progressLog" class="text-yellow-300 text-sm mt-4 space-y-1 text-left max-w-full w-full bg-dark-blue-900/50 p-4 rounded-lg border border-yellow-500/30 max-h-96 overflow-y-auto font-mono">
-                <!-- Logs de progresso serão adicionados aqui -->
+<!-- Console de Debug (sempre visível) -->
+<div id="consolePanel" class="mb-8">
+    <div class="bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-sm rounded-2xl border border-gray-500/50 shadow-xl overflow-hidden">
+        <div class="bg-gradient-to-r from-gray-700/80 to-gray-800/80 p-4 border-b border-gray-500/50 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg shadow-lg">
+                    <i class="fas fa-terminal text-white text-lg"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Console de Debug</h3>
+                    <p class="text-gray-300 text-sm">Acompanhe cada passo do cálculo</p>
+                </div>
             </div>
+            <button onclick="limparConsole()" 
+                    class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-all duration-200">
+                <i class="fas fa-trash mr-1"></i>Limpar
+            </button>
         </div>
+        <div id="progressLog" class="text-green-400 text-xs leading-relaxed p-6 bg-black/80 font-mono min-h-[400px] max-h-[600px] overflow-y-auto whitespace-pre-wrap break-words">
+            <div class="text-gray-500">Aguardando início do cálculo...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading State (spinner pequeno) -->
+<div id="loadingState" class="hidden text-center mb-4">
+    <div class="inline-flex items-center space-x-3 bg-yellow-900/50 px-6 py-3 rounded-lg border border-yellow-500/50">
+        <div class="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-yellow-500"></div>
+        <p class="text-yellow-200 text-sm font-medium">Processando...</p>
     </div>
 </div>
 
@@ -272,6 +291,11 @@ async function salvarConfiguracoes() {
     }
 }
 
+function limparConsole() {
+    const logContainer = document.getElementById('progressLog');
+    logContainer.innerHTML = '<div class="text-gray-500">Console limpo. Aguardando novo cálculo...</div>';
+}
+
 async function calcularEscalacao() {
     const hackGoleiro = document.getElementById('hackGoleiroToggle').checked;
     const fecharDefesa = document.getElementById('fecharDefesaToggle').checked;
@@ -280,9 +304,20 @@ async function calcularEscalacao() {
     // Salvar configurações antes de calcular
     await salvarConfiguracoes();
     
-    // Limpar logs anteriores
+    // Limpar logs anteriores e adicionar cabeçalho
     const logContainer = document.getElementById('progressLog');
     logContainer.innerHTML = '';
+    
+    // Adicionar timestamp e configurações
+    const timestamp = new Date().toLocaleTimeString('pt-BR');
+    logContainer.innerHTML = `<div class="text-cyan-400 font-bold">═══════════════════════════════════════════════════════════
+[${timestamp}] INICIANDO NOVO CÁLCULO DE ESCALAÇÃO IDEAL
+═══════════════════════════════════════════════════════════</div>
+<div class="text-gray-300 mt-2">Configurações:</div>
+<div class="text-gray-400">  • Posição do Capitão: ${posicaoCapitao}</div>
+<div class="text-gray-400">  • Hack do Goleiro: ${hackGoleiro ? 'Sim' : 'Não'}</div>
+<div class="text-gray-400">  • Fechar Defesa: ${fecharDefesa ? 'Sim' : 'Não'}</div>
+<div class="text-cyan-400 mt-2">═══════════════════════════════════════════════════════════\n</div>`;
     
     // Mostrar loading
     document.getElementById('loadingState').classList.remove('hidden');
@@ -291,6 +326,9 @@ async function calcularEscalacao() {
     document.getElementById('calcularBtn').disabled = true;
     
     try {
+        // Log: Buscando dados
+        adicionarLog('🔍 Buscando dados do time e rankings...', 'info');
+        
         // Buscar dados (usa time selecionado na sessão)
         const response = await fetch('/api/escalacao-ideal/dados');
         const data = await response.json();
@@ -299,22 +337,16 @@ async function calcularEscalacao() {
             throw new Error(data.error);
         }
         
+        adicionarLog(`✅ Dados carregados com sucesso`, 'success');
+        adicionarLog(`   Patrimônio: R$ ${parseFloat(data.patrimonio).toFixed(2)}`, 'info');
+        adicionarLog(`   Rodada: ${data.rodada_atual}`, 'info');
+        
         // Criar instância do calculador
         const calculador = new CalculoEscalacaoIdeal(data);
         
         // Configurar callback de logs - exibir passo a passo detalhado
-        const logContainer = document.getElementById('progressLog');
-        logContainer.innerHTML = ''; // Limpar logs anteriores
-        
         calculador.setLogCallback((message) => {
-            const logEntry = document.createElement('div');
-            logEntry.textContent = message;
-            // Manter espaçamento para logs detalhados
-            logEntry.className = 'text-yellow-300 text-sm font-mono whitespace-pre-wrap break-words';
-            logEntry.style.marginBottom = '2px';
-            logContainer.appendChild(logEntry);
-            // Scroll automático para acompanhar os logs
-            logContainer.scrollTop = logContainer.scrollHeight;
+            adicionarLog(message, 'log');
         });
         
         // Calcular escalação
@@ -323,23 +355,52 @@ async function calcularEscalacao() {
         // Exibir resultado
         exibirResultado(resultado);
         
+        adicionarLog('\n✅✅✅ CÁLCULO CONCLUÍDO COM SUCESSO! ✅✅✅', 'success-bold');
+        
     } catch (error) {
         console.error('Erro ao calcular escalação:', error);
-        // Exibir erro também nos logs detalhados
-        const logContainer = document.getElementById('progressLog');
-        if (logContainer) {
-            const errorLog = document.createElement('div');
-            errorLog.textContent = `\n❌ ERRO: ${error.message || 'Erro ao calcular escalação'}`;
-            errorLog.className = 'text-red-400 text-sm font-mono font-bold mt-2';
-            logContainer.appendChild(errorLog);
-            logContainer.scrollTop = logContainer.scrollHeight;
+        
+        // Exibir erro detalhado nos logs
+        adicionarLog('\n❌❌❌ ERRO DURANTE O CÁLCULO ❌❌❌', 'error-bold');
+        adicionarLog(`Mensagem: ${error.message || 'Erro desconhecido'}`, 'error');
+        
+        if (error.stack) {
+            adicionarLog(`\nStack trace:`, 'error');
+            adicionarLog(error.stack, 'error');
         }
+        
         document.getElementById('errorMessage').textContent = error.message || 'Erro ao calcular escalação';
         document.getElementById('errorState').classList.remove('hidden');
-        document.getElementById('loadingState').classList.add('hidden');
     } finally {
+        document.getElementById('loadingState').classList.add('hidden');
         document.getElementById('calcularBtn').disabled = false;
     }
+}
+
+function adicionarLog(message, tipo = 'log') {
+    const logContainer = document.getElementById('progressLog');
+    const logEntry = document.createElement('div');
+    
+    // Definir cores e estilos baseados no tipo
+    const estilos = {
+        'log': 'text-green-400',
+        'info': 'text-blue-400',
+        'success': 'text-green-300',
+        'success-bold': 'text-green-300 font-bold text-base',
+        'error': 'text-red-400',
+        'error-bold': 'text-red-400 font-bold text-base',
+        'warning': 'text-yellow-400',
+        'debug': 'text-gray-400'
+    };
+    
+    logEntry.textContent = message;
+    logEntry.className = `${estilos[tipo] || 'text-green-400'} leading-relaxed`;
+    logEntry.style.marginBottom = '1px';
+    
+    logContainer.appendChild(logEntry);
+    
+    // Scroll automático para acompanhar os logs
+    logContainer.scrollTop = logContainer.scrollHeight;
 }
 
 function exibirResultado(resultado) {
