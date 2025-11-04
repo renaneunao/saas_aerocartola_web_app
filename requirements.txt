@@ -15,7 +15,6 @@ pandas==2.2.3
 pycparser==2.22
 PyJWT==2.10.1
 python-dateutil==2.9.0.post0
-
 pytz==2025.2
 requests==2.32.4
 six==1.17.0
@@ -24,14 +23,6 @@ typing_extensions==4.13.1
 tzdata==2025.2
 urllib3==2.3.0
 webencodings==0.5.1
-
-# Web server & runtime
-Flask
-gunicorn
-
-# Progress bar used by main/tqdm
 tqdm
-
 cloudscraper
-lxml
 psycopg2-binary==2.9.9
