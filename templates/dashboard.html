@@ -126,7 +126,7 @@
                     {% endif %}
                     {% endif %}
                 </p>
-                <a href="{{ url_for('escalacao_ideal') }}" class="inline-flex items-center justify-center w-full px-4 py-2 bg-gradient-to-r {% if not status.tem_calculos %}from-gray-600 to-gray-700 cursor-not-allowed{% elif status.tem_escalacao %}from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800{% else %}from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800{% endif %} text-white rounded-lg font-semibold transition-all duration-200" {% if not status.tem_calculos %}disabled{% endif %}>
+                <a href="{{ url_for('modulo_escalacao_ideal') }}" class="inline-flex items-center justify-center w-full px-4 py-2 bg-gradient-to-r {% if not status.tem_calculos %}from-gray-600 to-gray-700 cursor-not-allowed{% elif status.tem_escalacao %}from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800{% else %}from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800{% endif %} text-white rounded-lg font-semibold transition-all duration-200" {% if not status.tem_calculos %}disabled{% endif %}>
                     <i class="fas {% if status.tem_escalacao %}fa-edit{% else %}fa-plus{% endif %} mr-2"></i>
                     {% if status.tem_escalacao %}Ver Escalação{% else %}Escalar Time{% endif %}
                 </a>
@@ -219,7 +219,7 @@
                 <div class="flex-1">
                     <p class="text-white font-semibold mb-1">Monte sua Escalação</p>
                     <p class="text-dark-blue-300 text-sm">Crie a escalação ideal do seu time baseada nos rankings calculados.</p>
-                    <a href="{{ url_for('escalacao_ideal') }}" class="inline-flex items-center mt-2 text-emerald-400 hover:text-emerald-300 text-sm font-medium">
+                    <a href="{{ url_for('modulo_escalacao_ideal') }}" class="inline-flex items-center mt-2 text-emerald-400 hover:text-emerald-300 text-sm font-medium">
                         Escalar agora <i class="fas fa-arrow-right ml-1"></i>
                     </a>
                 </div>
@@ -232,7 +232,7 @@
         <i class="fas fa-check-circle text-6xl text-green-400 mb-4"></i>
         <h2 class="text-2xl font-bold text-white mb-2">Tudo Pronto!</h2>
         <p class="text-green-200 mb-4">Seu time está totalmente configurado e pronto para jogar!</p>
-        <a href="{{ url_for('escalacao_ideal') }}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-105">
+        <a href="{{ url_for('modulo_escalacao_ideal') }}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg font-semibold transition-all duration-200 transform hover:scale-105">
             <i class="fas fa-eye mr-2"></i>
             Ver Escalação Completa
         </a>
