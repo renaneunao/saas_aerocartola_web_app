@@ -340,12 +340,12 @@ class EscalacaoIdeal {
         const goleiroTitular = escalacao.titulares.goleiros[0];
         const precoTitular = this.getPreco(goleiroTitular);
         
-        // Buscar goleiro nulo (que não vai jogar) MAIS CARO
+        // Buscar goleiro nulo (status 6 - que não vai jogar) MAIS CARO
         const todosGoleiros = this.rankings.goleiro || [];
         const goleiroNulo = todosGoleiros.find(g => 
             !escaladosIds.includes(g.atleta_id) && 
             this.getPreco(g) > precoTitular &&
-            g.status_id !== 7  // Não provável
+            g.status_id === 6  // Apenas goleiros nulos (status 6)
         );
         
         if (goleiroNulo) {
