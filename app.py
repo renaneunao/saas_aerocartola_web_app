@@ -148,9 +148,9 @@ def index():
             print("[DEBUG INDEX] Nenhum time encontrado, redirecionando para associar_credenciais")
             return redirect(url_for('associar_credenciais'))
         
-        # Se tiver times, redirecionar para o dashboard
-        print("[DEBUG INDEX] Redirecionando para dashboard")
-        return redirect(url_for('dashboard'))
+        # Se tiver times, redirecionar para a página inicial
+        print("[DEBUG INDEX] Redirecionando para pagina_inicial")
+        return redirect(url_for('pagina_inicial'))
     except Exception as e:
         print(f"[ERRO INDEX] Erro na função index(): {e}")
         import traceback
