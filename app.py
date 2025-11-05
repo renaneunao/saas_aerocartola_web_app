@@ -1340,7 +1340,7 @@ def api_modulo_dados(modulo):
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num, c.nome as clube_nome,
-                   c.abreviacao as clube_abrev
+                   c.abreviacao as clube_abrev, a.status_id
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             WHERE a.posicao_id = %s AND a.status_id = 7
@@ -1396,10 +1396,10 @@ def api_modulo_dados(modulo):
         
         atletas = []
         for row in atletas_raw:
-            if not row or len(row) < 9:
+            if not row or len(row) < 10:
                 continue
             try:
-                atleta_id, apelido, clube_id, pontos, media, preco, jogos, clube_nome, clube_abrev = row
+                atleta_id, apelido, clube_id, pontos, media, preco, jogos, clube_nome, clube_abrev, status_id = row
                 escudo_url = get_team_shield(clube_id, size='45x45')
                 adversario_id = adversarios_dict.get(clube_id)
                 
@@ -1416,7 +1416,8 @@ def api_modulo_dados(modulo):
                     'jogos_num': int(jogos) if jogos else 0,
                     'peso_jogo': peso_jogo_dict.get(clube_id, 0),
                     'peso_sg': peso_sg_dict.get(clube_id, 0),
-                    'adversario_id': adversario_id
+                    'adversario_id': adversario_id,
+                    'status_id': int(status_id) if status_id else 7
                 })
             except Exception as e:
                 print(f"Erro ao processar atleta: {e}, row: {row}")
@@ -2241,6 +2242,26 @@ def api_escalacao_dados():
         ''', (perfil_peso_sg, rodada_atual))
         clubes_sg = [{'clube_id': row[0], 'peso_sg': float(row[1])} for row in cursor.fetchall()]
         
+        # Buscar TODOS os goleiros (para hack do goleiro) - incluindo não prováveis
+        cursor.execute('''
+            SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num, a.status_id
+            FROM acf_atletas a
+            WHERE a.posicao_id = 1
+            ORDER BY a.preco_num DESC
+        ''')
+        todos_goleiros = []
+        for row in cursor.fetchall():
+            if row and len(row) >= 5:
+                todos_goleiros.append({
+                    'atleta_id': row[0],
+                    'apelido': row[1],
+                    'clube_id': row[2],
+                    'preco_num': float(row[3]) if row[3] else 0,
+                    'preco': float(row[3]) if row[3] else 0,
+                    'status_id': int(row[4]) if row[4] else 0,
+                    'pontuacao_total': 0  # Goleiros nulos não precisam de pontuação
+                })
+        
         # Buscar top 5 de peso de jogo
         perfil_peso_jogo = config.get('perfil_peso_jogo', 2)
         cursor.execute('''
@@ -2301,6 +2322,7 @@ def api_escalacao_dados():
             'team_id': team_id,
             'rodada_atual': rodada_atual,
             'rankings_por_posicao': rankings_por_posicao,
+            'todos_goleiros': todos_goleiros,  # Lista completa de goleiros para hack
             'config': {
                 'formation': escalacao_config['formation'] if escalacao_config else '4-3-3',
                 'hack_goleiro': escalacao_config['hack_goleiro'] if escalacao_config else False,
