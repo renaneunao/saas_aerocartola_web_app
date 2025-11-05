@@ -28,6 +28,11 @@ def create_rankings_teams_table(conn: psycopg2.extensions.connection):
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_rankings_teams_config ON acw_rankings_teams(team_id, configuration_id, posicao_id, rodada_atual)')
     conn.commit()
 
+# Alias para compatibilidade com o nome esperado pelo app.py
+def create_user_rankings_table(conn: psycopg2.extensions.connection):
+    """Alias para create_rankings_teams_table por compatibilidade"""
+    return create_rankings_teams_table(conn)
+
 def save_team_ranking(
     conn: psycopg2.extensions.connection,
     user_id: int,

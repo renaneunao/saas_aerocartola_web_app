@@ -143,10 +143,10 @@ def index():
             close_db_connection(conn)
             print("[DEBUG INDEX] Conexão com banco fechada")
         
-        # Se não tiver times, redirecionar para página de associação
+        # Se não tiver times, redirecionar para página inicial (mais amigável)
         if not times or len(times) == 0:
-            print("[DEBUG INDEX] Nenhum time encontrado, redirecionando para associar_credenciais")
-            return redirect(url_for('associar_credenciais'))
+            print("[DEBUG INDEX] Nenhum time encontrado, redirecionando para pagina_inicial")
+            return redirect(url_for('pagina_inicial'))
         
         # Se tiver times, redirecionar para o dashboard
         print("[DEBUG INDEX] Redirecionando para dashboard")
@@ -395,7 +395,7 @@ def pagina_inicial():
         create_teams_table(conn)
         times = get_all_user_teams(conn, user['id'])
         if not times or len(times) == 0:
-            flash('Por favor, associe suas credenciais do Cartola primeiro.', 'warning')
+            flash('Bem-vindo ao Cartola Manager! Para começar, vamos adicionar seu primeiro time.', 'info')
             return redirect(url_for('associar_credenciais'))
     finally:
         close_db_connection(conn)
