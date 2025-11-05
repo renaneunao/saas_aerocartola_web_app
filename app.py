@@ -316,10 +316,11 @@ def dashboard():
         team_info_cartola = None
         team_shield_url = None
         try:
-            team_info_cartola = fetch_team_info_by_team_id(selected_team['access_token'])
+            team_info_cartola = fetch_team_info_by_team_id(conn, team_id)
             if team_info_cartola and team_info_cartola.get('time', {}).get('url_escudo_png'):
                 team_shield_url = team_info_cartola['time']['url_escudo_png']
-        except:
+        except Exception as e:
+            print(f"Erro ao buscar informações do time do Cartola: {e}")
             pass
         
         # Buscar informações do time
@@ -334,7 +335,7 @@ def dashboard():
             'tem_perfis': tem_perfis,
             'tem_calculos': tem_calculos,
             'tem_escalacao': tem_escalacao,
-            'perfis_info': config if tem_perfis else None
+            'perfis_info': config if (tem_perfis and config) else {}
         }
         
     except Exception as e:
