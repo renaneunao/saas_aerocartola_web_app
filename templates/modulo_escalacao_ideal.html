@@ -470,11 +470,19 @@ async function calcularEscalacao() {
         const posicaoCapitao = document.getElementById('posicaoCapitao').value;
         const posicaoReservaLuxo = document.getElementById('posicaoReservaLuxo').value;
         
+        // Log dos dados recebidos
+        console.log('[DEBUG] Dados recebidos da API:', {
+            total_goleiros: dados.todos_goleiros?.length || 0,
+            patrimonio: dados.patrimonio,
+            rodada: dados.rodada_atual
+        });
+        
         // Criar instância do calculador
         const escalador = new EscalacaoIdeal({
             rodada_atual: dados.rodada_atual,
             patrimonio: dados.patrimonio,
             rankings_por_posicao: dados.rankings_por_posicao,
+            todos_goleiros: dados.todos_goleiros || [],  // 🔧 ADICIONADO!
             clubes_sg: dados.clubes_sg || [],
             formacao: formation,
             posicao_capitao: posicaoCapitao,
