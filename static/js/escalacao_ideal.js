@@ -13,6 +13,20 @@ class EscalacaoIdeal {
         this.clubes_sg = dados.clubes_sg || [];
         this.todosGoleiros = dados.todos_goleiros || [];  // Lista completa de goleiros para hack
         
+        // Log de debug para verificar goleiros recebidos
+        console.log('[DEBUG] Goleiros recebidos no construtor:', this.todosGoleiros.length);
+        if (this.todosGoleiros.length > 0) {
+            const goleirosNulos = this.todosGoleiros.filter(g => g.status_id !== 7 && g.status_id !== 2);
+            console.log('[DEBUG] Goleiros NULOS:', goleirosNulos.length);
+            if (goleirosNulos.length > 0) {
+                console.log('[DEBUG] Top 5 goleiros nulos:', goleirosNulos.slice(0, 5).map(g => 
+                    `${g.apelido} - R$ ${g.preco_num} - status: ${g.status_id}`
+                ));
+            }
+        } else {
+            console.warn('[ATENÇÃO] Nenhum goleiro recebido do backend!');
+        }
+        
         // Configurações (podem ser passadas ou usar padrão)
         this.formacao = this.parseFormacao(dados.formacao || '4-3-3');
         this.posicaoCapitao = dados.posicao_capitao || 'atacantes';
