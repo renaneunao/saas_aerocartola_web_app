@@ -246,16 +246,16 @@ function showAlert(message, title = '', type = 'info') {
         };
         
         overlay.innerHTML = `
-            <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95" id="alertContent">
+            <div class="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-sm border-2 border-blue-500/30 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95" id="alertContent">
                 <div class="flex items-start gap-4 mb-4">
                     <i class="fas ${icons[type] || icons.info} text-3xl ${colors[type] || colors.info} flex-shrink-0 mt-1"></i>
                     <div class="flex-1">
-                        ${title ? `<h3 class="text-xl font-bold text-gray-800 mb-2">${title}</h3>` : ''}
-                        <p class="text-gray-700">${message}</p>
+                        ${title ? `<h3 class="text-xl font-bold text-white mb-2">${title}</h3>` : ''}
+                        <p class="text-gray-300">${message}</p>
                     </div>
                 </div>
                 <div class="flex justify-end">
-                    <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium" id="alertOkBtn">
+                    <button class="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 font-medium shadow-lg" id="alertOkBtn" style="box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);">
                         OK
                     </button>
                 </div>
@@ -314,16 +314,16 @@ function showConfirm(message, title = 'Confirmar', options = {}) {
         overlay.style.opacity = '0';
         
         overlay.innerHTML = `
-            <div class="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95" id="confirmContent">
+            <div class="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-sm border-2 border-blue-500/30 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95" id="confirmContent">
                 <div class="mb-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-3">${title}</h3>
-                    <p class="text-gray-700">${message}</p>
+                    <h3 class="text-xl font-bold text-white mb-3">${title}</h3>
+                    <p class="text-gray-300">${message}</p>
                 </div>
                 <div class="flex justify-end gap-3">
-                    <button class="px-6 py-2 ${cancelClass} rounded-lg transition-colors font-medium" id="confirmCancelBtn">
+                    <button class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-all duration-200 font-medium" id="confirmCancelBtn">
                         ${cancelText}
                     </button>
-                    <button class="px-6 py-2 ${confirmClass} text-white rounded-lg transition-colors font-medium" id="confirmOkBtn">
+                    <button class="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 font-medium shadow-lg" id="confirmOkBtn" style="box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);">
                         ${confirmText}
                     </button>
                 </div>

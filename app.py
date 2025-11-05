@@ -139,8 +139,8 @@ def index():
     if not times or len(times) == 0:
         return redirect(url_for('associar_credenciais'))
     
-    # Se tiver times, mostrar página inicial com seleção de perfis
-    return redirect(url_for('pagina_inicial'))
+    # Se tiver times, redirecionar para o dashboard
+    return redirect(url_for('dashboard'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -252,6 +252,104 @@ def associar_credenciais():
             close_db_connection(conn)
     
     return render_template('associar_credenciais.html', current_user=user)
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    """Dashboard principal com verificações de status do time"""
+    user = get_current_user()
+    
+    from models.teams import create_teams_table, get_team, get_all_user_teams
+    from models.user_configurations import get_user_default_configuration, create_user_configurations_table
+    from models.user_rankings import create_user_rankings_table
+    from api_cartola import fetch_team_info_by_team_id
+    from utils.team_shields import get_team_shield
+    
+    conn = get_db_connection()
+    try:
+        create_teams_table(conn)
+        create_user_configurations_table(conn)
+        create_user_rankings_table(conn)
+        
+        # Verificar se há time selecionado
+        team_id = session.get('selected_team_id')
+        
+        if not team_id:
+            # Buscar todos os times do usuário
+            all_teams = get_all_user_teams(conn, user['id'])
+            if not all_teams or len(all_teams) == 0:
+                flash('Por favor, associe suas credenciais do Cartola primeiro.', 'warning')
+                return redirect(url_for('associar_credenciais'))
+            
+            # Selecionar o primeiro time como padrão
+            selected_team = all_teams[0]
+            team_id = selected_team['id']
+            session['selected_team_id'] = team_id
+        else:
+            selected_team = get_team(conn, team_id, user['id'])
+            if not selected_team:
+                flash('Time não encontrado. Por favor, selecione um time.', 'warning')
+                return redirect(url_for('credenciais'))
+        
+        # 1. Verificar se perfis foram configurados
+        config = get_user_default_configuration(conn, user['id'], team_id)
+        tem_perfis = config is not None and config.get('perfil_peso_jogo') and config.get('perfil_peso_sg')
+        
+        # 2. Verificar se posições foram calculadas (verificar se há dados em user_rankings)
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT COUNT(*) FROM user_rankings 
+            WHERE user_id = %s AND team_id = %s
+        ''', (user['id'], team_id))
+        count_rankings = cursor.fetchone()[0]
+        tem_calculos = count_rankings > 0
+        
+        # 3. Verificar se tem escalação (verificar se há dados em user_escalacao_config)
+        cursor.execute('''
+            SELECT COUNT(*) FROM user_escalacao_config 
+            WHERE user_id = %s AND team_id = %s
+        ''', (user['id'], team_id))
+        count_escalacao = cursor.fetchone()[0]
+        tem_escalacao = count_escalacao > 0
+        
+        # Buscar informações do time do Cartola
+        team_info_cartola = None
+        team_shield_url = None
+        try:
+            team_info_cartola = fetch_team_info_by_team_id(selected_team['access_token'])
+            if team_info_cartola and team_info_cartola.get('time', {}).get('url_escudo_png'):
+                team_shield_url = team_info_cartola['time']['url_escudo_png']
+        except:
+            pass
+        
+        # Buscar informações do time
+        team_info = {
+            'id': selected_team['id'],
+            'team_name': selected_team.get('team_name', 'Meu Time'),
+            'team_slug': team_info_cartola.get('time', {}).get('slug') if team_info_cartola else None,
+            'team_shield_url': team_shield_url
+        }
+        
+        status = {
+            'tem_perfis': tem_perfis,
+            'tem_calculos': tem_calculos,
+            'tem_escalacao': tem_escalacao,
+            'perfis_info': config if tem_perfis else None
+        }
+        
+    except Exception as e:
+        print(f"Erro ao carregar dashboard: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Erro ao carregar o dashboard.', 'error')
+        return redirect(url_for('credenciais'))
+    finally:
+        close_db_connection(conn)
+    
+    return render_template('dashboard.html', 
+                         current_user=user, 
+                         team=team_info,
+                         status=status)
 
 @app.route('/pagina-inicial')
 @login_required

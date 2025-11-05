@@ -515,11 +515,11 @@
                     sessionStorage.removeItem('times_cache_timestamp');
                     await carregarTimesSidebar(true); // Forçar recarregar
                     
-                    // Recarregar página se estiver em página que depende do time
-                    const currentPath = window.location.pathname;
-                    if (currentPath.includes('/modulos/') || currentPath.includes('/escalacao-ideal')) {
-                        window.location.reload();
-                    }
+                    // Sempre redirecionar para o dashboard ao trocar de time
+                    showToast('Time trocado com sucesso!', 'success', 2000);
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1000);
                 }
             } catch (error) {
                 console.error('Erro ao selecionar time:', error);
