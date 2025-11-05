@@ -317,6 +317,9 @@ async function carregarDados(forcarRecalculo = false) {
         return;
     }
     
+    // Mostrar loader
+    showLoader(forcarRecalculo ? 'Recalculando ranking de goleiros...' : 'Carregando dados de goleiros...');
+    
     calculando = true;
     const chamadaId = ++chamadaIdCounter;
     let loadingState = document.getElementById('loadingState');
@@ -501,6 +504,8 @@ async function carregarDados(forcarRecalculo = false) {
                     if (logsContainer) {
                         logsContainer.classList.add('hidden');
                     }
+                    // Toast de sucesso
+                    showToast(`✅ Goleiros calculados com sucesso! (${resultados.length} jogadores)`, 'success');
                 }, 500);
                 
                 console.log(`[DEBUG] ✅✅✅ RANKING EXIBIDO - RETORNANDO IMEDIATAMENTE (ID: ${chamadaId})`);
@@ -582,6 +587,8 @@ async function carregarDados(forcarRecalculo = false) {
                 if (logsContainer) {
                     logsContainer.classList.add('hidden');
                 }
+                // Toast de sucesso
+                showToast(`✅ Goleiros calculados com sucesso! (${resultados.length} jogadores)`, 'success');
             }, 500);
             
             console.log(`[DEBUG] ✅✅✅ RETORNANDO - NÃO DEVE CALCULAR (ID: ${chamadaId})`);
@@ -710,6 +717,8 @@ async function carregarDados(forcarRecalculo = false) {
             if (logsContainer) {
                 logsContainer.classList.add('hidden');
             }
+            // Toast de sucesso
+            showToast(`✅ Goleiros calculados com sucesso! (${resultados.length} jogadores)`, 'success');
         }, 500);
         
         calculando = false; // Liberar flag ao finalizar (cálculo normal)
@@ -721,7 +730,10 @@ async function carregarDados(forcarRecalculo = false) {
         errorState.classList.remove('hidden');
         errorMessage.textContent = error.message;
         calculando = false; // Liberar flag em caso de erro
+        showToast('Erro ao carregar dados de goleiros', 'error');
         console.log('[DEBUG] ========== FINALIZANDO carregarDados (erro) ==========');
+    } finally {
+        hideLoader();
     }
 }
 
@@ -816,6 +828,8 @@ function renderizarTabelaGoleiros(resultados) {
 
 // Função para salvar pesos
 async function salvarPesos() {
+    showLoader('Salvando configurações de pesos...');
+    
     const form = document.getElementById('pesosForm');
     const formData = new FormData(form);
     
@@ -837,14 +851,16 @@ async function salvarPesos() {
             throw new Error('Erro ao salvar pesos');
         }
         
+        showToast('Pesos salvos com sucesso!', 'success');
+        
         // Recarregar dados com novos pesos (forçar recálculo)
         await carregarDados(true);
         
-        // Mostrar mensagem de sucesso
-        alert('Pesos salvos com sucesso!');
     } catch (error) {
         console.error('Erro ao salvar pesos:', error);
-        alert('Erro ao salvar pesos: ' + error.message);
+        showAlert('Erro ao salvar pesos: ' + error.message, 'Erro', 'error');
+    } finally {
+        hideLoader();
     }
 }
 

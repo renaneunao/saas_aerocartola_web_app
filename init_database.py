@@ -174,6 +174,32 @@ def init_all_tables():
         
         create_user_escalacao_config_table(conn)
         
+        # Migração: Adicionar colunas novas se não existirem
+        cursor = conn.cursor()
+        try:
+            # Verificar e adicionar posicao_reserva_luxo
+            cursor.execute("""
+                SELECT column_name FROM information_schema.columns 
+                WHERE table_name='acw_escalacao_config' AND column_name='posicao_reserva_luxo'
+            """)
+            if not cursor.fetchone():
+                print("   🔄 Adicionando coluna posicao_reserva_luxo...")
+                cursor.execute("ALTER TABLE acw_escalacao_config ADD COLUMN posicao_reserva_luxo VARCHAR(50) DEFAULT 'atacantes'")
+                conn.commit()
+            
+            # Verificar e adicionar prioridades
+            cursor.execute("""
+                SELECT column_name FROM information_schema.columns 
+                WHERE table_name='acw_escalacao_config' AND column_name='prioridades'
+            """)
+            if not cursor.fetchone():
+                print("   🔄 Adicionando coluna prioridades...")
+                cursor.execute("ALTER TABLE acw_escalacao_config ADD COLUMN prioridades TEXT DEFAULT 'atacantes,laterais,meias,zagueiros,goleiros,treinadores'")
+                conn.commit()
+        except Exception as e:
+            print(f"   ⚠️ Aviso ao migrar acw_escalacao_config: {e}")
+            conn.rollback()
+        
         # Criar tabela de pesos por posição por time
         print("📋 Criando tabela acw_posicao_weights...")
         cursor = conn.cursor()

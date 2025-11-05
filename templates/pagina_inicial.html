@@ -53,6 +53,19 @@
     }
 </style>
 
+<!-- Overlay de bloqueio (se não houver time selecionado) -->
+<div id="semTimeOverlay" class="hidden fixed inset-0 bg-dark-blue-900/95 backdrop-blur-sm z-50 flex flex-col items-center justify-center p-6">
+    <i class="fas fa-users text-yellow-400 text-6xl mb-6"></i>
+    <h2 class="text-3xl font-bold text-white mb-4 text-center">Nenhum Time Selecionado</h2>
+    <p class="text-dark-blue-200 text-lg mb-8 text-center max-w-2xl">
+        Para configurar os perfis de Peso de Jogo e Peso SG, você precisa primeiro selecionar ou cadastrar um time.
+    </p>
+    <a href="/credenciais" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105">
+        <i class="fas fa-plus-circle mr-2"></i>
+        Gerenciar Meus Times
+    </a>
+</div>
+
 <!-- Form para seleção de perfis -->
 <div class="w-full px-1 sm:px-2 lg:px-3">
     <form method="post" action="{{ url_for('salvar_configuracao_perfis') }}" id="profileForm">
@@ -448,12 +461,55 @@ document.addEventListener('DOMContentLoaded', function() {
         currentSlide = Math.round(slider.scrollLeft / slider.offsetWidth);
     });
     
+    // Verificar se há time selecionado
+    async function verificarTimeSelecionado() {
+        try {
+            const response = await fetch('/api/credenciais/lista');
+            const data = await response.json();
+            
+            // Verificar se há algum time selecionado
+            const temTimeSelecionado = data.times && data.times.some(t => t.selected);
+            
+            if (!temTimeSelecionado) {
+                // Mostrar overlay de bloqueio
+                document.getElementById('semTimeOverlay').classList.remove('hidden');
+                
+                // Desabilitar form
+                const form = document.getElementById('profileForm');
+                const inputs = form.querySelectorAll('input, button');
+                inputs.forEach(input => input.disabled = true);
+                
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Erro ao verificar time selecionado:', error);
+            return true; // Em caso de erro, permitir (failsafe)
+        }
+    }
+    
+    // Verificar ao carregar página
+    verificarTimeSelecionado();
+    
     // Form submit handler
     const form = document.getElementById('profileForm');
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Verificar novamente antes de submeter
+        const temTime = await verificarTimeSelecionado();
+        if (!temTime) {
+            showAlert('Time Não Selecionado', 'Por favor, selecione um time antes de configurar os perfis.');
+            return;
+        }
+        
         const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Salvando...';
         submitBtn.disabled = true;
+        
+        // Submeter form
+        form.submit();
     });
 });
 </script>

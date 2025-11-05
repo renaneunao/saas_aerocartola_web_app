@@ -369,23 +369,20 @@
             carregarTimesSidebar();
         });
 
-        // Função para carregar times na sidebar
-        async function carregarTimesSidebar() {
-            try {
-                const response = await fetch('/api/credenciais/lista');
-                const data = await response.json();
-                const timesList = document.getElementById('timesList');
-                
-                if (!timesList) return;
-                
-                timesList.innerHTML = '';
-                
-                if (!data.times || data.times.length === 0) {
-                    timesList.innerHTML = '<div class="px-3 py-2 text-xs text-dark-blue-400">Nenhum time cadastrado</div>';
-                    return;
-                }
-                
-                data.times.forEach(time => {
+        // Função para renderizar times na sidebar
+        function renderizarTimesSidebar(data) {
+            const timesList = document.getElementById('timesList');
+            
+            if (!timesList) return;
+            
+            timesList.innerHTML = '';
+            
+            if (!data.times || data.times.length === 0) {
+                timesList.innerHTML = '<div class="px-3 py-2 text-xs text-dark-blue-400">Nenhum time cadastrado</div>';
+                return;
+            }
+            
+            data.times.forEach(time => {
                     const timeItem = document.createElement('div');
                     timeItem.className = `px-3 py-2 text-sm rounded-l-lg cursor-pointer transition-all duration-200 ${
                         time.selected 
@@ -394,42 +391,113 @@
                     }`;
                     timeItem.innerHTML = `
                         <div class="flex items-center">
-                            <div class="w-6 h-6 rounded mr-2 flex items-center justify-center team-shield-sidebar" data-team-id="${time.id}">
-                                <i class="fas fa-futbol text-xs ${time.selected ? 'text-blue-400' : 'text-dark-blue-400'}"></i>
+                            <div class="w-8 h-8 rounded mr-2 flex items-center justify-center team-shield-sidebar" data-team-id="${time.id}">
+                                <i class="fas fa-futbol text-sm ${time.selected ? 'text-blue-400' : 'text-dark-blue-400'}"></i>
                             </div>
                             <span class="flex-1 truncate">${time.team_name}</span>
                             ${time.selected ? '<i class="fas fa-check text-blue-400 ml-2"></i>' : ''}
                         </div>
                     `;
                     
-                    // Carregar escudo dinamicamente
+                    // Carregar escudo dinamicamente com ALTA RESOLUÇÃO
                     if (time.team_shield_url) {
                         const shieldContainer = timeItem.querySelector('.team-shield-sidebar');
                         if (shieldContainer) {
                             shieldContainer.innerHTML = '';
                             const img = document.createElement('img');
-                            img.src = time.team_shield_url;
+                            
+                            // Usar resolução MÁXIMA disponível da API do Cartola
+                            let highResUrl = time.team_shield_url;
+                            
+                            // Se for PNG do Cartola, usar versão SEM TAMANHO (original)
+                            if (highResUrl.includes('/45x45.png')) {
+                                // Remover /45x45.png para pegar versão original de alta res
+                                highResUrl = highResUrl.replace('/45x45.png', '');
+                            } else if (highResUrl.includes('/60x60.png')) {
+                                highResUrl = highResUrl.replace('/60x60.png', '');
+                            }
+                            // Facebook profile já é alta resolução
+                            
+                            img.src = highResUrl;
                             img.alt = 'Escudo';
-                            img.className = 'w-6 h-6 rounded object-cover border border-white/20';
+                            // Container fixo + object-contain para não esticar
+                            img.className = 'w-8 h-8 rounded border border-white/20';
+                            img.style.objectFit = 'contain'; // NÃO esticar, manter proporção
+                            img.style.imageRendering = '-webkit-optimize-contrast'; // Melhor nitidez
+                            img.onerror = function() {
+                                // Se falhar, usar ícone padrão
+                                shieldContainer.innerHTML = '<i class="fas fa-futbol text-sm text-dark-blue-400"></i>';
+                            };
                             shieldContainer.appendChild(img);
                         }
                     }
                     timeItem.addEventListener('click', async () => {
-                        await selecionarTime(time.id);
+                        // Não pedir confirmação se já está selecionado
+                        if (time.selected) return;
+                        
+                        // Pedir confirmação antes de trocar
+                        const confirmado = await showConfirm(
+                            `Deseja trocar para o time "${time.team_name}"?`,
+                            '🔄 Trocar de Time',
+                            {
+                                confirmText: 'Sim, trocar',
+                                cancelText: 'Cancelar'
+                            }
+                        );
+                        
+                        if (confirmado) {
+                            await selecionarTime(time.id);
+                        }
                     });
                     timesList.appendChild(timeItem);
                 });
+        }
+        
+        // Função para carregar times na sidebar (com cache)
+        async function carregarTimesSidebar(forcarRecarregar = false) {
+            // Verificar se há cache válido (não forçar recarregar)
+            if (!forcarRecarregar) {
+                const cachedData = sessionStorage.getItem('times_cache');
+                const cacheTimestamp = sessionStorage.getItem('times_cache_timestamp');
+                
+                if (cachedData && cacheTimestamp) {
+                    const cacheAge = Date.now() - parseInt(cacheTimestamp);
+                    // Cache válido por 5 minutos (300000ms)
+                    if (cacheAge < 300000) {
+                        console.log('📦 Usando times do cache (idade: ' + Math.round(cacheAge/1000) + 's)');
+                        const data = JSON.parse(cachedData);
+                        renderizarTimesSidebar(data);
+                        return;
+                    }
+                }
+            }
+            
+            showLoader('Carregando seus times...');
+            try {
+                const response = await fetch('/api/credenciais/lista');
+                const data = await response.json();
+                
+                // Salvar no cache
+                sessionStorage.setItem('times_cache', JSON.stringify(data));
+                sessionStorage.setItem('times_cache_timestamp', Date.now().toString());
+                console.log('💾 Times salvos no cache');
+                
+                renderizarTimesSidebar(data);
             } catch (error) {
                 console.error('Erro ao carregar times:', error);
+                showToast('Erro ao carregar times', 'error');
                 const timesList = document.getElementById('timesList');
                 if (timesList) {
                     timesList.innerHTML = '<div class="px-3 py-2 text-xs text-red-400">Erro ao carregar times</div>';
                 }
+            } finally {
+                hideLoader();
             }
         }
 
         // Função para selecionar time
         async function selecionarTime(timeId) {
+            showLoader('Selecionando time...');
             try {
                 const response = await fetch('/api/time/selecionar', {
                     method: 'POST',
@@ -442,8 +510,10 @@
                 });
                 
                 if (response.ok) {
-                    // Recarregar lista de times para atualizar visual
-                    await carregarTimesSidebar();
+                    // Limpar cache e recarregar lista de times
+                    sessionStorage.removeItem('times_cache');
+                    sessionStorage.removeItem('times_cache_timestamp');
+                    await carregarTimesSidebar(true); // Forçar recarregar
                     
                     // Recarregar página se estiver em página que depende do time
                     const currentPath = window.location.pathname;
@@ -453,10 +523,16 @@
                 }
             } catch (error) {
                 console.error('Erro ao selecionar time:', error);
-                alert('Erro ao selecionar time');
+                showToast('Erro ao selecionar time', 'error');
+            } finally {
+                hideLoader();
             }
         }
     </script>
+    
+    <!-- UI Components (Loader, Toast, Alert, Confirm) -->
+    <script src="{{ url_for('static', filename='js/ui-components.js') }}"></script>
+    
     {% block scripts %}{% endblock %}
   </body>
 </html>

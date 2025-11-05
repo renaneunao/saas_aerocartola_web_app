@@ -13,13 +13,24 @@
         </h1>
     </div>
     <p class="text-dark-blue-200 text-lg">Análise detalhada de cada posição e cálculo</p>
+    <p class="text-dark-blue-300 text-sm mt-2">
+        <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+        <span id="statusGeral">Carregando status dos módulos...</span>
+    </p>
 </div>
 
 <!-- Módulos Grid -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
     <!-- Goleiros -->
     <a href="{{ url_for('modulo_individual', modulo='goleiro') }}" 
-       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+       id="modulo-goleiro"
+       data-modulo="goleiro"
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+        <!-- Badge de status (será atualizado via JS) -->
+        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
+            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
+            PENDENTE
+        </div>
         <div class="p-6">
             <div class="flex items-center space-x-4 mb-4">
                 <div class="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
@@ -42,7 +53,13 @@
 
     <!-- Laterais -->
     <a href="{{ url_for('modulo_individual', modulo='lateral') }}" 
-       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+       id="modulo-lateral"
+       data-modulo="lateral"
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
+            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
+            PENDENTE
+        </div>
         <div class="p-6">
             <div class="flex items-center space-x-4 mb-4">
                 <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
@@ -65,7 +82,13 @@
 
     <!-- Zagueiros -->
     <a href="{{ url_for('modulo_individual', modulo='zagueiro') }}" 
-       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+       id="modulo-zagueiro"
+       data-modulo="zagueiro"
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
+            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
+            PENDENTE
+        </div>
         <div class="p-6">
             <div class="flex items-center space-x-4 mb-4">
                 <div class="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
@@ -88,7 +111,13 @@
 
     <!-- Meias -->
     <a href="{{ url_for('modulo_individual', modulo='meia') }}" 
-       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+       id="modulo-meia"
+       data-modulo="meia"
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
+            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
+            PENDENTE
+        </div>
         <div class="p-6">
             <div class="flex items-center space-x-4 mb-4">
                 <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
@@ -111,7 +140,13 @@
 
     <!-- Atacantes -->
     <a href="{{ url_for('modulo_individual', modulo='atacante') }}" 
-       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+       id="modulo-atacante"
+       data-modulo="atacante"
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
+            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
+            PENDENTE
+        </div>
         <div class="p-6">
             <div class="flex items-center space-x-4 mb-4">
                 <div class="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
@@ -134,7 +169,13 @@
 
     <!-- Treinadores -->
     <a href="{{ url_for('modulo_individual', modulo='treinador') }}" 
-       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+       id="modulo-treinador"
+       data-modulo="treinador"
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
+            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
+            PENDENTE
+        </div>
         <div class="p-6">
             <div class="flex items-center space-x-4 mb-4">
                 <div class="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
@@ -157,7 +198,19 @@
 
     <!-- Escalação Ideal -->
     <a href="{{ url_for('modulo_escalacao_ideal') }}" 
-       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden">
+       id="modulo-escalacao-ideal"
+       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+        <!-- Badge de status DESMARCADO/LIBERADO -->
+        <div id="escalacao-status-badge" class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10 bg-gray-500/80 text-white">
+            <i class="fas fa-minus-circle mr-1"></i>
+            <span id="escalacao-status-text">DESMARCADO</span>
+        </div>
+        <!-- Overlay de bloqueio -->
+        <div id="escalacao-overlay" class="hidden absolute inset-0 bg-dark-blue-900/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6">
+            <i class="fas fa-exclamation-triangle text-yellow-400 text-4xl mb-4"></i>
+            <p class="text-white text-lg font-bold mb-2 text-center">Calcule todos os módulos primeiro</p>
+            <p class="text-dark-blue-300 text-sm text-center" id="modulos-pendentes-text">Faltam módulos a calcular</p>
+        </div>
         <div class="p-6">
             <div class="flex items-center space-x-4 mb-4">
                 <div class="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
@@ -200,10 +253,10 @@
                     
                     <div>
                         <h4 class="font-medium text-purple-100 mb-2">
-                            <i class="fas fa-balance-scale text-purple-400 mr-2"></i>
-                            Pesos Personalizados
+                            <i class="fas fa-check-circle text-green-400 mr-2"></i>
+                            Sistema de Validação
                         </h4>
-                        <p class="text-sm">Cada módulo utiliza os pesos configurados individualmente, permitindo ajustes específicos para cada posição.</p>
+                        <p class="text-sm">Cada módulo calculado recebe um visto verde. A escalação ideal só fica disponível após calcular TODOS os módulos de posição.</p>
                     </div>
                     
                     <div>
@@ -217,13 +270,182 @@
                     <div>
                         <h4 class="font-medium text-purple-100 mb-2">
                             <i class="fas fa-sync text-purple-400 mr-2"></i>
-                            Atualização Automática
+                            Atualização por Rodada
                         </h4>
-                        <p class="text-sm">Os dados são atualizados automaticamente a cada execução do sistema, garantindo informações sempre atuais.</p>
+                        <p class="text-sm">Os cálculos são específicos para cada rodada e time. Ao trocar de rodada, os módulos precisam ser recalculados.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Carregar status dos módulos ao carregar a página
+    document.addEventListener('DOMContentLoaded', async function() {
+        try {
+            showLoader('Verificando status dos módulos...');
+            
+            // PRIMEIRO: Verificar se há perfis disponíveis
+            const perfisResponse = await fetch('/api/perfis/verificar');
+            const perfisData = await perfisResponse.json();
+            
+            if (!perfisData.tem_perfis) {
+                // NÃO HÁ PERFIS - BLOQUEAR TUDO
+                hideLoader();
+                
+                // Bloquear todos os módulos de posição
+                const modulos = ['goleiro', 'lateral', 'zagueiro', 'meia', 'atacante', 'treinador'];
+                modulos.forEach(modulo => {
+                    const card = document.getElementById(`modulo-${modulo}`);
+                    if (card) {
+                        // Adicionar overlay de bloqueio
+                        const overlay = document.createElement('div');
+                        overlay.className = 'absolute inset-0 bg-dark-blue-900/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-4';
+                        overlay.innerHTML = `
+                            <i class="fas fa-exclamation-triangle text-red-400 text-3xl mb-3"></i>
+                            <p class="text-white text-sm font-bold text-center">Sem perfis disponíveis</p>
+                        `;
+                        card.appendChild(overlay);
+                        card.style.cursor = 'not-allowed';
+                        
+                        // Badge vermelho
+                        const badge = card.querySelector('.status-badge');
+                        if (badge) {
+                            badge.className = 'status-badge absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
+                            badge.innerHTML = '<i class="fas fa-ban mr-1"></i>BLOQUEADO';
+                        }
+                        
+                        // Impedir clique
+                        card.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            showAlert('Perfis Não Calculados', perfisData.mensagem);
+                        });
+                    }
+                });
+                
+                // Bloquear escalação ideal também
+                const escalacaoCard = document.getElementById('modulo-escalacao-ideal');
+                const escalacaoOverlay = document.getElementById('escalacao-overlay');
+                const escalacaoBadge = document.getElementById('escalacao-status-badge');
+                
+                escalacaoOverlay.classList.remove('hidden');
+                escalacaoOverlay.innerHTML = `
+                    <i class="fas fa-exclamation-triangle text-red-400 text-4xl mb-4"></i>
+                    <p class="text-white text-lg font-bold mb-2 text-center">Perfis não disponíveis</p>
+                    <p class="text-dark-blue-300 text-sm text-center">${perfisData.mensagem}</p>
+                `;
+                escalacaoBadge.className = 'absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
+                escalacaoBadge.innerHTML = '<i class="fas fa-ban mr-1"></i>BLOQUEADO';
+                escalacaoCard.style.cursor = 'not-allowed';
+                escalacaoCard.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showAlert('Perfis Não Calculados', perfisData.mensagem);
+                });
+                
+                // Atualizar status geral
+                const statusGeral = document.getElementById('statusGeral');
+                statusGeral.innerHTML = `<span class="text-red-400 font-bold"><i class="fas fa-ban mr-1"></i>${perfisData.mensagem}</span>`;
+                
+                return; // Não continuar verificação de status
+            }
+            
+            // SE HOUVER PERFIS, continuar verificação normal
+            const response = await fetch('/api/modulos/status');
+            if (!response.ok) {
+                throw new Error('Erro ao buscar status dos módulos');
+            }
+            
+            const data = await response.json();
+            console.log('Status dos módulos:', data);
+            
+            // Atualizar badges de cada módulo
+            const modulos = ['goleiro', 'lateral', 'zagueiro', 'meia', 'atacante', 'treinador'];
+            const modulosCalculados = [];
+            const modulosPendentes = [];
+            
+            modulos.forEach(modulo => {
+                const card = document.getElementById(`modulo-${modulo}`);
+                const badge = card.querySelector('.status-badge');
+                
+                if (data.status[modulo]) {
+                    // Módulo CALCULADO - badge verde com visto
+                    badge.className = 'status-badge absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
+                    badge.innerHTML = '<i class="fas fa-check-circle mr-1"></i>CALCULADO';
+                    modulosCalculados.push(modulo);
+                } else {
+                    // Módulo PENDENTE - badge laranja com ampulheta
+                    badge.className = 'status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
+                    badge.innerHTML = '<i class="fas fa-hourglass-half mr-1 animate-pulse"></i>PENDENTE';
+                    modulosPendentes.push(modulo);
+                }
+            });
+            
+            // Atualizar status geral no header
+            const statusGeral = document.getElementById('statusGeral');
+            if (data.todos_calculados) {
+                statusGeral.innerHTML = `<span class="text-green-400 font-bold"><i class="fas fa-check-circle mr-1"></i>Todos os módulos calculados! Pronto para escalar.</span>`;
+            } else {
+                const nomes = {
+                    'goleiro': 'Goleiros',
+                    'lateral': 'Laterais',
+                    'zagueiro': 'Zagueiros',
+                    'meia': 'Meias',
+                    'atacante': 'Atacantes',
+                    'treinador': 'Técnicos'
+                };
+                const faltam = modulosPendentes.map(m => nomes[m]).join(', ');
+                statusGeral.innerHTML = `<span class="text-yellow-400 font-bold"><i class="fas fa-exclamation-triangle mr-1"></i>Calculados: ${modulosCalculados.length}/6 • Faltam: ${faltam}</span>`;
+            }
+            
+            // Controlar acesso ao módulo de escalação ideal
+            const escalacaoCard = document.getElementById('modulo-escalacao-ideal');
+            const escalacaoOverlay = document.getElementById('escalacao-overlay');
+            const escalacaoBadge = document.getElementById('escalacao-status-badge');
+            const escalacaoStatusText = document.getElementById('escalacao-status-text');
+            const modulosPendentesText = document.getElementById('modulos-pendentes-text');
+            
+            if (data.todos_calculados) {
+                // LIBERADO - badge verde com visto
+                escalacaoOverlay.classList.add('hidden');
+                escalacaoBadge.className = 'absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
+                escalacaoStatusText.innerHTML = '<i class="fas fa-check-circle mr-1"></i>LIBERADO';
+                escalacaoCard.style.cursor = 'pointer';
+            } else {
+                // DESMARCADO - badge cinza
+                escalacaoOverlay.classList.remove('hidden');
+                escalacaoBadge.className = 'absolute top-3 right-3 bg-gray-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
+                escalacaoStatusText.innerHTML = '<i class="fas fa-minus-circle mr-1"></i>DESMARCADO';
+                escalacaoCard.style.cursor = 'not-allowed';
+                
+                // Mensagem do que falta
+                const nomes = {
+                    'goleiro': 'Goleiros',
+                    'lateral': 'Laterais',
+                    'zagueiro': 'Zagueiros',
+                    'meia': 'Meias',
+                    'atacante': 'Atacantes',
+                    'treinador': 'Técnicos'
+                };
+                const faltam = modulosPendentes.map(m => nomes[m]).join(', ');
+                modulosPendentesText.innerHTML = `Pendentes (${modulosPendentes.length}): <span class="text-yellow-300 font-bold">${faltam}</span>`;
+                
+                // Impedir navegação
+                escalacaoCard.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showAlert(
+                        'Módulos Pendentes', 
+                        `Por favor, calcule todos os módulos de posição antes de acessar a escalação ideal.\n\nAinda faltam: ${faltam}`
+                    );
+                });
+            }
+            
+        } catch (error) {
+            console.error('Erro ao carregar status:', error);
+            showToast('Erro ao verificar status dos módulos', 'error');
+        } finally {
+            hideLoader();
+        }
+    });
+</script>
 {% endblock %}

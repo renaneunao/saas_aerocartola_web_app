@@ -34,7 +34,10 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         {% if time.team_shield_url %}
-                        <img src="{{ time.team_shield_url }}" alt="Escudo" class="w-12 h-12 rounded-lg object-cover border-2 border-white/20 shadow-lg">
+                        <img src="{{ time.team_shield_url.replace('/45x45.png', '').replace('/60x60.png', '') }}" 
+                             alt="Escudo" 
+                             class="w-12 h-12 rounded-lg border-2 border-white/20 shadow-lg"
+                             style="object-fit: contain; image-rendering: -webkit-optimize-contrast;">
                         {% else %}
                         <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-lg flex items-center justify-center">
                             <i class="fas fa-futbol text-white text-xl"></i>
@@ -171,6 +174,8 @@ async function atualizarTokens(timeId) {
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Atualizando...</span>';
     
+    showLoader('Atualizando tokens do time...');
+    
     try {
         const response = await fetch(`/api/time/atualizar-tokens/${timeId}`, {
             method: 'POST',
@@ -182,18 +187,20 @@ async function atualizarTokens(timeId) {
         const data = await response.json();
         
         if (response.ok) {
-            alert('Tokens atualizados com sucesso!');
-            window.location.reload();
+            showToast('Tokens atualizados com sucesso!', 'success');
+            setTimeout(() => window.location.reload(), 1000);
         } else {
-            alert('Erro ao atualizar tokens: ' + (data.error || 'Erro desconhecido'));
+            showAlert('Erro ao atualizar tokens: ' + (data.error || 'Erro desconhecido'), 'Erro', 'error');
             btn.disabled = false;
             btn.innerHTML = originalHtml;
         }
     } catch (error) {
         console.error('Erro ao atualizar tokens:', error);
-        alert('Erro ao atualizar tokens');
+        showAlert('Erro ao atualizar tokens', 'Erro de Conexão', 'error');
         btn.disabled = false;
         btn.innerHTML = originalHtml;
+    } finally {
+        hideLoader();
     }
 }
 </script>

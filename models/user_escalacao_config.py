@@ -18,6 +18,8 @@ def create_user_escalacao_config_table(conn: psycopg2.extensions.connection):
             hack_goleiro BOOLEAN DEFAULT FALSE,
             fechar_defesa BOOLEAN DEFAULT FALSE,
             posicao_capitao VARCHAR(50) DEFAULT 'atacantes',
+            posicao_reserva_luxo VARCHAR(50) DEFAULT 'atacantes',
+            prioridades TEXT DEFAULT 'atacantes,laterais,meias,zagueiros,goleiros,treinadores',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES acw_users(id) ON DELETE CASCADE,
@@ -39,7 +41,7 @@ def get_user_escalacao_config(conn: psycopg2.extensions.connection, user_id: int
     
     if team_id:
         cursor.execute('''
-            SELECT id, user_id, team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, created_at, updated_at
+            SELECT id, user_id, team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, posicao_reserva_luxo, prioridades, created_at, updated_at
             FROM acw_escalacao_config
             WHERE user_id = %s AND team_id = %s
             LIMIT 1
@@ -47,7 +49,7 @@ def get_user_escalacao_config(conn: psycopg2.extensions.connection, user_id: int
     else:
         # Se não especificar, busca a primeira configuração do usuário
         cursor.execute('''
-            SELECT id, user_id, team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, created_at, updated_at
+            SELECT id, user_id, team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, posicao_reserva_luxo, prioridades, created_at, updated_at
             FROM acw_escalacao_config
             WHERE user_id = %s
             ORDER BY created_at DESC
@@ -65,15 +67,17 @@ def get_user_escalacao_config(conn: psycopg2.extensions.connection, user_id: int
         'hack_goleiro': row[4],
         'fechar_defesa': row[5],
         'posicao_capitao': row[6],
-        'created_at': row[7],
-        'updated_at': row[8]
+        'posicao_reserva_luxo': row[7],
+        'prioridades': row[8],
+        'created_at': row[9],
+        'updated_at': row[10]
     }
 
 def get_all_user_escalacao_configs(conn: psycopg2.extensions.connection, user_id: int) -> List[Dict]:
     """Busca todas as configurações de escalação ideal de um usuário"""
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT id, user_id, team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, created_at, updated_at
+        SELECT id, user_id, team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, posicao_reserva_luxo, prioridades, created_at, updated_at
         FROM acw_escalacao_config
         WHERE user_id = %s
         ORDER BY created_at DESC
@@ -88,8 +92,10 @@ def get_all_user_escalacao_configs(conn: psycopg2.extensions.connection, user_id
             'hack_goleiro': row[4],
             'fechar_defesa': row[5],
             'posicao_capitao': row[6],
-            'created_at': row[7],
-            'updated_at': row[8]
+            'posicao_reserva_luxo': row[7],
+            'prioridades': row[8],
+            'created_at': row[9],
+            'updated_at': row[10]
         }
         for row in rows
     ]
@@ -101,7 +107,9 @@ def upsert_user_escalacao_config(
     formation: str = '4-3-3',
     hack_goleiro: bool = False,
     fechar_defesa: bool = False,
-    posicao_capitao: str = 'atacantes'
+    posicao_capitao: str = 'atacantes',
+    posicao_reserva_luxo: str = 'atacantes',
+    prioridades: str = 'atacantes,laterais,meias,zagueiros,goleiros,tecnicos'
 ) -> int:
     """Cria ou atualiza a configuração de escalação ideal de um usuário para um time específico"""
     cursor = conn.cursor()
@@ -117,18 +125,18 @@ def upsert_user_escalacao_config(
         # Atualizar
         cursor.execute('''
             UPDATE acw_escalacao_config
-            SET formation = %s, hack_goleiro = %s, fechar_defesa = %s, posicao_capitao = %s, updated_at = CURRENT_TIMESTAMP
+            SET formation = %s, hack_goleiro = %s, fechar_defesa = %s, posicao_capitao = %s, posicao_reserva_luxo = %s, prioridades = %s, updated_at = CURRENT_TIMESTAMP
             WHERE user_id = %s AND team_id = %s
             RETURNING id
-        ''', (formation, hack_goleiro, fechar_defesa, posicao_capitao, user_id, team_id))
+        ''', (formation, hack_goleiro, fechar_defesa, posicao_capitao, posicao_reserva_luxo, prioridades, user_id, team_id))
         config_id = cursor.fetchone()[0]
     else:
         # Criar novo
         cursor.execute('''
-            INSERT INTO acw_escalacao_config (user_id, team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO acw_escalacao_config (user_id, team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, posicao_reserva_luxo, prioridades)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
-        ''', (user_id, team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao))
+        ''', (user_id, team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, posicao_reserva_luxo, prioridades))
         config_id = cursor.fetchone()[0]
     
     conn.commit()

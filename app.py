@@ -629,6 +629,309 @@ def modulos():
         return redirect(url_for('credenciais'))
     return render_template('modulos.html')
 
+@app.route('/api/admin/limpar-rankings', methods=['POST'])
+@login_required
+def api_admin_limpar_rankings():
+    """API para limpar todos os rankings (admin only)"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Contar antes
+        cursor.execute("SELECT COUNT(*) FROM acw_rankings_teams")
+        total_antes = cursor.fetchone()[0]
+        
+        # Deletar todos
+        cursor.execute("DELETE FROM acw_rankings_teams")
+        conn.commit()
+        
+        # Contar depois
+        cursor.execute("SELECT COUNT(*) FROM acw_rankings_teams")
+        total_depois = cursor.fetchone()[0]
+        
+        return jsonify({
+            'success': True,
+            'deletados': total_antes,
+            'restantes': total_depois,
+            'mensagem': f'✅ {total_antes} rankings deletados com sucesso!'
+        })
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"Erro ao limpar rankings: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        close_db_connection(conn)
+
+@app.route('/api/debug/time/<int:team_id>')
+@login_required
+def api_debug_time(team_id):
+    """API de debug para verificar por que um time não retorna rankings"""
+    user = get_current_user()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        debug_info = {}
+        
+        # Buscar rodada
+        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        rodada_result = cursor.fetchone()
+        rodada_atual = rodada_result[0] if rodada_result else 1
+        debug_info['rodada_atual'] = rodada_atual
+        
+        # Buscar info do time
+        cursor.execute("SELECT id, user_id, team_name FROM acw_teams WHERE id = %s", (team_id,))
+        time_info = cursor.fetchone()
+        if not time_info:
+            return jsonify({'error': 'Time não encontrado'}), 404
+        
+        debug_info['time'] = {
+            'id': time_info[0],
+            'user_id': time_info[1],
+            'team_name': time_info[2]
+        }
+        
+        # Buscar configuração
+        from models.user_configurations import get_user_default_configuration
+        config = get_user_default_configuration(conn, time_info[1], team_id)
+        
+        debug_info['configuracao'] = {
+            'existe': config is not None,
+            'config_id': config.get('id') if config else None,
+            'perfil_peso_jogo': config.get('perfil_peso_jogo') if config else None,
+            'perfil_peso_sg': config.get('perfil_peso_sg') if config else None
+        }
+        
+        # Verificar rankings - QUERY DIRETA
+        cursor.execute("""
+            SELECT posicao_id, configuration_id, 
+                   CASE 
+                       WHEN ranking_data::text = '[]' THEN 0
+                       ELSE jsonb_array_length(ranking_data)
+                   END as qtd_jogadores
+            FROM acw_rankings_teams
+            WHERE team_id = %s
+              AND rodada_atual = %s
+            ORDER BY posicao_id
+        """, (team_id, rodada_atual))
+        
+        rankings_direto = cursor.fetchall()
+        debug_info['rankings_direto'] = [
+            {'posicao_id': r[0], 'configuration_id': r[1], 'qtd_jogadores': r[2]}
+            for r in rankings_direto
+        ]
+        
+        # Verificar rankings com configuration_id
+        if config:
+            cursor.execute("""
+                SELECT posicao_id,
+                       CASE 
+                           WHEN ranking_data::text = '[]' THEN 0
+                           ELSE jsonb_array_length(ranking_data)
+                       END as qtd_jogadores
+                FROM acw_rankings_teams
+                WHERE team_id = %s
+                  AND rodada_atual = %s
+                  AND configuration_id = %s
+                ORDER BY posicao_id
+            """, (team_id, rodada_atual, config.get('id')))
+            
+            rankings_com_config = cursor.fetchall()
+            debug_info['rankings_com_config_id'] = [
+                {'posicao_id': r[0], 'qtd_jogadores': r[1]}
+                for r in rankings_com_config
+            ]
+        else:
+            debug_info['rankings_com_config_id'] = []
+        
+        # Usar a mesma função da API
+        from models.user_rankings import get_team_rankings
+        posicoes = {
+            'goleiro': 1, 'lateral': 2, 'zagueiro': 3,
+            'meia': 4, 'atacante': 5, 'treinador': 6
+        }
+        
+        rankings_via_funcao = {}
+        for pos_nome, pos_id in posicoes.items():
+            rankings = get_team_rankings(
+                conn,
+                time_info[1],  # user_id
+                team_id=team_id,
+                configuration_id=config.get('id') if config else None,
+                posicao_id=pos_id,
+                rodada_atual=rodada_atual
+            )
+            
+            if rankings:
+                ranking_data = rankings[0].get('ranking_data', [])
+                qtd = len(ranking_data) if isinstance(ranking_data, list) else 0
+                rankings_via_funcao[pos_nome] = {'qtd_jogadores': qtd, 'tem_ranking': True}
+            else:
+                rankings_via_funcao[pos_nome] = {'qtd_jogadores': 0, 'tem_ranking': False}
+        
+        debug_info['rankings_via_funcao'] = rankings_via_funcao
+        
+        # Diagnóstico
+        debug_info['diagnostico'] = []
+        
+        if not config:
+            debug_info['diagnostico'].append('❌ TIME NÃO TEM CONFIGURAÇÃO - Precisa escolher perfis')
+        
+        if len(debug_info['rankings_direto']) == 0:
+            debug_info['diagnostico'].append('❌ NENHUM RANKING SALVO - Precisa calcular os módulos')
+        elif len(debug_info['rankings_direto']) < 6:
+            debug_info['diagnostico'].append(f'⚠️  APENAS {len(debug_info["rankings_direto"])}/6 RANKINGS')
+        
+        if config and len(debug_info['rankings_com_config_id']) == 0:
+            debug_info['diagnostico'].append('❌ RANKINGS SALVOS COM OUTRO configuration_id - Recalcular módulos')
+        
+        if not debug_info['diagnostico']:
+            debug_info['diagnostico'].append('✅ Tudo parece OK')
+        
+        return jsonify(debug_info)
+        
+    except Exception as e:
+        print(f"Erro no debug: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        close_db_connection(conn)
+
+@app.route('/api/perfis/verificar')
+@login_required
+def api_perfis_verificar():
+    """API para verificar se há perfis de peso de jogo e SG disponíveis"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Buscar rodada atual
+        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        rodada_result = cursor.fetchone()
+        rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else None
+        
+        if not rodada_atual:
+            return jsonify({
+                'tem_perfis': False,
+                'tem_peso_jogo': False,
+                'tem_peso_sg': False,
+                'rodada_atual': None,
+                'mensagem': 'Nenhuma rodada encontrada. Execute o sistema de cálculo de perfis primeiro.'
+            })
+        
+        # Verificar perfis de peso de jogo
+        cursor.execute("""
+            SELECT COUNT(*) FROM acp_peso_jogo_perfis 
+            WHERE rodada_atual = %s
+        """, (rodada_atual,))
+        count_peso_jogo = cursor.fetchone()[0]
+        
+        # Verificar perfis de peso SG
+        cursor.execute("""
+            SELECT COUNT(*) FROM acp_peso_sg_perfis 
+            WHERE rodada_atual = %s
+        """, (rodada_atual,))
+        count_peso_sg = cursor.fetchone()[0]
+        
+        tem_peso_jogo = count_peso_jogo > 0
+        tem_peso_sg = count_peso_sg > 0
+        tem_perfis = tem_peso_jogo and tem_peso_sg
+        
+        mensagem = None
+        if not tem_perfis:
+            if not tem_peso_jogo and not tem_peso_sg:
+                mensagem = 'Não há perfis de Peso de Jogo nem Peso SG calculados. Execute o sistema de cálculo primeiro.'
+            elif not tem_peso_jogo:
+                mensagem = 'Não há perfis de Peso de Jogo calculados. Execute o sistema de cálculo primeiro.'
+            elif not tem_peso_sg:
+                mensagem = 'Não há perfis de Peso SG calculados. Execute o sistema de cálculo primeiro.'
+        
+        return jsonify({
+            'tem_perfis': tem_perfis,
+            'tem_peso_jogo': tem_peso_jogo,
+            'tem_peso_sg': tem_peso_sg,
+            'rodada_atual': rodada_atual,
+            'count_peso_jogo': count_peso_jogo,
+            'count_peso_sg': count_peso_sg,
+            'mensagem': mensagem
+        })
+    except Exception as e:
+        print(f"Erro ao verificar perfis: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        close_db_connection(conn)
+
+@app.route('/api/modulos/status')
+@login_required
+def api_modulos_status():
+    """API para verificar status de todos os módulos (se foram calculados)"""
+    user = get_current_user()
+    team_id = session.get('selected_team_id')
+    
+    if not team_id:
+        return jsonify({'error': 'Nenhum time selecionado'}), 400
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Buscar rodada atual
+        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        rodada_result = cursor.fetchone()
+        rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
+        
+        # Mapeamento de módulos para posicao_id
+        posicao_map = {
+            'goleiro': 1, 
+            'lateral': 2, 
+            'zagueiro': 3, 
+            'meia': 4, 
+            'atacante': 5, 
+            'treinador': 6
+        }
+        
+        # Verificar cada módulo de posição
+        modulos = ['goleiro', 'lateral', 'zagueiro', 'meia', 'atacante', 'treinador']
+        status = {}
+        
+        for modulo in modulos:
+            posicao_id = posicao_map[modulo]
+            cursor.execute("""
+                SELECT COUNT(*) > 0 as calculado
+                FROM acw_rankings_teams
+                WHERE team_id = %s
+                  AND rodada_atual = %s
+                  AND posicao_id = %s
+            """, (team_id, rodada_atual, posicao_id))
+            
+            result = cursor.fetchone()
+            status[modulo] = bool(result[0]) if result else False
+        
+        # Verificar se todos foram calculados
+        todos_calculados = all(status.values())
+        
+        return jsonify({
+            'status': status,
+            'todos_calculados': todos_calculados,
+            'rodada_atual': rodada_atual,
+            'team_id': team_id
+        })
+    except Exception as e:
+        print(f"Erro ao verificar status dos módulos: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        close_db_connection(conn)
+
 @app.route('/modulos/<modulo>')
 @login_required
 def modulo_individual(modulo):
@@ -920,12 +1223,17 @@ def api_modulo_dados(modulo):
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
-        # Buscar configuração do usuário
+        # ⭐ OBTER TEAM_ID DA SESSÃO - ISSO É CRÍTICO!
+        team_id = session.get('selected_team_id')
+        if not team_id:
+            return jsonify({'error': 'Nenhum time selecionado'}), 400
+        
+        # Buscar configuração DO TIME (não só do usuário!)
         from models.user_configurations import get_user_default_configuration
-        config = get_user_default_configuration(conn, user['id'])
+        config = get_user_default_configuration(conn, user['id'], team_id)
         
         if not config:
-            return jsonify({'error': 'Nenhuma configuração encontrada. Configure os perfis primeiro.'}), 400
+            return jsonify({'error': 'Configuração não encontrada para este time'}), 404
         
         # Buscar partidas da rodada atual
         cursor.execute('''
@@ -1598,7 +1906,9 @@ def api_escalacao_config():
                     'formation': config['formation'],
                     'hack_goleiro': config['hack_goleiro'],
                     'fechar_defesa': config['fechar_defesa'],
-                    'posicao_capitao': config['posicao_capitao']
+                    'posicao_capitao': config['posicao_capitao'],
+                    'posicao_reserva_luxo': config.get('posicao_reserva_luxo', 'atacantes'),
+                    'prioridades': config.get('prioridades', 'atacantes,laterais,meias,zagueiros,goleiros,tecnicos')
                 })
             else:
                 # Retornar valores padrão
@@ -1606,7 +1916,9 @@ def api_escalacao_config():
                     'formation': '4-3-3',
                     'hack_goleiro': False,
                     'fechar_defesa': False,
-                    'posicao_capitao': 'atacantes'
+                    'posicao_capitao': 'atacantes',
+                    'posicao_reserva_luxo': 'atacantes',
+                    'prioridades': 'atacantes,laterais,meias,zagueiros,goleiros,tecnicos'
                 })
         else:  # POST
             data = request.get_json()
@@ -1619,9 +1931,11 @@ def api_escalacao_config():
             hack_goleiro = data.get('hack_goleiro', False)
             fechar_defesa = data.get('fechar_defesa', False)
             posicao_capitao = data.get('posicao_capitao', 'atacantes')
+            posicao_reserva_luxo = data.get('posicao_reserva_luxo', 'atacantes')
+            prioridades = data.get('prioridades', 'atacantes,laterais,meias,zagueiros,goleiros,tecnicos')
             
             upsert_user_escalacao_config(
-                conn, user['id'], team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao
+                conn, user['id'], team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, posicao_reserva_luxo, prioridades
             )
             return jsonify({'success': True})
     except Exception as e:
@@ -1846,15 +2160,72 @@ def api_escalacao_dados():
         # Buscar clubes para obter informações de SG - usar o perfil configurado pelo usuário
         perfil_peso_sg = config.get('perfil_peso_sg', 2)  # Usar perfil 2 como padrão
         cursor.execute('''
-            SELECT clube_id, peso_sg as club_sg
+            SELECT clube_id, peso_sg
             FROM acp_peso_sg_perfis
             WHERE perfil_id = %s AND rodada_atual = %s
             ORDER BY peso_sg DESC
             LIMIT 10
         ''', (perfil_peso_sg, rodada_atual))
-        clubes_sg = [{'clube_id': row[0], 'sg': float(row[1])} for row in cursor.fetchall()]
+        clubes_sg = [{'clube_id': row[0], 'peso_sg': float(row[1])} for row in cursor.fetchall()]
+        
+        # Buscar top 5 de peso de jogo
+        perfil_peso_jogo = config.get('perfil_peso_jogo', 2)
+        cursor.execute('''
+            SELECT clube_id, peso_jogo
+            FROM acp_peso_jogo_perfis
+            WHERE perfil_id = %s AND rodada_atual = %s
+            ORDER BY peso_jogo DESC
+            LIMIT 5
+        ''', (perfil_peso_jogo, rodada_atual))
+        top5_peso_jogo = [{'clube_id': row[0], 'peso_jogo': float(row[1])} for row in cursor.fetchall()]
+        
+        # Buscar top 5 de peso SG
+        cursor.execute('''
+            SELECT clube_id, peso_sg
+            FROM acp_peso_sg_perfis
+            WHERE perfil_id = %s AND rodada_atual = %s
+            ORDER BY peso_sg DESC
+            LIMIT 5
+        ''', (perfil_peso_sg, rodada_atual))
+        top5_peso_sg = [{'clube_id': row[0], 'peso_sg': float(row[1])} for row in cursor.fetchall()]
+        
+        # Buscar dados de clubes com escudos para os cards
+        from utils.team_shields import get_team_shield
+        clube_ids_set = set()
+        
+        # Coletar IDs de clubes dos rankings
+        for pos_nome, ranking in rankings_por_posicao.items():
+            for jogador in ranking[:5]:  # Top 5 apenas
+                if jogador.get('clube_id'):
+                    clube_ids_set.add(jogador['clube_id'])
+        
+        # Coletar IDs dos top 5 de pesos
+        for item in top5_peso_jogo:
+            clube_ids_set.add(item['clube_id'])
+        for item in top5_peso_sg:
+            clube_ids_set.add(item['clube_id'])
+        
+        # Buscar dados dos clubes
+        clubes_dict = {}
+        if clube_ids_set:
+            placeholders = ','.join(['%s'] * len(clube_ids_set))
+            cursor.execute(f'''
+                SELECT id, nome, abreviacao
+                FROM acf_clubes
+                WHERE id IN ({placeholders})
+            ''', list(clube_ids_set))
+            
+            for row in cursor.fetchall():
+                clube_id = row[0]
+                escudo_url = get_team_shield(clube_id, size='45x45')
+                clubes_dict[clube_id] = {
+                    'nome': row[1],
+                    'abreviacao': row[2],
+                    'escudo_url': escudo_url
+                }
         
         response_data = {
+            'team_id': team_id,
             'rodada_atual': rodada_atual,
             'rankings_por_posicao': rankings_por_posicao,
             'config': {
@@ -1864,7 +2235,10 @@ def api_escalacao_dados():
                 'posicao_capitao': escalacao_config['posicao_capitao'] if escalacao_config else 'atacantes'
             },
             'patrimonio': patrimonio,
-            'clubes_sg': clubes_sg
+            'clubes_sg': clubes_sg,
+            'top5_peso_jogo': top5_peso_jogo,
+            'top5_peso_sg': top5_peso_sg,
+            'clubes_dict': clubes_dict
         }
         
         # Adicionar erro de patrimônio se houver
@@ -1876,6 +2250,218 @@ def api_escalacao_dados():
         return jsonify(response_data)
     except Exception as e:
         print(f"Erro ao buscar dados de escalação: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        close_db_connection(conn)
+
+@app.route('/api/escalacao-ideal/escalar', methods=['POST'])
+@login_required
+def api_escalar_time():
+    """API para escalar o time no Cartola FC"""
+    from api_cartola import salvar_time_no_cartola
+    from models.teams import get_team
+    
+    user = get_current_user()
+    conn = get_db_connection()
+    
+    try:
+        # Receber dados da escalação
+        data = request.get_json()
+        print(f"[DEBUG] Dados recebidos: {data}")
+        
+        escalacao = data.get('escalacao') if data else None
+        
+        if not escalacao:
+            print(f"[ERROR] Escalação não fornecida. Data: {data}")
+            return jsonify({'error': 'Escalação não fornecida'}), 400
+        
+        # Obter team_id da sessão
+        team_id = session.get('selected_team_id')
+        if not team_id:
+            return jsonify({'error': 'Nenhum time selecionado'}), 400
+        
+        # Buscar team no banco
+        team = get_team(conn, team_id)
+        if not team:
+            return jsonify({'error': 'Time não encontrado'}), 404
+        
+        access_token = team.get('access_token')
+        if not access_token:
+            return jsonify({'error': 'Token de acesso não encontrado'}), 401
+        
+        # Mapear posições para IDs numéricos (usado pela API do Cartola)
+        posicao_id_map = {
+            'goleiros': 1,
+            'laterais': 2,
+            'zagueiros': 3,
+            'meias': 4,
+            'atacantes': 5,
+            'treinadores': 6
+        }
+        
+        # Preparar payload para API do Cartola
+        titulares = escalacao.get('titulares', {})
+        reservas = escalacao.get('reservas', {})
+        
+        # Array de IDs dos titulares (12 atletas)
+        atletas_ids = []
+        for posicao in ['goleiros', 'zagueiros', 'laterais', 'meias', 'atacantes', 'treinadores']:
+            jogadores = titulares.get(posicao, [])
+            print(f"[DEBUG] Posição {posicao}: {len(jogadores)} jogadores")
+            for jogador in jogadores:
+                atleta_id = jogador.get('atleta_id')
+                print(f"[DEBUG]   - Jogador: {jogador.get('apelido', 'N/A')} (ID: {atleta_id})")
+                atletas_ids.append(atleta_id)
+        
+        print(f"[DEBUG] Total de atletas: {len(atletas_ids)}")
+        
+        # Validar 12 atletas
+        if len(atletas_ids) != 12:
+            print(f"[ERROR] Escalação inválida: {len(atletas_ids)} atletas")
+            print(f"[ERROR] Titulares: {titulares}")
+            return jsonify({
+                'error': f'Escalação inválida: {len(atletas_ids)} atletas. Esperado: 12',
+                'detalhes': {
+                    'atletas_encontrados': len(atletas_ids),
+                    'por_posicao': {pos: len(titulares.get(pos, [])) for pos in ['goleiros', 'zagueiros', 'laterais', 'meias', 'atacantes', 'treinadores']}
+                }
+            }), 400
+        
+        # Identificar capitão
+        capitao_id = None
+        for posicao_jogadores in titulares.values():
+            for jogador in posicao_jogadores:
+                if jogador.get('eh_capitao'):
+                    capitao_id = jogador.get('atleta_id')
+                    break
+            if capitao_id:
+                break
+        
+        # Mapear reservas {posicao_id: atleta_id}
+        # IMPORTANTE: Reserva de luxo também deve estar aqui!
+        # As chaves devem ser STRINGS com os IDs das posições
+        reservas_map = {}
+        for posicao, jogadores in reservas.items():
+            for jogador in jogadores:
+                posicao_id = posicao_id_map.get(posicao)
+                if posicao_id:
+                    atleta_id = jogador.get('atleta_id')
+                    reservas_map[str(posicao_id)] = atleta_id  # String!
+                    print(f"[DEBUG] Reserva posição {posicao_id} ({posicao}): {jogador.get('apelido')} (ID: {atleta_id}) - Luxo: {jogador.get('eh_reserva_luxo', False)}")
+        
+        # Identificar reserva de luxo
+        reserva_luxo_id = None
+        for jogadores in reservas.values():
+            for jogador in jogadores:
+                if jogador.get('eh_reserva_luxo'):
+                    reserva_luxo_id = jogador.get('atleta_id')
+                    print(f"[DEBUG] Reserva de luxo identificado: {jogador.get('apelido')} (ID: {reserva_luxo_id})")
+                    break
+            if reserva_luxo_id:
+                break
+        
+        print(f"[DEBUG] Reservas completas: {reservas_map}")
+        print(f"[DEBUG] Capitão: {capitao_id}")
+        print(f"[DEBUG] Reserva luxo: {reserva_luxo_id}")
+        
+        # Obter esquema da formação (mapear 4-3-3 -> ID 3, etc)
+        esquema_map = {
+            '4-3-3': 3,
+            '4-4-2': 1,
+            '3-5-2': 2,
+            '3-4-3': 4,
+            '4-5-1': 5,
+            '5-4-1': 6
+        }
+        formacao = data.get('formacao', '4-3-3')
+        esquema_id = esquema_map.get(formacao, 3)
+        
+        # Montar payload
+        time_para_escalacao = {
+            'esquema': esquema_id,
+            'atletas': atletas_ids,
+            'capitao': capitao_id,
+            'reservas': reservas_map,
+            'reserva_luxo_id': reserva_luxo_id
+        }
+        
+        print(f"[DEBUG] Escalando time {team_id}")
+        print(f"[DEBUG] Payload: {time_para_escalacao}")
+        
+        # Enviar para API do Cartola
+        # Criar uma função auxiliar que usa team_id
+        from api_cartola import API_URL_SALVAR_TIME, refresh_access_token_by_team_id
+        import requests
+        
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json, text/plain, */*",
+            "Content-Type": "application/json;charset=UTF-8",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Origin": "https://cartola.globo.com",
+            "Referer": "https://cartola.globo.com/",
+            "x-glb-app": "cartola_web",
+            "x-glb-auth": "oidc",
+        }
+        
+        try:
+            # Timeout de 10 segundos para não travar o cliente
+            response = requests.post(API_URL_SALVAR_TIME, json=time_para_escalacao, headers=headers, timeout=10)
+            
+            if response.status_code == 401:
+                # Token expirado, tentar refresh
+                print(f"[DEBUG] Token expirado, tentando refresh...")
+                new_token = refresh_access_token_by_team_id(conn, team_id)
+                if new_token:
+                    headers["Authorization"] = f"Bearer {new_token}"
+                    response = requests.post(API_URL_SALVAR_TIME, json=time_para_escalacao, headers=headers, timeout=10)
+                else:
+                    return jsonify({'error': 'Falha ao atualizar token'}), 401
+            
+            # Processar resposta
+            if 200 <= response.status_code < 300:
+                try:
+                    response_data = response.json()
+                    if response_data.get("mensagem") == "Time Escalado! Boa Sorte!":
+                        return jsonify({
+                            'success': True,
+                            'mensagem': 'Time escalado com sucesso!',
+                            'detalhes': response_data
+                        })
+                    else:
+                        return jsonify({
+                            'error': response_data.get('mensagem', 'Erro desconhecido'),
+                            'detalhes': response_data
+                        }), 400
+                except Exception:
+                    return jsonify({
+                        'error': 'Resposta inesperada da API',
+                        'status': response.status_code
+                    }), 400
+            else:
+                try:
+                    error_data = response.json()
+                    return jsonify({
+                        'error': error_data.get('mensagem', f'Erro HTTP {response.status_code}'),
+                        'detalhes': error_data
+                    }), response.status_code
+                except Exception:
+                    return jsonify({
+                        'error': f'Erro HTTP {response.status_code}',
+                        'mensagem': response.text[:200]
+                    }), response.status_code
+                    
+        except requests.exceptions.Timeout:
+            print(f"[ERROR] Timeout ao escalar time")
+            return jsonify({'error': 'A API do Cartola demorou demais para responder. Tente novamente.'}), 504
+        except requests.exceptions.RequestException as e:
+            print(f"[ERROR] Erro ao escalar: {e}")
+            return jsonify({'error': f'Erro de conexão: {str(e)}'}), 500
+        
+    except Exception as e:
+        print(f"[ERROR] Erro no endpoint escalar: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
