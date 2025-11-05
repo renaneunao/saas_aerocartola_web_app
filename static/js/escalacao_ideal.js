@@ -378,7 +378,8 @@ class EscalacaoIdeal {
         // 3. Se houver posições desescaladas, tentar combinações
         if (posicoesDesescaladas.length > 0) {
             const orcamentoRestante = this.patrimonio - escalacao.custoTotal;
-            this.log(`\n🔄 Tentando combinar posições desescaladas com orçamento restante: R$ ${orcamentoRestante.toFixed(2)}`);
+            this.log(`\n🔄 Recombinando posições desescaladas`);
+            this.log(`   Orçamento restante: R$ ${orcamentoRestante.toFixed(2)}`);
             
             // Filtrar apenas as posições efetivamente desescaladas (que não foram completadas pela defesa)
             const posDesescaladasEfetivas = posicoesDesescaladas.filter(pos => {
@@ -389,19 +390,22 @@ class EscalacaoIdeal {
             
             if (posDesescaladasEfetivas.length === 0) {
                 // Todas as posições desescaladas já foram preenchidas (ex: pela defesa fechada)
+                this.log(`   ✅ Todas as posições desescaladas já foram preenchidas`);
                 return escalacao;
             }
             
+            this.log(`   📦 Recombinando ${posDesescaladasEfetivas.length} posição(ões): [${posDesescaladasEfetivas.join(', ')}]`);
+            
             // Buscar candidatos para cada posição desescalada
             const candidatosPorPosicao = {};
-            const top_n = 10; // Número de candidatos para atacantes, laterais, meias
-            const top_n_reduzido = 5; // Número de candidatos para goleiros, técnicos, zagueiros
+            const top_n = 5; // Número de candidatos por posição para recombinações
+            
+            this.log(`\n📊 Buscando ${top_n} candidatos para cada posição desescalada...`);
             
             for (const posicao of posDesescaladasEfetivas) {
                 const posicaoSingular = Object.keys(this.singularToPlural).find(k => this.singularToPlural[k] === posicao);
-                const quantidade_candidatos = ['goleiros', 'treinadores', 'zagueiros'].includes(posicao) ? top_n_reduzido : top_n;
                 
-                candidatosPorPosicao[posicao] = this.buscarMelhores(posicaoSingular, quantidade_candidatos, null, escaladosIds);
+                candidatosPorPosicao[posicao] = this.buscarMelhores(posicaoSingular, top_n, null, escaladosIds);
                 
                 this.log(`\n📋 Candidatos para ${posicao}: ${candidatosPorPosicao[posicao].length}`);
                 candidatosPorPosicao[posicao].forEach(c => {
@@ -473,7 +477,8 @@ class EscalacaoIdeal {
                 this.log(`\n💰 Custo FINAL: R$ ${escalacao.custoTotal.toFixed(2)} / R$ ${this.patrimonio.toFixed(2)}`);
                 return escalacao;
             } else {
-                this.log(`\n❌ Nenhuma combinação válida encontrada dentro do orçamento`);
+                this.log(`\n❌ Nenhuma combinação válida com ${posDesescaladasEfetivas.length} posição(ões) desescalada(s)`);
+                this.log(`   Será necessário desescalar mais uma posição e tentar novamente...`);
                 return null;
             }
         }

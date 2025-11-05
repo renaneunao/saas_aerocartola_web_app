@@ -41,9 +41,8 @@ Modificado o método `tentarEscalacao(posicoesDesescaladas)` para:
 
 1. **Escalar posições prioritárias primeiro** (excluindo as desescaladas)
 2. **Calcular orçamento restante**
-3. **Buscar candidatos** para cada posição desescalada (top_n candidatos)
-   - Atacantes, Laterais, Meias: 10 candidatos
-   - Goleiros, Zagueiros, Técnicos: 5 candidatos
+3. **Buscar candidatos** para cada posição desescalada
+   - Todas as posições: **5 candidatos** (otimizado para performance)
 4. **Gerar combinações** para cada posição desescalada
 5. **Calcular produto cartesiano** de todas as combinações
 6. **Testar cada combinação** e escolher a melhor que cabe no orçamento
@@ -135,6 +134,17 @@ if (totalAtual !== totalEsperado) {
                      └─────────┘
 ```
 
+## 💡 Desescalação Progressiva
+
+**O sistema agora funciona assim:**
+
+1. **Tenta escalar tudo** → Se falhar: desescala posição 1
+2. **Recombina com 1 posição** (5 candidatos) → Se falhar: desescala posição 2
+3. **Recombina com 2 posições** (5x5 = 25 combinações) → Se falhar: desescala posição 3
+4. **Recombina com 3 posições** (5x5x5 = 125 combinações) → E assim por diante...
+
+Isso garante que **sempre** haverá uma combinação válida que preenche as 12 posições!
+
 ## Exemplo de Log Esperado
 
 ```
@@ -148,7 +158,11 @@ if (totalAtual !== totalEsperado) {
 ...
 💰 Custo total dos titulares: R$ 125.32 / R$ 133.66
 
-🔄 Tentando combinar posições desescaladas com orçamento restante: R$ 8.34
+🔄 Recombinando posições desescaladas
+   Orçamento restante: R$ 8.34
+   📦 Recombinando 1 posição(ões): [treinadores]
+
+📊 Buscando 5 candidatos para cada posição desescalada...
 
 📋 Candidatos para treinadores: 2
    - Técnico 1 (R$ 10.00, 5.00 pts)
