@@ -2256,24 +2256,59 @@ def api_escalacao_dados():
         clubes_sg = [{'clube_id': row[0], 'peso_sg': float(row[1])} for row in cursor.fetchall()]
         
         # Buscar TODOS os goleiros (para hack do goleiro) - incluindo não prováveis
+        print("[DEBUG] Buscando TODOS os goleiros da tabela acf_atletas...")
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num, a.status_id
             FROM acf_atletas a
             WHERE a.posicao_id = 1
             ORDER BY a.preco_num DESC
         ''')
+        
+        rows_goleiros = cursor.fetchall()
+        print(f"[DEBUG] Query retornou {len(rows_goleiros)} goleiros da tabela acf_atletas")
+        
         todos_goleiros = []
-        for row in cursor.fetchall():
+        goleiros_nulos_count = 0
+        goleiros_provaveis_count = 0
+        
+        for row in rows_goleiros:
             if row and len(row) >= 5:
-                todos_goleiros.append({
+                status_id = int(row[4]) if row[4] else 0
+                
+                # Contar por status
+                if status_id in [2, 7]:
+                    goleiros_provaveis_count += 1
+                else:
+                    goleiros_nulos_count += 1
+                
+                goleiro_data = {
                     'atleta_id': row[0],
                     'apelido': row[1],
                     'clube_id': row[2],
                     'preco_num': float(row[3]) if row[3] else 0,
                     'preco': float(row[3]) if row[3] else 0,
-                    'status_id': int(row[4]) if row[4] else 0,
+                    'status_id': status_id,
                     'pontuacao_total': 0  # Goleiros nulos não precisam de pontuação
-                })
+                }
+                todos_goleiros.append(goleiro_data)
+        
+        print(f"[DEBUG] Total de goleiros processados: {len(todos_goleiros)}")
+        print(f"[DEBUG] Goleiros prováveis (status 2 ou 7): {goleiros_provaveis_count}")
+        print(f"[DEBUG] Goleiros NULOS (outros status): {goleiros_nulos_count}")
+        
+        if todos_goleiros:
+            # Mostrar os 5 goleiros nulos mais caros
+            goleiros_nulos_lista = [g for g in todos_goleiros if g['status_id'] not in [2, 7]]
+            goleiros_nulos_lista.sort(key=lambda x: x['preco_num'], reverse=True)
+            
+            if goleiros_nulos_lista:
+                print(f"[DEBUG] Top 5 goleiros NULOS mais caros:")
+                for g in goleiros_nulos_lista[:5]:
+                    print(f"  - {g['apelido']} - R$ {g['preco_num']:.2f} - status_id: {g['status_id']}")
+            else:
+                print("[DEBUG] ATENÇÃO: Nenhum goleiro NULO encontrado!")
+        else:
+            print("[DEBUG] ATENÇÃO: Lista de todos_goleiros está VAZIA!")
         
         # Buscar top 5 de peso de jogo
         perfil_peso_jogo = config.get('perfil_peso_jogo', 2)
@@ -2354,10 +2389,112 @@ def api_escalacao_dados():
             response_data['patrimonio_error'] = patrimonio_error
         
         print(f"[DEBUG] Retornando patrimônio: {patrimonio}, erro: {patrimonio_error}")
+        print(f"[DEBUG] Enviando {len(todos_goleiros)} goleiros no campo 'todos_goleiros' da resposta")
         
         return jsonify(response_data)
     except Exception as e:
         print(f"Erro ao buscar dados de escalação: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        close_db_connection(conn)
+
+@app.route('/diagnostico/goleiros-nulos')
+@login_required
+def diagnostico_goleiros_nulos():
+    """Página de diagnóstico para visualizar goleiros nulos"""
+    return render_template('diagnostico_goleiros.html')
+
+@app.route('/api/escalacao-ideal/goleiros-nulos')
+@login_required
+def api_goleiros_nulos():
+    """API para buscar goleiros nulos diretamente da tabela acf_atletas"""
+    conn = get_db_connection()
+    
+    try:
+        # Parâmetro opcional: preço mínimo do goleiro titular
+        preco_minimo = request.args.get('preco_minimo', 0, type=float)
+        
+        cursor = conn.cursor()
+        
+        # Buscar TODOS os goleiros da tabela
+        cursor.execute('''
+            SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num, a.status_id,
+                   c.nome as clube_nome, c.abreviacao as clube_abrev
+            FROM acf_atletas a
+            LEFT JOIN acf_clubes c ON a.clube_id = c.id
+            WHERE a.posicao_id = 1
+            ORDER BY a.preco_num DESC
+        ''')
+        
+        todos_goleiros = []
+        goleiros_nulos = []
+        goleiros_provaveis = []
+        
+        for row in cursor.fetchall():
+            if row and len(row) >= 5:
+                goleiro = {
+                    'atleta_id': row[0],
+                    'apelido': row[1],
+                    'clube_id': row[2],
+                    'preco_num': float(row[3]) if row[3] else 0,
+                    'status_id': int(row[4]) if row[4] else 0,
+                    'clube_nome': row[5] if len(row) > 5 else None,
+                    'clube_abrev': row[6] if len(row) > 6 else None
+                }
+                
+                todos_goleiros.append(goleiro)
+                
+                # Classificar por status
+                if goleiro['status_id'] in [2, 7]:  # Provável ou dúvida
+                    goleiros_provaveis.append(goleiro)
+                else:  # Nulo (qualquer outro status)
+                    goleiros_nulos.append(goleiro)
+        
+        # Filtrar goleiros nulos mais caros que o preço mínimo
+        goleiros_nulos_mais_caros = [
+            g for g in goleiros_nulos 
+            if g['preco_num'] > preco_minimo
+        ]
+        
+        # Ordenar por preço (mais caros primeiro)
+        goleiros_nulos_mais_caros.sort(key=lambda x: x['preco_num'], reverse=True)
+        
+        response = {
+            'total_goleiros': len(todos_goleiros),
+            'total_goleiros_provaveis': len(goleiros_provaveis),
+            'total_goleiros_nulos': len(goleiros_nulos),
+            'total_goleiros_nulos_mais_caros': len(goleiros_nulos_mais_caros),
+            'preco_minimo_filtro': preco_minimo,
+            'todos_goleiros': todos_goleiros,
+            'goleiros_provaveis': goleiros_provaveis,
+            'goleiros_nulos': goleiros_nulos,
+            'goleiros_nulos_mais_caros': goleiros_nulos_mais_caros,
+            'status_ids': {
+                '2': 'Dúvida',
+                '3': 'Suspenso',
+                '5': 'Contundido',
+                '6': 'Nulo',
+                '7': 'Provável'
+            }
+        }
+        
+        print(f"[DEBUG] Goleiros na base: {len(todos_goleiros)}")
+        print(f"[DEBUG] Goleiros prováveis (status 2 ou 7): {len(goleiros_provaveis)}")
+        print(f"[DEBUG] Goleiros nulos (outros status): {len(goleiros_nulos)}")
+        print(f"[DEBUG] Goleiros nulos mais caros que R$ {preco_minimo:.2f}: {len(goleiros_nulos_mais_caros)}")
+        
+        if goleiros_nulos_mais_caros:
+            top5 = goleiros_nulos_mais_caros[:5]
+            print(f"[DEBUG] Top 5 goleiros nulos mais caros:")
+            for g in top5:
+                print(f"  - {g['apelido']} ({g['clube_abrev']}) - R$ {g['preco_num']:.2f} - status_id: {g['status_id']}")
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        print(f"Erro ao buscar goleiros nulos: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500

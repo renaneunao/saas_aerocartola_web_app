@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnóstico - Goleiros Nulos{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Cabeçalho -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg shadow-lg p-6 mb-6">
+            <h1 class="text-3xl font-bold text-white mb-2">🔍 Diagnóstico: Goleiros Nulos</h1>
+            <p class="text-blue-100">Busca direta na tabela acf_atletas</p>
+        </div>
+
+        <!-- Filtros -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex items-center gap-4">
+                <label class="text-sm font-semibold text-gray-700">Preço Mínimo:</label>
+                <input 
+                    type="number" 
+                    id="precoMinimo" 
+                    class="border border-gray-300 rounded px-3 py-2 w-32"
+                    placeholder="0.00"
+                    step="0.01"
+                    value="0"
+                />
+                <button 
+                    onclick="buscarGoleiros()" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded transition"
+                >
+                    🔍 Buscar
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="text-center py-8 hidden">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+            <p class="mt-4 text-gray-600">Carregando...</p>
+        </div>
+
+        <!-- Erro -->
+        <div id="erro" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 hidden">
+            <p class="font-bold">Erro:</p>
+            <p id="erroMensagem"></p>
+        </div>
+
+        <!-- Estatísticas -->
+        <div id="estatisticas" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 hidden">
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <p class="text-gray-500 text-sm mb-1">Total de Goleiros</p>
+                <p class="text-3xl font-bold text-blue-600" id="totalGoleiros">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <p class="text-gray-500 text-sm mb-1">Prováveis (2, 7)</p>
+                <p class="text-3xl font-bold text-green-600" id="totalProvaveis">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <p class="text-gray-500 text-sm mb-1">Goleiros Nulos</p>
+                <p class="text-3xl font-bold text-orange-600" id="totalNulos">0</p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4 text-center">
+                <p class="text-gray-500 text-sm mb-1">Nulos > Preço Min</p>
+                <p class="text-3xl font-bold text-red-600" id="totalNulosCaros">0</p>
+            </div>
+        </div>
+
+        <!-- Tabelas -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Goleiros Nulos Mais Caros -->
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="bg-red-600 text-white px-6 py-4 rounded-t-lg">
+                    <h2 class="text-xl font-bold">🔴 Goleiros Nulos (Filtrados)</h2>
+                </div>
+                <div class="p-6">
+                    <div id="goleirosNulosCaros" class="space-y-2">
+                        <!-- Será preenchido via JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Goleiros Prováveis -->
+            <div class="bg-white rounded-lg shadow-md">
+                <div class="bg-green-600 text-white px-6 py-4 rounded-t-lg">
+                    <h2 class="text-xl font-bold">✅ Goleiros Prováveis</h2>
+                </div>
+                <div class="p-6">
+                    <div id="goleirosProvaveis" class="space-y-2">
+                        <!-- Será preenchido via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Todos os Goleiros Nulos -->
+        <div class="bg-white rounded-lg shadow-md mt-6">
+            <div class="bg-orange-600 text-white px-6 py-4 rounded-t-lg">
+                <h2 class="text-xl font-bold">📋 Todos os Goleiros Nulos</h2>
+            </div>
+            <div class="p-6">
+                <div id="todosGoleirosNulos" class="space-y-2 max-h-96 overflow-y-auto">
+                    <!-- Será preenchido via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function buscarGoleiros() {
+    const precoMinimo = parseFloat(document.getElementById('precoMinimo').value) || 0;
+    
+    // Mostrar loading
+    document.getElementById('loading').classList.remove('hidden');
+    document.getElementById('erro').classList.add('hidden');
+    document.getElementById('estatisticas').classList.add('hidden');
+    
+    try {
+        const response = await fetch(`/api/escalacao-ideal/goleiros-nulos?preco_minimo=${precoMinimo}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || 'Erro ao buscar goleiros');
+        }
+        
+        // Atualizar estatísticas
+        document.getElementById('totalGoleiros').textContent = data.total_goleiros;
+        document.getElementById('totalProvaveis').textContent = data.total_goleiros_provaveis;
+        document.getElementById('totalNulos').textContent = data.total_goleiros_nulos;
+        document.getElementById('totalNulosCaros').textContent = data.total_goleiros_nulos_mais_caros;
+        document.getElementById('estatisticas').classList.remove('hidden');
+        
+        // Renderizar goleiros nulos filtrados
+        renderizarGoleiros(data.goleiros_nulos_mais_caros, 'goleirosNulosCaros', true);
+        
+        // Renderizar goleiros prováveis (top 10)
+        renderizarGoleiros(data.goleiros_provaveis.slice(0, 10), 'goleirosProvaveis', false);
+        
+        // Renderizar todos os goleiros nulos
+        renderizarGoleiros(data.goleiros_nulos, 'todosGoleirosNulos', true);
+        
+    } catch (error) {
+        document.getElementById('erroMensagem').textContent = error.message;
+        document.getElementById('erro').classList.remove('hidden');
+    } finally {
+        document.getElementById('loading').classList.add('hidden');
+    }
+}
+
+function renderizarGoleiros(goleiros, elementId, mostrarStatus) {
+    const container = document.getElementById(elementId);
+    
+    if (!goleiros || goleiros.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center">Nenhum goleiro encontrado</p>';
+        return;
+    }
+    
+    const statusMap = {
+        2: 'Dúvida',
+        3: 'Suspenso',
+        5: 'Contundido',
+        6: 'Nulo',
+        7: 'Provável'
+    };
+    
+    container.innerHTML = goleiros.map(g => `
+        <div class="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100 transition">
+            <div class="flex-1">
+                <p class="font-semibold text-gray-800">${g.apelido}</p>
+                <p class="text-sm text-gray-600">${g.clube_abrev || g.clube_nome || 'N/A'}</p>
+            </div>
+            <div class="text-right">
+                <p class="font-bold text-lg ${g.status_id === 7 ? 'text-green-600' : 'text-red-600'}">
+                    R$ ${g.preco_num.toFixed(2)}
+                </p>
+                ${mostrarStatus ? `<p class="text-xs text-gray-500">Status: ${statusMap[g.status_id] || g.status_id}</p>` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Buscar ao carregar a página
+window.addEventListener('DOMContentLoaded', () => {
+    buscarGoleiros();
+});
+</script>
+{% endblock %}
