@@ -319,18 +319,18 @@ def dashboard():
         config = get_user_default_configuration(conn, user['id'], team_id)
         tem_perfis = config is not None and config.get('perfil_peso_jogo') and config.get('perfil_peso_sg')
         
-        # 2. Verificar se posições foram calculadas (verificar se há dados em user_rankings)
+        # 2. Verificar se posições foram calculadas (verificar se há dados em acw_rankings_teams)
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT COUNT(*) FROM user_rankings 
+            SELECT COUNT(*) FROM acw_rankings_teams 
             WHERE user_id = %s AND team_id = %s
         ''', (user['id'], team_id))
         count_rankings = cursor.fetchone()[0]
         tem_calculos = count_rankings > 0
         
-        # 3. Verificar se tem escalação (verificar se há dados em user_escalacao_config)
+        # 3. Verificar se tem escalação (verificar se há dados em acw_escalacao_config)
         cursor.execute('''
-            SELECT COUNT(*) FROM user_escalacao_config 
+            SELECT COUNT(*) FROM acw_escalacao_config 
             WHERE user_id = %s AND team_id = %s
         ''', (user['id'], team_id))
         count_escalacao = cursor.fetchone()[0]
