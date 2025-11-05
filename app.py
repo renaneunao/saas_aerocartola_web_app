@@ -942,6 +942,8 @@ def modulo_individual(modulo):
         flash('Módulo inválido', 'error')
         return redirect(url_for('modulos'))
     
+    user = get_current_user()
+    
     # Buscar rodada atual
     conn = get_db_connection()
     rodada_atual = 1
@@ -953,21 +955,92 @@ def modulo_individual(modulo):
     finally:
         close_db_connection(conn)
     
-    # Buscar pesos atuais do módulo
-    from utils.weights import get_weight
-    defaults_goleiro = {
-        'FATOR_MEDIA': 0.2,
-        'FATOR_FF': 4.5,
-        'FATOR_FD': 6.5,
-        'FATOR_SG': 1.5,
-        'FATOR_PESO_JOGO': 1.5,
-        'FATOR_GOL_ADVERSARIO': 2.0
+    # Defaults por posição
+    defaults_posicao = {
+        'goleiro': {
+            'FATOR_MEDIA': 0.2,
+            'FATOR_FF': 4.5,
+            'FATOR_FD': 6.5,
+            'FATOR_SG': 1.5,
+            'FATOR_PESO_JOGO': 1.5,
+            'FATOR_GOL_ADVERSARIO': 2.0
+        },
+        'lateral': {
+            'FATOR_MEDIA': 3.0,
+            'FATOR_DS': 8.0,
+            'FATOR_SG': 2.0,
+            'FATOR_ESCALACAO': 10.0,
+            'FATOR_FF': 2.0,
+            'FATOR_FS': 1.0,
+            'FATOR_FD': 2.0,
+            'FATOR_G': 4.0,
+            'FATOR_A': 4.0,
+            'FATOR_PESO_JOGO': 1.0
+        },
+        'zagueiro': {
+            'FATOR_MEDIA': 1.5,
+            'FATOR_DS': 4.5,
+            'FATOR_SG': 4.0,
+            'FATOR_ESCALACAO': 5.0,
+            'FATOR_PESO_JOGO': 5.0
+        },
+        'meia': {
+            'FATOR_MEDIA': 1.0,
+            'FATOR_DS': 3.6,
+            'FATOR_FF': 0.7,
+            'FATOR_FS': 0.8,
+            'FATOR_FD': 0.9,
+            'FATOR_G': 2.5,
+            'FATOR_A': 2.0,
+            'FATOR_ESCALACAO': 10.0,
+            'FATOR_PESO_JOGO': 9.5
+        },
+        'atacante': {
+            'FATOR_MEDIA': 2.5,
+            'FATOR_DS': 2.0,
+            'FATOR_FF': 1.2,
+            'FATOR_FS': 1.3,
+            'FATOR_FD': 1.3,
+            'FATOR_G': 2.5,
+            'FATOR_A': 2.5,
+            'FATOR_ESCALACAO': 10.0,
+            'FATOR_PESO_JOGO': 10.0
+        },
+        'treinador': {
+            'FATOR_PESO_JOGO': 1.0
+        }
     }
     
-    # Buscar pesos salvos ou usar defaults
+    defaults_modulo = defaults_posicao.get(modulo, defaults_posicao['goleiro'])
+    
+    # Buscar team_id da sessão
+    team_id = session.get('selected_team_id')
+    
+    # Buscar pesos salvos para este time e módulo (se houver time selecionado)
     pesos_atuais = {}
-    for key, default in defaults_goleiro.items():
-        pesos_atuais[key] = float(get_weight(modulo, key, default))
+    if team_id:
+        conn = get_db_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT weights_json FROM acw_posicao_weights
+                WHERE user_id = %s AND team_id = %s AND posicao = %s
+            ''', (user['id'], team_id, modulo))
+            peso_row = cursor.fetchone()
+            
+            if peso_row and peso_row[0]:
+                # Pesos salvos encontrados para este time
+                pesos_salvos = peso_row[0] if isinstance(peso_row[0], dict) else json.loads(peso_row[0])
+                for key, default in defaults_modulo.items():
+                    pesos_atuais[key] = float(pesos_salvos.get(key, default))
+            else:
+                # Não há pesos salvos, usar defaults
+                pesos_atuais = {key: float(default) for key, default in defaults_modulo.items()}
+        finally:
+            close_db_connection(conn)
+    else:
+        # Sem time selecionado, usar defaults
+        pesos_atuais = {key: float(default) for key, default in defaults_modulo.items()}
     
     # Renderizar template específico para cada módulo
     template_map = {
