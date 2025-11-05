@@ -124,23 +124,39 @@ def logout_user():
 @app.route('/')
 @login_required
 def index():
-    user = get_current_user()
-    
-    # Verificar se o usuário tem times associados
-    from models.teams import create_teams_table
-    conn = get_db_connection()
     try:
-        create_teams_table(conn)
-        times = get_all_user_teams(conn, user['id'])
-    finally:
-        close_db_connection(conn)
-    
-    # Se não tiver times, redirecionar para página de associação
-    if not times or len(times) == 0:
-        return redirect(url_for('associar_credenciais'))
-    
-    # Se tiver times, redirecionar para o dashboard
-    return redirect(url_for('dashboard'))
+        print("[DEBUG INDEX] Iniciando função index()")
+        user = get_current_user()
+        print(f"[DEBUG INDEX] Usuário atual: {user}")
+        
+        # Verificar se o usuário tem times associados
+        from models.teams import create_teams_table
+        conn = get_db_connection()
+        print("[DEBUG INDEX] Conexão com banco obtida")
+        
+        try:
+            create_teams_table(conn)
+            print("[DEBUG INDEX] Tabela de times criada/verificada")
+            times = get_all_user_teams(conn, user['id'])
+            print(f"[DEBUG INDEX] Times encontrados: {len(times) if times else 0}")
+        finally:
+            close_db_connection(conn)
+            print("[DEBUG INDEX] Conexão com banco fechada")
+        
+        # Se não tiver times, redirecionar para página de associação
+        if not times or len(times) == 0:
+            print("[DEBUG INDEX] Nenhum time encontrado, redirecionando para associar_credenciais")
+            return redirect(url_for('associar_credenciais'))
+        
+        # Se tiver times, redirecionar para o dashboard
+        print("[DEBUG INDEX] Redirecionando para dashboard")
+        return redirect(url_for('dashboard'))
+    except Exception as e:
+        print(f"[ERRO INDEX] Erro na função index(): {e}")
+        import traceback
+        traceback.print_exc()
+        flash(f'Erro ao carregar a página inicial: {str(e)}', 'error')
+        return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -257,16 +273,24 @@ def associar_credenciais():
 @login_required
 def dashboard():
     """Dashboard principal com verificações de status do time"""
-    user = get_current_user()
+    print("[DEBUG DASHBOARD] Iniciando função dashboard()")
     
-    from models.teams import create_teams_table, get_team, get_all_user_teams
-    from models.user_configurations import get_user_default_configuration, create_user_configurations_table
-    from models.user_rankings import create_user_rankings_table
-    from api_cartola import fetch_team_info_by_team_id
-    from utils.team_shields import get_team_shield
-    
-    conn = get_db_connection()
+    conn = None
     try:
+        user = get_current_user()
+        print(f"[DEBUG DASHBOARD] Usuário atual: {user}")
+        
+        from models.teams import create_teams_table, get_team, get_all_user_teams
+        from models.user_configurations import get_user_default_configuration, create_user_configurations_table
+        from models.user_rankings import create_user_rankings_table
+        from api_cartola import fetch_team_info_by_team_id
+        from utils.team_shields import get_team_shield
+        
+        print("[DEBUG DASHBOARD] Imports realizados com sucesso")
+        
+        conn = get_db_connection()
+        print("[DEBUG DASHBOARD] Conexão com banco obtida")
+        
         create_teams_table(conn)
         create_user_configurations_table(conn)
         create_user_rankings_table(conn)
@@ -338,19 +362,26 @@ def dashboard():
             'perfis_info': config if (tem_perfis and config) else {}
         }
         
+        print("[DEBUG DASHBOARD] Dashboard processado com sucesso, renderizando template")
+        
+        return render_template('dashboard.html', 
+                             current_user=user, 
+                             team=team_info,
+                             status=status)
+    
     except Exception as e:
-        print(f"Erro ao carregar dashboard: {e}")
+        print(f"[ERRO DASHBOARD] Erro ao carregar dashboard: {e}")
         import traceback
         traceback.print_exc()
-        flash('Erro ao carregar o dashboard.', 'error')
-        return redirect(url_for('credenciais'))
+        flash(f'Erro ao carregar o dashboard: {str(e)}', 'error')
+        return redirect(url_for('associar_credenciais'))
     finally:
-        close_db_connection(conn)
-    
-    return render_template('dashboard.html', 
-                         current_user=user, 
-                         team=team_info,
-                         status=status)
+        try:
+            close_db_connection(conn)
+            print("[DEBUG DASHBOARD] Conexão com banco fechada")
+        except:
+            print("[DEBUG DASHBOARD] Erro ao fechar conexão (conexão pode não ter sido criada)")
+            pass
 
 @app.route('/pagina-inicial')
 @login_required
