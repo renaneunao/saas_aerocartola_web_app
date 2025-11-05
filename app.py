@@ -1174,7 +1174,7 @@ def recalcular_modulo(modulo):
 @app.route('/api/modulos/<modulo>/verificar-ranking', methods=['GET'])
 @login_required
 def api_verificar_ranking(modulo):
-    """API rápida para verificar se há ranking salvo antes de buscar todos os dados"""
+    """API rápida para verificar se há ranking e pesos salvos antes de buscar todos os dados"""
     from flask import jsonify
     user = get_current_user()
     
@@ -1190,14 +1190,14 @@ def api_verificar_ranking(modulo):
         # Obter team_id da sessão
         team_id = session.get('selected_team_id')
         if not team_id:
-            return jsonify({'has_ranking': False})
+            return jsonify({'has_ranking': False, 'has_weights': False})
         
         # Buscar configuração do usuário para este time
         from models.user_configurations import get_user_default_configuration
         config = get_user_default_configuration(conn, user['id'], team_id)
         
         if not config:
-            return jsonify({'has_ranking': False})
+            return jsonify({'has_ranking': False, 'has_weights': False})
         
         # Validar módulo
         posicao_map = {
@@ -1206,7 +1206,15 @@ def api_verificar_ranking(modulo):
         posicao_id = posicao_map.get(modulo)
         
         if not posicao_id:
-            return jsonify({'has_ranking': False})
+            return jsonify({'has_ranking': False, 'has_weights': False})
+        
+        # Verificar se há pesos salvos para este time e módulo
+        cursor.execute('''
+            SELECT weights_json FROM acw_posicao_weights
+            WHERE user_id = %s AND team_id = %s AND posicao = %s
+        ''', (user['id'], team_id, modulo))
+        peso_row = cursor.fetchone()
+        has_weights = peso_row is not None and peso_row[0] is not None
         
         # Verificar se há ranking salvo
         from models.user_rankings import get_team_rankings
@@ -1234,6 +1242,7 @@ def api_verificar_ranking(modulo):
             if has_ranking:
                 return jsonify({
                     'has_ranking': True,
+                    'has_weights': has_weights,
                     'rodada_atual': rodada_atual,
                     'ranking_count': len(ranking_data)
                 })
@@ -1261,15 +1270,16 @@ def api_verificar_ranking(modulo):
             if has_ranking:
                 return jsonify({
                     'has_ranking': True,
+                    'has_weights': has_weights,
                     'rodada_atual': rodada_atual,
                     'ranking_count': len(ranking_data)
                 })
         
-        return jsonify({'has_ranking': False})
+        return jsonify({'has_ranking': False, 'has_weights': has_weights})
         
     except Exception as e:
         print(f"Erro ao verificar ranking: {e}")
-        return jsonify({'has_ranking': False})
+        return jsonify({'has_ranking': False, 'has_weights': False})
     finally:
         close_db_connection(conn)
 
