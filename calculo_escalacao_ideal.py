@@ -629,11 +629,11 @@ def calcular_escalacao_ideal(rodada_atual, posicao_capitao='atacantes', access_t
             } for row in cursor.fetchall()
         ]
         
-        # 2. Buscar goleiros não relacionados (que não vão jogar)
+        # 2. Buscar goleiros nulos (que não vão jogar - não podem ser provável=7 nem dúvida=2)
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num, a.status_id, 0 as pontuacao_total
             FROM acf_atletas a
-            WHERE a.posicao_id = %s AND a.status_id != 7  -- Apenas não prováveis
+            WHERE a.posicao_id = %s AND a.status_id NOT IN (2, 7)  -- Goleiros nulos (qualquer status exceto provável=7 e dúvida=2)
             ORDER BY a.preco_num ASC  -- Ordena do mais barato para o mais caro
         ''', (posicao_ids['goleiros'],))
         
