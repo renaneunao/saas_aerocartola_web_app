@@ -42,6 +42,40 @@ def now_brasilia():
     return datetime.now()
 
 # ========================================
+# LOGGING DE REQUISIÇÕES
+# ========================================
+
+@app.before_request
+def log_request_info():
+    """Loga informações sobre cada requisição recebida"""
+    print("=" * 80)
+    print(f"🔵 REQUISIÇÃO RECEBIDA: {request.method} {request.path}")
+    print(f"   URL completa: {request.url}")
+    print(f"   IP: {request.remote_addr}")
+    print(f"   User-Agent: {request.headers.get('User-Agent', 'N/A')[:100]}")
+    print(f"   Sessão user_id: {session.get('user_id', 'NÃO AUTENTICADO')}")
+    print(f"   Sessão username: {session.get('username', 'N/A')}")
+    print(f"   Sessão selected_team_id: {session.get('selected_team_id', 'N/A')}")
+    if request.form:
+        print(f"   Form data: {list(request.form.keys())}")
+    if request.args:
+        print(f"   Query params: {dict(request.args)}")
+    print("=" * 80)
+
+@app.after_request
+def log_response_info(response):
+    """Loga informações sobre cada resposta enviada"""
+    print("-" * 80)
+    print(f"🟢 RESPOSTA ENVIADA: {request.method} {request.path}")
+    print(f"   Status: {response.status_code} {response.status}")
+    print(f"   Content-Type: {response.content_type}")
+    if response.status_code in [301, 302, 303, 307, 308]:
+        print(f"   🔀 REDIRECT para: {response.headers.get('Location', 'N/A')}")
+    print("-" * 80)
+    print()
+    return response
+
+# ========================================
 # SISTEMA DE AUTENTICAÇÃO
 # ========================================
 
@@ -51,9 +85,12 @@ def login_required(f):
     
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        print(f"[LOGIN_REQUIRED] Verificando autenticação para rota: {request.path}")
         if not is_user_authenticated():
+            print(f"[LOGIN_REQUIRED] ❌ Usuário NÃO autenticado, redirecionando para login")
             flash('Você precisa fazer login para acessar esta página.', 'warning')
             return redirect(url_for('login'))
+        print(f"[LOGIN_REQUIRED] ✅ Usuário autenticado, permitindo acesso")
         return f(*args, **kwargs)
     return decorated_function
 
@@ -77,16 +114,23 @@ def admin_required(f):
 
 def is_user_authenticated():
     """Verifica se o usuário está autenticado"""
-    return session.get('user_id') is not None
+    user_id = session.get('user_id')
+    is_auth = user_id is not None
+    print(f"[IS_AUTHENTICATED] user_id na sessão: {user_id}, autenticado: {is_auth}")
+    return is_auth
 
 def get_current_user():
     """Retorna os dados do usuário atual ou None"""
     user_id = session.get('user_id')
+    print(f"[GET_CURRENT_USER] Buscando usuário com ID: {user_id}")
+    
     if not user_id:
+        print(f"[GET_CURRENT_USER] ❌ Nenhum user_id na sessão")
         return None
     
     conn = get_db_connection()
     if not conn:
+        print(f"[GET_CURRENT_USER] ❌ Falha ao conectar ao banco")
         return None
     
     try:
@@ -98,8 +142,10 @@ def get_current_user():
         ''', (user_id,))
         row = cursor.fetchone()
         if not row:
+            print(f"[GET_CURRENT_USER] ❌ Usuário não encontrado no banco")
             return None
-        return {
+        
+        user = {
             'id': row[0],
             'username': row[1],
             'email': row[2],
@@ -107,8 +153,12 @@ def get_current_user():
             'is_active': row[4],
             'is_admin': row[5]
         }
+        print(f"[GET_CURRENT_USER] ✅ Usuário encontrado: {user['username']} (ID: {user['id']})")
+        return user
     except Exception as e:
-        print(f"Erro ao buscar usuário: {e}")
+        print(f"[GET_CURRENT_USER] ❌ Erro ao buscar usuário: {e}")
+        import traceback
+        traceback.print_exc()
         return None
     finally:
         close_db_connection(conn)
@@ -161,43 +211,64 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """Página e processamento de login"""
+    print("[LOGIN] Função login() chamada")
+    
     if is_user_authenticated():
+        print("[LOGIN] Usuário já autenticado, redirecionando para index")
         return redirect(url_for('index'))
     
     if request.method == 'POST':
+        print("[LOGIN] Processando POST de login")
         username_or_email = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         remember_me = bool(request.form.get('remember'))
         
+        print(f"[LOGIN] Tentativa de login com username/email: {username_or_email}")
+        
         if not username_or_email or not password:
+            print("[LOGIN] Campos vazios, retornando erro")
             flash('Por favor, preencha todos os campos.', 'error')
             return render_template('login.html')
         
+        print("[LOGIN] Autenticando usuário...")
         auth_result = authenticate_user(username_or_email, password)
         
         if auth_result['success']:
             user = auth_result['user']
+            print(f"[LOGIN] ✅ Autenticação bem-sucedida! Usuário: {user['username']} (ID: {user['id']})")
+            
             # Usar sessão do Flask diretamente (sem sessões customizadas)
             session['user_id'] = user['id']
             session['username'] = user['username']
+            print(f"[LOGIN] Sessão configurada: user_id={session['user_id']}, username={session['username']}")
+            
             # Inicializar time selecionado com o primeiro time do usuário (se houver)
             from models.teams import create_teams_table
             conn = get_db_connection()
             try:
                 create_teams_table(conn)
                 times = get_all_user_teams(conn, user['id'])
+                print(f"[LOGIN] Times encontrados: {len(times) if times else 0}")
                 if times and len(times) > 0:
                     session['selected_team_id'] = times[0]['id']
+                    print(f"[LOGIN] Time selecionado: {times[0]['id']} - {times[0].get('team_name', 'N/A')}")
             finally:
                 close_db_connection(conn)
+            
             flash(f'Bem-vindo, {user.get("full_name") or user["username"]}!', 'success')
+            
             next_page = request.args.get('next')
             if next_page:
+                print(f"[LOGIN] Redirecionando para next_page: {next_page}")
                 return redirect(next_page)
+            
+            print(f"[LOGIN] Redirecionando para index()")
             return redirect(url_for('index'))
         else:
+            print(f"[LOGIN] ❌ Falha na autenticação: {auth_result['error']}")
             flash(auth_result['error'], 'error')
     
+    print("[LOGIN] Renderizando template login.html")
     return render_template('login.html')
 
 @app.route('/logout')
@@ -2856,6 +2927,55 @@ def health_check():
         pass
     return jsonify({"status": "unhealthy"}), 500
 
+# ========================================
+# ERROR HANDLERS
+# ========================================
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handler para erros 500 - Internal Server Error"""
+    print("=" * 80)
+    print("🔴 ERRO 500 - INTERNAL SERVER ERROR")
+    print(f"Erro: {error}")
+    print(f"Rota: {request.method} {request.path}")
+    print(f"URL: {request.url}")
+    print("-" * 80)
+    import traceback
+    traceback.print_exc()
+    print("=" * 80)
+    
+    # Em modo debug, deixar o Flask mostrar a página de erro detalhada
+    if app.debug:
+        raise error
+    
+    flash(f'Erro interno: {str(error)}', 'error')
+    return redirect(url_for('login'))
+
+@app.errorhandler(Exception)
+def handle_exception(error):
+    """Handler genérico para todas as exceções não tratadas"""
+    print("=" * 80)
+    print("🔴 EXCEÇÃO NÃO TRATADA")
+    print(f"Tipo: {type(error).__name__}")
+    print(f"Erro: {error}")
+    print(f"Rota: {request.method} {request.path}")
+    print(f"URL: {request.url}")
+    print("-" * 80)
+    import traceback
+    traceback.print_exc()
+    print("=" * 80)
+    
+    # Em modo debug, deixar o Flask mostrar a página de erro detalhada
+    if app.debug:
+        raise error
+    
+    flash(f'Erro inesperado: {str(error)}', 'error')
+    return redirect(url_for('login'))
+
 if __name__ == '__main__':
+    print("🚀 Iniciando aplicação Flask...")
+    print(f"   Debug mode: {app.debug}")
+    print(f"   Secret key configurada: {'Sim' if app.secret_key else 'Não'}")
+    print("=" * 80)
     app.run(host='0.0.0.0', port=5000, debug=True)
 
