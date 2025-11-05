@@ -309,6 +309,42 @@ class EscalacaoIdeal {
     }
     
     /**
+     * Gera todas as combinações de um array (como itertools.combinations do Python)
+     * @param {Array} arr - Array de elementos
+     * @param {number} size - Tamanho das combinações
+     * @returns {Array} Array de combinações
+     */
+    combinations(arr, size) {
+        if (size > arr.length || size <= 0) return [];
+        if (size === arr.length) return [arr];
+        if (size === 1) return arr.map(el => [el]);
+        
+        const result = [];
+        for (let i = 0; i < arr.length - size + 1; i++) {
+            const head = arr[i];
+            const tailCombinations = this.combinations(arr.slice(i + 1), size - 1);
+            for (const tail of tailCombinations) {
+                result.push([head, ...tail]);
+            }
+        }
+        return result;
+    }
+    
+    /**
+     * Gera o produto cartesiano de múltiplos arrays (como itertools.product do Python)
+     * @param {Array} arrays - Array de arrays
+     * @returns {Array} Array de combinações
+     */
+    product(...arrays) {
+        if (arrays.length === 0) return [[]];
+        if (arrays.length === 1) return arrays[0].map(el => [el]);
+        
+        return arrays.reduce((acc, curr) => {
+            return acc.flatMap(x => curr.map(y => [...x, y]));
+        }, [[]]);
+    }
+    
+    /**
      * Tenta escalação completa
      */
     tentarEscalacao(posicoesDesescaladas = []) {
@@ -328,7 +364,7 @@ class EscalacaoIdeal {
             this.fecharDefesaMelhorClube(escalacao, escaladosIds);
         }
         
-        // 2. Escalar por prioridade
+        // 2. Escalar por prioridade (pular desescaladas)
         for (const posicao of this.prioridades) {
             if (posicoesDesescaladas.includes(posicao)) continue;
             
@@ -338,6 +374,109 @@ class EscalacaoIdeal {
         }
         
         this.log(`\n💰 Custo total dos titulares: R$ ${escalacao.custoTotal.toFixed(2)} / R$ ${this.patrimonio.toFixed(2)}`);
+        
+        // 3. Se houver posições desescaladas, tentar combinações
+        if (posicoesDesescaladas.length > 0) {
+            const orcamentoRestante = this.patrimonio - escalacao.custoTotal;
+            this.log(`\n🔄 Tentando combinar posições desescaladas com orçamento restante: R$ ${orcamentoRestante.toFixed(2)}`);
+            
+            // Filtrar apenas as posições efetivamente desescaladas (que não foram completadas pela defesa)
+            const posDesescaladasEfetivas = posicoesDesescaladas.filter(pos => {
+                const posicaoSingular = Object.keys(this.singularToPlural).find(k => this.singularToPlural[k] === pos);
+                const qtNecessaria = this.formacao[posicaoSingular];
+                return escalacao.titulares[pos].length < qtNecessaria;
+            });
+            
+            if (posDesescaladasEfetivas.length === 0) {
+                // Todas as posições desescaladas já foram preenchidas (ex: pela defesa fechada)
+                return escalacao;
+            }
+            
+            // Buscar candidatos para cada posição desescalada
+            const candidatosPorPosicao = {};
+            const top_n = 10; // Número de candidatos para atacantes, laterais, meias
+            const top_n_reduzido = 5; // Número de candidatos para goleiros, técnicos, zagueiros
+            
+            for (const posicao of posDesescaladasEfetivas) {
+                const posicaoSingular = Object.keys(this.singularToPlural).find(k => this.singularToPlural[k] === posicao);
+                const quantidade_candidatos = ['goleiros', 'treinadores', 'zagueiros'].includes(posicao) ? top_n_reduzido : top_n;
+                
+                candidatosPorPosicao[posicao] = this.buscarMelhores(posicaoSingular, quantidade_candidatos, null, escaladosIds);
+                
+                this.log(`\n📋 Candidatos para ${posicao}: ${candidatosPorPosicao[posicao].length}`);
+                candidatosPorPosicao[posicao].forEach(c => {
+                    this.log(`   - ${c.apelido} (R$ ${this.getPreco(c).toFixed(2)}, ${this.getPontuacao(c).toFixed(2)} pts)`);
+                });
+            }
+            
+            // Gerar combinações para cada posição
+            const combinacoesPorPosicao = [];
+            for (const posicao of posDesescaladasEfetivas) {
+                const posicaoSingular = Object.keys(this.singularToPlural).find(k => this.singularToPlural[k] === posicao);
+                const qtNecessaria = this.formacao[posicaoSingular];
+                const candidatos = candidatosPorPosicao[posicao];
+                
+                if (candidatos.length < qtNecessaria) {
+                    this.log(`\n❌ Candidatos insuficientes para ${posicao}: ${candidatos.length}/${qtNecessaria}`);
+                    return null;
+                }
+                
+                const combos = this.combinations(candidatos, qtNecessaria);
+                combinacoesPorPosicao.push({
+                    posicao: posicao,
+                    combos: combos
+                });
+            }
+            
+            // Gerar produto cartesiano de todas as combinações
+            this.log(`\n🔍 Gerando combinações possíveis...`);
+            const todasCombinacoes = this.product(...combinacoesPorPosicao.map(item => 
+                item.combos.map(combo => ({ posicao: item.posicao, jogadores: combo }))
+            ));
+            
+            this.log(`   Total de combinações a testar: ${todasCombinacoes.length}`);
+            
+            // Testar combinações em ordem de maior pontuação
+            let melhorCombinacao = null;
+            let melhorPontuacao = -Infinity;
+            
+            for (const combinacao of todasCombinacoes) {
+                // Extrair todos os jogadores da combinação
+                const todosJogadores = combinacao.flatMap(item => item.jogadores);
+                
+                const custoTotal = todosJogadores.reduce((sum, j) => sum + this.getPreco(j), 0);
+                const pontuacaoTotal = todosJogadores.reduce((sum, j) => sum + this.getPontuacao(j), 0);
+                
+                if (custoTotal <= orcamentoRestante && pontuacaoTotal > melhorPontuacao) {
+                    melhorPontuacao = pontuacaoTotal;
+                    melhorCombinacao = combinacao;
+                }
+            }
+            
+            if (melhorCombinacao) {
+                this.log(`\n✅ Melhor combinação encontrada! Pontuação: ${melhorPontuacao.toFixed(2)}`);
+                
+                // Aplicar a melhor combinação
+                for (const item of melhorCombinacao) {
+                    const posicao = item.posicao;
+                    const jogadores = item.jogadores;
+                    
+                    escalacao.titulares[posicao] = jogadores;
+                    const custoPos = jogadores.reduce((sum, j) => sum + this.getPreco(j), 0);
+                    escalacao.custoTotal += custoPos;
+                    
+                    jogadores.forEach(j => escaladosIds.push(j.atleta_id));
+                    
+                    this.log(`   ${posicao}: ${jogadores.map(j => `${j.apelido} (R$ ${this.getPreco(j).toFixed(2)})`).join(', ')}`);
+                }
+                
+                this.log(`\n💰 Custo FINAL: R$ ${escalacao.custoTotal.toFixed(2)} / R$ ${this.patrimonio.toFixed(2)}`);
+                return escalacao;
+            } else {
+                this.log(`\n❌ Nenhuma combinação válida encontrada dentro do orçamento`);
+                return null;
+            }
+        }
         
         return escalacao;
     }
@@ -522,6 +661,32 @@ class EscalacaoIdeal {
             .reduce((sum, j) => sum + this.getPontuacao(j), 0);
         
         escalacao.patrimonio = this.patrimonio;
+        
+        // Validar número de jogadores por posição
+        const validacao = {
+            goleiros: { esperado: this.formacao.goleiro, atual: escalacao.titulares.goleiros.length },
+            zagueiros: { esperado: this.formacao.zagueiro, atual: escalacao.titulares.zagueiros.length },
+            laterais: { esperado: this.formacao.lateral, atual: escalacao.titulares.laterais.length },
+            meias: { esperado: this.formacao.meia, atual: escalacao.titulares.meias.length },
+            atacantes: { esperado: this.formacao.atacante, atual: escalacao.titulares.atacantes.length },
+            treinadores: { esperado: this.formacao.treinador, atual: escalacao.titulares.treinadores.length }
+        };
+        
+        const totalEsperado = Object.values(this.formacao).reduce((sum, v) => sum + v, 0);
+        const totalAtual = Object.values(escalacao.titulares).reduce((sum, arr) => sum + arr.length, 0);
+        
+        if (totalAtual !== totalEsperado) {
+            this.log('\n' + '⚠️'.repeat(30));
+            this.log(`❌ ERRO: Escalação inválida!`);
+            this.log(`Total de jogadores: ${totalAtual}/${totalEsperado}`);
+            this.log(`\nDetalhamento por posição:`);
+            for (const [posicao, info] of Object.entries(validacao)) {
+                const status = info.atual === info.esperado ? '✅' : '❌';
+                this.log(`  ${status} ${posicao}: ${info.atual}/${info.esperado}`);
+            }
+            this.log('⚠️'.repeat(30));
+            throw new Error(`Escalação inválida: ${totalAtual} atletas. Esperado: ${totalEsperado}`);
+        }
         
         this.log('\n' + '═'.repeat(60));
         this.log(`✅ ESCALAÇÃO CONCLUÍDA!`);
