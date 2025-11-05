@@ -999,7 +999,7 @@ def modulo_individual(modulo):
             'FATOR_MEDIA': 2.5,
             'FATOR_DS': 2.0,
             'FATOR_FF': 3.2,
-            'FATOR_FS': 1.8,
+            'FATOR_FS': 2.3,
             'FATOR_FD': 3.4,
             'FATOR_G': 4.0,
             'FATOR_A': 3.5,
