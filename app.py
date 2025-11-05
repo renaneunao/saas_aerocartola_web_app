@@ -1085,56 +1085,30 @@ def modulo_individual(modulo):
     finally:
         close_db_connection(conn)
     
-    # Defaults por posição
+    # Defaults por posição (sincronizados com a API)
     defaults_posicao = {
         'goleiro': {
-            'FATOR_MEDIA': 0.3,
-            'FATOR_FF': 1.3,
-            'FATOR_FD': 1.3,
-            'FATOR_SG': 1.4,
-            'FATOR_PESO_JOGO': 0.3,
-            'FATOR_GOL_ADVERSARIO': 1.4
+            'FATOR_MEDIA': 0.2, 'FATOR_FF': 4.5, 'FATOR_FD': 6.5, 'FATOR_SG': 1.5,
+            'FATOR_PESO_JOGO': 1.5, 'FATOR_GOL_ADVERSARIO': 2.0
         },
         'lateral': {
-            'FATOR_MEDIA': 1.6,
-            'FATOR_DS': 2.1,
-            'FATOR_SG': 2.0,
-            'FATOR_ESCALACAO': 1.5,
-            'FATOR_FF': 1.4,
-            'FATOR_FS': 1.3,
-            'FATOR_FD': 1.4,
-            'FATOR_G': 1.5,
-            'FATOR_A': 1.8,
-            'FATOR_PESO_JOGO': 1.5
+            'FATOR_MEDIA': 3.0, 'FATOR_DS': 8.0, 'FATOR_SG': 2.0, 'FATOR_ESCALACAO': 10.0,
+            'FATOR_FF': 2.0, 'FATOR_FS': 1.0, 'FATOR_FD': 2.0, 'FATOR_G': 4.0,
+            'FATOR_A': 4.0, 'FATOR_PESO_JOGO': 1.0
         },
         'zagueiro': {
-            'FATOR_MEDIA': 1.5,
-            'FATOR_DS': 2.0,
-            'FATOR_SG': 2.0,
-            'FATOR_ESCALACAO': 1.5,
-            'FATOR_PESO_JOGO': 1.5
+            'FATOR_MEDIA': 1.5, 'FATOR_DS': 4.5, 'FATOR_SG': 4.0, 'FATOR_ESCALACAO': 5.0,
+            'FATOR_PESO_JOGO': 5.0
         },
         'meia': {
-            'FATOR_MEDIA': 2.5,
-            'FATOR_DS': 3.0,
-            'FATOR_FF': 2.9,
-            'FATOR_FS': 2.8,
-            'FATOR_FD': 3.2,
-            'FATOR_G': 4.2,
-            'FATOR_A': 3.5,
-            'FATOR_ESCALACAO': 2.0,
-            'FATOR_PESO_JOGO': 2.5
+            'FATOR_MEDIA': 1.0, 'FATOR_DS': 3.6, 'FATOR_FF': 0.7, 'FATOR_FS': 0.8,
+            'FATOR_FD': 0.9, 'FATOR_G': 2.5, 'FATOR_A': 2.0, 'FATOR_ESCALACAO': 10.0,
+            'FATOR_PESO_JOGO': 9.5
         },
         'atacante': {
-            'FATOR_MEDIA': 2.9,
-            'FATOR_DS': 2.0,
-            'FATOR_FF': 3.2,
-            'FATOR_FS': 2.3,
-            'FATOR_FD': 3.4,
-            'FATOR_G': 4.0,
-            'FATOR_A': 3.5,
-            'FATOR_ESCALACAO': 3.0,
-            'FATOR_PESO_JOGO': 3.5
+            'FATOR_MEDIA': 2.5, 'FATOR_DS': 2.0, 'FATOR_FF': 1.2, 'FATOR_FS': 1.3,
+            'FATOR_FD': 1.3, 'FATOR_G': 2.5, 'FATOR_A': 2.5, 'FATOR_ESCALACAO': 10.0,
+            'FATOR_PESO_JOGO': 10.0
         },
         'treinador': {
             'FATOR_PESO_JOGO': 1.0
@@ -1200,7 +1174,7 @@ def recalcular_modulo(modulo):
 @app.route('/api/modulos/<modulo>/verificar-ranking', methods=['GET'])
 @login_required
 def api_verificar_ranking(modulo):
-    """API rápida para verificar se há ranking salvo antes de buscar todos os dados"""
+    """API rápida para verificar se há ranking e pesos salvos antes de buscar todos os dados"""
     from flask import jsonify
     user = get_current_user()
     
@@ -1216,14 +1190,14 @@ def api_verificar_ranking(modulo):
         # Obter team_id da sessão
         team_id = session.get('selected_team_id')
         if not team_id:
-            return jsonify({'has_ranking': False})
+            return jsonify({'has_ranking': False, 'has_weights': False})
         
         # Buscar configuração do usuário para este time
         from models.user_configurations import get_user_default_configuration
         config = get_user_default_configuration(conn, user['id'], team_id)
         
         if not config:
-            return jsonify({'has_ranking': False})
+            return jsonify({'has_ranking': False, 'has_weights': False})
         
         # Validar módulo
         posicao_map = {
@@ -1232,7 +1206,15 @@ def api_verificar_ranking(modulo):
         posicao_id = posicao_map.get(modulo)
         
         if not posicao_id:
-            return jsonify({'has_ranking': False})
+            return jsonify({'has_ranking': False, 'has_weights': False})
+        
+        # Verificar se há pesos salvos para este time e módulo
+        cursor.execute('''
+            SELECT weights_json FROM acw_posicao_weights
+            WHERE user_id = %s AND team_id = %s AND posicao = %s
+        ''', (user['id'], team_id, modulo))
+        peso_row = cursor.fetchone()
+        has_weights = peso_row is not None and peso_row[0] is not None
         
         # Verificar se há ranking salvo
         from models.user_rankings import get_team_rankings
@@ -1260,6 +1242,7 @@ def api_verificar_ranking(modulo):
             if has_ranking:
                 return jsonify({
                     'has_ranking': True,
+                    'has_weights': has_weights,
                     'rodada_atual': rodada_atual,
                     'ranking_count': len(ranking_data)
                 })
@@ -1287,15 +1270,16 @@ def api_verificar_ranking(modulo):
             if has_ranking:
                 return jsonify({
                     'has_ranking': True,
+                    'has_weights': has_weights,
                     'rodada_atual': rodada_atual,
                     'ranking_count': len(ranking_data)
                 })
         
-        return jsonify({'has_ranking': False})
+        return jsonify({'has_ranking': False, 'has_weights': has_weights})
         
     except Exception as e:
         print(f"Erro ao verificar ranking: {e}")
-        return jsonify({'has_ranking': False})
+        return jsonify({'has_ranking': False, 'has_weights': False})
     finally:
         close_db_connection(conn)
 

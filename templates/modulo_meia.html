@@ -170,13 +170,13 @@
             <div class="flex items-center justify-between mt-6 pt-4 border-t border-yellow-500/30">
                 <div class="text-sm text-yellow-300">
                     <i class="fas fa-info-circle mr-2"></i>
-                    Alterações serão aplicadas ao recalcular
+                    Clique para salvar e recalcular com os novos pesos
                 </div>
                 <div class="flex space-x-3">
                     <button type="button" onclick="salvarPesos()"
                             class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105">
                         <i class="fas fa-save mr-2"></i>
-                        Salvar Pesos
+                        Salvar e Recalcular
                     </button>
                 </div>
             </div>
@@ -450,32 +450,53 @@ async function carregarDados(forcarRecalculo = false) {
     updateProgress(5, 'Conectando ao servidor...');
     
     try {
-        // PRIMEIRO: Verificar rapidamente se há ranking salvo (sem buscar todos os dados)
+        // PRIMEIRO: Verificar se há pesos salvos E se há ranking
         if (!forcarRecalculo) {
-            console.log(`[DEBUG] 🔍 VERIFICANDO RANKING SALVO ANTES DO FETCH (ID: ${chamadaId})`);
-            updateProgress(10, 'Verificando ranking salvo...');
-            addProgressLog('🔍 Verificando se há ranking salvo...', 'info');
+            console.log(`[DEBUG] 🔍 VERIFICANDO PESOS E RANKING SALVOS (ID: ${chamadaId})`);
+            updateProgress(10, 'Verificando pesos salvos...');
+            addProgressLog('🔍 Verificando se há pesos e ranking salvos...', 'info');
             
-                    try {
-                        const checkResponse = await fetch('/api/modulos/meia/verificar-ranking');
-                        const checkData = await checkResponse.json();
-                        
-                        console.log(`[DEBUG] 🔍 Resultado verificação rápida:`, checkData);
-                        
-                        if (checkData.has_ranking) {
-                            console.log(`[DEBUG] ✅✅✅ RANKING SALVO ENCONTRADO NA VERIFICAÇÃO RÁPIDA (ID: ${chamadaId})`);
-                            console.log(`[DEBUG] 🚫🚫🚫 ATIVANDO BLOQUEADOR IMEDIATAMENTE! (ID: ${chamadaId})`);
-                            
-                            // ATIVAR BLOQUEADOR IMEDIATAMENTE quando detectar ranking salvo
-                            window.BLOQUEAR_CALCULO_MEIA = true;
-                            
-                            // Se tem ranking, buscar apenas os dados completos
-                            updateProgress(20, 'Ranking encontrado, carregando dados...');
-                            addProgressLog(`💾 Ranking salvo encontrado! Carregando dados...`, 'success');
-                        } else {
-                            console.log(`[DEBUG] ❌ Nenhum ranking salvo na verificação rápida (ID: ${chamadaId})`);
-                            // Garantir que o bloqueador NÃO está ativo se não há ranking
-                            window.BLOQUEAR_CALCULO_MEIA = false;
+            try {
+                const checkResponse = await fetch('/api/modulos/meia/verificar-ranking');
+                const checkData = await checkResponse.json();
+                
+                console.log(`[DEBUG] 🔍 Resultado verificação:`, checkData);
+                
+                // Se não tem pesos salvos, salvar os pesos padrão ANTES de continuar
+                if (!checkData.has_weights) {
+                    console.log(`[DEBUG] ⚠️ PESOS NÃO ENCONTRADOS - SALVANDO PESOS PADRÃO (ID: ${chamadaId})`);
+                    updateProgress(15, 'Salvando pesos padrão...');
+                    addProgressLog('💾 Primeira vez! Salvando pesos padrão...', 'info');
+                    
+                    const form = document.getElementById('pesosForm');
+                    const formData = new FormData(form);
+                    const pesos = {};
+                    for (const [key, value] of formData.entries()) {
+                        pesos[key] = parseFloat(value);
+                    }
+                    
+                    const saveResponse = await fetch('/api/modulos/meia/pesos', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(pesos)
+                    });
+                    
+                    if (!saveResponse.ok) {
+                        throw new Error('Erro ao salvar pesos padrão');
+                    }
+                    
+                    addProgressLog('✅ Pesos padrão salvos com sucesso!', 'success');
+                    console.log(`[DEBUG] ✅ PESOS PADRÃO SALVOS (ID: ${chamadaId})`);
+                }
+                
+                if (checkData.has_ranking) {
+                    console.log(`[DEBUG] ✅✅✅ RANKING SALVO ENCONTRADO (ID: ${chamadaId})`);
+                    window.BLOQUEAR_CALCULO_MEIA = true;
+                    updateProgress(20, 'Ranking encontrado, carregando dados...');
+                    addProgressLog(`💾 Ranking salvo encontrado! Carregando dados...`, 'success');
+                } else {
+                    console.log(`[DEBUG] ❌ Nenhum ranking salvo (ID: ${chamadaId})`);
+                    window.BLOQUEAR_CALCULO_MEIA = false;
                         }
                     } catch (checkError) {
                         console.error('[DEBUG] Erro na verificação rápida:', checkError);
