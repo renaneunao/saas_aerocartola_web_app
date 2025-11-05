@@ -966,7 +966,7 @@ def modulo_individual(modulo):
             'FATOR_GOL_ADVERSARIO': 1.4
         },
         'lateral': {
-            'FATOR_MEDIA': 1.5,
+            'FATOR_MEDIA': 1.6,
             'FATOR_DS': 2.1,
             'FATOR_SG': 2.0,
             'FATOR_ESCALACAO': 1.5,
@@ -996,14 +996,14 @@ def modulo_individual(modulo):
             'FATOR_PESO_JOGO': 2.5
         },
         'atacante': {
-            'FATOR_MEDIA': 2.5,
+            'FATOR_MEDIA': 2.9,
             'FATOR_DS': 2.0,
             'FATOR_FF': 3.2,
             'FATOR_FS': 2.3,
             'FATOR_FD': 3.4,
             'FATOR_G': 4.0,
             'FATOR_A': 3.5,
-            'FATOR_ESCALACAO': 2.5,
+            'FATOR_ESCALACAO': 3.0,
             'FATOR_PESO_JOGO': 3.5
         },
         'treinador': {
