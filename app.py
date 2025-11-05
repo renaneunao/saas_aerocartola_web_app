@@ -2109,25 +2109,33 @@ def api_escalacao_dados():
                             if len(atleta_ids_sem_preco) <= 3:
                                 print(f"[DEBUG] Jogador {jogador_norm.get('apelido', 'N/A')} (ID: {jogador_norm.get('atleta_id')}) sem preço válido. preco_num={preco_num_val}, preco={preco_val}")
                     
-                    # Buscar preços da tabela atletas para os que não têm
+                    # Buscar preços e status_id da tabela atletas
                     preco_dict = {}
-                    if atleta_ids_sem_preco:
-                        print(f"[DEBUG] Buscando preços para {len(atleta_ids_sem_preco)} atletas sem preço na posição {pos_nome}")
-                        placeholders = ','.join(['%s'] * len(atleta_ids_sem_preco))
+                    status_dict = {}
+                    
+                    # Buscar para todos os atletas do ranking (para garantir status_id atualizado)
+                    atleta_ids_ranking = [j['atleta_id'] for j in ranking_data if j.get('atleta_id')]
+                    if atleta_ids_ranking:
+                        placeholders = ','.join(['%s'] * len(atleta_ids_ranking))
                         cursor.execute(f'''
-                            SELECT atleta_id, preco_num
+                            SELECT atleta_id, preco_num, status_id
                             FROM acf_atletas
                             WHERE atleta_id IN ({placeholders})
-                        ''', atleta_ids_sem_preco)
-                        rows_precos = cursor.fetchall()
-                        print(f"[DEBUG] Encontrados {len(rows_precos)} preços na tabela atletas")
-                        for row in rows_precos:
+                        ''', atleta_ids_ranking)
+                        rows_atletas = cursor.fetchall()
+                        
+                        for row in rows_atletas:
+                            atleta_id = row[0]
                             preco_val = float(row[1]) if row[1] else 0.0
-                            preco_dict[row[0]] = preco_val
-                            if preco_val > 0:
-                                print(f"[DEBUG] Atleta {row[0]}: preco_num = {preco_val}")
-                    else:
-                        print(f"[DEBUG] Todos os jogadores da posição {pos_nome} já têm preço")
+                            status_val = int(row[2]) if row[2] else 0
+                            
+                            preco_dict[atleta_id] = preco_val
+                            status_dict[atleta_id] = status_val
+                        
+                        print(f"[DEBUG] Buscados preços e status para {len(rows_atletas)} atletas da posição {pos_nome}")
+                    
+                    if atleta_ids_sem_preco:
+                        print(f"[DEBUG] {len(atleta_ids_sem_preco)} atletas sem preço na posição {pos_nome}")
                     
                     # Segunda passagem: normalizar todos os jogadores
                     for jogador in ranking_data:
@@ -2159,6 +2167,12 @@ def api_escalacao_dados():
                         # Atualizar campos de preço
                         jogador_norm['preco_num'] = preco_valor
                         jogador_norm['preco'] = preco_valor
+                        
+                        # Adicionar status_id atual da tabela (não do ranking salvo)
+                        if atleta_id and atleta_id in status_dict:
+                            jogador_norm['status_id'] = status_dict[atleta_id]
+                        else:
+                            jogador_norm['status_id'] = 0  # Status desconhecido
                         
                         ranking_normalizado.append(jogador_norm)
                     
@@ -2241,6 +2255,26 @@ def api_escalacao_dados():
         ''', (perfil_peso_sg, rodada_atual))
         clubes_sg = [{'clube_id': row[0], 'peso_sg': float(row[1])} for row in cursor.fetchall()]
         
+        # Buscar TODOS os goleiros (para hack do goleiro) - incluindo não prováveis
+        cursor.execute('''
+            SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num, a.status_id
+            FROM acf_atletas a
+            WHERE a.posicao_id = 1
+            ORDER BY a.preco_num DESC
+        ''')
+        todos_goleiros = []
+        for row in cursor.fetchall():
+            if row and len(row) >= 5:
+                todos_goleiros.append({
+                    'atleta_id': row[0],
+                    'apelido': row[1],
+                    'clube_id': row[2],
+                    'preco_num': float(row[3]) if row[3] else 0,
+                    'preco': float(row[3]) if row[3] else 0,
+                    'status_id': int(row[4]) if row[4] else 0,
+                    'pontuacao_total': 0  # Goleiros nulos não precisam de pontuação
+                })
+        
         # Buscar top 5 de peso de jogo
         perfil_peso_jogo = config.get('perfil_peso_jogo', 2)
         cursor.execute('''
@@ -2301,6 +2335,7 @@ def api_escalacao_dados():
             'team_id': team_id,
             'rodada_atual': rodada_atual,
             'rankings_por_posicao': rankings_por_posicao,
+            'todos_goleiros': todos_goleiros,  # Lista completa de goleiros para hack
             'config': {
                 'formation': escalacao_config['formation'] if escalacao_config else '4-3-3',
                 'hack_goleiro': escalacao_config['hack_goleiro'] if escalacao_config else False,

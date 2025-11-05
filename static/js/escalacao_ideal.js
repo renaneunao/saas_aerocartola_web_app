@@ -11,6 +11,7 @@ class EscalacaoIdeal {
         this.patrimonio = parseFloat(dados.patrimonio) || 0;
         this.rankings = dados.rankings_por_posicao || {};
         this.clubes_sg = dados.clubes_sg || [];
+        this.todosGoleiros = dados.todos_goleiros || [];  // Lista completa de goleiros para hack
         
         // Configurações (podem ser passadas ou usar padrão)
         this.formacao = this.parseFormacao(dados.formacao || '4-3-3');
@@ -341,7 +342,18 @@ class EscalacaoIdeal {
         const precoTitular = this.getPreco(goleiroTitular);
         
         // Buscar goleiro nulo (que não vai jogar - não pode ser provável=7 nem dúvida=2) MAIS CARO
-        const todosGoleiros = this.rankings.goleiro || [];
+        // Usar a lista completa de goleiros (todos_goleiros) em vez do ranking
+        const todosGoleiros = this.todosGoleiros || [];
+        
+        // Debug: mostrar alguns goleiros e seus status
+        if (todosGoleiros.length > 0) {
+            this.log(`   Verificando ${todosGoleiros.length} goleiros para o hack...`);
+            const exemplos = todosGoleiros.slice(0, 3);
+            exemplos.forEach(g => {
+                this.log(`      ${g.apelido}: status_id=${g.status_id}, preço=R$ ${this.getPreco(g).toFixed(2)}`);
+            });
+        }
+        
         const goleiroNulo = todosGoleiros.find(g => 
             !escaladosIds.includes(g.atleta_id) && 
             this.getPreco(g) > precoTitular &&
@@ -351,6 +363,8 @@ class EscalacaoIdeal {
         if (goleiroNulo) {
             const precoNulo = this.getPreco(goleiroNulo);
             const diferenca = precoNulo - precoTitular;
+            
+            this.log(`   Goleiro nulo encontrado: ${goleiroNulo.apelido} (status_id=${goleiroNulo.status_id})`);
             
             if (escalacao.custoTotal + diferenca <= this.patrimonio) {
                 this.log(`   ✅ Hack aplicado!`);
@@ -365,6 +379,16 @@ class EscalacaoIdeal {
             }
         } else {
             this.log(`   ❌ Não encontrou goleiro nulo mais caro`);
+            // Debug: mostrar por que não encontrou
+            const goleirosMaisCaro = todosGoleiros.filter(g => 
+                !escaladosIds.includes(g.atleta_id) && 
+                this.getPreco(g) > precoTitular
+            );
+            if (goleirosMaisCaro.length > 0) {
+                this.log(`      ${goleirosMaisCaro.length} goleiros mais caros encontrados, mas todos têm status provável/dúvida`);
+            } else {
+                this.log(`      Nenhum goleiro mais caro que R$ ${precoTitular.toFixed(2)} encontrado`);
+            }
         }
     }
     
