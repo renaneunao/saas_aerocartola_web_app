@@ -644,18 +644,9 @@ def salvar_configuracao_perfis():
     try:
         create_user_configurations_table(conn)
         
-        pesos_posicao = {
-            'goleiro': {},
-            'lateral': {},
-            'zagueiro': {},
-            'meia': {},
-            'atacante': {},
-            'treinador': {}
-        }
-        
         create_user_configuration(
             conn, user['id'], team_id, 'Configuração Padrão', 
-            perfil_peso_jogo, perfil_peso_sg, pesos_posicao, is_default=True
+            perfil_peso_jogo, perfil_peso_sg, is_default=True
         )
         
         flash('Perfis salvos com sucesso!', 'success')
@@ -1755,9 +1746,8 @@ def api_modulo_dados(modulo):
         if peso_row and peso_row[0]:
             pesos_salvos = peso_row[0] if isinstance(peso_row[0], dict) else json.loads(peso_row[0])
         else:
-            # Buscar pesos do JSONB de configuração do usuário, ou usar defaults
-            pesos_posicao = config.get('pesos_posicao', {})
-            pesos_salvos = pesos_posicao.get(modulo, {})
+            # Se não encontrar pesos salvos, usar defaults
+            pesos_salvos = {}
         
         pesos = {}
         for key, default in defaults_modulo.items():

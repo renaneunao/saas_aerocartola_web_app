@@ -16,7 +16,6 @@ def create_user_configurations_table(conn: psycopg2.extensions.connection):
             name VARCHAR(255) NOT NULL,
             perfil_peso_jogo INTEGER NOT NULL,
             perfil_peso_sg INTEGER NOT NULL,
-            pesos_posicao JSONB NOT NULL,
             is_default BOOLEAN DEFAULT FALSE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -38,7 +37,7 @@ def get_user_configurations(conn: psycopg2.extensions.connection, user_id: int, 
     """Busca todas as configurações de um usuário"""
     cursor = conn.cursor()
     query = '''
-        SELECT id, user_id, team_id, name, perfil_peso_jogo, perfil_peso_sg, pesos_posicao, is_default, created_at, updated_at
+        SELECT id, user_id, team_id, name, perfil_peso_jogo, perfil_peso_sg, is_default, created_at, updated_at
         FROM acw_weight_configurations
         WHERE user_id = %s
     '''
@@ -58,10 +57,9 @@ def get_user_configurations(conn: psycopg2.extensions.connection, user_id: int, 
             'name': row[3],
             'perfil_peso_jogo': row[4],
             'perfil_peso_sg': row[5],
-            'pesos_posicao': row[6] if isinstance(row[6], dict) else json.loads(row[6]) if row[6] else {},
-            'is_default': row[7],
-            'created_at': row[8],
-            'updated_at': row[9]
+            'is_default': row[6],
+            'created_at': row[7],
+            'updated_at': row[8]
         })
     return result
 
@@ -69,7 +67,7 @@ def get_user_default_configuration(conn: psycopg2.extensions.connection, user_id
     """Busca a configuração padrão de um usuário"""
     cursor = conn.cursor()
     query = '''
-        SELECT id, user_id, team_id, name, perfil_peso_jogo, perfil_peso_sg, pesos_posicao, is_default, created_at, updated_at
+        SELECT id, user_id, team_id, name, perfil_peso_jogo, perfil_peso_sg, is_default, created_at, updated_at
         FROM acw_weight_configurations
         WHERE user_id = %s AND is_default = TRUE
     '''
@@ -89,10 +87,9 @@ def get_user_default_configuration(conn: psycopg2.extensions.connection, user_id
         'name': row[3],
         'perfil_peso_jogo': row[4],
         'perfil_peso_sg': row[5],
-        'pesos_posicao': row[6] if isinstance(row[6], dict) else json.loads(row[6]) if row[6] else {},
-        'is_default': row[7],
-        'created_at': row[8],
-        'updated_at': row[9]
+        'is_default': row[6],
+        'created_at': row[7],
+        'updated_at': row[8]
     }
 
 def create_user_configuration(
@@ -102,7 +99,6 @@ def create_user_configuration(
     name: str,
     perfil_peso_jogo: int,
     perfil_peso_sg: int,
-    pesos_posicao: dict,
     is_default: bool = False
 ) -> int:
     """Cria ou atualiza uma configuração de pesos para um time"""
@@ -118,18 +114,17 @@ def create_user_configuration(
     
     # Usar UPSERT (INSERT ... ON CONFLICT UPDATE) para atualizar se já existir
     cursor.execute('''
-        INSERT INTO acw_weight_configurations (user_id, team_id, name, perfil_peso_jogo, perfil_peso_sg, pesos_posicao, is_default)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO acw_weight_configurations (user_id, team_id, name, perfil_peso_jogo, perfil_peso_sg, is_default)
+        VALUES (%s, %s, %s, %s, %s, %s)
         ON CONFLICT (user_id, team_id) 
         DO UPDATE SET
             name = EXCLUDED.name,
             perfil_peso_jogo = EXCLUDED.perfil_peso_jogo,
             perfil_peso_sg = EXCLUDED.perfil_peso_sg,
-            pesos_posicao = EXCLUDED.pesos_posicao,
             is_default = EXCLUDED.is_default,
             updated_at = CURRENT_TIMESTAMP
         RETURNING id
-    ''', (user_id, team_id, name, perfil_peso_jogo, perfil_peso_sg, json.dumps(pesos_posicao), is_default))
+    ''', (user_id, team_id, name, perfil_peso_jogo, perfil_peso_sg, is_default))
     
     config_id = cursor.fetchone()[0]
     conn.commit()

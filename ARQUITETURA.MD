@@ -382,23 +382,11 @@ DELETE /api/times/{time_id}                    # Deletar time
 ```json
 {
   "perfil_peso_jogo": 3,
-  "perfil_peso_sg": 2,
-  "pesos_posicao": {
-    "goleiro": {
-      "FATOR_MEDIA": 1.0,
-      "FATOR_FF": 0.7,
-      "FATOR_FD": 0.9,
-      "FATOR_PESO_JOGO": 9.5
-    },
-    "zagueiro": {
-      "FATOR_MEDIA": 2.5,
-      "FATOR_DS": 3.6,
-      ...
-    },
-    ...
-  }
+  "perfil_peso_sg": 2
 }
 ```
+
+**Nota:** Os pesos por posição são armazenados na tabela separada `acw_posicao_weights` para maior flexibilidade e performance.
 
 **Armazenamento:**
 - **Configurações de pesos**: No banco (`user_configurations` table)
@@ -550,15 +538,29 @@ CREATE TABLE users (
 );
 
 -- Tabela de configurações de usuário
-CREATE TABLE user_configurations (
+CREATE TABLE acw_weight_configurations (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
+    user_id INTEGER REFERENCES acw_users(id),
+    team_id INTEGER REFERENCES acw_teams(id),
     name VARCHAR(255) NOT NULL,  -- "Estratégia Conservadora", etc.
     perfil_peso_jogo INTEGER NOT NULL,
     perfil_peso_sg INTEGER NOT NULL,
-    pesos_posicao JSONB NOT NULL,  -- JSON com pesos por posição
     is_default BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(user_id, team_id)
+);
+
+-- Tabela de pesos por posição (separada para maior flexibilidade)
+CREATE TABLE acw_posicao_weights (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES acw_users(id),
+    team_id INTEGER REFERENCES acw_teams(id),
+    posicao VARCHAR(50) NOT NULL,  -- 'goleiro', 'lateral', 'zagueiro', 'meia', 'atacante', 'treinador'
+    weights_json JSONB NOT NULL,  -- JSON com os pesos específicos da posição
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE(user_id, team_id, posicao)
 );
 
 -- Tabela de times do usuário

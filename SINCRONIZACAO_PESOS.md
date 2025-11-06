@@ -106,8 +106,7 @@ Atualizei os pesos padrão na função `modulo_individual` (app.py, linhas 1089-
 A ordem de prioridade para os pesos é:
 
 1. **Pesos salvos pelo usuário** (tabela `acw_posicao_weights`)
-2. **Pesos da configuração do time** (JSONB `pesos_posicao`)
-3. **Pesos padrão** (definidos no `app.py` e sincronizados com JS)
+2. **Pesos padrão** (definidos no `app.py` e sincronizados com JS)
 
 ## Arquivos Modificados
 
