@@ -36,7 +36,11 @@ class CalculoAtacante {
     calcularMelhoresAtacantes(topN = 20) {
         const resultados = [];
         const totalEscalacoes = this.calcularTotalEscalacoes();
+        console.log(`[DEBUG ATACANTE] ========== INÍCIO DO CÁLCULO ==========`);
+        console.log(`[DEBUG ATACANTE] FATOR_ESCALACAO: ${this.pesos.FATOR_ESCALACAO}`);
         console.log(`[DEBUG ATACANTE] Total de escalações: ${totalEscalacoes}`);
+        console.log(`[DEBUG ATACANTE] Número de atletas com escalação: ${Object.keys(this.escalacoes_data).length}`);
+        console.log(`[DEBUG ATACANTE] Escalações (primeiros 5):`, Object.entries(this.escalacoes_data).slice(0, 5));
 
         for (let i = 0; i < this.atletas.length; i++) {
             const atleta = this.atletas[i];

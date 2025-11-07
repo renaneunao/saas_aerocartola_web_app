@@ -32,7 +32,11 @@ class CalculoZagueiro {
     calcularMelhoresZagueiros(topN = 20) {
         const resultados = [];
         const totalEscalacoes = this.calcularTotalEscalacoes();
+        console.log(`[DEBUG ZAGUEIRO] ========== INÍCIO DO CÁLCULO ==========`);
+        console.log(`[DEBUG ZAGUEIRO] FATOR_ESCALACAO: ${this.pesos.FATOR_ESCALACAO}`);
         console.log(`[DEBUG ZAGUEIRO] Total de escalações: ${totalEscalacoes}`);
+        console.log(`[DEBUG ZAGUEIRO] Número de atletas com escalação: ${Object.keys(this.escalacoes_data).length}`);
+        console.log(`[DEBUG ZAGUEIRO] Escalações (primeiros 5):`, Object.entries(this.escalacoes_data).slice(0, 5));
 
         for (let i = 0; i < this.atletas.length; i++) {
             const atleta = this.atletas[i];

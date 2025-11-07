@@ -1615,12 +1615,22 @@ def api_modulo_dados(modulo):
                 ORDER BY escalacoes DESC
                 LIMIT 20
             ''')
-            for row in cursor.fetchall():
+            rows = cursor.fetchall()
+            print(f"[ESCALACOES] Total de registros encontrados em acf_destaques: {len(rows)}")
+            for row in rows:
                 if row and len(row) >= 2:
                     atleta_id, escalacoes = row
                     escalacoes_data[atleta_id] = float(escalacoes) if escalacoes else 0
+            print(f"[ESCALACOES] Dados de escalação preparados: {len(escalacoes_data)} atletas")
+            if escalacoes_data:
+                first_5 = dict(list(escalacoes_data.items())[:5])
+                print(f"[ESCALACOES] Primeiros 5: {first_5}")
+            else:
+                print(f"[ESCALACOES] ⚠️ ATENÇÃO: Nenhum dado de escalação encontrado!")
         except Exception as e:
-            print(f"Erro ao buscar escalações: {e}")
+            print(f"[ESCALACOES] ❌ Erro ao buscar escalações: {e}")
+            import traceback
+            traceback.print_exc()
         
         # Buscar dados de partidas para média de gols
         gols_data = {}

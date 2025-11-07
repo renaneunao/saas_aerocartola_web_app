@@ -36,7 +36,11 @@ class CalculoMeia {
     calcularMelhoresMeias(topN = 20) {
         const resultados = [];
         const totalEscalacoes = this.calcularTotalEscalacoes();
+        console.log(`[DEBUG MEIA] ========== INÍCIO DO CÁLCULO ==========`);
+        console.log(`[DEBUG MEIA] FATOR_ESCALACAO: ${this.pesos.FATOR_ESCALACAO}`);
         console.log(`[DEBUG MEIA] Total de escalações: ${totalEscalacoes}`);
+        console.log(`[DEBUG MEIA] Número de atletas com escalação: ${Object.keys(this.escalacoes_data).length}`);
+        console.log(`[DEBUG MEIA] Escalações (primeiros 5):`, Object.entries(this.escalacoes_data).slice(0, 5));
 
         for (let i = 0; i < this.atletas.length; i++) {
             const atleta = this.atletas[i];
