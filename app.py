@@ -1601,7 +1601,16 @@ def api_modulo_dados(modulo):
             for row in cursor.fetchall():
                 if row and len(row) >= 2:
                     atleta_id, escalacoes = row
-                    escalacoes_data[atleta_id] = float(escalacoes) if escalacoes else 0
+                    # Converter escalacoes: remover vírgulas se for string (ex: "108,313" -> 108313)
+                    if escalacoes:
+                        if isinstance(escalacoes, str):
+                            # Remover vírgulas e converter para float
+                            escalacoes_clean = escalacoes.replace(',', '').replace('.', '')
+                            escalacoes_data[atleta_id] = float(escalacoes_clean)
+                        else:
+                            escalacoes_data[atleta_id] = float(escalacoes)
+                    else:
+                        escalacoes_data[atleta_id] = 0
         except Exception as e:
             print(f"Erro ao buscar escalações: {e}")
         

@@ -147,11 +147,20 @@ def calcular_melhores_laterais(top_n=10, rodada_atual=6, min_jogos_pref=3, rodad
         LIMIT 20
     ''')
     destaques_top = cursor.fetchall()
-    total_escalacoes_top = sum(float(d[1]) for d in destaques_top) if destaques_top else 1.0  # Evitar divisão por zero
+    
+    # Converter escalações (remover vírgulas se for string: "108,313" -> 108313)
+    def converter_escalacao(valor):
+        if valor is None:
+            return 0.0
+        if isinstance(valor, str):
+            return float(valor.replace(',', '').replace('.', ''))
+        return float(valor)
+    
+    total_escalacoes_top = sum(converter_escalacao(d[1]) for d in destaques_top) if destaques_top else 1.0
     printdbg(f"Total de jogadores no top 20 destaques: {len(destaques_top)}, Total de escalações: {total_escalacoes_top}")
 
     # Criar dicionário para acesso rápido às escalações
-    escalacoes_por_atleta = {d[0]: float(d[1]) for d in destaques_top}
+    escalacoes_por_atleta = {d[0]: converter_escalacao(d[1]) for d in destaques_top}
 
     # Calcular pontuação total
     resultados = []
