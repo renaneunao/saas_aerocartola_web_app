@@ -132,6 +132,22 @@ class CalculoAtacante {
         const percentual_escalacoes = totalEscalacoes > 0 ? escalacoes / totalEscalacoes : 0;
         const peso_escalacao = 1 + percentual_escalacoes * this.pesos.FATOR_ESCALACAO;
 
+        // 🔍 TESTE: Mostrar cálculo completo para o primeiro jogador
+        if (typeof window._debug_first === 'undefined') {
+            window._debug_first = true;
+            alert(`TESTE FATOR_ESCALACAO:\n\n` +
+                  `Jogador: ${apelido}\n` +
+                  `escalacoes[${atleta_id}]: ${escalacoes}\n` +
+                  `totalEscalacoes: ${totalEscalacoes}\n` +
+                  `percentual: ${escalacoes}/${totalEscalacoes} = ${percentual_escalacoes.toFixed(6)}\n` +
+                  `FATOR_ESCALACAO: ${this.pesos.FATOR_ESCALACAO}\n\n` +
+                  `peso_escalacao = 1 + ${percentual_escalacoes.toFixed(6)} * ${this.pesos.FATOR_ESCALACAO}\n` +
+                  `peso_escalacao = ${peso_escalacao.toFixed(6)}\n\n` +
+                  `pontuacao_base: ${pontuacao_total.toFixed(2)}\n` +
+                  `sqrt(${pontuacao_total.toFixed(2)}) = ${Math.sqrt(pontuacao_total).toFixed(2)}\n` +
+                  `pontuacao_final: ${Math.sqrt(pontuacao_total).toFixed(2)} * ${peso_escalacao.toFixed(6)} = ${(Math.sqrt(pontuacao_total) * peso_escalacao).toFixed(2)}`);
+        }
+
         // Ajustar pontuação final: raiz quadrada multiplicada pelo peso
         const pontuacao_total_final = Math.sqrt(pontuacao_total) * peso_escalacao;
 
