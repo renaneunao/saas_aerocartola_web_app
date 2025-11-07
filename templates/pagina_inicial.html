@@ -24,18 +24,24 @@
     .profile-slider-container {
         position: relative;
         overflow: hidden;
+        height: calc(100vh - 8rem); /* Ocupa altura total menos header/nav */
+        min-height: 600px;
     }
     
     .profile-slider {
         display: flex;
         transition: transform 0.4s ease-in-out;
         scroll-behavior: smooth;
+        height: 100%;
     }
     
     .profile-slide {
         min-width: 100%;
         width: 100%;
         flex-shrink: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
     
     /* Container de scroll horizontal - scrollbar no topo usando direction: rtl */
@@ -46,6 +52,8 @@
         padding-bottom: 0.5rem;
         scroll-behavior: smooth;
         direction: rtl; /* Inverte direção para scrollbar aparecer no topo */
+        flex: 1 1 auto;
+        min-height: 0;
     }
     
     /* Scrollbar customizado - fino e bonito */
@@ -80,17 +88,53 @@
         gap: 1rem;
         min-width: max-content;
         direction: ltr; /* Reverter direção para conteúdo aparecer na ordem correta */
+        align-items: stretch;
+        min-height: 100%;
     }
     
     .profile-card {
-        flex: 0 0 320px;
-        min-width: 320px;
+        flex: 0 0 220px;
+        min-width: 220px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .profile-card > div {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* Scrollbar vertical customizada para container de times */
+    .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.3);
+        border-radius: 10px;
+    }
+    
+    .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #0369a1, #0284c7);
+        border-radius: 10px;
+        transition: background 0.3s ease;
+    }
+    
+    .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #0284c7, #0ea5e9);
+    }
+    
+    /* Para Firefox */
+    .profile-card [class*="overflow-y-auto"] {
+        scrollbar-width: thin;
+        scrollbar-color: #0284c7 rgba(15, 23, 42, 0.3);
     }
     
     @media (max-width: 640px) {
         .profile-card {
-            flex: 0 0 280px;
-            min-width: 280px;
+            flex: 0 0 200px;
+            min-width: 200px;
         }
     }
 </style>
@@ -118,7 +162,7 @@
                 
                 <!-- PASSO 1: Perfil de Peso de Jogo -->
                 <div class="profile-slide">
-                    <div class="bg-gradient-to-br from-slate-900/95 to-slate-950/95 backdrop-blur-sm rounded-2xl border-2 border-slate-700/50 shadow-2xl overflow-hidden mb-4">
+                    <div class="bg-gradient-to-br from-slate-900/95 to-slate-950/95 backdrop-blur-sm rounded-2xl border-2 border-slate-700/50 shadow-2xl overflow-hidden flex flex-col h-full">
                         <!-- Header -->
                         <div class="bg-gradient-to-r from-dark-blue-700/90 to-dark-blue-800/90 p-4 border-b border-slate-700/50">
                             <div class="flex items-center justify-between">
@@ -138,7 +182,7 @@
                         </div>
 
                         <!-- Container com scroll horizontal -->
-                        <div class="p-4 profile-scroll-container">
+                        <div class="p-4 profile-scroll-container flex-1 min-h-0">
                             <div class="profile-cards-grid">
                                 {% for perfil in perfis_peso_jogo %}
                                 <label class="profile-card relative cursor-pointer group">
@@ -148,46 +192,46 @@
                                            class="peer sr-only"
                                            {% if config_default and config_default.perfil_peso_jogo == perfil.perfil_id %}checked{% endif %}
                                            required>
-                                    <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-4 hover:border-dark-blue-500/70 transition-all duration-200 peer-checked:border-dark-blue-500 peer-checked:bg-dark-blue-900/20 peer-checked:shadow-2xl h-full flex flex-col" style="min-height: 700px;">
-                                        <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-700/50">
-                                            <span class="text-white font-bold text-xl font-serif">Perfil {{ perfil.perfil_id }}</span>
-                                            <i class="fas fa-check-circle text-dark-blue-400 opacity-0 peer-checked:opacity-100 transition-opacity duration-200 text-2xl"></i>
+                                    <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-3 hover:border-dark-blue-500/70 transition-all duration-200 peer-checked:border-dark-blue-500 peer-checked:bg-dark-blue-900/20 peer-checked:shadow-2xl h-full flex flex-col">
+                                        <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-700/50">
+                                            <span class="text-white font-bold text-base font-serif">Perfil {{ perfil.perfil_id }}</span>
+                                            <i class="fas fa-check-circle text-dark-blue-400 opacity-0 peer-checked:opacity-100 transition-opacity duration-200 text-lg"></i>
                                         </div>
-                                        <p class="text-dark-blue-300 text-sm font-medium mb-2 leading-tight">{{ perfil.descricao }}</p>
-                                        <p class="text-slate-400 text-xs mb-4 font-sans">Últimas {{ perfil.ultimas_partidas }} partidas</p>
+                                        <p class="text-dark-blue-300 text-xs font-medium mb-1 leading-tight">{{ perfil.descricao }}</p>
+                                        <p class="text-slate-400 text-xs mb-2 font-sans">Últimas {{ perfil.ultimas_partidas }} partidas</p>
                                         
                                         <!-- Ranking de Times Favoritos -->
-                                        <div class="mt-auto flex flex-col flex-1 min-h-0">
-                                            <p class="text-xs text-slate-400 font-medium mb-2 uppercase tracking-wide">Times Favoritos ({{ perfil.top_clubes|length }}):</p>
-                                            <div class="flex-1 space-y-1 overflow-y-auto">
+                                        <div class="flex flex-col flex-1 min-h-0">
+                                            <p class="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide">Times Favoritos ({{ perfil.top_clubes|length }}):</p>
+                                            <div class="space-y-0.5 overflow-y-auto flex-1" style="min-height: 0;">
                                                 {% for clube in perfil.top_clubes %}
-                                                <div class="bg-slate-900/70 rounded-lg px-3 py-2 hover:bg-slate-800/90 transition-colors border border-slate-700/30">
-                                                    <div class="flex items-center justify-between text-sm mb-1">
-                                                        <div class="flex items-center space-x-2 flex-1 min-w-0">
+                                                <div class="bg-slate-900/70 rounded-lg px-2 py-1.5 hover:bg-slate-800/90 transition-colors border border-slate-700/30">
+                                                    <div class="flex items-center justify-between text-xs mb-0.5">
+                                                        <div class="flex items-center space-x-1.5 flex-1 min-w-0">
                                                             {% if clube.clube_id in clubes_dict and clubes_dict[clube.clube_id].escudo_url %}
                                                             <img src="{{ clubes_dict[clube.clube_id].escudo_url }}" 
                                                                  alt="{{ clubes_dict[clube.clube_id].nome }}" 
-                                                                 class="w-6 h-6 rounded-full flex-shrink-0">
+                                                                 class="w-5 h-5 rounded-full flex-shrink-0">
                                                             {% else %}
-                                                            <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
+                                                            <div class="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
                                                                 <span class="text-xs text-slate-300">{{ loop.index }}</span>
                                                             </div>
                                                             {% endif %}
-                                                            <span class="text-white truncate font-medium">
+                                                            <span class="text-white truncate font-medium text-xs">
                                                                 {{ loop.index }}. {% if clube.clube_id in clubes_dict %}{{ clubes_dict[clube.clube_id].nome }}{% else %}Time {{ clube.clube_id }}{% endif %}
                                                             </span>
                                                         </div>
-                                                        <span class="font-bold ml-3 whitespace-nowrap text-sm" style="color: {{ clube.peso_color }};">{{ clube.peso_jogo_str }}</span>
+                                                        <span class="font-bold ml-2 whitespace-nowrap text-xs" style="color: {{ clube.peso_color }};">{{ clube.peso_jogo_str }}</span>
                                                     </div>
                                                     {% if clube.adversario_id and clube.adversario_id in clubes_dict %}
-                                                    <div class="flex items-center space-x-2 text-xs text-slate-400 mt-1 pl-8">
-                                                        <span class="text-slate-500">vs</span>
+                                                    <div class="flex items-center space-x-1.5 text-xs text-slate-400 mt-0.5 pl-6">
+                                                        <span class="text-slate-500 text-xs">vs</span>
                                                         {% if clubes_dict[clube.adversario_id].escudo_url %}
                                                         <img src="{{ clubes_dict[clube.adversario_id].escudo_url }}" 
                                                              alt="{{ clubes_dict[clube.adversario_id].nome }}" 
-                                                             class="w-4 h-4 rounded-full flex-shrink-0">
+                                                             class="w-3.5 h-3.5 rounded-full flex-shrink-0">
                                                         {% endif %}
-                                                        <span class="truncate">{{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}</span>
+                                                        <span class="truncate text-xs">{{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}</span>
                                                     </div>
                                                     {% endif %}
                                                 </div>
@@ -204,7 +248,7 @@
                         </div>
 
                         <!-- Botão Próximo -->
-                        <div class="p-4 border-t border-slate-700/50 bg-slate-900/50 flex justify-end">
+                        <div class="px-4 pt-4 pb-4 border-t border-slate-700/50 bg-slate-900/50 flex justify-end flex-shrink-0">
                             <button type="button" 
                                     onclick="slideToNext()"
                                     id="nextBtnPesoJogo"
@@ -218,7 +262,7 @@
 
                 <!-- PASSO 2: Perfil de Peso SG -->
                 <div class="profile-slide">
-                    <div class="bg-gradient-to-br from-slate-900/95 to-slate-950/95 backdrop-blur-sm rounded-2xl border-2 border-slate-700/50 shadow-2xl overflow-hidden mb-4">
+                    <div class="bg-gradient-to-br from-slate-900/95 to-slate-950/95 backdrop-blur-sm rounded-2xl border-2 border-slate-700/50 shadow-2xl overflow-hidden flex flex-col h-full">
                         <!-- Header -->
                         <div class="bg-gradient-to-r from-cyan-600/90 to-teal-600/90 p-4 border-b border-slate-700/50">
                             <div class="flex items-center justify-between">
@@ -238,7 +282,7 @@
                         </div>
 
                         <!-- Container com scroll horizontal -->
-                        <div class="p-4 profile-scroll-container">
+                        <div class="p-4 profile-scroll-container flex-1 min-h-0">
                             <div class="profile-cards-grid">
                                 {% for perfil in perfis_peso_sg %}
                                 <label class="profile-card relative cursor-pointer group">
@@ -248,46 +292,46 @@
                                            class="peer sr-only"
                                            {% if config_default and config_default.perfil_peso_sg == perfil.perfil_id %}checked{% endif %}
                                            required>
-                                    <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-4 hover:border-cyan-500/70 transition-all duration-200 peer-checked:border-cyan-500 peer-checked:bg-cyan-900/20 peer-checked:shadow-2xl h-full flex flex-col" style="min-height: 700px;">
-                                        <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-700/50">
-                                            <span class="text-white font-bold text-xl font-serif">Perfil {{ perfil.perfil_id }}</span>
-                                            <i class="fas fa-check-circle text-cyan-400 opacity-0 peer-checked:opacity-100 transition-opacity duration-200 text-2xl"></i>
+                                    <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-3 hover:border-cyan-500/70 transition-all duration-200 peer-checked:border-cyan-500 peer-checked:bg-cyan-900/20 peer-checked:shadow-2xl h-full flex flex-col">
+                                        <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-700/50">
+                                            <span class="text-white font-bold text-base font-serif">Perfil {{ perfil.perfil_id }}</span>
+                                            <i class="fas fa-check-circle text-cyan-400 opacity-0 peer-checked:opacity-100 transition-opacity duration-200 text-lg"></i>
                                         </div>
-                                        <p class="text-cyan-300 text-sm font-medium mb-2 leading-tight">{{ perfil.descricao }}</p>
-                                        <p class="text-slate-400 text-xs mb-4 font-sans">Últimas {{ perfil.ultimas_partidas }} partidas</p>
+                                        <p class="text-cyan-300 text-xs font-medium mb-1 leading-tight">{{ perfil.descricao }}</p>
+                                        <p class="text-slate-400 text-xs mb-2 font-sans">Últimas {{ perfil.ultimas_partidas }} partidas</p>
                                         
                                         <!-- Ranking de Defesas -->
-                                        <div class="mt-auto flex flex-col flex-1 min-h-0">
-                                            <p class="text-xs text-slate-400 font-medium mb-2 uppercase tracking-wide">Melhor Defesa ({{ perfil.top_clubes|length }}):</p>
-                                            <div class="flex-1 space-y-1 overflow-y-auto">
+                                        <div class="flex flex-col flex-1 min-h-0">
+                                            <p class="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide">Melhor Defesa ({{ perfil.top_clubes|length }}):</p>
+                                            <div class="space-y-0.5 overflow-y-auto flex-1" style="min-height: 0;">
                                                 {% for clube in perfil.top_clubes %}
-                                                <div class="bg-slate-900/70 rounded-lg px-3 py-2 hover:bg-slate-800/90 transition-colors border border-slate-700/30">
-                                                    <div class="flex items-center justify-between text-sm mb-1">
-                                                        <div class="flex items-center space-x-2 flex-1 min-w-0">
+                                                <div class="bg-slate-900/70 rounded-lg px-2 py-1.5 hover:bg-slate-800/90 transition-colors border border-slate-700/30">
+                                                    <div class="flex items-center justify-between text-xs mb-0.5">
+                                                        <div class="flex items-center space-x-1.5 flex-1 min-w-0">
                                                             {% if clube.clube_id in clubes_dict and clubes_dict[clube.clube_id].escudo_url %}
                                                             <img src="{{ clubes_dict[clube.clube_id].escudo_url }}" 
                                                                  alt="{{ clubes_dict[clube.clube_id].nome }}" 
-                                                                 class="w-6 h-6 rounded-full flex-shrink-0">
+                                                                 class="w-5 h-5 rounded-full flex-shrink-0">
                                                             {% else %}
-                                                            <div class="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
+                                                            <div class="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
                                                                 <span class="text-xs text-slate-300">{{ loop.index }}</span>
                                                             </div>
                                                             {% endif %}
-                                                            <span class="text-white truncate font-medium">
+                                                            <span class="text-white truncate font-medium text-xs">
                                                                 {{ loop.index }}. {% if clube.clube_id in clubes_dict %}{{ clubes_dict[clube.clube_id].nome }}{% else %}Time {{ clube.clube_id }}{% endif %}
                                                             </span>
                                                         </div>
-                                                        <span class="font-bold ml-3 whitespace-nowrap text-sm" style="color: {{ clube.peso_color }};">{{ clube.peso_sg_str }}</span>
+                                                        <span class="font-bold ml-2 whitespace-nowrap text-xs" style="color: {{ clube.peso_color }};">{{ clube.peso_sg_str }}</span>
                                                     </div>
                                                     {% if clube.adversario_id and clube.adversario_id in clubes_dict %}
-                                                    <div class="flex items-center space-x-2 text-xs text-slate-400 mt-1 pl-8">
-                                                        <span class="text-slate-500">vs</span>
+                                                    <div class="flex items-center space-x-1.5 text-xs text-slate-400 mt-0.5 pl-6">
+                                                        <span class="text-slate-500 text-xs">vs</span>
                                                         {% if clubes_dict[clube.adversario_id].escudo_url %}
                                                         <img src="{{ clubes_dict[clube.adversario_id].escudo_url }}" 
                                                              alt="{{ clubes_dict[clube.adversario_id].nome }}" 
-                                                             class="w-4 h-4 rounded-full flex-shrink-0">
+                                                             class="w-3.5 h-3.5 rounded-full flex-shrink-0">
                                                         {% endif %}
-                                                        <span class="truncate">{{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}</span>
+                                                        <span class="truncate text-xs">{{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}</span>
                                                     </div>
                                                     {% endif %}
                                                 </div>
@@ -304,7 +348,7 @@
                         </div>
 
                         <!-- Botões de Navegação -->
-                        <div class="p-4 border-t border-slate-700/50 bg-slate-900/50 flex justify-between items-center">
+                        <div class="px-4 pt-4 pb-4 border-t border-slate-700/50 bg-slate-900/50 flex justify-between items-center flex-shrink-0">
                             <button type="button" 
                                     onclick="slideToPrevious()"
                                     class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2">
