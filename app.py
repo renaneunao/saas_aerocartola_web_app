@@ -1589,14 +1589,14 @@ def api_modulo_dados(modulo):
                 except Exception as e:
                     print(f"Erro ao buscar desarmes cedidos por adversários: {e}")
         
-        # 3. Buscar escalações (top 20 destaques) - SEM FILTRO DE POSIÇÃO!
+        # 3. Buscar escalações (TODOS OS JOGADORES com escalações > 0)
         escalacoes_data = {}
         try:
             cursor.execute('''
                 SELECT atleta_id, escalacoes
                 FROM acf_destaques
+                WHERE escalacoes > 0
                 ORDER BY escalacoes DESC
-                LIMIT 20
             ''')
             rows = cursor.fetchall()
             print(f"[DEBUG ESCALACOES] Total de registros retornados: {len(rows)}")
@@ -1604,7 +1604,11 @@ def api_modulo_dados(modulo):
                 if row and len(row) >= 2:
                     atleta_id, escalacoes = row
                     escalacoes_data[atleta_id] = float(escalacoes) if escalacoes else 0
-                    print(f"[DEBUG ESCALACOES] Atleta {atleta_id}: {escalacoes} escalações")
+            
+            # Log dos top 5 para debug
+            if escalacoes_data:
+                top5 = sorted(escalacoes_data.items(), key=lambda x: x[1], reverse=True)[:5]
+                print(f"[DEBUG ESCALACOES] Top 5 mais escalados: {top5}")
             print(f"[DEBUG ESCALACOES] Total no dicionário: {len(escalacoes_data)}")
         except Exception as e:
             print(f"Erro ao buscar escalações: {e}")
