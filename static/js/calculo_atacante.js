@@ -37,6 +37,15 @@ class CalculoAtacante {
         console.log(`[DEBUG CONSTRUTOR] data.pesos:`, data.pesos);
         console.log(`[DEBUG CONSTRUTOR] this.pesos após atribuição:`, this.pesos);
         console.log(`[DEBUG CONSTRUTOR] FATOR_ESCALACAO: ${this.pesos.FATOR_ESCALACAO}`);
+        
+        // 🔍 DIAGNÓSTICO: Armazenar globalmente para inspeção
+        window.escalacoes_data_global = this.escalacoes_data;
+        window.pesos_global = this.pesos;
+        
+        console.log('🔍 [DIAGNÓSTICO ESCALAÇÃO]');
+        console.log('  escalacoes_data:', this.escalacoes_data);
+        console.log('  Quantidade de atletas:', Object.keys(this.escalacoes_data).length);
+        console.log('  FATOR_ESCALACAO:', this.pesos.FATOR_ESCALACAO);
         console.log(`[DEBUG CONSTRUTOR] Tipo do FATOR_ESCALACAO: ${typeof this.pesos.FATOR_ESCALACAO}`);
         console.log(`[DEBUG CONSTRUTOR] Total de atletas: ${this.atletas.length}`);
         console.log(`[DEBUG CONSTRUTOR] Total de itens em escalacoes_data: ${Object.keys(this.escalacoes_data).length}`);
@@ -202,7 +211,8 @@ class CalculoAtacante {
             media_a: parseFloat(media_a.toFixed(2)),
             adversario_id,
             adversario_nome,
-            peso_escalacao: parseFloat(peso_escalacao.toFixed(4))
+            peso_escalacao: parseFloat(peso_escalacao.toFixed(4)),
+            escalacoes: escalacoes  // 🔍 Adicionar número de escalações ao resultado
         };
     }
 }
