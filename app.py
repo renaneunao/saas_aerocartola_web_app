@@ -1374,6 +1374,23 @@ def api_salvar_pesos(modulo):
                     VALUES (%s, %s, %s, %s)
                 ''', (user['id'], team_id, modulo, json.dumps(pesos, ensure_ascii=False)))
             
+            # 🔥 DELETAR RANKINGS SALVOS para forçar recálculo com novos pesos
+            cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+            rodada_result = cursor.fetchone()
+            rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
+            
+            posicao_map = {
+                'goleiro': 1, 'lateral': 2, 'zagueiro': 3, 'meia': 4, 'atacante': 5, 'treinador': 6
+            }
+            posicao_id = posicao_map.get(modulo)
+            
+            if posicao_id:
+                cursor.execute('''
+                    DELETE FROM user_rankings 
+                    WHERE user_id = %s AND team_id = %s AND posicao_id = %s AND rodada_atual = %s
+                ''', (user['id'], team_id, posicao_id, rodada_atual))
+                print(f"[PESOS] Rankings deletados para {modulo} após mudança de pesos")
+            
             conn.commit()
             return jsonify({'success': True, 'message': 'Pesos salvos com sucesso'})
         finally:
