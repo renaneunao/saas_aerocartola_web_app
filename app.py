@@ -1589,7 +1589,7 @@ def api_modulo_dados(modulo):
                 except Exception as e:
                     print(f"Erro ao buscar desarmes cedidos por adversários: {e}")
         
-        # 3. Buscar escalações (top 20 destaques)
+        # 3. Buscar escalações (top 20 destaques) - SEM FILTRO DE POSIÇÃO!
         escalacoes_data = {}
         try:
             cursor.execute('''
@@ -1598,19 +1598,14 @@ def api_modulo_dados(modulo):
                 ORDER BY escalacoes DESC
                 LIMIT 20
             ''')
-            for row in cursor.fetchall():
+            rows = cursor.fetchall()
+            print(f"[DEBUG ESCALACOES] Total de registros retornados: {len(rows)}")
+            for row in rows:
                 if row and len(row) >= 2:
                     atleta_id, escalacoes = row
-                    # Converter escalacoes: remover vírgulas se for string (ex: "108,313" -> 108313)
-                    if escalacoes:
-                        if isinstance(escalacoes, str):
-                            # Remover vírgulas e converter para float
-                            escalacoes_clean = escalacoes.replace(',', '').replace('.', '')
-                            escalacoes_data[atleta_id] = float(escalacoes_clean)
-                        else:
-                            escalacoes_data[atleta_id] = float(escalacoes)
-                    else:
-                        escalacoes_data[atleta_id] = 0
+                    escalacoes_data[atleta_id] = float(escalacoes) if escalacoes else 0
+                    print(f"[DEBUG ESCALACOES] Atleta {atleta_id}: {escalacoes} escalações")
+            print(f"[DEBUG ESCALACOES] Total no dicionário: {len(escalacoes_data)}")
         except Exception as e:
             print(f"Erro ao buscar escalações: {e}")
         
