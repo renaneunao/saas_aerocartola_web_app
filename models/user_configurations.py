@@ -25,6 +25,22 @@ def create_user_configurations_table(conn: psycopg2.extensions.connection):
             UNIQUE(user_id, team_id)
         )
     ''')
+    
+    # Remover coluna pesos_posicao se existir (migration automática)
+    try:
+        cursor.execute('''
+            SELECT EXISTS (
+                SELECT FROM information_schema.columns 
+                WHERE table_schema = 'public' 
+                AND table_name = 'acw_weight_configurations'
+                AND column_name = 'pesos_posicao'
+            )
+        ''')
+        if cursor.fetchone()[0]:
+            cursor.execute('ALTER TABLE acw_weight_configurations DROP COLUMN pesos_posicao')
+    except Exception:
+        pass  # Coluna já foi removida ou não existe
+    
     # Criar índices apenas se as colunas existirem
     try:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_user_weight_configurations_user_id ON acw_weight_configurations(user_id)')
