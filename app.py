@@ -430,7 +430,6 @@ def pagina_inicial():
             FROM acp_peso_jogo_perfis pj
             WHERE pj.rodada_atual = %s
             ORDER BY pj.perfil_id
-            LIMIT 10
         ''', (rodada_atual,))
         perfis_raw = cursor.fetchall()
         
@@ -501,7 +500,6 @@ def pagina_inicial():
             FROM acp_peso_sg_perfis ps
             WHERE ps.rodada_atual = %s
             ORDER BY ps.perfil_id
-            LIMIT 10
         ''', (rodada_atual,))
         perfis_raw = cursor.fetchall()
         
@@ -1746,7 +1744,7 @@ def api_modulo_dados(modulo):
         if peso_row and peso_row[0]:
             pesos_salvos = peso_row[0] if isinstance(peso_row[0], dict) else json.loads(peso_row[0])
         else:
-            # Se não encontrar pesos salvos, usar defaults
+            # Se não houver pesos salvos, usar defaults
             pesos_salvos = {}
         
         pesos = {}
