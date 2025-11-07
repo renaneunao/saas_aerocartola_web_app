@@ -119,6 +119,23 @@ def init_all_tables():
                     conn.commit()
                     print("   ✅ Estrutura migrada")
         
+        # Verificar e remover coluna pesos_posicao se existir (não é mais utilizada)
+        # Esta verificação deve ser feita independentemente da existência de outras colunas antigas
+        if table_exists:
+            cursor.execute('''
+                SELECT EXISTS (
+                    SELECT FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                    AND table_name = 'acw_weight_configurations'
+                    AND column_name = 'pesos_posicao'
+                )
+            ''')
+            if cursor.fetchone()[0]:
+                print("   Removendo coluna obsoleta pesos_posicao...")
+                cursor.execute('ALTER TABLE acw_weight_configurations DROP COLUMN IF EXISTS pesos_posicao')
+                conn.commit()
+                print("   ✅ Coluna pesos_posicao removida")
+        
         create_user_configurations_table(conn)
         
         # Criar tabela de rankings por time
