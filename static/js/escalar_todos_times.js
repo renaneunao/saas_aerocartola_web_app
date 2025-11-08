@@ -55,14 +55,12 @@ class EscalarTodosTimes {
             window.CalculoGoleiro && window.CalculoLateral && 
             window.CalculoZagueiro && window.CalculoMeia && 
             window.CalculoAtacante && window.CalculoTreinador) {
-            this.log('✅ Scripts já carregados', 'info');
             return;
         }
         
         // Verificar se os scripts já estão no DOM (carregados pelo dashboard ou módulos)
         const scriptsNoDOM = document.querySelectorAll('script[src*="calculo_"], script[src*="escalacao"]');
         if (scriptsNoDOM.length > 0) {
-            this.log(`⏭️ ${scriptsNoDOM.length} scripts já encontrados no DOM, aguardando carregamento...`, 'info');
             // Aguardar um pouco para que os scripts sejam processados
             for (let i = 0; i < 20; i++) {
                 await new Promise(resolve => setTimeout(resolve, 200));
@@ -71,7 +69,6 @@ class EscalarTodosTimes {
                     window.CalculoGoleiro && window.CalculoLateral && 
                     window.CalculoZagueiro && window.CalculoMeia && 
                     window.CalculoAtacante && window.CalculoTreinador) {
-                    this.log('✅ Scripts carregados do DOM', 'success');
                     return;
                 }
             }
@@ -103,7 +100,6 @@ class EscalarTodosTimes {
             // Verificar se o script já foi carregado no DOM
             const existingScript = document.querySelector(`script[src*="${scriptName}"]`);
             if (existingScript) {
-                this.log(`⏭️ Script ${scriptName} já no DOM, aguardando...`, 'info');
                 // Aguardar mais tempo para que seja processado
                 for (let i = 0; i < 10; i++) {
                     await new Promise(resolve => setTimeout(resolve, 200));
@@ -120,8 +116,6 @@ class EscalarTodosTimes {
                 continue;
             }
             
-            this.log(`📦 Carregando ${scriptName}...`, 'info');
-            
             // Tentar diferentes caminhos
             const caminhos = [
                 `/static/js/${scriptName}`,
@@ -137,7 +131,6 @@ class EscalarTodosTimes {
                         script.src = src;
                         script.async = false;
                         script.onload = () => {
-                            this.log(`✅ ${scriptName} carregado`, 'success');
                             carregado = true;
                             resolve();
                         };
@@ -151,10 +144,6 @@ class EscalarTodosTimes {
                     // Tentar próximo caminho
                     continue;
                 }
-            }
-            
-            if (!carregado) {
-                this.log(`⚠️ Não foi possível carregar ${scriptName}`, 'warning');
             }
             
             // Pequena pausa entre scripts
@@ -189,8 +178,6 @@ class EscalarTodosTimes {
      * Busca todos os times do usuário
      */
     async buscarTodosTimes() {
-        this.log('📡 Buscando lista de times...', 'info');
-        
         const response = await fetch('/api/credenciais/lista');
         if (!response.ok) {
             throw new Error('Erro ao buscar lista de times');
@@ -207,7 +194,7 @@ class EscalarTodosTimes {
             throw new Error('Você precisa ter mais de um time cadastrado para usar esta funcionalidade');
         }
         
-        this.log(`✅ ${times.length} times encontrados`, 'success');
+        this.log(`📋 ${times.length} times encontrados`, 'info');
         return times;
     }
 
@@ -222,7 +209,6 @@ class EscalarTodosTimes {
             const timeSelecionado = data.times.find(t => t.selected);
             if (timeSelecionado) {
                 this.timeOriginal = timeSelecionado.id;
-                this.log(`💾 Time original salvo: ${timeSelecionado.team_name}`, 'info');
             }
         }
     }
@@ -231,8 +217,6 @@ class EscalarTodosTimes {
      * Seleciona um time
      */
     async selecionarTime(teamId) {
-        this.log(`🔄 Selecionando time ${teamId}...`, 'info');
-        
         const response = await fetch('/api/time/selecionar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -245,8 +229,6 @@ class EscalarTodosTimes {
         
         // Aguardar um pouco para garantir que a sessão foi atualizada
         await new Promise(resolve => setTimeout(resolve, 500));
-        
-        this.log(`✅ Time ${teamId} selecionado`, 'success');
     }
 
     /**
@@ -254,9 +236,7 @@ class EscalarTodosTimes {
      */
     async voltarTimeOriginal() {
         if (this.timeOriginal) {
-            this.log(`🔄 Voltando para o time original...`, 'info');
             await this.selecionarTime(this.timeOriginal);
-            this.log(`✅ Time original restaurado`, 'success');
         }
     }
 
@@ -264,9 +244,7 @@ class EscalarTodosTimes {
      * Escala um time específico
      */
     async escalarTime(time) {
-        this.log('═'.repeat(60), 'info');
-        this.log(`🚀 PROCESSANDO TIME: ${time.team_name}`, 'info');
-        this.log('═'.repeat(60), 'info');
+        this.log(`🚀 Processando time: ${time.team_name}`, 'info');
         
         try {
             // 1. Selecionar o time
@@ -321,22 +299,15 @@ class EscalarTodosTimes {
      */
     async executar() {
         try {
-            this.log('═'.repeat(60), 'info');
-            this.log('🚀 INICIANDO ESCALAÇÃO DE TODOS OS TIMES', 'info');
-            this.log('═'.repeat(60), 'info');
-            
             this.updateProgress(0, 'Iniciando...');
             
             // 1. Carregar scripts de cálculo ANTES de tudo
-            this.log('📦 Verificando e carregando scripts necessários...', 'info');
             await this.carregarScriptsCalculo();
             
             // Verificar se os scripts foram carregados
             if (!window.EscalacaoRapida) {
                 throw new Error('Não foi possível carregar os scripts necessários. Os scripts podem não estar disponíveis nesta página. Tente usar a funcionalidade na página de módulos ou recarregue a página.');
             }
-            
-            this.log('✅ Scripts carregados com sucesso!', 'success');
             
             // 2. Salvar time original
             await this.salvarTimeOriginal();
@@ -345,8 +316,6 @@ class EscalarTodosTimes {
             const times = await this.buscarTodosTimes();
             this.timesTotal = times.length;
             this.timesProcessados = 0;
-            
-            this.log(`📋 Total de times a processar: ${this.timesTotal}`, 'info');
             
             // 4. Processar cada time
             for (const time of times) {
@@ -368,19 +337,14 @@ class EscalarTodosTimes {
             const sucessos = this.resultados.filter(r => r.success).length;
             const falhas = this.resultados.filter(r => !r.success).length;
             
-            this.log('═'.repeat(60), 'info');
-            this.log('📊 RESUMO FINAL', 'info');
-            this.log('═'.repeat(60), 'info');
-            this.log(`✅ Times escalados com sucesso: ${sucessos}/${this.timesTotal}`, 'success');
+            this.log(`📊 Resumo: ${sucessos}/${this.timesTotal} times escalados com sucesso`, sucessos === this.timesTotal ? 'success' : 'info');
             
             if (falhas > 0) {
-                this.log(`❌ Times com erro: ${falhas}/${this.timesTotal}`, 'error');
+                this.log(`❌ ${falhas} time(s) com erro:`, 'error');
                 this.resultados.filter(r => !r.success).forEach(r => {
-                    this.log(`  - ${r.time.team_name}: ${r.erro}`, 'error');
+                    this.log(`  • ${r.time.team_name}: ${r.erro}`, 'error');
                 });
             }
-            
-            this.log('═'.repeat(60), 'info');
             
             this.updateProgress(100, 'Concluído!');
             
@@ -524,7 +488,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 <!-- Logs -->
                 <div id="logsContainerTodos" class="bg-dark-blue-950 rounded-lg p-4 max-h-96 overflow-y-auto font-mono text-sm">
-                    <div class="text-dark-blue-400">Aguardando início...</div>
                 </div>
                 
                 <!-- Botão de fechar (só aparece quando concluído) -->

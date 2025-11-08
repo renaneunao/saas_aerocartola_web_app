@@ -1338,6 +1338,315 @@ def api_salvar_ranking(modulo):
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/modulos/atacante/detalhes/<int:atleta_id>')
+@login_required
+def api_atacante_detalhes(atleta_id):
+    """API para buscar detalhes completos de um atacante"""
+    from flask import jsonify
+    user = get_current_user()
+    
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        # Buscar rodada atual
+        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        rodada_result = cursor.fetchone()
+        rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
+        
+        # Buscar dados do atacante (mesma estrutura da query em api_modulo_dados)
+        cursor.execute('''
+            SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
+                   a.preco_num, a.jogos_num,
+                   c.nome as clube_nome, c.abreviacao as clube_abrev
+            FROM acf_atletas a
+            JOIN acf_clubes c ON a.clube_id = c.id
+            WHERE a.atleta_id = %s AND a.posicao_id = 5 AND a.status_id = 7
+        ''', (atleta_id,))
+        
+        atleta_row = cursor.fetchone()
+        if not atleta_row:
+            return jsonify({'error': 'Atacante não encontrado'}), 404
+        
+        # Extrair dados do atleta de forma segura
+        try:
+            atleta_id_val = atleta_row[0]
+            apelido = atleta_row[1]
+            nome = atleta_row[2]
+            clube_id = atleta_row[3]
+            pontos_num = atleta_row[4]
+            media_num = atleta_row[5]
+            preco_num = atleta_row[6]
+            jogos_num = atleta_row[7]
+            clube_nome = atleta_row[8]
+            clube_abrev = atleta_row[9]
+            
+            # Buscar escudo do clube usando a função utilitária
+            from utils.team_shields import get_team_shield
+            clube_escudo_url = get_team_shield(clube_id, size='45x45')
+        except (IndexError, TypeError) as e:
+            print(f"Erro ao extrair dados do atleta: {e}")
+            print(f"Row length: {len(atleta_row) if atleta_row else 0}")
+            print(f"Row content: {atleta_row}")
+            return jsonify({'error': f'Erro ao processar dados do atacante: {str(e)}'}), 500
+        
+        if not clube_id:
+            return jsonify({'error': 'Dados do atacante incompletos (clube_id ausente)'}), 500
+        
+        # Buscar adversário
+        adversario_id = None
+        try:
+            cursor.execute('''
+                SELECT clube_casa_id, clube_visitante_id
+                FROM acf_partidas
+                WHERE rodada_id = %s AND valida = TRUE
+                AND (clube_casa_id = %s OR clube_visitante_id = %s)
+            ''', (rodada_atual, clube_id, clube_id))
+            
+            partida = cursor.fetchone()
+            if partida and len(partida) >= 2:
+                adversario_id = partida[1] if partida[0] == clube_id else partida[0]
+        except Exception as e:
+            print(f"Erro ao buscar adversário: {e}")
+        
+        # Buscar dados do adversário
+        adversario_nome = 'N/A'
+        adversario_escudo_url = ''
+        if adversario_id:
+            try:
+                cursor.execute('''
+                    SELECT nome FROM acf_clubes WHERE id = %s
+                ''', (adversario_id,))
+                adv_row = cursor.fetchone()
+                if adv_row and len(adv_row) >= 1:
+                    adversario_nome = adv_row[0] if adv_row[0] else 'N/A'
+                    # Buscar escudo do adversário usando a função utilitária
+                    adversario_escudo_url = get_team_shield(adversario_id, size='45x45')
+            except Exception as e:
+                print(f"Erro ao buscar dados do adversário: {e}")
+        
+        # Buscar peso do jogo
+        team_id = session.get('selected_team_id')
+        peso_jogo = 0
+        if team_id and clube_id:
+            try:
+                from models.user_configurations import get_user_default_configuration
+                config = get_user_default_configuration(conn, user['id'], team_id)
+                if config and config.get('perfil_peso_jogo'):
+                    cursor.execute('''
+                        SELECT peso_jogo FROM acp_peso_jogo_perfis
+                        WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
+                    ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
+                    peso_row = cursor.fetchone()
+                    if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
+                        peso_jogo = float(peso_row[0])
+            except Exception as e:
+                print(f"Erro ao buscar peso do jogo: {e}")
+        
+        # Buscar médias de scouts
+        media_ds = 0
+        media_ff = 0
+        media_fs = 0
+        media_fd = 0
+        media_g = 0
+        media_a = 0
+        
+        try:
+            cursor.execute('''
+                SELECT 
+                    AVG(COALESCE(scout_ds, 0)) as avg_ds,
+                    AVG(COALESCE(scout_ff, 0)) as avg_ff,
+                    AVG(COALESCE(scout_fs, 0)) as avg_fs,
+                    AVG(COALESCE(scout_fd, 0)) as avg_fd,
+                    AVG(COALESCE(scout_g, 0)) as avg_g,
+                    AVG(COALESCE(scout_a, 0)) as avg_a
+                FROM acf_pontuados
+                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
+            ''', (atleta_id, rodada_atual))
+            
+            stats_row = cursor.fetchone()
+            if stats_row and len(stats_row) >= 6:
+                media_ds = float(stats_row[0]) if stats_row[0] is not None else 0
+                media_ff = float(stats_row[1]) if stats_row[1] is not None else 0
+                media_fs = float(stats_row[2]) if stats_row[2] is not None else 0
+                media_fd = float(stats_row[3]) if stats_row[3] is not None else 0
+                media_g = float(stats_row[4]) if stats_row[4] is not None else 0
+                media_a = float(stats_row[5]) if stats_row[5] is not None else 0
+        except Exception as e:
+            print(f"Erro ao buscar médias de scouts: {e}")
+        
+        # Buscar número de escalações
+        escalacoes = 0
+        try:
+            cursor.execute('''
+                SELECT escalacoes FROM acf_destaques WHERE atleta_id = %s
+            ''', (atleta_id,))
+            escalacoes_row = cursor.fetchone()
+            if escalacoes_row and escalacoes_row[0] is not None:
+                escalacoes = int(escalacoes_row[0]) if escalacoes_row[0] > 0 else 0
+        except Exception as e:
+            print(f"Erro ao buscar escalações: {e}")
+        
+        # Buscar gols sofridos pelo adversário (casa e fora)
+        adversario_gols_sofridos_casa = 0
+        adversario_gols_sofridos_fora = 0
+        adversario_jogos_casa = 0
+        adversario_jogos_fora = 0
+        if adversario_id:
+            try:
+                # Gols sofridos em casa
+                cursor.execute('''
+                    SELECT 
+                        SUM(placar_oficial_visitante) as gols_sofridos,
+                        COUNT(*) as jogos
+                    FROM acf_partidas
+                    WHERE clube_casa_id = %s AND rodada_id < %s AND valida = TRUE
+                      AND placar_oficial_visitante IS NOT NULL
+                ''', (adversario_id, rodada_atual))
+                casa_row = cursor.fetchone()
+                if casa_row and casa_row[1] and casa_row[1] > 0:
+                    adversario_gols_sofridos_casa = float(casa_row[0]) if casa_row[0] else 0
+                    adversario_jogos_casa = int(casa_row[1])
+                
+                # Gols sofridos fora
+                cursor.execute('''
+                    SELECT 
+                        SUM(placar_oficial_mandante) as gols_sofridos,
+                        COUNT(*) as jogos
+                    FROM acf_partidas
+                    WHERE clube_visitante_id = %s AND rodada_id < %s AND valida = TRUE
+                      AND placar_oficial_mandante IS NOT NULL
+                ''', (adversario_id, rodada_atual))
+                fora_row = cursor.fetchone()
+                if fora_row and fora_row[1] and fora_row[1] > 0:
+                    adversario_gols_sofridos_fora = float(fora_row[0]) if fora_row[0] else 0
+                    adversario_jogos_fora = int(fora_row[1])
+            except Exception as e:
+                print(f"Erro ao buscar gols sofridos do adversário: {e}")
+        
+        # Verificar se o atacante joga em casa ou fora
+        joga_em_casa = False
+        if adversario_id:
+            try:
+                cursor.execute('''
+                    SELECT clube_casa_id, clube_visitante_id FROM acf_partidas
+                    WHERE rodada_id = %s AND valida = TRUE
+                    AND (clube_casa_id = %s OR clube_visitante_id = %s)
+                ''', (rodada_atual, clube_id, clube_id))
+                partida_row = cursor.fetchone()
+                if partida_row and len(partida_row) >= 2:
+                    joga_em_casa = (partida_row[0] == clube_id)
+            except Exception as e:
+                print(f"Erro ao verificar se joga em casa: {e}")
+        
+        # Buscar gols feitos pelo atacante nas últimas 5 rodadas
+        gols_ultimas_rodadas = 0
+        rodadas_analisadas = 5
+        try:
+            cursor.execute('''
+                SELECT SUM(scout_g) as total_gols
+                FROM acf_pontuados
+                WHERE atleta_id = %s AND rodada_id >= %s AND rodada_id < %s
+                  AND entrou_em_campo = TRUE
+            ''', (atleta_id, rodada_atual - rodadas_analisadas, rodada_atual))
+            gols_row = cursor.fetchone()
+            if gols_row and gols_row[0] is not None:
+                gols_ultimas_rodadas = int(gols_row[0]) if gols_row[0] > 0 else 0
+        except Exception as e:
+            print(f"Erro ao buscar gols nas últimas rodadas: {e}")
+        
+        # Buscar faltas cometidas e cartões nas últimas rodadas
+        faltas_cometidas_ultimas = 0
+        cartoes_amarelos_ultimas = 0
+        cartoes_vermelhos_ultimas = 0
+        try:
+            cursor.execute('''
+                SELECT 
+                    SUM(COALESCE(scout_fc, 0)) as total_fc,
+                    SUM(COALESCE(scout_ca, 0)) as total_ca,
+                    SUM(COALESCE(scout_cv, 0)) as total_cv
+                FROM acf_pontuados
+                WHERE atleta_id = %s AND rodada_id >= %s AND rodada_id < %s
+                  AND entrou_em_campo = TRUE
+            ''', (atleta_id, rodada_atual - rodadas_analisadas, rodada_atual))
+            faltas_cartoes_row = cursor.fetchone()
+            if faltas_cartoes_row:
+                faltas_cometidas_ultimas = int(faltas_cartoes_row[0]) if faltas_cartoes_row[0] else 0
+                cartoes_amarelos_ultimas = int(faltas_cartoes_row[1]) if faltas_cartoes_row[1] else 0
+                cartoes_vermelhos_ultimas = int(faltas_cartoes_row[2]) if faltas_cartoes_row[2] else 0
+        except Exception as e:
+            print(f"Erro ao buscar faltas e cartões: {e}")
+        
+        # Buscar pontuação total do ranking salvo (se existir)
+        pontuacao_total = 0
+        if team_id:
+            try:
+                from models.user_configurations import get_user_default_configuration
+                config = get_user_default_configuration(conn, user['id'], team_id)
+                if config:
+                    from models.user_rankings import get_team_rankings
+                    rankings = get_team_rankings(
+                        conn, user['id'], team_id=team_id,
+                        configuration_id=config.get('id'), posicao_id=5,
+                        rodada_atual=rodada_atual
+                    )
+                    if rankings and len(rankings) > 0:
+                        ranking_data = rankings[0].get('ranking_data', [])
+                        if isinstance(ranking_data, dict):
+                            ranking_data = ranking_data.get('ranking', ranking_data.get('resultados', []))
+                        if isinstance(ranking_data, list):
+                            for item in ranking_data:
+                                if isinstance(item, dict) and item.get('atleta_id') == atleta_id:
+                                    pontuacao_total = item.get('pontuacao_total', 0)
+                                    break
+            except Exception as e:
+                print(f"Erro ao buscar pontuação do ranking: {e}")
+        
+        return jsonify({
+            'atleta_id': atleta_id_val,
+            'apelido': apelido or nome or 'N/A',
+            'nome': nome or apelido or 'N/A',
+            'clube_id': clube_id,
+            'clube_nome': clube_nome or 'N/A',
+            'clube_abrev': clube_abrev or 'N/A',
+            'clube_escudo_url': clube_escudo_url or '',
+            'foto_url': '',  # Fotos são carregadas via JavaScript usando getPlayerImage
+            'pontos_num': float(pontos_num) if pontos_num is not None else 0,
+            'media': float(media_num) if media_num is not None else 0,
+            'preco': float(preco_num) if preco_num is not None else 0,
+            'jogos': int(jogos_num) if jogos_num is not None else 0,
+            'adversario_id': adversario_id,
+            'adversario_nome': adversario_nome,
+            'adversario_escudo_url': adversario_escudo_url,
+            'peso_jogo': peso_jogo,
+            'media_ds': media_ds,
+            'media_ff': media_ff,
+            'media_fs': media_fs,
+            'media_fd': media_fd,
+            'media_g': media_g,
+            'media_a': media_a,
+            'pontuacao_total': pontuacao_total,
+            'escalacoes': escalacoes,
+            'adversario_gols_sofridos_casa': adversario_gols_sofridos_casa,
+            'adversario_gols_sofridos_fora': adversario_gols_sofridos_fora,
+            'adversario_jogos_casa': adversario_jogos_casa,
+            'adversario_jogos_fora': adversario_jogos_fora,
+            'joga_em_casa': joga_em_casa,
+            'gols_ultimas_rodadas': gols_ultimas_rodadas,
+            'rodadas_analisadas': rodadas_analisadas,
+            'faltas_cometidas_ultimas': faltas_cometidas_ultimas,
+            'cartoes_amarelos_ultimas': cartoes_amarelos_ultimas,
+            'cartoes_vermelhos_ultimas': cartoes_vermelhos_ultimas
+        })
+        
+    except Exception as e:
+        print(f"Erro ao buscar detalhes do atacante: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        close_db_connection(conn)
+
 @app.route('/api/modulos/<modulo>/pesos', methods=['POST'])
 @login_required
 def api_salvar_pesos(modulo):
@@ -1394,6 +1703,215 @@ def api_salvar_pesos(modulo):
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/modulos/lateral/detalhes/<int:atleta_id>')
+@login_required
+def api_lateral_detalhes(atleta_id):
+    """API para buscar detalhes completos de um lateral"""
+    from flask import jsonify
+    user = get_current_user()
+    
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        # Buscar rodada atual
+        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        rodada_result = cursor.fetchone()
+        rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
+        
+        # Buscar dados do lateral
+        cursor.execute('''
+            SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
+                   a.preco_num, a.jogos_num,
+                   c.nome as clube_nome, c.abreviacao as clube_abrev
+            FROM acf_atletas a
+            JOIN acf_clubes c ON a.clube_id = c.id
+            WHERE a.atleta_id = %s AND a.posicao_id = 2 AND a.status_id = 7
+        ''', (atleta_id,))
+        
+        atleta_row = cursor.fetchone()
+        if not atleta_row:
+            return jsonify({'error': 'Lateral não encontrado'}), 404
+        
+        # Extrair dados
+        try:
+            atleta_id_val = atleta_row[0]
+            apelido = atleta_row[1]
+            nome = atleta_row[2]
+            clube_id = atleta_row[3]
+            pontos_num = atleta_row[4]
+            media_num = atleta_row[5]
+            preco_num = atleta_row[6]
+            jogos_num = atleta_row[7]
+            clube_nome = atleta_row[8]
+            clube_abrev = atleta_row[9]
+            
+            from utils.team_shields import get_team_shield
+            clube_escudo_url = get_team_shield(clube_id, size='45x45')
+        except (IndexError, TypeError) as e:
+            print(f"Erro ao extrair dados do lateral: {e}")
+            return jsonify({'error': f'Erro ao processar dados: {str(e)}'}), 500
+        
+        # Buscar adversário
+        adversario_id = None
+        try:
+            cursor.execute('''
+                SELECT clube_casa_id, clube_visitante_id
+                FROM acf_partidas
+                WHERE rodada_id = %s AND valida = TRUE
+                AND (clube_casa_id = %s OR clube_visitante_id = %s)
+            ''', (rodada_atual, clube_id, clube_id))
+            partida = cursor.fetchone()
+            if partida and len(partida) >= 2:
+                adversario_id = partida[1] if partida[0] == clube_id else partida[0]
+        except Exception as e:
+            print(f"Erro ao buscar adversário: {e}")
+        
+        # Buscar dados do adversário
+        adversario_nome = 'N/A'
+        adversario_escudo_url = ''
+        if adversario_id:
+            try:
+                cursor.execute('SELECT nome FROM acf_clubes WHERE id = %s', (adversario_id,))
+                adv_row = cursor.fetchone()
+                if adv_row and len(adv_row) >= 1:
+                    adversario_nome = adv_row[0] if adv_row[0] else 'N/A'
+                    adversario_escudo_url = get_team_shield(adversario_id, size='45x45')
+            except Exception as e:
+                print(f"Erro ao buscar dados do adversário: {e}")
+        
+        # Buscar peso do jogo e saldo de gol
+        team_id = session.get('selected_team_id')
+        peso_jogo = 0
+        peso_sg = 0
+        if team_id and clube_id:
+            try:
+                from models.user_configurations import get_user_default_configuration
+                config = get_user_default_configuration(conn, user['id'], team_id)
+                if config:
+                    if config.get('perfil_peso_jogo'):
+                        cursor.execute('''
+                            SELECT peso_jogo FROM acp_peso_jogo_perfis
+                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
+                        ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
+                        peso_row = cursor.fetchone()
+                        if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
+                            peso_jogo = float(peso_row[0])
+                    
+                    if config.get('perfil_peso_sg'):
+                        cursor.execute('''
+                            SELECT peso_sg FROM acp_peso_sg_perfis
+                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
+                        ''', (config['perfil_peso_sg'], rodada_atual, clube_id))
+                        sg_row = cursor.fetchone()
+                        if sg_row and len(sg_row) > 0 and sg_row[0] is not None:
+                            peso_sg = float(sg_row[0])
+            except Exception as e:
+                print(f"Erro ao buscar pesos: {e}")
+        
+        # Buscar médias de scouts (foco em DS, A, SG)
+        media_ds = 0
+        media_a = 0
+        media_g = 0
+        media_ff = 0
+        media_fs = 0
+        media_fd = 0
+        
+        try:
+            cursor.execute('''
+                SELECT 
+                    AVG(COALESCE(scout_ds, 0)) as avg_ds,
+                    AVG(COALESCE(scout_a, 0)) as avg_a,
+                    AVG(COALESCE(scout_g, 0)) as avg_g,
+                    AVG(COALESCE(scout_ff, 0)) as avg_ff,
+                    AVG(COALESCE(scout_fs, 0)) as avg_fs,
+                    AVG(COALESCE(scout_fd, 0)) as avg_fd
+                FROM acf_pontuados
+                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
+            ''', (atleta_id, rodada_atual))
+            
+            stats_row = cursor.fetchone()
+            if stats_row and len(stats_row) >= 6:
+                media_ds = float(stats_row[0]) if stats_row[0] is not None else 0
+                media_a = float(stats_row[1]) if stats_row[1] is not None else 0
+                media_g = float(stats_row[2]) if stats_row[2] is not None else 0
+                media_ff = float(stats_row[3]) if stats_row[3] is not None else 0
+                media_fs = float(stats_row[4]) if stats_row[4] is not None else 0
+                media_fd = float(stats_row[5]) if stats_row[5] is not None else 0
+        except Exception as e:
+            print(f"Erro ao buscar médias de scouts: {e}")
+        
+        # Buscar número de escalações
+        escalacoes = 0
+        try:
+            cursor.execute('SELECT escalacoes FROM acf_destaques WHERE atleta_id = %s', (atleta_id,))
+            escalacoes_row = cursor.fetchone()
+            if escalacoes_row and escalacoes_row[0] is not None:
+                escalacoes = int(escalacoes_row[0]) if escalacoes_row[0] > 0 else 0
+        except Exception as e:
+            print(f"Erro ao buscar escalações: {e}")
+        
+        # Buscar pontuação total do ranking
+        pontuacao_total = 0
+        if team_id:
+            try:
+                from models.user_configurations import get_user_default_configuration
+                config = get_user_default_configuration(conn, user['id'], team_id)
+                if config:
+                    from models.user_rankings import get_team_rankings
+                    rankings = get_team_rankings(
+                        conn, user['id'], team_id=team_id,
+                        configuration_id=config.get('id'), posicao_id=2,
+                        rodada_atual=rodada_atual
+                    )
+                    if rankings and len(rankings) > 0:
+                        ranking_data = rankings[0].get('ranking_data', [])
+                        if isinstance(ranking_data, dict):
+                            ranking_data = ranking_data.get('ranking', ranking_data.get('resultados', []))
+                        if isinstance(ranking_data, list):
+                            for item in ranking_data:
+                                if isinstance(item, dict) and item.get('atleta_id') == atleta_id:
+                                    pontuacao_total = item.get('pontuacao_total', 0)
+                                    break
+            except Exception as e:
+                print(f"Erro ao buscar pontuação do ranking: {e}")
+        
+        return jsonify({
+            'atleta_id': atleta_id_val,
+            'apelido': apelido or nome or 'N/A',
+            'nome': nome or apelido or 'N/A',
+            'clube_id': clube_id,
+            'clube_nome': clube_nome or 'N/A',
+            'clube_abrev': clube_abrev or 'N/A',
+            'clube_escudo_url': clube_escudo_url or '',
+            'foto_url': '',
+            'pontos_num': float(pontos_num) if pontos_num is not None else 0,
+            'media': float(media_num) if media_num is not None else 0,
+            'preco': float(preco_num) if preco_num is not None else 0,
+            'jogos': int(jogos_num) if jogos_num is not None else 0,
+            'adversario_id': adversario_id,
+            'adversario_nome': adversario_nome,
+            'adversario_escudo_url': adversario_escudo_url,
+            'peso_jogo': peso_jogo,
+            'peso_sg': peso_sg,
+            'media_ds': media_ds,
+            'media_a': media_a,
+            'media_g': media_g,
+            'media_ff': media_ff,
+            'media_fs': media_fs,
+            'media_fd': media_fd,
+            'pontuacao_total': pontuacao_total,
+            'escalacoes': escalacoes
+        })
+        
+    except Exception as e:
+        print(f"Erro ao buscar detalhes do lateral: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        close_db_connection(conn)
 
 @app.route('/api/modulos/<modulo>/dados')
 @login_required
