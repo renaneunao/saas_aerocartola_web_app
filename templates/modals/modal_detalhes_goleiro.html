@@ -1,0 +1,316 @@
+<div id="modalDetalhesGoleiro" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-dark-blue-900 rounded-2xl border border-dark-blue-700 shadow-2xl max-w-3xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
+        <button onclick="fecharModalGoleiro()" class="absolute top-4 right-4 text-dark-blue-300 hover:text-white text-xl">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <h3 class="text-2xl font-bold text-white mb-6 text-center flex items-center justify-center gap-3">
+            <img id="modalGoleiroClubeEscudo" src="" alt="Clube" class="w-8 h-8 rounded-full border border-dark-blue-600">
+            <img id="modalGoleiroFoto" src="" alt="Jogador" class="w-10 h-10 rounded-full border-2 border-green-400">
+            <span id="modalGoleiroNome">Detalhes do Goleiro</span>
+        </h3>
+
+        <!-- Informações do Jogador -->
+        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
+            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-user-circle text-green-400"></i>
+                Informações do Jogador
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Pontuação Total</p>
+                    <p id="modalGoleiroPontuacao" class="text-white font-bold text-lg"></p>
+                </div>
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Média</p>
+                    <p id="modalGoleiroMedia" class="text-white font-bold text-lg"></p>
+                </div>
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Jogos</p>
+                    <p id="modalGoleiroJogos" class="text-white font-bold text-lg"></p>
+                </div>
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Preço</p>
+                    <p id="modalGoleiroPreco" class="text-green-400 font-bold text-lg"></p>
+                </div>
+                <div id="modalGoleiroEscalacoesContainer" class="hidden">
+                    <p class="text-dark-blue-300 text-sm">Escalações</p>
+                    <p id="modalGoleiroEscalacoes" class="text-blue-400 font-bold text-lg"></p>
+                </div>
+            </div>
+            <div class="mt-3 grid grid-cols-2 gap-4">
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Clube</p>
+                    <p id="modalGoleiroClube" class="text-white font-semibold"></p>
+                </div>
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Saldo de Gol (SG)</p>
+                    <p id="modalGoleiroSG" class="text-green-400 font-bold text-lg"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Confronto -->
+        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
+            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-futbol text-orange-400"></i>
+                Confronto
+            </h4>
+            <div class="flex items-center gap-2 mb-2">
+                <img id="modalGoleiroAdversarioEscudo" src="" alt="Adversário" class="w-8 h-8 rounded-full">
+                <p id="modalGoleiroAdversarioNome" class="text-white font-semibold"></p>
+            </div>
+            <div>
+                <p class="text-dark-blue-300 text-sm">Peso do Jogo</p>
+                <p id="modalGoleiroPesoJogo" class="font-bold text-lg"></p>
+            </div>
+        </div>
+
+        <!-- Scouts Principais (DE, Gols Sofridos) -->
+        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
+            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-star text-yellow-400"></i>
+                Scouts Principais
+            </h4>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3 text-center">
+                    <p class="text-dark-blue-300 text-sm mb-1">Defesa (DE)</p>
+                    <p id="modalGoleiroDE" class="text-green-400 font-bold text-xl"></p>
+                </div>
+                <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-center">
+                    <p class="text-dark-blue-300 text-sm mb-1">Gols Sofridos (Média)</p>
+                    <p id="modalGoleiroGolsSofridos" class="text-red-400 font-bold text-xl"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Argumentos -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-green-500/50">
+                <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <i class="fas fa-thumbs-up text-green-400"></i>
+                    Argumentos a Favor
+                </h4>
+                <ul id="modalGoleiroArgumentosFavor" class="list-none space-y-2 text-sm text-dark-blue-300">
+                </ul>
+            </div>
+            <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-red-500/50">
+                <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <i class="fas fa-thumbs-down text-red-400"></i>
+                    Argumentos Contra
+                </h4>
+                <ul id="modalGoleiroArgumentosContra" class="list-none space-y-2 text-sm text-dark-blue-300">
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let dadosGoleiroAtual = null;
+
+async function openGoleiroModal(atletaId) {
+    const modal = document.getElementById('modalDetalhesGoleiro');
+    if (!modal) {
+        console.error('Modal de detalhes do goleiro não encontrado');
+        showToast('Modal não encontrado. Recarregue a página.', 'error');
+        return;
+    }
+
+    showLoader('Carregando detalhes do goleiro...');
+
+    try {
+        const response = await fetch(`/api/modulos/goleiro/detalhes/${atletaId}`);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+            throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`);
+        }
+        
+        const dados = await response.json();
+        
+        if (!dados || dados.error) {
+            throw new Error(dados.error || 'Dados inválidos retornados');
+        }
+        
+        dadosGoleiroAtual = dados;
+        preencherModalGoleiro(dados);
+        
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        hideLoader();
+    } catch (error) {
+        console.error('Erro ao abrir modal:', error);
+        hideLoader();
+        showToast(`Erro ao carregar detalhes: ${error.message}`, 'error');
+    }
+}
+
+function preencherModalGoleiro(dados) {
+    document.getElementById('modalGoleiroNome').textContent = dados.apelido || dados.nome || 'N/A';
+    document.getElementById('modalGoleiroClube').textContent = dados.clube_nome || 'N/A';
+    document.getElementById('modalGoleiroPontuacao').textContent = formatNumber(dados.pontuacao_total || 0);
+    document.getElementById('modalGoleiroMedia').textContent = formatNumber(dados.media || 0);
+    document.getElementById('modalGoleiroJogos').textContent = dados.jogos || 0;
+    document.getElementById('modalGoleiroPreco').textContent = `R$ ${formatNumber(dados.preco || 0)}`;
+    document.getElementById('modalGoleiroSG').textContent = formatNumber(dados.peso_sg || 0);
+    
+    const fotoEl = document.getElementById('modalGoleiroFoto');
+    if (typeof getPlayerImage !== 'undefined') {
+        fotoEl.src = getPlayerImage(dados.atleta_id) || '';
+    } else {
+        fotoEl.src = dados.foto_url || '';
+    }
+    document.getElementById('modalGoleiroClubeEscudo').src = dados.clube_escudo_url || 'https://via.placeholder.com/45';
+
+    document.getElementById('modalGoleiroAdversarioNome').textContent = dados.adversario_nome || 'N/A';
+    document.getElementById('modalGoleiroAdversarioEscudo').src = dados.adversario_escudo_url || 'https://via.placeholder.com/20';
+    const pesoJogoEl = document.getElementById('modalGoleiroPesoJogo');
+    pesoJogoEl.textContent = formatNumber(dados.peso_jogo);
+    if (dados.peso_jogo > 0) {
+        pesoJogoEl.className = 'font-bold text-green-400 text-lg';
+    } else if (dados.peso_jogo < 0) {
+        pesoJogoEl.className = 'font-bold text-red-400 text-lg';
+    } else {
+        pesoJogoEl.className = 'font-bold text-gray-400 text-lg';
+    }
+
+    document.getElementById('modalGoleiroDE').textContent = formatNumber(dados.media_de);
+    document.getElementById('modalGoleiroGolsSofridos').textContent = formatNumber(dados.media_gols_sofridos);
+
+    const escalacoesContainer = document.getElementById('modalGoleiroEscalacoesContainer');
+    const escalacoes = dados.escalacoes || 0;
+    if (escalacoes > 0) {
+        document.getElementById('modalGoleiroEscalacoes').textContent = escalacoes.toLocaleString('pt-BR');
+        escalacoesContainer.classList.remove('hidden');
+    } else {
+        escalacoesContainer.classList.add('hidden');
+    }
+
+    gerarArgumentosGoleiro(dados);
+}
+
+function fecharModalGoleiro() {
+    document.getElementById('modalDetalhesGoleiro').classList.add('hidden');
+    document.body.style.overflow = '';
+    dadosGoleiroAtual = null;
+}
+
+function gerarArgumentosGoleiro(dados) {
+    const argumentosFavor = [];
+    const argumentosContra = [];
+
+    if (dados.media >= 6.0) {
+        argumentosFavor.push({
+            texto: `Boa média de pontos: ${formatNumber(dados.media)} por jogo`,
+            icone: 'fa-star'
+        });
+    } else if (dados.media < 4.0 && dados.jogos > 3) {
+        argumentosContra.push({
+            texto: `Média baixa de pontos: ${formatNumber(dados.media)} por jogo`,
+            icone: 'fa-exclamation-triangle'
+        });
+    }
+
+    if (dados.peso_sg > 0.5) {
+        argumentosFavor.push({
+            texto: `Bom saldo de gol do clube: ${formatNumber(dados.peso_sg)}`,
+            icone: 'fa-shield-alt'
+        });
+    } else if (dados.peso_sg < -0.5) {
+        argumentosContra.push({
+            texto: `Saldo de gol negativo do clube: ${formatNumber(dados.peso_sg)}`,
+            icone: 'fa-shield-alt'
+        });
+    }
+
+    if (dados.media_de >= 3.0) {
+        argumentosFavor.push({
+            texto: `Alta média de defesas: ${formatNumber(dados.media_de)} por jogo`,
+            icone: 'fa-hand-paper'
+        });
+    } else if (dados.media_de < 2.0 && dados.jogos > 3) {
+        argumentosContra.push({
+            texto: `Baixa média de defesas: ${formatNumber(dados.media_de)} por jogo`,
+            icone: 'fa-exclamation-triangle'
+        });
+    }
+
+    if (dados.media_gols_sofridos < 1.0 && dados.jogos > 3) {
+        argumentosFavor.push({
+            texto: `Poucos gols sofridos: ${formatNumber(dados.media_gols_sofridos)} por jogo`,
+            icone: 'fa-shield'
+        });
+    } else if (dados.media_gols_sofridos >= 1.5 && dados.jogos > 3) {
+        argumentosContra.push({
+            texto: `Muitos gols sofridos: ${formatNumber(dados.media_gols_sofridos)} por jogo`,
+            icone: 'fa-exclamation-triangle'
+        });
+    }
+
+    if (dados.peso_jogo > 0.5) {
+        argumentosFavor.push({
+            texto: `Confronto favorável contra ${dados.adversario_nome} (peso: ${formatNumber(dados.peso_jogo)})`,
+            icone: 'fa-thumbs-up'
+        });
+    } else if (dados.peso_jogo < -0.5) {
+        argumentosContra.push({
+            texto: `Confronto difícil contra ${dados.adversario_nome} (peso: ${formatNumber(dados.peso_jogo)})`,
+            icone: 'fa-thumbs-down'
+        });
+    }
+
+    const precoPorPonto = dados.media > 0 ? (dados.preco || 0) / dados.media : 0;
+    if (precoPorPonto < 100000) {
+        argumentosFavor.push({
+            texto: `Bom custo-benefício: R$ ${formatNumber(precoPorPonto)} por ponto`,
+            icone: 'fa-dollar-sign'
+        });
+    } else if (precoPorPonto > 200000) {
+        argumentosContra.push({
+            texto: `Preço elevado em relação à média: R$ ${formatNumber(precoPorPonto)} por ponto`,
+            icone: 'fa-dollar-sign'
+        });
+    }
+
+    renderizarArgumentos('modalGoleiroArgumentosFavor', argumentosFavor, 'green');
+    renderizarArgumentos('modalGoleiroArgumentosContra', argumentosContra, 'red');
+}
+
+function renderizarArgumentos(containerId, argumentos, cor) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (argumentos.length === 0) {
+        container.innerHTML = `<li class="text-dark-blue-400">Nenhum argumento ${cor === 'green' ? 'a favor' : 'contra'} encontrado.</li>`;
+        return;
+    }
+
+    argumentos.forEach(arg => {
+        const li = document.createElement('li');
+        li.className = `flex items-start gap-2 text-${cor}-300`;
+        li.innerHTML = `<i class="fas ${arg.icone} flex-shrink-0 mt-1"></i> <span>${arg.texto}</span>`;
+        container.appendChild(li);
+    });
+}
+
+if (typeof formatNumber === 'undefined') {
+    function formatNumber(num) {
+        if (num === null || num === undefined) return '0.00';
+        const parsed = parseFloat(num);
+        if (isNaN(parsed)) return '0.00';
+        return parsed.toFixed(2);
+    }
+}
+
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('modalDetalhesGoleiro');
+    if (modal && e.target === modal) {
+        fecharModalGoleiro();
+    }
+});
+</script>
+
