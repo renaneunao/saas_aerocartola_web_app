@@ -233,6 +233,16 @@
 
 </div>
 
+<!-- Botão de Escalação Rápida -->
+<div class="mt-8 mb-6 flex justify-center">
+    <button id="escalacaoRapidaBtn" 
+            class="group bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center space-x-3">
+        <i class="fas fa-bolt text-2xl"></i>
+        <span class="text-lg">⚡ Escalação Rápida</span>
+        <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
+    </button>
+</div>
+
 <!-- Info Section -->
 <div class="mt-12">
     <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/50">
@@ -448,4 +458,16 @@
         }
     });
 </script>
+
+<!-- Scripts de Cálculo (necessários para escalação rápida) -->
+<script src="{{ url_for('static', filename='js/calculo_goleiro.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_lateral.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_zagueiro.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_meia.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_atacante.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_treinador.js') }}"></script>
+<script src="{{ url_for('static', filename='js/escalacao_ideal.js') }}"></script>
+
+<!-- Script de Escalação Rápida -->
+<script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
 {% endblock %}
