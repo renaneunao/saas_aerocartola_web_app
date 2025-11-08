@@ -1,0 +1,395 @@
+<div id="modalDetalhesAtacante" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-dark-blue-900 rounded-2xl border border-dark-blue-700 shadow-2xl max-w-3xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
+        <!-- Botão de Fechar -->
+        <button onclick="fecharModalAtacante()" class="absolute top-4 right-4 text-dark-blue-300 hover:text-white text-xl">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <h3 class="text-2xl font-bold text-white mb-6 text-center flex items-center justify-center gap-3">
+            <img id="modalAtacanteClubeEscudo" src="" alt="Clube" class="w-8 h-8 rounded-full border border-dark-blue-600">
+            <img id="modalAtacanteFoto" src="" alt="Jogador" class="w-10 h-10 rounded-full border-2 border-red-400">
+            <span id="modalAtacanteNome">Detalhes do Atacante</span>
+        </h3>
+
+        <!-- Informações do Jogador -->
+        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
+            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-user-circle text-red-400"></i>
+                Informações do Jogador
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Pontuação Total</p>
+                    <p id="modalAtacantePontuacao" class="text-white font-bold text-lg"></p>
+                </div>
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Média</p>
+                    <p id="modalAtacanteMedia" class="text-white font-bold text-lg"></p>
+                </div>
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Jogos</p>
+                    <p id="modalAtacanteJogos" class="text-white font-bold text-lg"></p>
+                </div>
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Preço</p>
+                    <p id="modalAtacantePreco" class="text-green-400 font-bold text-lg"></p>
+                </div>
+                <div id="modalAtacanteEscalacoesContainer" class="hidden">
+                    <p class="text-dark-blue-300 text-sm">Escalações</p>
+                    <p id="modalAtacanteEscalacoes" class="text-blue-400 font-bold text-lg"></p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <p class="text-dark-blue-300 text-sm">Clube</p>
+                <p id="modalAtacanteClube" class="text-white font-semibold"></p>
+            </div>
+        </div>
+
+        <!-- Confronto -->
+        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
+            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-futbol text-orange-400"></i>
+                Confronto
+            </h4>
+            <div class="flex items-center gap-2 mb-2">
+                <img id="modalAtacanteAdversarioEscudo" src="" alt="Adversário" class="w-8 h-8 rounded-full">
+                <p id="modalAtacanteAdversarioNome" class="text-white font-semibold"></p>
+            </div>
+            <div>
+                <p class="text-dark-blue-300 text-sm">Peso do Jogo</p>
+                <p id="modalAtacantePesoJogo" class="font-bold text-lg"></p>
+            </div>
+        </div>
+
+        <!-- Scouts Principais (G, A) -->
+        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
+            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-star text-yellow-400"></i>
+                Scouts Principais
+            </h4>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-center">
+                    <p class="text-dark-blue-300 text-sm mb-1">Gol (G)</p>
+                    <p id="modalAtacanteG" class="text-red-400 font-bold text-xl"></p>
+                </div>
+                <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-center">
+                    <p class="text-dark-blue-300 text-sm mb-1">Assistência (A)</p>
+                    <p id="modalAtacanteA" class="text-blue-400 font-bold text-xl"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scouts Detalhados -->
+        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
+            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-chart-bar text-purple-400"></i>
+                Scouts Detalhados (Média por Jogo)
+            </h4>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-sm text-dark-blue-300">
+                <div><span class="font-medium text-white">FF:</span> <span id="modalAtacanteFF"></span></div>
+                <div><span class="font-medium text-white">FS:</span> <span id="modalAtacanteFS"></span></div>
+                <div><span class="font-medium text-white">FD:</span> <span id="modalAtacanteFD"></span></div>
+                <div><span class="font-medium text-white">G:</span> <span id="modalAtacanteGDetalhe"></span></div>
+                <div><span class="font-medium text-white">A:</span> <span id="modalAtacanteADetalhe"></span></div>
+                <div><span class="font-medium text-white">DS:</span> <span id="modalAtacanteDS"></span></div>
+            </div>
+        </div>
+
+        <!-- Argumentos -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-green-500/50">
+                <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <i class="fas fa-thumbs-up text-green-400"></i>
+                    Argumentos a Favor
+                </h4>
+                <ul id="modalAtacanteArgumentosFavor" class="list-none space-y-2 text-sm text-dark-blue-300">
+                    <!-- Argumentos serão preenchidos via JS -->
+                </ul>
+            </div>
+            <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-red-500/50">
+                <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <i class="fas fa-thumbs-down text-red-400"></i>
+                    Argumentos Contra
+                </h4>
+                <ul id="modalAtacanteArgumentosContra" class="list-none space-y-2 text-sm text-dark-blue-300">
+                    <!-- Argumentos serão preenchidos via JS -->
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let dadosAtacanteAtual = null;
+
+async function openAtacanteModal(atletaId) {
+    const modal = document.getElementById('modalDetalhesAtacante');
+    if (!modal) {
+        console.error('Modal de detalhes do atacante não encontrado');
+        showToast('Modal não encontrado. Recarregue a página.', 'error');
+        return;
+    }
+
+    showLoader('Carregando detalhes do atacante...');
+
+    try {
+        const response = await fetch(`/api/modulos/atacante/detalhes/${atletaId}`);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+            throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`);
+        }
+        
+        const dados = await response.json();
+        
+        if (!dados || dados.error) {
+            throw new Error(dados.error || 'Dados inválidos retornados');
+        }
+        
+        dadosAtacanteAtual = dados;
+        preencherModalAtacante(dados);
+        
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        hideLoader();
+    } catch (error) {
+        console.error('Erro ao abrir modal:', error);
+        hideLoader();
+        showToast(`Erro ao carregar detalhes: ${error.message}`, 'error');
+    }
+}
+
+function preencherModalAtacante(dados) {
+    document.getElementById('modalAtacanteNome').textContent = dados.apelido || dados.nome || 'N/A';
+    document.getElementById('modalAtacanteClube').textContent = dados.clube_nome || 'N/A';
+    document.getElementById('modalAtacantePontuacao').textContent = formatNumber(dados.pontuacao_total || 0);
+    document.getElementById('modalAtacanteMedia').textContent = formatNumber(dados.media || 0);
+    document.getElementById('modalAtacanteJogos').textContent = dados.jogos || 0;
+    document.getElementById('modalAtacantePreco').textContent = `R$ ${formatNumber(dados.preco || 0)}`;
+    
+    const fotoEl = document.getElementById('modalAtacanteFoto');
+    if (typeof getPlayerImage !== 'undefined') {
+        fotoEl.src = getPlayerImage(dados.atleta_id) || '';
+    } else {
+        fotoEl.src = dados.foto_url || '';
+    }
+    document.getElementById('modalAtacanteClubeEscudo').src = dados.clube_escudo_url || 'https://via.placeholder.com/45';
+
+    document.getElementById('modalAtacanteAdversarioNome').textContent = dados.adversario_nome || 'N/A';
+    document.getElementById('modalAtacanteAdversarioEscudo').src = dados.adversario_escudo_url || 'https://via.placeholder.com/20';
+    const pesoJogoEl = document.getElementById('modalAtacantePesoJogo');
+    pesoJogoEl.textContent = formatNumber(dados.peso_jogo);
+    if (dados.peso_jogo > 0) {
+        pesoJogoEl.className = 'font-bold text-green-400 text-lg';
+    } else if (dados.peso_jogo < 0) {
+        pesoJogoEl.className = 'font-bold text-red-400 text-lg';
+    } else {
+        pesoJogoEl.className = 'font-bold text-gray-400 text-lg';
+    }
+
+    // Scouts principais
+    document.getElementById('modalAtacanteG').textContent = formatNumber(dados.media_g);
+    document.getElementById('modalAtacanteA').textContent = formatNumber(dados.media_a);
+
+    // Scouts detalhados
+    document.getElementById('modalAtacanteFF').textContent = formatNumber(dados.media_ff);
+    document.getElementById('modalAtacanteFS').textContent = formatNumber(dados.media_fs);
+    document.getElementById('modalAtacanteFD').textContent = formatNumber(dados.media_fd);
+    document.getElementById('modalAtacanteGDetalhe').textContent = formatNumber(dados.media_g);
+    document.getElementById('modalAtacanteADetalhe').textContent = formatNumber(dados.media_a);
+    document.getElementById('modalAtacanteDS').textContent = formatNumber(dados.media_ds);
+
+    // Escalações
+    const escalacoesContainer = document.getElementById('modalAtacanteEscalacoesContainer');
+    const escalacoes = dados.escalacoes || 0;
+    if (escalacoes > 0) {
+        document.getElementById('modalAtacanteEscalacoes').textContent = escalacoes.toLocaleString('pt-BR');
+        escalacoesContainer.classList.remove('hidden');
+    } else {
+        escalacoesContainer.classList.add('hidden');
+    }
+
+    gerarArgumentosAtacante(dados);
+}
+
+function fecharModalAtacante() {
+    document.getElementById('modalDetalhesAtacante').classList.add('hidden');
+    document.body.style.overflow = '';
+    dadosAtacanteAtual = null;
+}
+
+function gerarArgumentosAtacante(dados) {
+    const argumentosFavor = [];
+    const argumentosContra = [];
+
+    // Média
+    if (dados.media >= 8.0) {
+        argumentosFavor.push({
+            texto: `Média excelente de ${formatNumber(dados.media)} pontos`,
+            icone: 'fa-star'
+        });
+    } else if (dados.media < 5.0) {
+        argumentosContra.push({
+            texto: `Média baixa de ${formatNumber(dados.media)} pontos`,
+            icone: 'fa-exclamation-triangle'
+        });
+    }
+
+    // Peso do jogo
+    if (dados.peso_jogo > 0.5) {
+        argumentosFavor.push({
+            texto: `Confronto favorável contra ${dados.adversario_nome} (peso: ${formatNumber(dados.peso_jogo)})`,
+            icone: 'fa-thumbs-up'
+        });
+    } else if (dados.peso_jogo < -0.5) {
+        argumentosContra.push({
+            texto: `Confronto difícil contra ${dados.adversario_nome} (peso: ${formatNumber(dados.peso_jogo)})`,
+            icone: 'fa-thumbs-down'
+        });
+    }
+
+    // Gols (muito importante para atacantes)
+    if (dados.media_g >= 0.5) {
+        argumentosFavor.push({
+            texto: `Boa média de gols: ${formatNumber(dados.media_g)} por jogo`,
+            icone: 'fa-futbol'
+        });
+    } else if (dados.media_g < 0.2 && dados.jogos > 3) {
+        argumentosContra.push({
+            texto: `Baixa média de gols: ${formatNumber(dados.media_g)} por jogo`,
+            icone: 'fa-times-circle'
+        });
+    }
+
+    // Assistências (muito importante para atacantes)
+    if (dados.media_a >= 0.3) {
+        argumentosFavor.push({
+            texto: `Boa média de assistências: ${formatNumber(dados.media_a)} por jogo`,
+            icone: 'fa-hand-holding'
+        });
+    }
+
+    // Finalizações
+    const totalFinalizacoes = (dados.media_ff || 0) + (dados.media_fs || 0) + (dados.media_fd || 0);
+    if (totalFinalizacoes >= 3.0) {
+        argumentosFavor.push({
+            texto: `Alto volume de finalizações: ${totalFinalizacoes.toFixed(2)} por jogo`,
+            icone: 'fa-bullseye'
+        });
+    }
+
+    // Preço
+    const precoPorPonto = dados.media > 0 ? (dados.preco || 0) / dados.media : 0;
+    if (precoPorPonto < 100000) {
+        argumentosFavor.push({
+            texto: `Bom custo-benefício: R$ ${formatNumber(precoPorPonto)} por ponto`,
+            icone: 'fa-dollar-sign'
+        });
+    } else if (precoPorPonto > 200000) {
+        argumentosContra.push({
+            texto: `Preço elevado em relação à média: R$ ${formatNumber(precoPorPonto)} por ponto`,
+            icone: 'fa-dollar-sign'
+        });
+    }
+
+    // Gols sofridos pelo adversário (argumento contra)
+    if (dados.adversario_id && dados.adversario_nome !== 'N/A') {
+        const jogaEmCasa = dados.joga_em_casa;
+        const golsSofridos = jogaEmCasa ? dados.adversario_gols_sofridos_casa : dados.adversario_gols_sofridos_fora;
+        const jogos = jogaEmCasa ? dados.adversario_jogos_casa : dados.adversario_jogos_fora;
+        const mediaGolsSofridos = jogos > 0 ? golsSofridos / jogos : 0;
+        const local = jogaEmCasa ? 'em casa' : 'fora';
+        
+        // Threshold ajustado: menos de 0.5 gols por jogo é considerado defesa muito forte
+        if (mediaGolsSofridos < 0.5 && jogos >= 3) {
+            argumentosContra.push({
+                texto: `Adversário ${dados.adversario_nome} tem defesa muito forte ${local} (${mediaGolsSofridos.toFixed(2)} gols sofridos por jogo)`,
+                icone: 'fa-shield-alt'
+            });
+        } else if (mediaGolsSofridos >= 1.5 && jogos >= 3) {
+            // Se o adversário toma muitos gols, é um argumento a favor
+            argumentosFavor.push({
+                texto: `Adversário ${dados.adversario_nome} tem defesa frágil ${local} (${mediaGolsSofridos.toFixed(2)} gols sofridos por jogo)`,
+                icone: 'fa-futbol'
+            });
+        }
+    }
+
+    // Baixo índice de gols feitos pelo atacante nas últimas rodadas
+    if (dados.gols_ultimas_rodadas !== undefined) {
+        const rodadas = dados.rodadas_analisadas || 5;
+        if (dados.gols_ultimas_rodadas === 0 && rodadas >= 3) {
+            argumentosContra.push({
+                texto: `Sem gols nas últimas ${rodadas} rodadas`,
+                icone: 'fa-times-circle'
+            });
+        } else if (dados.gols_ultimas_rodadas > 0 && dados.gols_ultimas_rodadas < 2 && rodadas >= 5) {
+            argumentosContra.push({
+                texto: `Apenas ${dados.gols_ultimas_rodadas} gol(s) nas últimas ${rodadas} rodadas`,
+                icone: 'fa-exclamation-triangle'
+            });
+        }
+    }
+
+    // Alto número de faltas cometidas
+    if (dados.faltas_cometidas_ultimas !== undefined) {
+        const rodadas = dados.rodadas_analisadas || 5;
+        const mediaFaltas = rodadas > 0 ? dados.faltas_cometidas_ultimas / rodadas : 0;
+        if (mediaFaltas >= 2.0) {
+            argumentosContra.push({
+                texto: `Alto número de faltas cometidas: ${dados.faltas_cometidas_ultimas} nas últimas ${rodadas} rodadas (${mediaFaltas.toFixed(2)} por jogo)`,
+                icone: 'fa-exclamation-triangle'
+            });
+        }
+    }
+
+    // Alto número de cartões
+    const totalCartoes = (dados.cartoes_amarelos_ultimas || 0) + (dados.cartoes_vermelhos_ultimas || 0);
+    if (totalCartoes >= 2) {
+        const rodadas = dados.rodadas_analisadas || 5;
+        argumentosContra.push({
+            texto: `Alto número de cartões: ${totalCartoes} nas últimas ${rodadas} rodadas (${dados.cartoes_amarelos_ultimas || 0} amarelos, ${dados.cartoes_vermelhos_ultimas || 0} vermelhos)`,
+            icone: 'fa-id-card'
+        });
+    }
+
+    renderizarArgumentos('modalAtacanteArgumentosFavor', argumentosFavor, 'green');
+    renderizarArgumentos('modalAtacanteArgumentosContra', argumentosContra, 'red');
+}
+
+function renderizarArgumentos(containerId, argumentos, cor) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (argumentos.length === 0) {
+        container.innerHTML = `<li class="text-dark-blue-400">Nenhum argumento ${cor === 'green' ? 'a favor' : 'contra'} encontrado.</li>`;
+        return;
+    }
+
+    argumentos.forEach(arg => {
+        const li = document.createElement('li');
+        li.className = `flex items-start gap-2 text-${cor}-300`;
+        li.innerHTML = `<i class="fas ${arg.icone} flex-shrink-0 mt-1"></i> <span>${arg.texto}</span>`;
+        container.appendChild(li);
+    });
+}
+
+if (typeof formatNumber === 'undefined') {
+    function formatNumber(num) {
+        if (num === null || num === undefined) return '0.00';
+        const parsed = parseFloat(num);
+        if (isNaN(parsed)) return '0.00';
+        return parsed.toFixed(2);
+    }
+}
+
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('modalDetalhesAtacante');
+    if (modal && e.target === modal) {
+        fecharModalAtacante();
+    }
+});
+</script>

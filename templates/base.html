@@ -186,10 +186,14 @@
             <!-- Times Selection Section -->
             <div class="space-y-1 pt-6 border-t border-dark-blue-700/50 mt-4">
                 <p class="px-3 text-xs font-semibold text-dark-blue-400 uppercase tracking-wider mb-2">Selecionar Time</p>
-                <div id="timesList" class="space-y-1 max-h-64 overflow-y-auto sidebar-scroll">
-                    <div class="px-3 py-2 text-xs text-dark-blue-400">Carregando times...</div>
+                <div id="timesListContainer" class="max-h-64 overflow-y-auto sidebar-scroll">
+                    <div id="timesList" class="space-y-1">
+                        <div class="px-3 py-2 text-xs text-dark-blue-400">Carregando times...</div>
+                    </div>
                 </div>
             </div>
+            
+            <!-- Escalar Todos os Times Button (será adicionado dinamicamente se houver mais de um time) -->
         </nav>
 
         <!-- Sidebar Footer -->
@@ -532,6 +536,9 @@
     
     <!-- UI Components (Loader, Toast, Alert, Confirm) -->
     <script src="{{ url_for('static', filename='js/ui-components.js') }}"></script>
+    
+    <!-- Script de Escalar Todos os Times (carrega scripts de cálculo dinamicamente quando necessário) -->
+    <script src="{{ url_for('static', filename='js/escalar_todos_times.js') }}"></script>
     
     {% block scripts %}{% endblock %}
   </body>

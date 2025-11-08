@@ -836,7 +836,7 @@ function renderizarTabelaGoleiros(resultados) {
                 <div class="font-medium text-green-400">R$ ${jogador.preco.toFixed(2)}</div>
             </td>
             <td class="py-4 px-2 text-center">
-                <button onclick="openGoleiroModal('${jogador.atleta_id}')" 
+                <button onclick="openGoleiroModal(${jogador.atleta_id})" 
                         class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
                     <i class="fas fa-eye mr-1"></i>
                     Detalhes
@@ -952,6 +952,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Modal placeholder - será implementado conforme necessário -->
+<!-- Modal de Detalhes do Goleiro -->
+{% include 'modals/modal_detalhes_goleiro.html' %}
 {% endblock %}
 

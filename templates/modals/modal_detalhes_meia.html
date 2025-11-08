@@ -1,0 +1,322 @@
+<div id="modalDetalhesMeia" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-dark-blue-900 rounded-2xl border border-dark-blue-700 shadow-2xl max-w-3xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
+        <button onclick="fecharModalMeia()" class="absolute top-4 right-4 text-dark-blue-300 hover:text-white text-xl">
+            <i class="fas fa-times"></i>
+        </button>
+
+        <h3 class="text-2xl font-bold text-white mb-6 text-center flex items-center justify-center gap-3">
+            <img id="modalMeiaClubeEscudo" src="" alt="Clube" class="w-8 h-8 rounded-full border border-dark-blue-600">
+            <img id="modalMeiaFoto" src="" alt="Jogador" class="w-10 h-10 rounded-full border-2 border-purple-400">
+            <span id="modalMeiaNome">Detalhes do Meia</span>
+        </h3>
+
+        <!-- Informações do Jogador -->
+        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
+            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-user-circle text-purple-400"></i>
+                Informações do Jogador
+            </h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Pontuação Total</p>
+                    <p id="modalMeiaPontuacao" class="text-white font-bold text-lg"></p>
+                </div>
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Média</p>
+                    <p id="modalMeiaMedia" class="text-white font-bold text-lg"></p>
+                </div>
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Jogos</p>
+                    <p id="modalMeiaJogos" class="text-white font-bold text-lg"></p>
+                </div>
+                <div>
+                    <p class="text-dark-blue-300 text-sm">Preço</p>
+                    <p id="modalMeiaPreco" class="text-green-400 font-bold text-lg"></p>
+                </div>
+                <div id="modalMeiaEscalacoesContainer" class="hidden">
+                    <p class="text-dark-blue-300 text-sm">Escalações</p>
+                    <p id="modalMeiaEscalacoes" class="text-blue-400 font-bold text-lg"></p>
+                </div>
+            </div>
+            <div class="mt-3">
+                <p class="text-dark-blue-300 text-sm">Clube</p>
+                <p id="modalMeiaClube" class="text-white font-semibold"></p>
+            </div>
+        </div>
+
+        <!-- Confronto -->
+        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
+            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-futbol text-orange-400"></i>
+                Confronto
+            </h4>
+            <div class="flex items-center gap-2 mb-2">
+                <img id="modalMeiaAdversarioEscudo" src="" alt="Adversário" class="w-8 h-8 rounded-full">
+                <p id="modalMeiaAdversarioNome" class="text-white font-semibold"></p>
+            </div>
+            <div>
+                <p class="text-dark-blue-300 text-sm">Peso do Jogo</p>
+                <p id="modalMeiaPesoJogo" class="font-bold text-lg"></p>
+            </div>
+        </div>
+
+        <!-- Scouts Principais (A, G) -->
+        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
+            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-star text-yellow-400"></i>
+                Scouts Principais
+            </h4>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-center">
+                    <p class="text-dark-blue-300 text-sm mb-1">Assistência (A)</p>
+                    <p id="modalMeiaA" class="text-blue-400 font-bold text-xl"></p>
+                </div>
+                <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-center">
+                    <p class="text-dark-blue-300 text-sm mb-1">Gol (G)</p>
+                    <p id="modalMeiaG" class="text-red-400 font-bold text-xl"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scouts Detalhados -->
+        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
+            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                <i class="fas fa-chart-bar text-purple-400"></i>
+                Scouts Detalhados (Média por Jogo)
+            </h4>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-sm text-dark-blue-300">
+                <div><span class="font-medium text-white">FF:</span> <span id="modalMeiaFF"></span></div>
+                <div><span class="font-medium text-white">FS:</span> <span id="modalMeiaFS"></span></div>
+                <div><span class="font-medium text-white">FD:</span> <span id="modalMeiaFD"></span></div>
+                <div><span class="font-medium text-white">G:</span> <span id="modalMeiaGDetalhe"></span></div>
+                <div><span class="font-medium text-white">A:</span> <span id="modalMeiaADetalhe"></span></div>
+                <div><span class="font-medium text-white">DS:</span> <span id="modalMeiaDS"></span></div>
+            </div>
+        </div>
+
+        <!-- Argumentos -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-green-500/50">
+                <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <i class="fas fa-thumbs-up text-green-400"></i>
+                    Argumentos a Favor
+                </h4>
+                <ul id="modalMeiaArgumentosFavor" class="list-none space-y-2 text-sm text-dark-blue-300">
+                </ul>
+            </div>
+            <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-red-500/50">
+                <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                    <i class="fas fa-thumbs-down text-red-400"></i>
+                    Argumentos Contra
+                </h4>
+                <ul id="modalMeiaArgumentosContra" class="list-none space-y-2 text-sm text-dark-blue-300">
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let dadosMeiaAtual = null;
+
+async function openMeiaModal(atletaId) {
+    const modal = document.getElementById('modalDetalhesMeia');
+    if (!modal) {
+        console.error('Modal de detalhes do meia não encontrado');
+        showToast('Modal não encontrado. Recarregue a página.', 'error');
+        return;
+    }
+
+    showLoader('Carregando detalhes do meia...');
+
+    try {
+        const response = await fetch(`/api/modulos/meia/detalhes/${atletaId}`);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+            throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`);
+        }
+        
+        const dados = await response.json();
+        
+        if (!dados || dados.error) {
+            throw new Error(dados.error || 'Dados inválidos retornados');
+        }
+        
+        dadosMeiaAtual = dados;
+        preencherModalMeia(dados);
+        
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        hideLoader();
+    } catch (error) {
+        console.error('Erro ao abrir modal:', error);
+        hideLoader();
+        showToast(`Erro ao carregar detalhes: ${error.message}`, 'error');
+    }
+}
+
+function preencherModalMeia(dados) {
+    document.getElementById('modalMeiaNome').textContent = dados.apelido || dados.nome || 'N/A';
+    document.getElementById('modalMeiaClube').textContent = dados.clube_nome || 'N/A';
+    document.getElementById('modalMeiaPontuacao').textContent = formatNumber(dados.pontuacao_total || 0);
+    document.getElementById('modalMeiaMedia').textContent = formatNumber(dados.media || 0);
+    document.getElementById('modalMeiaJogos').textContent = dados.jogos || 0;
+    document.getElementById('modalMeiaPreco').textContent = `R$ ${formatNumber(dados.preco || 0)}`;
+    
+    const fotoEl = document.getElementById('modalMeiaFoto');
+    if (typeof getPlayerImage !== 'undefined') {
+        fotoEl.src = getPlayerImage(dados.atleta_id) || '';
+    } else {
+        fotoEl.src = dados.foto_url || '';
+    }
+    document.getElementById('modalMeiaClubeEscudo').src = dados.clube_escudo_url || 'https://via.placeholder.com/45';
+
+    document.getElementById('modalMeiaAdversarioNome').textContent = dados.adversario_nome || 'N/A';
+    document.getElementById('modalMeiaAdversarioEscudo').src = dados.adversario_escudo_url || 'https://via.placeholder.com/20';
+    const pesoJogoEl = document.getElementById('modalMeiaPesoJogo');
+    pesoJogoEl.textContent = formatNumber(dados.peso_jogo);
+    if (dados.peso_jogo > 0) {
+        pesoJogoEl.className = 'font-bold text-green-400 text-lg';
+    } else if (dados.peso_jogo < 0) {
+        pesoJogoEl.className = 'font-bold text-red-400 text-lg';
+    } else {
+        pesoJogoEl.className = 'font-bold text-gray-400 text-lg';
+    }
+
+    document.getElementById('modalMeiaA').textContent = formatNumber(dados.media_a);
+    document.getElementById('modalMeiaG').textContent = formatNumber(dados.media_g);
+
+    document.getElementById('modalMeiaFF').textContent = formatNumber(dados.media_ff);
+    document.getElementById('modalMeiaFS').textContent = formatNumber(dados.media_fs);
+    document.getElementById('modalMeiaFD').textContent = formatNumber(dados.media_fd);
+    document.getElementById('modalMeiaGDetalhe').textContent = formatNumber(dados.media_g);
+    document.getElementById('modalMeiaADetalhe').textContent = formatNumber(dados.media_a);
+    document.getElementById('modalMeiaDS').textContent = formatNumber(dados.media_ds);
+
+    const escalacoesContainer = document.getElementById('modalMeiaEscalacoesContainer');
+    const escalacoes = dados.escalacoes || 0;
+    if (escalacoes > 0) {
+        document.getElementById('modalMeiaEscalacoes').textContent = escalacoes.toLocaleString('pt-BR');
+        escalacoesContainer.classList.remove('hidden');
+    } else {
+        escalacoesContainer.classList.add('hidden');
+    }
+
+    gerarArgumentosMeia(dados);
+}
+
+function fecharModalMeia() {
+    document.getElementById('modalDetalhesMeia').classList.add('hidden');
+    document.body.style.overflow = '';
+    dadosMeiaAtual = null;
+}
+
+function gerarArgumentosMeia(dados) {
+    const argumentosFavor = [];
+    const argumentosContra = [];
+
+    if (dados.media >= 7.0) {
+        argumentosFavor.push({
+            texto: `Boa média de pontos: ${formatNumber(dados.media)} por jogo`,
+            icone: 'fa-star'
+        });
+    } else if (dados.media < 5.0 && dados.jogos > 3) {
+        argumentosContra.push({
+            texto: `Média baixa de pontos: ${formatNumber(dados.media)} por jogo`,
+            icone: 'fa-exclamation-triangle'
+        });
+    }
+
+    if (dados.peso_jogo > 0.5) {
+        argumentosFavor.push({
+            texto: `Confronto favorável contra ${dados.adversario_nome} (peso: ${formatNumber(dados.peso_jogo)})`,
+            icone: 'fa-thumbs-up'
+        });
+    } else if (dados.peso_jogo < -0.5) {
+        argumentosContra.push({
+            texto: `Confronto difícil contra ${dados.adversario_nome} (peso: ${formatNumber(dados.peso_jogo)})`,
+            icone: 'fa-thumbs-down'
+        });
+    }
+
+    // Assistências (muito importante para meias)
+    if (dados.media_a >= 0.4) {
+        argumentosFavor.push({
+            texto: `Boa média de assistências: ${formatNumber(dados.media_a)} por jogo`,
+            icone: 'fa-hand-holding'
+        });
+    } else if (dados.media_a < 0.2 && dados.jogos > 3) {
+        argumentosContra.push({
+            texto: `Baixa média de assistências: ${formatNumber(dados.media_a)} por jogo`,
+            icone: 'fa-exclamation-triangle'
+        });
+    }
+
+    // Gols (muito importante para meias)
+    if (dados.media_g >= 0.3) {
+        argumentosFavor.push({
+            texto: `Boa média de gols: ${formatNumber(dados.media_g)} por jogo`,
+            icone: 'fa-futbol'
+        });
+    } else if (dados.media_g < 0.1 && dados.jogos > 3) {
+        argumentosContra.push({
+            texto: `Baixa média de gols: ${formatNumber(dados.media_g)} por jogo`,
+            icone: 'fa-times-circle'
+        });
+    }
+
+    const precoPorPonto = dados.media > 0 ? (dados.preco || 0) / dados.media : 0;
+    if (precoPorPonto < 100000) {
+        argumentosFavor.push({
+            texto: `Bom custo-benefício: R$ ${formatNumber(precoPorPonto)} por ponto`,
+            icone: 'fa-dollar-sign'
+        });
+    } else if (precoPorPonto > 200000) {
+        argumentosContra.push({
+            texto: `Preço elevado em relação à média: R$ ${formatNumber(precoPorPonto)} por ponto`,
+            icone: 'fa-dollar-sign'
+        });
+    }
+
+    renderizarArgumentos('modalMeiaArgumentosFavor', argumentosFavor, 'green');
+    renderizarArgumentos('modalMeiaArgumentosContra', argumentosContra, 'red');
+}
+
+function renderizarArgumentos(containerId, argumentos, cor) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    if (argumentos.length === 0) {
+        container.innerHTML = `<li class="text-dark-blue-400">Nenhum argumento ${cor === 'green' ? 'a favor' : 'contra'} encontrado.</li>`;
+        return;
+    }
+
+    argumentos.forEach(arg => {
+        const li = document.createElement('li');
+        li.className = `flex items-start gap-2 text-${cor}-300`;
+        li.innerHTML = `<i class="fas ${arg.icone} flex-shrink-0 mt-1"></i> <span>${arg.texto}</span>`;
+        container.appendChild(li);
+    });
+}
+
+if (typeof formatNumber === 'undefined') {
+    function formatNumber(num) {
+        if (num === null || num === undefined) return '0.00';
+        const parsed = parseFloat(num);
+        if (isNaN(parsed)) return '0.00';
+        return parsed.toFixed(2);
+    }
+}
+
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('modalDetalhesMeia');
+    if (modal && e.target === modal) {
+        fecharModalMeia();
+    }
+});
+</script>
+

@@ -694,10 +694,13 @@ async function carregarDados(forcarRecalculo = false) {
             const resultados = [];
             const total = this.atletas.length;
             let processados = 0;
+            
+            // Calcular total de escalações ANTES do loop
+            const totalEscalacoes = this.calcularTotalEscalacoes();
 
             for (const atleta of this.atletas) {
                 processados++;
-                const resultado = this.calcularPontuacao(atleta);
+                const resultado = this.calcularPontuacao(atleta, totalEscalacoes);
                 resultados.push(resultado);
                 
                 // Atualizar progresso a cada 5 atacantes ou no último
@@ -1024,6 +1027,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Modal placeholder - será implementado conforme necessário -->
+<!-- Modal de Detalhes do Atacante -->
+{% include 'modals/modal_detalhes_atacante.html' %}
 {% endblock %}
 

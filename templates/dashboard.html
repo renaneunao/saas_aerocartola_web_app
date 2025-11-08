@@ -140,7 +140,7 @@
             <i class="fas fa-bolt text-yellow-400 mr-3"></i>
             Ações Rápidas
         </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <a href="{{ url_for('credenciais') }}" class="flex items-center space-x-3 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition-all duration-200 hover:bg-slate-800/70">
                 <div class="p-2 bg-blue-500/20 rounded-lg">
                     <i class="fas fa-cog text-blue-400 text-xl"></i>
@@ -170,6 +170,30 @@
                     <p class="text-dark-blue-400 text-xs">Monte seu time</p>
                 </div>
             </a>
+
+            {% if status.tem_perfis %}
+            <button id="escalacaoRapidaBtn" 
+                    class="flex items-center space-x-3 p-4 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-xl border-2 border-green-500/50 hover:border-green-500 transition-all duration-200 hover:from-green-600/30 hover:to-emerald-600/30 cursor-pointer">
+                <div class="p-2 bg-green-500/30 rounded-lg">
+                    <i class="fas fa-bolt text-green-400 text-xl"></i>
+                </div>
+                <div class="text-left">
+                    <p class="text-white font-semibold">⚡ Escalação Rápida</p>
+                    <p class="text-dark-blue-400 text-xs">Calcular e escalar automaticamente</p>
+                </div>
+            </button>
+            
+            <button id="escalarTodosTimesBtn" 
+                    class="flex items-center space-x-3 p-4 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-xl border-2 border-yellow-500/50 hover:border-yellow-500 transition-all duration-200 hover:from-yellow-600/30 hover:to-orange-600/30 cursor-pointer">
+                <div class="p-2 bg-yellow-500/30 rounded-lg">
+                    <i class="fas fa-users text-yellow-400 text-xl"></i>
+                </div>
+                <div class="text-left">
+                    <p class="text-white font-semibold">⚡ Escalar Todos os Times</p>
+                    <p class="text-dark-blue-400 text-xs">Escalar todos de uma vez</p>
+                </div>
+            </button>
+            {% endif %}
 
             <button onclick="window.location.reload()" class="flex items-center space-x-3 p-4 bg-slate-800/50 rounded-xl border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-200 hover:bg-slate-800/70">
                 <div class="p-2 bg-cyan-500/20 rounded-lg">
@@ -239,4 +263,16 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Scripts de Cálculo (necessários para escalação rápida) -->
+<script src="{{ url_for('static', filename='js/calculo_goleiro.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_lateral.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_zagueiro.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_meia.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_atacante.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_treinador.js') }}"></script>
+<script src="{{ url_for('static', filename='js/escalacao_ideal.js') }}"></script>
+
+<!-- Script de Escalação Rápida -->
+<script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
 {% endblock %}
