@@ -419,10 +419,14 @@ def pagina_inicial():
         partidas = cursor.fetchall()
         
         # Criar dicionário de adversários: {clube_id: adversario_id}
+        # E dicionário de local: {clube_id: 'C' (casa) ou 'F' (fora)}
         adversarios_dict = {}
+        local_dict = {}  # 'C' para casa, 'F' para fora
         for casa_id, visitante_id in partidas:
             adversarios_dict[casa_id] = visitante_id
             adversarios_dict[visitante_id] = casa_id
+            local_dict[casa_id] = 'C'  # Time joga em casa
+            local_dict[visitante_id] = 'F'  # Time joga fora
         
         # Buscar perfis de peso de jogo com top 3 clubes
         cursor.execute('''
@@ -465,6 +469,8 @@ def pagina_inicial():
             for row in todos_clubes:
                 clube_id = row[0]
                 adversario_id = adversarios_dict.get(clube_id)
+                local = local_dict.get(clube_id, None)  # 'C' para casa, 'F' para fora, None se não encontrado
+                adversario_local = local_dict.get(adversario_id, None) if adversario_id else None  # Local do adversário
                 peso_value = round(row[1], 2)
                 
                 # Calcular cor baseada na posição entre min e max (0 a 1)
@@ -484,7 +490,9 @@ def pagina_inicial():
                     'peso_jogo': peso_value,
                     'peso_jogo_str': f"{peso_value:.2f}",
                     'adversario_id': adversario_id,
-                    'peso_color': color_hex
+                    'adversario_local': adversario_local,  # 'C' ou 'F' do adversário
+                    'peso_color': color_hex,
+                    'local': local  # 'C' ou 'F'
                 })
             
             perfis_peso_jogo.append({
@@ -522,6 +530,8 @@ def pagina_inicial():
             for row in todos_clubes:
                 clube_id = row[0]
                 adversario_id = adversarios_dict.get(clube_id)
+                local = local_dict.get(clube_id, None)  # 'C' para casa, 'F' para fora, None se não encontrado
+                adversario_local = local_dict.get(adversario_id, None) if adversario_id else None  # Local do adversário
                 peso_value = round(row[1], 2)
                 
                 # Calcular cor baseada na posição entre min e max (0 a 1)
@@ -541,7 +551,9 @@ def pagina_inicial():
                     'peso_sg': peso_value,
                     'peso_sg_str': f"{peso_value:.2f}",
                     'adversario_id': adversario_id,
-                    'peso_color': color_hex
+                    'adversario_local': adversario_local,  # 'C' ou 'F' do adversário
+                    'peso_color': color_hex,
+                    'local': local  # 'C' ou 'F'
                 })
             
             perfis_peso_sg.append({

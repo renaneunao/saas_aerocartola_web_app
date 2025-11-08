@@ -217,8 +217,16 @@
                                                                 <span class="text-xs text-slate-300">{{ loop.index }}</span>
                                                             </div>
                                                             {% endif %}
-                                                            <span class="text-white truncate font-medium text-xs">
+                                                            <span class="text-white truncate font-medium text-xs relative">
+                                                                <!-- Badge de Casa/Fora na frente da abreviação do time -->
+                                                                {% if clube.local %}
+                                                                <span class="absolute top-1/2 -translate-y-1/2 left-0 w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold {% if clube.local == 'C' %}bg-green-600 text-white{% else %}bg-orange-600 text-white{% endif %} shadow-sm border border-slate-900 z-10" title="{% if clube.local == 'C' %}Joga em Casa{% else %}Joga Fora{% endif %}">
+                                                                    {{ clube.local }}
+                                                                </span>
+                                                                <span class="pl-4">{{ loop.index }}. {% if clube.clube_id in clubes_dict %}{{ clubes_dict[clube.clube_id].nome }}{% else %}Time {{ clube.clube_id }}{% endif %}</span>
+                                                                {% else %}
                                                                 {{ loop.index }}. {% if clube.clube_id in clubes_dict %}{{ clubes_dict[clube.clube_id].nome }}{% else %}Time {{ clube.clube_id }}{% endif %}
+                                                                {% endif %}
                                                             </span>
                                                         </div>
                                                         <span class="font-bold ml-2 whitespace-nowrap text-xs" style="color: {{ clube.peso_color }};">{{ clube.peso_jogo_str }}</span>
@@ -231,7 +239,17 @@
                                                              alt="{{ clubes_dict[clube.adversario_id].nome }}" 
                                                              class="w-3.5 h-3.5 rounded-full flex-shrink-0">
                                                         {% endif %}
-                                                        <span class="truncate text-xs">{{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}</span>
+                                                        <span class="truncate text-xs relative">
+                                                            <!-- Badge de Casa/Fora na frente da abreviação do adversário -->
+                                                            {% if clube.adversario_local %}
+                                                            <span class="absolute top-1/2 -translate-y-1/2 left-0 w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold {% if clube.adversario_local == 'C' %}bg-green-600 text-white{% else %}bg-orange-600 text-white{% endif %} shadow-sm border border-slate-900 z-10" title="{% if clube.adversario_local == 'C' %}Joga em Casa{% else %}Joga Fora{% endif %}">
+                                                                {{ clube.adversario_local }}
+                                                            </span>
+                                                            <span class="pl-4">{{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}</span>
+                                                            {% else %}
+                                                            {{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}
+                                                            {% endif %}
+                                                        </span>
                                                     </div>
                                                     {% endif %}
                                                 </div>
@@ -317,8 +335,16 @@
                                                                 <span class="text-xs text-slate-300">{{ loop.index }}</span>
                                                             </div>
                                                             {% endif %}
-                                                            <span class="text-white truncate font-medium text-xs">
+                                                            <span class="text-white truncate font-medium text-xs relative">
+                                                                <!-- Badge de Casa/Fora na frente da abreviação do time -->
+                                                                {% if clube.local %}
+                                                                <span class="absolute top-1/2 -translate-y-1/2 left-0 w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold {% if clube.local == 'C' %}bg-green-600 text-white{% else %}bg-orange-600 text-white{% endif %} shadow-sm border border-slate-900 z-10" title="{% if clube.local == 'C' %}Joga em Casa{% else %}Joga Fora{% endif %}">
+                                                                    {{ clube.local }}
+                                                                </span>
+                                                                <span class="pl-4">{{ loop.index }}. {% if clube.clube_id in clubes_dict %}{{ clubes_dict[clube.clube_id].nome }}{% else %}Time {{ clube.clube_id }}{% endif %}</span>
+                                                                {% else %}
                                                                 {{ loop.index }}. {% if clube.clube_id in clubes_dict %}{{ clubes_dict[clube.clube_id].nome }}{% else %}Time {{ clube.clube_id }}{% endif %}
+                                                                {% endif %}
                                                             </span>
                                                         </div>
                                                         <span class="font-bold ml-2 whitespace-nowrap text-xs" style="color: {{ clube.peso_color }};">{{ clube.peso_sg_str }}</span>
@@ -331,7 +357,17 @@
                                                              alt="{{ clubes_dict[clube.adversario_id].nome }}" 
                                                              class="w-3.5 h-3.5 rounded-full flex-shrink-0">
                                                         {% endif %}
-                                                        <span class="truncate text-xs">{{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}</span>
+                                                        <span class="truncate text-xs relative">
+                                                            <!-- Badge de Casa/Fora na frente da abreviação do adversário -->
+                                                            {% if clube.adversario_local %}
+                                                            <span class="absolute top-1/2 -translate-y-1/2 left-0 w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold {% if clube.adversario_local == 'C' %}bg-green-600 text-white{% else %}bg-orange-600 text-white{% endif %} shadow-sm border border-slate-900 z-10" title="{% if clube.adversario_local == 'C' %}Joga em Casa{% else %}Joga Fora{% endif %}">
+                                                                {{ clube.adversario_local }}
+                                                            </span>
+                                                            <span class="pl-4">{{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}</span>
+                                                            {% else %}
+                                                            {{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}
+                                                            {% endif %}
+                                                        </span>
                                                     </div>
                                                     {% endif %}
                                                 </div>
