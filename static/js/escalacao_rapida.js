@@ -433,6 +433,11 @@ class EscalacaoRapida {
     }
 }
 
+// Exportar para uso global
+if (typeof window !== 'undefined') {
+    window.EscalacaoRapida = EscalacaoRapida;
+}
+
 // Inicializar quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', function() {
     const btn = document.getElementById('escalacaoRapidaBtn');
