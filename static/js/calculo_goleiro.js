@@ -19,13 +19,15 @@ class CalculoGoleiro {
         this.adversarios_dict = data.adversarios_dict || {};
         this.pontuados_data = data.pontuados_data || {};
         this.gols_data = data.gols_data || {};
+        this.escalacoes_data = data.escalacoes_data || {};
         this.pesos = data.pesos || {
             FATOR_MEDIA: 0.2,
             FATOR_FF: 4.5,
             FATOR_FD: 6.5,
             FATOR_SG: 1.5,
             FATOR_PESO_JOGO: 1.5,
-            FATOR_GOL_ADVERSARIO: 2.0
+            FATOR_GOL_ADVERSARIO: 2.0,
+            FATOR_ESCALACAO: 10.0
         };
     }
 
@@ -36,9 +38,10 @@ class CalculoGoleiro {
      */
     calcularMelhoresGoleiros(topN = 20) {
         const resultados = [];
+        const totalEscalacoes = this.calcularTotalEscalacoes();
 
         for (const atleta of this.atletas) {
-            const resultado = this.calcularPontuacao(atleta);
+            const resultado = this.calcularPontuacao(atleta, totalEscalacoes);
             resultados.push(resultado);
         }
 
@@ -49,12 +52,20 @@ class CalculoGoleiro {
         return topResultados;
     }
 
+    calcularTotalEscalacoes() {
+        if (!this.escalacoes_data || Object.keys(this.escalacoes_data).length === 0) {
+            return 1.0;
+        }
+        return Object.values(this.escalacoes_data).reduce((sum, esc) => sum + (esc || 0), 0) || 1.0;
+    }
+
     /**
      * Calcula a pontuação de um goleiro específico
      * @param {Object} atleta - Dados do atleta
+     * @param {number} totalEscalacoes - Total de escalações para cálculo do peso
      * @returns {Object} Resultado com pontuação e métricas
      */
-    calcularPontuacao(atleta) {
+    calcularPontuacao(atleta, totalEscalacoes) {
         const { 
             atleta_id, 
             apelido, 
@@ -105,7 +116,20 @@ class CalculoGoleiro {
         // Calcular pontuação total
         // Fórmula: ((pontos_media + peso_jogo + peso_finalizacoes - (media_gols_adversario * FATOR_GOL_ADVERSARIO)) * (FATOR_SG + peso_sg))
         const base_pontuacao = pontos_media + peso_jogo_final + peso_finalizacoes - (media_gols_adversario * this.pesos.FATOR_GOL_ADVERSARIO);
-        const pontuacao_total = base_pontuacao * (this.pesos.FATOR_SG + peso_sg_final);
+        let pontuacao_total = base_pontuacao * (this.pesos.FATOR_SG + peso_sg_final);
+
+        // Garantir que pontuacao_total seja não negativa antes de calcular a raiz quadrada
+        if (pontuacao_total < 0) {
+            pontuacao_total = 0;
+        }
+
+        // Calcular peso de escalação
+        const escalacoes = this.escalacoes_data[atleta_id] || 0;
+        const percentual_escalacoes = totalEscalacoes > 0 ? escalacoes / totalEscalacoes : 0;
+        const peso_escalacao = 1 + percentual_escalacoes * this.pesos.FATOR_ESCALACAO;
+
+        // Ajustar pontuação final: raiz quadrada multiplicada pelo peso
+        const pontuacao_total_final = Math.sqrt(pontuacao_total) * peso_escalacao;
 
         return {
             atleta_id,
@@ -114,7 +138,7 @@ class CalculoGoleiro {
             clube_nome,
             clube_abrev,
             clube_escudo_url,
-            pontuacao_total: parseFloat(pontuacao_total.toFixed(2)),
+            pontuacao_total: isNaN(pontuacao_total_final) ? 0 : parseFloat(pontuacao_total_final.toFixed(2)),
             media: parseFloat(media_num.toFixed(2)),
             preco: parseFloat(preco_num.toFixed(2)),
             jogos: jogos_num,
@@ -123,7 +147,8 @@ class CalculoGoleiro {
             peso_finalizacoes: parseFloat(peso_finalizacoes.toFixed(2)),
             media_gols_adversario: parseFloat(media_gols_adversario.toFixed(2)),
             adversario_id,
-            adversario_nome
+            adversario_nome,
+            peso_escalacao: parseFloat(peso_escalacao.toFixed(4))
         };
     }
 }
