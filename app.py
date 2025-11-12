@@ -2895,9 +2895,9 @@ def api_modulo_dados(modulo):
                     ranking_data = []
                 ranking_salvo = ranking_data if (isinstance(ranking_data, list) and len(ranking_data) > 0) else None
                 if ranking_salvo:
-                    print(f"[API] ✅ Ranking encontrado com configuration_id - tamanho: {len(ranking_data)}")
+                    print(f"[API] [OK] Ranking encontrado com configuration_id - tamanho: {len(ranking_data)}")
                 else:
-                    print(f"[API] ⚠️ Ranking encontrado mas vazio ou formato incorreto - tipo: {type(ranking_data)}")
+                    print(f"[API] [AVISO] Ranking encontrado mas vazio ou formato incorreto - tipo: {type(ranking_data)}")
             
             # Se não encontrou com configuration_id, tentar buscar sem (para compatibilidade)
             if not ranking_salvo:
@@ -2919,14 +2919,14 @@ def api_modulo_dados(modulo):
                         ranking_data = []
                     ranking_salvo = ranking_data if (isinstance(ranking_data, list) and len(ranking_data) > 0) else None
                     if ranking_salvo:
-                        print(f"[API] ✅ Ranking encontrado sem configuration_id - tamanho: {len(ranking_data)}")
+                        print(f"[API] [OK] Ranking encontrado sem configuration_id - tamanho: {len(ranking_data)}")
         
         # Log final decisivo
         if ranking_salvo and isinstance(ranking_salvo, list) and len(ranking_salvo) > 0:
-            print(f"[API] ✅✅✅ Ranking salvo VÁLIDO encontrado: {len(ranking_salvo)} itens - NÃO VAI CALCULAR")
+            print(f"[API] [OK] Ranking salvo VALIDO encontrado: {len(ranking_salvo)} itens - NAO VAI CALCULAR")
             print(f"[API] Primeiro item do ranking: {ranking_salvo[0] if ranking_salvo else 'N/A'}")
         else:
-            print("[API] ❌❌❌ Nenhum ranking salvo encontrado ou inválido - VAI CALCULAR AUTOMATICAMENTE")
+            print("[API] [ERRO] Nenhum ranking salvo encontrado ou invalido - VAI CALCULAR AUTOMATICAMENTE")
             ranking_salvo = None  # Garantir que seja None se inválido
         
         # Garantir que ranking_salvo seja uma lista ou None antes de retornar

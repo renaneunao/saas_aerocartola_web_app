@@ -644,10 +644,11 @@ async function carregarDados(forcarRecalculo = false) {
             const resultados = [];
             const total = this.atletas.length;
             let processados = 0;
+            const totalEscalacoes = this.calcularTotalEscalacoes();
 
             for (const atleta of this.atletas) {
                 processados++;
-                const resultado = this.calcularPontuacao(atleta);
+                const resultado = this.calcularPontuacao(atleta, totalEscalacoes);
                 resultados.push(resultado);
                 
                 // Atualizar progresso a cada 5 zagueiros ou no último
