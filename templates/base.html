@@ -108,7 +108,7 @@
         }
     </style>
   </head>
-<body class="h-full bg-gradient-to-br from-dark-blue-950 via-dark-blue-900 to-slate-900 text-white overflow-x-hidden">
+<body data-user-id="{{ current_user.id if current_user and current_user.id else '' }}" class="h-full bg-gradient-to-br from-dark-blue-950 via-dark-blue-900 to-slate-900 text-white overflow-x-hidden">
     <!-- Sidebar -->
     <div class="fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-b from-dark-blue-900 to-dark-blue-950 shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out" id="sidebar">
         <!-- Sidebar Header -->
@@ -539,6 +539,17 @@
     
     <!-- Script de Escalar Todos os Times (carrega scripts de cálculo dinamicamente quando necessário) -->
     <script src="{{ url_for('static', filename='js/escalar_todos_times.js') }}"></script>
+    
+    <!-- Expor user_id para extensão do navegador -->
+    <script>
+        {% if current_user and current_user.id %}
+        window.userId = {{ current_user.id|tojson }};
+        window.user_id = {{ current_user.id|tojson }};
+        console.log('✅ [Cartola Manager] User ID exposto:', window.userId);
+        {% else %}
+        console.warn('⚠️ [Cartola Manager] User ID não disponível');
+        {% endif %}
+    </script>
     
     {% block scripts %}{% endblock %}
   </body>

@@ -117,6 +117,14 @@ def logout_user():
     """Faz logout do usuário atual"""
     session.clear()
 
+@app.context_processor
+def inject_user():
+    """Injeta variáveis globais em todos os templates"""
+    user = get_current_user()
+    return {
+        'current_user': user
+    }
+
 # ========================================
 # ROTAS PRINCIPAIS
 # ========================================
