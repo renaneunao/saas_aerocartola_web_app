@@ -39,6 +39,14 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       SECRET_KEY: ${SECRET_KEY:-change-me-to-a-secure-random-value-in-production}
       FLASK_ENV: ${FLASK_ENV:-production}
+      # Stripe - Chaves de API
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      # Stripe - IDs dos Produtos
+      STRIPE_PRODUCT_STARTER: ${STRIPE_PRODUCT_STARTER}
+      STRIPE_PRODUCT_PRO_PLUS: ${STRIPE_PRODUCT_PRO_PLUS}
+      # Domínio da aplicação
+      DOMAIN: ${DOMAIN:-http://localhost:5000}
     ports:
       - "5000:5000"
     volumes:

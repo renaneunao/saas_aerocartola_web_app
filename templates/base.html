@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Player Images -->
     <script src="{{ url_for('static', filename='cartola_imgs/player_images_by_id.js') }}"></script>
     <script>
@@ -128,16 +130,36 @@
         </div>
 
         <!-- User Section -->
-        <div class="px-6 py-4 border-b border-dark-blue-700/50">
+        <div class="px-6 py-4 border-b border-dark-blue-700/50 relative">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center relative">
                     <i class="fas fa-user text-white"></i>
+                    <!-- Badge do Plano no canto -->
+                    {% if current_user and current_user.plano %}
+                    {% set plano = current_user.plano %}
+                    {% set plano_nomes = {
+                        'free': 'FREE',
+                        'avancado': 'AVANÇADO',
+                        'pro': 'PRO'
+                    } %}
+                    {% set plano_colors = {
+                        'free': 'bg-slate-600 text-slate-100 border-slate-500',
+                        'avancado': 'bg-blue-600 text-blue-100 border-blue-500',
+                        'pro': 'bg-yellow-600 text-yellow-100 border-yellow-500'
+                    } %}
+                    <span class="absolute -top-1 -right-1 px-1.5 py-0.5 {{ plano_colors.get(plano, 'bg-slate-600 text-slate-100') }} border border-dark-blue-900 rounded text-[9px] font-bold leading-tight shadow-lg whitespace-nowrap" 
+                          title="Plano {{ plano_nomes.get(plano, plano|upper) }}">
+                        {{ plano_nomes.get(plano, plano|upper) }}
+                    </span>
+                    {% endif %}
                 </div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-medium text-white truncate">
                         {% if session.get('username') %}{{ session.get('username') }}{% else %}Usuário{% endif %}
                     </p>
-                    <p class="text-xs text-dark-blue-300">Administrador</p>
+                    <p class="text-xs text-dark-blue-300">
+                        {% if current_user and current_user.is_admin %}Administrador{% else %}Usuário{% endif %}
+                    </p>
                 </div>
             </div>
         </div>
@@ -181,6 +203,20 @@
                     <i class="fas fa-users mr-3 text-orange-400"></i>
                     Meus Times
                 </a>
+                
+                <a href="{{ url_for('pagamento.index') }}" 
+                   class="{% if request.path.startswith('/pagamento') %}bg-dark-blue-700 text-white border-r-2 border-yellow-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
+                    <i class="fas fa-credit-card mr-3 text-yellow-400"></i>
+                    Planos e Assinaturas
+                </a>
+                
+                {% if current_user and current_user.is_admin %}
+                <a href="{{ url_for('admin_planos') }}" 
+                   class="{% if request.path.startswith('/admin/planos') %}bg-dark-blue-700 text-white border-r-2 border-purple-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
+                    <i class="fas fa-crown mr-3 text-purple-400"></i>
+                    Testar Planos (Admin)
+                </a>
+                {% endif %}
             </div>
 
             <!-- Times Selection Section -->
@@ -374,10 +410,16 @@
         });
 
         // Função para renderizar times na sidebar
-        function renderizarTimesSidebar(data) {
+        async function renderizarTimesSidebar(data) {
             const timesList = document.getElementById('timesList');
             
             if (!timesList) return;
+            
+            // Remover botão "Escalar Todos os Times" se existir antes de limpar a lista
+            const botaoExistente = document.getElementById('escalarTodosTimesBtnSidebar');
+            if (botaoExistente) {
+                botaoExistente.remove();
+            }
             
             timesList.innerHTML = '';
             
@@ -386,60 +428,135 @@
                 return;
             }
             
-            data.times.forEach(time => {
-                    const timeItem = document.createElement('div');
-                    timeItem.className = `px-3 py-2 text-sm rounded-l-lg cursor-pointer transition-all duration-200 ${
-                        time.selected 
-                            ? 'bg-dark-blue-700 text-white border-r-2 border-blue-500' 
-                            : 'text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white'
-                    }`;
-                    timeItem.innerHTML = `
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 rounded mr-2 flex items-center justify-center team-shield-sidebar" data-team-id="${time.id}">
-                                <i class="fas fa-futbol text-sm ${time.selected ? 'text-blue-400' : 'text-dark-blue-400'}"></i>
-                            </div>
-                            <span class="flex-1 truncate">${time.team_name}</span>
-                            ${time.selected ? '<i class="fas fa-check text-blue-400 ml-2"></i>' : ''}
-                        </div>
-                    `;
-                    
-                    // Carregar escudo dinamicamente com ALTA RESOLUÇÃO
-                    if (time.team_shield_url) {
-                        const shieldContainer = timeItem.querySelector('.team-shield-sidebar');
-                        if (shieldContainer) {
-                            shieldContainer.innerHTML = '';
-                            const img = document.createElement('img');
-                            
-                            // Usar resolução MÁXIMA disponível da API do Cartola
-                            let highResUrl = time.team_shield_url;
-                            
-                            // Se for PNG do Cartola, usar versão SEM TAMANHO (original)
-                            if (highResUrl.includes('/45x45.png')) {
-                                // Remover /45x45.png para pegar versão original de alta res
-                                highResUrl = highResUrl.replace('/45x45.png', '');
-                            } else if (highResUrl.includes('/60x60.png')) {
-                                highResUrl = highResUrl.replace('/60x60.png', '');
-                            }
-                            // Facebook profile já é alta resolução
-                            
-                            img.src = highResUrl;
-                            img.alt = 'Escudo';
-                            // Container fixo + object-contain para não esticar
-                            img.className = 'w-8 h-8 rounded border border-white/20';
-                            img.style.objectFit = 'contain'; // NÃO esticar, manter proporção
-                            img.style.imageRendering = '-webkit-optimize-contrast'; // Melhor nitidez
-                            img.onerror = function() {
-                                // Se falhar, usar ícone padrão
-                                shieldContainer.innerHTML = '<i class="fas fa-futbol text-sm text-dark-blue-400"></i>';
-                            };
-                            shieldContainer.appendChild(img);
-                        }
+            // Buscar limite de times do plano
+            let maxTimes = 999999; // Padrão: ilimitado
+            try {
+                const permsResponse = await fetch('/api/user/permissions');
+                if (permsResponse.ok) {
+                    const permsData = await permsResponse.json();
+                    const timesMaximos = permsData.permissions.timesMaximos;
+                    if (timesMaximos === 'infinite') {
+                        maxTimes = 999999;
+                    } else {
+                        maxTimes = parseInt(timesMaximos) || 1;
                     }
-                    timeItem.addEventListener('click', async () => {
-                        // Não pedir confirmação se já está selecionado
-                        if (time.selected) return;
+                }
+            } catch (error) {
+                console.error('Erro ao buscar permissões:', error);
+            }
+            
+            // Limitar quantidade de times mostrados
+            const timesLimitados = data.times.slice(0, maxTimes);
+            
+            // Desabilitar temporariamente o MutationObserver durante a renderização
+            if (window.escalarTodosTimesObserver) {
+                window.escalarTodosTimesObserver.disconnect();
+            }
+            
+            // Se tiver apenas 1 time, mostrar nome e escudo (layout vertical)
+            // Se tiver 2 ou mais, mostrar apenas escudos em grid de 4 colunas
+            if (timesLimitados.length === 1) {
+                const time = timesLimitados[0];
+                const hasTokenError = time.token_error === true;
+                
+                const timeItem = document.createElement('div');
+                timeItem.className = `px-3 py-2 text-sm rounded-l-lg cursor-pointer transition-all duration-200 ${
+                    time.selected 
+                        ? 'bg-dark-blue-700 text-white border-r-2 border-blue-500' 
+                        : 'text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white'
+                }`;
+                timeItem.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded mr-2 flex items-center justify-center team-shield-sidebar" data-team-id="${time.id}">
+                            <i class="fas fa-futbol text-sm ${time.selected ? 'text-blue-400' : 'text-dark-blue-400'}"></i>
+                        </div>
+                        <span class="flex-1 truncate">${time.team_name}</span>
+                        ${time.selected ? '<i class="fas fa-check text-blue-400 ml-2"></i>' : ''}
+                    </div>
+                `;
+                
+                // Carregar escudo dinamicamente com ALTA RESOLUÇÃO
+                const shieldContainer = timeItem.querySelector('.team-shield-sidebar');
+                if (shieldContainer) {
+                    if (hasTokenError) {
+                        // Mostrar "X" vermelho indicando erro de token
+                        console.warn(`[DEBUG] ⚠️ Time ${time.id} (${time.team_name}) tem erro de token (401)`);
+                        shieldContainer.innerHTML = `
+                            <div class="w-8 h-8 rounded flex items-center justify-center bg-red-900/30 border-2 border-red-500/50" title="Erro de autenticação. Clique para atualizar os tokens.">
+                                <i class="fas fa-times text-red-400 text-xs"></i>
+                            </div>
+                        `;
+                        // Adicionar listener que redireciona para edição
+                        timeItem.addEventListener('click', async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = `/credenciais`;
+                        }, true);
+                    } else if (time.team_shield_url) {
+                        shieldContainer.innerHTML = '';
+                        const img = document.createElement('img');
                         
-                        // Pedir confirmação antes de trocar
+                        // Usar resolução MÁXIMA disponível da API do Cartola
+                        let highResUrl = time.team_shield_url;
+                        
+                        // Se for PNG do Cartola, usar versão SEM TAMANHO (original)
+                        if (highResUrl.includes('/45x45.png')) {
+                            highResUrl = highResUrl.replace('/45x45.png', '');
+                        } else if (highResUrl.includes('/60x60.png')) {
+                            highResUrl = highResUrl.replace('/60x60.png', '');
+                        }
+                        
+                        img.src = highResUrl;
+                        img.alt = 'Escudo';
+                        img.className = 'w-8 h-8 rounded border border-white/20';
+                        img.style.objectFit = 'contain';
+                        img.style.imageRendering = '-webkit-optimize-contrast';
+                        img.onerror = function() {
+                            shieldContainer.innerHTML = '<i class="fas fa-futbol text-sm text-dark-blue-400"></i>';
+                        };
+                        shieldContainer.appendChild(img);
+                    } else {
+                        // Tentar buscar via API se não tiver
+                        fetch(`/api/time/${time.id}/escudo`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.token_error === true) {
+                                    shieldContainer.innerHTML = `
+                                        <div class="w-8 h-8 rounded flex items-center justify-center bg-red-900/30 border-2 border-red-500/50" title="Erro de autenticação. Clique para atualizar os tokens.">
+                                            <i class="fas fa-times text-red-400 text-xs"></i>
+                                        </div>
+                                    `;
+                                    const newTimeItem = timeItem.cloneNode(true);
+                                    timeItem.parentNode.replaceChild(newTimeItem, timeItem);
+                                    newTimeItem.addEventListener('click', async (e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        window.location.href = `/credenciais`;
+                                    }, true);
+                                } else if (data.team_shield_url) {
+                                    const img = document.createElement('img');
+                                    let highResUrl = data.team_shield_url;
+                                    if (highResUrl.includes('/45x45.png')) {
+                                        highResUrl = highResUrl.replace('/45x45.png', '');
+                                    } else if (highResUrl.includes('/60x60.png')) {
+                                        highResUrl = highResUrl.replace('/60x60.png', '');
+                                    }
+                                    img.src = highResUrl;
+                                    img.alt = 'Escudo';
+                                    img.className = 'w-8 h-8 rounded border border-white/20';
+                                    img.style.objectFit = 'contain';
+                                    img.style.imageRendering = '-webkit-optimize-contrast';
+                                    shieldContainer.innerHTML = '';
+                                    shieldContainer.appendChild(img);
+                                }
+                            });
+                    }
+                }
+                
+                // Adicionar listener de seleção apenas se não tiver erro de token
+                if (!hasTokenError) {
+                    timeItem.addEventListener('click', async () => {
+                        if (time.selected) return;
                         const confirmado = await showConfirm(
                             `Deseja trocar para o time "${time.team_name}"?`,
                             '🔄 Trocar de Time',
@@ -448,13 +565,193 @@
                                 cancelText: 'Cancelar'
                             }
                         );
-                        
                         if (confirmado) {
                             await selecionarTime(time.id);
                         }
                     });
-                    timesList.appendChild(timeItem);
+                }
+                timesList.appendChild(timeItem);
+            } else {
+                // 2 ou mais times: mostrar apenas escudos em grid de 4 colunas
+                const gridContainer = document.createElement('div');
+                gridContainer.className = 'grid grid-cols-4 gap-1.5 px-2';
+                
+                timesLimitados.forEach((time, index) => {
+                    console.log(`[DEBUG] Renderizando time ${index + 1}/${timesLimitados.length}:`, {
+                        id: time.id,
+                        name: time.team_name,
+                        hasShieldUrl: !!time.team_shield_url,
+                        shieldUrl: time.team_shield_url,
+                        selected: time.selected,
+                        fullTimeObject: time
+                    });
+                    
+                    const timeItem = document.createElement('div');
+                    timeItem.className = `relative cursor-pointer transition-all duration-200 rounded-lg p-1 ${
+                        time.selected 
+                            ? 'bg-dark-blue-700 border-2 border-blue-500' 
+                            : 'bg-dark-blue-800/50 hover:bg-dark-blue-800 border-2 border-transparent hover:border-dark-blue-600'
+                    }`;
+                    timeItem.setAttribute('data-team-id', time.id);
+                    timeItem.setAttribute('title', time.team_name);
+                    
+                    const shieldContainer = document.createElement('div');
+                    shieldContainer.className = 'w-full aspect-square rounded flex items-center justify-center team-shield-sidebar';
+                    shieldContainer.setAttribute('data-team-id', time.id);
+                    
+                    // Verificar se há erro de token
+                    const hasTokenError = time.token_error === true;
+                    
+                    if (hasTokenError) {
+                        // Mostrar "X" vermelho indicando erro de token
+                        console.warn(`[DEBUG] ⚠️ Time ${time.id} (${time.team_name}) tem erro de token (401)`);
+                        shieldContainer.innerHTML = `
+                            <div class="w-full h-full flex items-center justify-center bg-red-900/30 rounded border-2 border-red-500/50" title="Erro de autenticação. Clique para atualizar os tokens.">
+                                <i class="fas fa-times text-red-400 text-lg"></i>
+                            </div>
+                        `;
+                        // Adicionar listener que redireciona para página de credenciais
+                        timeItem.addEventListener('click', async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = `/credenciais`;
+                        }, true); // Usar capture phase para executar antes
+                    } else if (time.team_shield_url && time.team_shield_url.trim() !== '') {
+                        const img = document.createElement('img');
+                        let highResUrl = time.team_shield_url;
+                        if (highResUrl.includes('/45x45.png')) {
+                            highResUrl = highResUrl.replace('/45x45.png', '');
+                        } else if (highResUrl.includes('/60x60.png')) {
+                            highResUrl = highResUrl.replace('/60x60.png', '');
+                        }
+                        img.src = highResUrl;
+                        img.alt = time.team_name;
+                        // Escudos proporcionais ao container (que é aspect-square)
+                        img.className = 'w-full h-full rounded object-contain';
+                        img.style.imageRendering = '-webkit-optimize-contrast';
+                        img.onload = function() {
+                            console.log(`[DEBUG] ✅ Escudo do time ${time.id} (${time.team_name}) carregado com sucesso:`, highResUrl);
+                        };
+                        img.onerror = function() {
+                            console.error(`[DEBUG] ❌ Erro ao carregar escudo do time ${time.id} (${time.team_name}):`, highResUrl);
+                            shieldContainer.innerHTML = '<i class="fas fa-futbol text-dark-blue-400 text-sm"></i>';
+                        };
+                        shieldContainer.appendChild(img);
+                        console.log(`[DEBUG] Imagem criada e adicionada ao DOM para time ${time.id}, src:`, highResUrl);
+                    } else {
+                        console.warn(`[DEBUG] ⚠️ Time ${time.id} (${time.team_name}) não tem team_shield_url. Tentando buscar via API...`);
+                        // Limpar cache se detectar time sem escudo (pode estar desatualizado)
+                        sessionStorage.removeItem('times_cache');
+                        sessionStorage.removeItem('times_cache_timestamp');
+                        console.log(`[DEBUG] Cache limpo devido à falta de escudo do time ${time.id}`);
+                        
+                        // Tentar buscar escudo via API se não tiver
+                        fetch(`/api/time/${time.id}/escudo`)
+                            .then(response => {
+                                console.log(`[DEBUG] Resposta da API para time ${time.id}:`, response.status, response.statusText);
+                                return response.json();
+                            })
+                            .then(data => {
+                                console.log(`[DEBUG] Dados retornados da API para time ${time.id}:`, data);
+                                
+                                // Verificar se há erro de token
+                                if (data.token_error === true) {
+                                    console.warn(`[DEBUG] ⚠️ Time ${time.id} tem erro de token (401) - mostrando X`);
+                                    shieldContainer.innerHTML = `
+                                        <div class="w-full h-full flex items-center justify-center bg-red-900/30 rounded border-2 border-red-500/50" title="Erro de autenticação. Clique para atualizar os tokens.">
+                                            <i class="fas fa-times text-red-400 text-lg"></i>
+                                        </div>
+                                    `;
+                                    // Remover listener de seleção e adicionar listener de edição
+                                    const newTimeItem = timeItem.cloneNode(true);
+                                    timeItem.parentNode.replaceChild(newTimeItem, timeItem);
+                                    newTimeItem.addEventListener('click', async (e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        window.location.href = `/credenciais`;
+                                    }, true);
+                                } else if (data.team_shield_url) {
+                                    console.log(`[DEBUG] ✅ Escudo encontrado via API para time ${time.id}:`, data.team_shield_url);
+                                    const img = document.createElement('img');
+                                    let highResUrl = data.team_shield_url;
+                                    if (highResUrl.includes('/45x45.png')) {
+                                        highResUrl = highResUrl.replace('/45x45.png', '');
+                                    } else if (highResUrl.includes('/60x60.png')) {
+                                        highResUrl = highResUrl.replace('/60x60.png', '');
+                                    }
+                                    img.src = highResUrl;
+                                    img.alt = time.team_name;
+                                    img.className = 'w-full h-full rounded object-contain';
+                                    img.style.imageRendering = '-webkit-optimize-contrast';
+                                    img.onload = function() {
+                                        console.log(`[DEBUG] ✅ Escudo do time ${time.id} carregado via API com sucesso`);
+                                    };
+                                    img.onerror = function() {
+                                        console.error(`[DEBUG] ❌ Erro ao carregar escudo via API para time ${time.id}`);
+                                    };
+                                    shieldContainer.innerHTML = '';
+                                    shieldContainer.appendChild(img);
+                                } else {
+                                    console.warn(`[DEBUG] ⚠️ API também não retornou escudo para time ${time.id}. Dados:`, data);
+                                    shieldContainer.innerHTML = '<i class="fas fa-futbol text-dark-blue-400 text-sm"></i>';
+                                }
+                            })
+                            .catch(error => {
+                                console.error(`[DEBUG] ❌ Erro ao buscar escudo via API para time ${time.id}:`, error);
+                                shieldContainer.innerHTML = '<i class="fas fa-futbol text-dark-blue-400 text-sm"></i>';
+                            });
+                    }
+                    
+                    // Indicador de selecionado (menor também)
+                    if (time.selected) {
+                        const checkBadge = document.createElement('div');
+                        checkBadge.className = 'absolute top-0.5 right-0.5 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center';
+                        checkBadge.innerHTML = '<i class="fas fa-check text-white text-[8px]"></i>';
+                        timeItem.appendChild(checkBadge);
+                    }
+                    
+                    timeItem.appendChild(shieldContainer);
+                    
+                    // Adicionar listener de seleção apenas se não tiver erro de token
+                    if (!hasTokenError) {
+                        timeItem.addEventListener('click', async () => {
+                            if (time.selected) return;
+                            const confirmado = await showConfirm(
+                                `Deseja trocar para o time "${time.team_name}"?`,
+                                '🔄 Trocar de Time',
+                                {
+                                    confirmText: 'Sim, trocar',
+                                    cancelText: 'Cancelar'
+                                }
+                            );
+                            if (confirmado) {
+                                await selecionarTime(time.id);
+                            }
+                        });
+                    }
+                    
+                    gridContainer.appendChild(timeItem);
                 });
+                
+                timesList.appendChild(gridContainer);
+            }
+            
+            // Reativar o observer após renderizar todos os times
+            if (window.escalarTodosTimesObserver && timesList) {
+                window.escalarTodosTimesObserver.observe(timesList, { childList: true, subtree: false });
+            }
+            
+            // Verificar e adicionar botão de escalar todos os times após renderizar TODOS os times
+            // Apenas se tiver mais de 1 time
+            if (timesLimitados.length > 1 && typeof verificarEAdicionarBotaoSidebar === 'function') {
+                console.log('[DEBUG] renderizarTimesSidebar: Chamando verificarEAdicionarBotaoSidebar após renderizar', timesLimitados.length, 'times');
+                setTimeout(() => {
+                    console.log('[DEBUG] renderizarTimesSidebar: Executando verificarEAdicionarBotaoSidebar agora');
+                    verificarEAdicionarBotaoSidebar();
+                }, 100);
+            } else {
+                console.log('[DEBUG] renderizarTimesSidebar: Não chamando verificarEAdicionarBotaoSidebar - times:', timesLimitados.length, 'função existe?', typeof verificarEAdicionarBotaoSidebar === 'function');
+            }
         }
         
         // Função para carregar times na sidebar (com cache)
@@ -470,7 +767,7 @@
                     if (cacheAge < 300000) {
                         console.log('📦 Usando times do cache (idade: ' + Math.round(cacheAge/1000) + 's)');
                         const data = JSON.parse(cachedData);
-                        renderizarTimesSidebar(data);
+                        await renderizarTimesSidebar(data);
                         return;
                     }
                 }
@@ -486,7 +783,7 @@
                 sessionStorage.setItem('times_cache_timestamp', Date.now().toString());
                 console.log('💾 Times salvos no cache');
                 
-                renderizarTimesSidebar(data);
+                await renderizarTimesSidebar(data);
             } catch (error) {
                 console.error('Erro ao carregar times:', error);
                 showToast('Erro ao carregar times', 'error');
@@ -535,6 +832,7 @@
     </script>
     
     <!-- UI Components (Loader, Toast, Alert, Confirm) -->
+    <script src="{{ url_for('static', filename='js/plan-permissions.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui-components.js') }}"></script>
     
     <!-- Script de Escalar Todos os Times (carrega scripts de cálculo dinamicamente quando necessário) -->

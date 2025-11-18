@@ -51,7 +51,7 @@
 
 <!-- Painel de Configuração de Pesos -->
 <div class="mb-8">
-    <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 backdrop-blur-sm rounded-2xl border border-purple-500/50 shadow-xl overflow-hidden">
+    <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 backdrop-blur-sm rounded-2xl border border-purple-500/50 shadow-xl overflow-hidden relative">
         <div class="bg-gradient-to-r from-purple-700/80 to-indigo-800/80 p-4 border-b border-purple-500/50">
             <div class="flex items-center space-x-3">
                 <div class="p-2 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-lg">
@@ -64,8 +64,20 @@
             </div>
         </div>
         
-        <form id="pesosForm" class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% if not permissions.editarPesosModulos %}
+        <!-- Overlay de bloqueio para edição de pesos -->
+        <div class="absolute inset-0 bg-dark-blue-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6">
+            <i class="fas fa-lock text-yellow-400 text-4xl mb-4"></i>
+            <p class="text-white text-lg font-bold mb-2 text-center">Edição de Pesos Bloqueada</p>
+            <p class="text-purple-300 text-sm text-center mb-4">Esta funcionalidade está disponível apenas no plano Pro</p>
+            <a href="{{ url_for('pagamento.index') }}" class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-xl">
+                <i class="fas fa-arrow-up mr-2"></i>
+                Upgrade para Pro
+            </a>
+        </div>
+        {% endif %}
+        <form id="pesosForm" class="p-6 relative">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 {% if not permissions.editarPesosModulos %}opacity-50{% endif %}" {% if not permissions.editarPesosModulos %}style="filter: blur(0.3px); pointer-events: none;"{% endif %}>
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-purple-200">
                         FATOR_MEDIA
@@ -74,7 +86,8 @@
                            id="FATOR_MEDIA"
                            name="FATOR_MEDIA" 
                            value="{{ pesos_atuais.get('FATOR_MEDIA', 0.2) }}" 
-                           step="0.1" 
+                           step="0.1"
+                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
                 </div>
                 <div class="space-y-2">
@@ -85,7 +98,8 @@
                            id="FATOR_FF"
                            name="FATOR_FF" 
                            value="{{ pesos_atuais.get('FATOR_FF', 4.5) }}" 
-                           step="0.1" 
+                           step="0.1"
+                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
                 </div>
                 <div class="space-y-2">
@@ -96,7 +110,8 @@
                            id="FATOR_FD"
                            name="FATOR_FD" 
                            value="{{ pesos_atuais.get('FATOR_FD', 6.5) }}" 
-                           step="0.1" 
+                           step="0.1"
+                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
                 </div>
                 <div class="space-y-2">
@@ -107,7 +122,8 @@
                            id="FATOR_SG"
                            name="FATOR_SG" 
                            value="{{ pesos_atuais.get('FATOR_SG', 1.5) }}" 
-                           step="0.1" 
+                           step="0.1"
+                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
                 </div>
                 <div class="space-y-2">
@@ -118,7 +134,8 @@
                            id="FATOR_PESO_JOGO"
                            name="FATOR_PESO_JOGO" 
                            value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 1.5) }}" 
-                           step="0.1" 
+                           step="0.1"
+                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
                 </div>
                 <div class="space-y-2">
@@ -129,7 +146,8 @@
                            id="FATOR_GOL_ADVERSARIO"
                            name="FATOR_GOL_ADVERSARIO" 
                            value="{{ pesos_atuais.get('FATOR_GOL_ADVERSARIO', 2.0) }}" 
-                           step="0.1" 
+                           step="0.1"
+                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
                 </div>
             </div>
@@ -137,11 +155,16 @@
             <div class="flex items-center justify-between mt-6 pt-4 border-t border-purple-500/30">
                 <div class="text-sm text-purple-300">
                     <i class="fas fa-info-circle mr-2"></i>
+                    {% if permissions.editarPesosModulos %}
                     Clique para salvar e recalcular com os novos pesos
+                    {% else %}
+                    Edição disponível apenas no plano Pro
+                    {% endif %}
                 </div>
                 <div class="flex space-x-3">
                     <button type="button" onclick="salvarPesos()"
-                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105">
+                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
+                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-save mr-2"></i>
                         Salvar e Recalcular
                     </button>
@@ -231,7 +254,7 @@
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Ações</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody style="position: relative;">
                         <!-- Dados serão preenchidos via JavaScript -->
                     </tbody>
                 </table>
@@ -503,36 +526,52 @@ async function carregarDados(forcarRecalculo = false) {
             if (data.ranking_salvo !== null && data.ranking_salvo !== undefined && 
                 Array.isArray(data.ranking_salvo) && data.ranking_salvo.length > 0) {
                 
-                console.log(`[DEBUG] ✅✅✅ EXIBINDO RANKING SALVO DIRETAMENTE (ID: ${chamadaId}) - ${data.ranking_salvo.length} itens`);
-                updateProgress(80, 'Exibindo ranking salvo...');
-                addProgressLog('💾 Exibindo ranking salvo...', 'success');
+                // Verificar se as pontuações estão zeradas
+                const todasPontuacoesZeradas = data.ranking_salvo.every(r => 
+                    !r.pontuacao_total || r.pontuacao_total === 0 || r.pontuacao_total === '0.00' || parseFloat(r.pontuacao_total) === 0
+                );
                 
-                // Renderizar ranking salvo diretamente
-                const resultados = data.ranking_salvo.map((r, i) => ({ ...r, rank: i + 1 }));
-                renderizarTabelaGoleiros(resultados);
+                if (todasPontuacoesZeradas) {
+                    console.log(`[DEBUG] ⚠️⚠️⚠️ RANKING SALVO TEM PONTUAÇÕES ZERADAS - FORÇANDO RECÁLCULO (ID: ${chamadaId})`);
+                    console.log(`[DEBUG] Amostra do ranking salvo:`, data.ranking_salvo.slice(0, 3).map(r => ({
+                        apelido: r.apelido,
+                        pontuacao_total: r.pontuacao_total
+                    })));
+                    // Desativar bloqueador e continuar para o cálculo
+                    window.BLOQUEAR_CALCULO_GOLEIRO = false;
+                    // Não retornar, deixar continuar para o cálculo
+                } else {
+                    console.log(`[DEBUG] ✅✅✅ EXIBINDO RANKING SALVO DIRETAMENTE (ID: ${chamadaId}) - ${data.ranking_salvo.length} itens`);
+                    updateProgress(80, 'Exibindo ranking salvo...');
+                    addProgressLog('💾 Exibindo ranking salvo...', 'success');
+                    
+                    // Renderizar ranking salvo diretamente
+                    const resultados = data.ranking_salvo.map((r, i) => ({ ...r, rank: i + 1 }));
+                    await renderizarTabelaGoleiros(resultados);
                 
-                const totalRegistrosEl = document.getElementById('totalRegistros');
-                if (totalRegistrosEl) {
-                    totalRegistrosEl.textContent = resultados.length;
-                }
-                
-                updateProgress(100, 'Concluído!');
-                addProgressLog(`✨ Ranking salvo exibido com sucesso! (${resultados.length} goleiros)`, 'success');
-                
-                // Esconder loading e mostrar conteúdo
-                setTimeout(() => {
-                    loadingState.classList.add('hidden');
-                    dataContent.classList.remove('hidden');
-                    if (logsContainer) {
-                        logsContainer.classList.add('hidden');
+                    const totalRegistrosEl = document.getElementById('totalRegistros');
+                    if (totalRegistrosEl) {
+                        totalRegistrosEl.textContent = resultados.length;
                     }
-                    // Toast de sucesso
-                    showToast(`✅ Goleiros calculados com sucesso! (${resultados.length} jogadores)`, 'success');
-                }, 500);
-                
-                console.log(`[DEBUG] ✅✅✅ RANKING EXIBIDO - RETORNANDO IMEDIATAMENTE (ID: ${chamadaId})`);
-                calculando = false;
-                return; // RETORNAR IMEDIATAMENTE - NÃO EXECUTAR MAIS NADA
+                    
+                    updateProgress(100, 'Concluído!');
+                    addProgressLog(`✨ Ranking salvo exibido com sucesso! (${resultados.length} goleiros)`, 'success');
+                    
+                    // Esconder loading e mostrar conteúdo
+                    setTimeout(() => {
+                        loadingState.classList.add('hidden');
+                        dataContent.classList.remove('hidden');
+                        if (logsContainer) {
+                            logsContainer.classList.add('hidden');
+                        }
+                        // Toast de sucesso
+                        showToast(`✅ Goleiros calculados com sucesso! (${resultados.length} jogadores)`, 'success');
+                    }, 500);
+                    
+                    console.log(`[DEBUG] ✅✅✅ RANKING EXIBIDO - RETORNANDO IMEDIATAMENTE (ID: ${chamadaId})`);
+                    calculando = false;
+                    return; // RETORNAR IMEDIATAMENTE - NÃO EXECUTAR MAIS NADA
+                }
             } else {
                 console.error(`[DEBUG] ❌❌❌ ERRO: Bloqueador ativo mas ranking_salvo inválido! (ID: ${chamadaId})`);
                 // Se bloqueador ativo mas sem ranking, desativar bloqueador e continuar
@@ -548,6 +587,30 @@ async function carregarDados(forcarRecalculo = false) {
             addProgressLog(`📊 Rodada: ${data.rodada_atual}, Perfil Jogo: ${data.perfil_peso_jogo}, Perfil SG: ${data.perfil_peso_sg}`, 'info');
         }
         
+        // DEBUG: Log dos dados recebidos
+        console.log('[DEBUG TEMPLATE] ========== DADOS RECEBIDOS DA API ==========');
+        console.log('[DEBUG TEMPLATE] Total de atletas:', data.atletas?.length || 0);
+        console.log('[DEBUG TEMPLATE] Rodada atual:', data.rodada_atual);
+        console.log('[DEBUG TEMPLATE] Perfil peso jogo:', data.perfil_peso_jogo);
+        console.log('[DEBUG TEMPLATE] Perfil peso SG:', data.perfil_peso_sg);
+        console.log('[DEBUG TEMPLATE] adversarios_dict:', data.adversarios_dict);
+        console.log('[DEBUG TEMPLATE] pontuados_data keys:', Object.keys(data.pontuados_data || {}).length);
+        console.log('[DEBUG TEMPLATE] gols_data keys:', Object.keys(data.gols_data || {}).length);
+        console.log('[DEBUG TEMPLATE] escalacoes_data keys:', Object.keys(data.escalacoes_data || {}).length);
+        console.log('[DEBUG TEMPLATE] pesos:', data.pesos);
+        if (data.atletas && data.atletas.length > 0) {
+            console.log('[DEBUG TEMPLATE] Primeiro atleta (amostra):', {
+                atleta_id: data.atletas[0].atleta_id,
+                apelido: data.atletas[0].apelido,
+                clube_id: data.atletas[0].clube_id,
+                media_num: data.atletas[0].media_num,
+                peso_jogo: data.atletas[0].peso_jogo,
+                peso_sg: data.atletas[0].peso_sg,
+                adversario_id: data.atletas[0].adversario_id
+            });
+        }
+        console.log('[DEBUG TEMPLATE] ============================================');
+        
         // Verificar se há ranking salvo (verificar se existe e é um array com itens)
         // Se forcarRecalculo for true, ignorar ranking salvo
         console.log(`[DEBUG] ========== VERIFICAÇÃO FINAL DE RANKING SALVO (ID: ${chamadaId}) ==========`);
@@ -562,8 +625,23 @@ async function carregarDados(forcarRecalculo = false) {
         
         if (!forcarRecalculo && data.ranking_salvo !== null && data.ranking_salvo !== undefined) {
             if (Array.isArray(data.ranking_salvo) && data.ranking_salvo.length > 0) {
-                temRankingSalvo = true;
-                console.log(`[DEBUG] ✅✅✅ RANKING SALVO CONFIRMADO (ID: ${chamadaId})`);
+                // Verificar se as pontuações estão zeradas
+                const todasPontuacoesZeradas = data.ranking_salvo.every(r => 
+                    !r.pontuacao_total || r.pontuacao_total === 0 || r.pontuacao_total === '0.00' || parseFloat(r.pontuacao_total) === 0
+                );
+                
+                if (todasPontuacoesZeradas) {
+                    console.log(`[DEBUG] ⚠️⚠️⚠️ RANKING SALVO TEM PONTUAÇÕES ZERADAS - FORÇANDO RECÁLCULO (ID: ${chamadaId})`);
+                    console.log(`[DEBUG] Amostra do ranking salvo:`, data.ranking_salvo.slice(0, 3).map(r => ({
+                        apelido: r.apelido,
+                        pontuacao_total: r.pontuacao_total
+                    })));
+                    temRankingSalvo = false; // Forçar recálculo
+                    forcarRecalculo = true; // Marcar para recalcular
+                } else {
+                    temRankingSalvo = true;
+                    console.log(`[DEBUG] ✅✅✅ RANKING SALVO CONFIRMADO (ID: ${chamadaId})`);
+                }
             } else {
                 console.log(`[DEBUG] ⚠️ Ranking salvo inválido (ID: ${chamadaId})`);
             }
@@ -658,11 +736,12 @@ async function carregarDados(forcarRecalculo = false) {
             const resultados = [];
             const total = this.atletas.length;
             let processados = 0;
-            const totalEscalacoes = this.calcularTotalEscalacoes();
 
             for (const atleta of this.atletas) {
                 processados++;
-                const resultado = this.calcularPontuacao(atleta, totalEscalacoes);
+                console.log(`[DEBUG TEMPLATE] Processando atleta ${processados}/${total}: ${atleta.apelido} (ID: ${atleta.atleta_id})`);
+                const resultado = this.calcularPontuacao(atleta);
+                console.log(`[DEBUG TEMPLATE] Resultado para ${atleta.apelido}: pontuacao_total = ${resultado.pontuacao_total}`);
                 resultados.push(resultado);
                 
                 // Atualizar progresso a cada 5 goleiros ou no último
@@ -761,21 +840,39 @@ async function carregarDados(forcarRecalculo = false) {
 }
 
 // Função para renderizar tabela de goleiros
-function renderizarTabelaGoleiros(resultados) {
+async function renderizarTabelaGoleiros(resultados) {
     const tbody = document.querySelector('#tabelaGoleiros tbody');
     if (!tbody) {
         console.error('Tabela de goleiros não encontrada');
         return;
     }
     
+    // Buscar permissão rankingCompleto
+    let temRankingCompleto = true;
+    try {
+        const permsResponse = await fetch('/api/user/permissions');
+        if (permsResponse.ok) {
+            const permsData = await permsResponse.json();
+            temRankingCompleto = permsData.permissions.rankingCompleto === true;
+        }
+    } catch (error) {
+        console.error('Erro ao buscar permissões:', error);
+    }
+    
     tbody.innerHTML = '';
     
     resultados.forEach((jogador) => {
+        // Se não tem ranking completo e rank <= 2, aplicar blur agressivo (invertido)
+        const isBloqueado = !temRankingCompleto && jogador.rank <= 2;
+        
         const tr = document.createElement('tr');
         tr.className = `border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 ${jogador.rank <= 3 ? `bg-gradient-to-r ${jogador.rank == 1 ? 'from-yellow-900/20 to-yellow-800/20' : jogador.rank == 2 ? 'from-gray-800/20 to-gray-700/20' : 'from-orange-900/20 to-orange-800/20'}` : ''}`;
+        if (isBloqueado) {
+            tr.style.position = 'relative';
+        }
         
         tr.innerHTML = `
-            <td class="py-4 px-2">
+            <td class="py-4 px-2 ${isBloqueado ? 'relative z-50' : ''}">
                 ${jogador.rank <= 3 ? `
                 <div class="flex items-center justify-center w-8 h-8 rounded-full ${jogador.rank == 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' : jogador.rank == 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' : 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'} shadow-lg">
                     ${jogador.rank == 1 ? '<i class="fas fa-crown text-sm"></i>' : jogador.rank == 2 ? '<i class="fas fa-medal text-sm"></i>' : '<i class="fas fa-award text-sm"></i>'}
@@ -786,7 +883,7 @@ function renderizarTabelaGoleiros(resultados) {
                 </div>
                 `}
             </td>
-            <td class="py-4 px-2">
+            <td class="py-4 px-2 ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="flex items-center space-x-2">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
                         <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover">
@@ -806,37 +903,37 @@ function renderizarTabelaGoleiros(resultados) {
                     </div>
                 </div>
             </td>
-            <td class="py-4 px-2">
+            <td class="py-4 px-2 ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="font-medium text-white">${jogador.clube_nome}</div>
             </td>
-            <td class="py-4 px-2">
+            <td class="py-4 px-2 ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="font-medium text-orange-300">${jogador.adversario_nome || 'N/A'}</div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="text-lg font-bold ${jogador.pontuacao_total >= 10 ? 'text-green-400' : jogador.pontuacao_total >= 5 ? 'text-yellow-400' : 'text-red-400'}">
                     ${jogador.pontuacao_total.toFixed(2)}
                 </div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="font-medium text-white">${jogador.media.toFixed(2)}</div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="font-medium text-white">${jogador.jogos}</div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="font-medium ${jogador.peso_jogo > 0 ? 'text-green-400' : jogador.peso_jogo < 0 ? 'text-red-400' : 'text-gray-400'}">
                     ${jogador.peso_jogo.toFixed(2)}
                 </div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="font-medium ${jogador.peso_sg > 0 ? 'text-green-400' : jogador.peso_sg < 0 ? 'text-red-400' : 'text-gray-400'}">
                     ${jogador.peso_sg.toFixed(2)}
                 </div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="font-medium text-green-400">R$ ${jogador.preco.toFixed(2)}</div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <button onclick="openGoleiroModal(${jogador.atleta_id})" 
                         class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
                     <i class="fas fa-eye mr-1"></i>
@@ -844,6 +941,33 @@ function renderizarTabelaGoleiros(resultados) {
                 </button>
             </td>
         `;
+        
+        // Se bloqueado, adicionar overlay com botão de upgrade
+        if (isBloqueado) {
+            // Criar td com colspan que cobre toda a linha
+            const overlayTd = document.createElement('td');
+            overlayTd.colSpan = 11;
+            overlayTd.className = 'relative';
+            overlayTd.style.position = 'absolute';
+            overlayTd.style.top = '0';
+            overlayTd.style.left = '0';
+            overlayTd.style.width = '100%';
+            overlayTd.style.height = '100%';
+            overlayTd.style.display = 'flex';
+            overlayTd.style.alignItems = 'center';
+            overlayTd.style.justifyContent = 'center';
+            overlayTd.style.zIndex = '50';
+            overlayTd.style.pointerEvents = 'auto';
+            overlayTd.style.background = 'transparent';
+            overlayTd.style.padding = '0';
+            overlayTd.innerHTML = `
+                <a href="/pagamento/" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition-all duration-200 shadow-xl">
+                    <i class="fas fa-arrow-up mr-2"></i>
+                    Upgrade para Ver
+                </a>
+            `;
+            tr.appendChild(overlayTd);
+        }
         
         tbody.appendChild(tr);
     });

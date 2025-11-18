@@ -4,6 +4,27 @@
 {% block content %}
 <div class="pagina-inicial-container">
 <style>
+    /* Desabilitar scroll da página */
+    html, body {
+        overflow: hidden !important;
+        height: 100vh !important;
+    }
+    
+    main {
+        overflow: hidden !important;
+        height: 100vh !important;
+    }
+    
+    main > div.max-w-7xl {
+        max-width: 100% !important;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        padding: 0.5rem !important;
+        display: flex;
+        flex-direction: column;
+    }
+    
     /* Sobrescrever o max-w do base.html para esta página */
     .pagina-inicial-container {
         max-width: 100% !important;
@@ -12,20 +33,20 @@
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
         width: 100% !important;
-    }
-    
-    /* Sobrescrever o max-w-7xl do div dentro de main */
-    main > div.max-w-7xl {
-        max-width: 100% !important;
-        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+        display: flex;
+        flex-direction: column;
     }
     
     /* Container de slides */
     .profile-slider-container {
         position: relative;
         overflow: hidden;
-        height: calc(100vh - 8rem); /* Ocupa altura total menos header/nav */
-        min-height: 600px;
+        height: calc(100vh - 6rem); /* Ocupa altura total menos header/nav */
+        min-height: 700px;
+        display: flex;
+        flex-direction: column;
     }
     
     .profile-slider {
@@ -54,6 +75,9 @@
         direction: rtl; /* Inverte direção para scrollbar aparecer no topo */
         flex: 1 1 auto;
         min-height: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
     
     /* Scrollbar customizado - fino e bonito */
@@ -89,7 +113,8 @@
         min-width: max-content;
         direction: ltr; /* Reverter direção para conteúdo aparecer na ordem correta */
         align-items: stretch;
-        min-height: 100%;
+        height: 100%;
+        flex: 1;
     }
     
     .profile-card {
@@ -97,38 +122,66 @@
         min-width: 220px;
         display: flex;
         flex-direction: column;
+        height: 100%;
     }
     
     .profile-card > div {
         height: 100%;
         display: flex;
         flex-direction: column;
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+    }
+    
+    /* Container de ranking dentro do card */
+    .profile-card .ranking-container {
+        flex: 1 1 0;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        position: relative;
     }
     
     /* Scrollbar vertical customizada para container de times */
+    .profile-card .ranking-list {
+        overflow-y: auto !important;
+        flex: 1 1 0;
+        min-height: 0;
+        max-height: 100%;
+        scrollbar-width: thin;
+        scrollbar-color: #0284c7 rgba(15, 23, 42, 0.3);
+        position: relative;
+    }
+    
+    .profile-card [class*="overflow-y-auto"] {
+        overflow-y: auto !important;
+        scrollbar-width: thin;
+        scrollbar-color: #0284c7 rgba(15, 23, 42, 0.3);
+    }
+    
+    .profile-card .ranking-list::-webkit-scrollbar,
     .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar {
         width: 6px;
     }
     
+    .profile-card .ranking-list::-webkit-scrollbar-track,
     .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar-track {
         background: rgba(15, 23, 42, 0.3);
         border-radius: 10px;
     }
     
+    .profile-card .ranking-list::-webkit-scrollbar-thumb,
     .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar-thumb {
         background: linear-gradient(180deg, #0369a1, #0284c7);
         border-radius: 10px;
         transition: background 0.3s ease;
     }
     
+    .profile-card .ranking-list::-webkit-scrollbar-thumb:hover,
     .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar-thumb:hover {
         background: linear-gradient(180deg, #0284c7, #0ea5e9);
-    }
-    
-    /* Para Firefox */
-    .profile-card [class*="overflow-y-auto"] {
-        scrollbar-width: thin;
-        scrollbar-color: #0284c7 rgba(15, 23, 42, 0.3);
     }
     
     @media (max-width: 640px) {
@@ -191,21 +244,30 @@
                                            value="{{ perfil.perfil_id }}" 
                                            class="peer sr-only"
                                            {% if config_default and config_default.perfil_peso_jogo == perfil.perfil_id %}checked{% endif %}
-                                           required>
-                                    <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-3 hover:border-dark-blue-500/70 transition-all duration-200 peer-checked:border-dark-blue-500 peer-checked:bg-dark-blue-900/20 peer-checked:shadow-2xl h-full flex flex-col">
-                                        <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-700/50">
-                                            <span class="text-white font-bold text-base font-serif">Perfil {{ perfil.perfil_id }}</span>
-                                            <i class="fas fa-check-circle text-dark-blue-400 opacity-0 peer-checked:opacity-100 transition-opacity duration-200 text-lg"></i>
+                                           {% if perfil.get('bloqueado') %}disabled data-bloqueado="true"{% else %}required data-bloqueado="false"{% endif %}>
+                                    <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-3 hover:border-dark-blue-500/70 transition-all duration-200 peer-checked:border-dark-blue-500 peer-checked:bg-dark-blue-900/20 peer-checked:shadow-2xl h-full flex flex-col relative">
+                                        {% if perfil.get('bloqueado') %}
+                                        <div class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+                                            <a href="{{ url_for('pagamento.index') }}" class="pointer-events-auto inline-flex items-center justify-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-xl">
+                                                <i class="fas fa-arrow-up mr-2"></i>
+                                                Upgrade
+                                            </a>
                                         </div>
-                                        <p class="text-dark-blue-300 text-xs font-medium mb-1 leading-tight">{{ perfil.descricao }}</p>
-                                        <p class="text-slate-400 text-xs mb-2 font-sans">Últimas {{ perfil.ultimas_partidas }} partidas</p>
-                                        
-                                        <!-- Ranking de Times Favoritos -->
-                                        <div class="flex flex-col flex-1 min-h-0">
-                                            <p class="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide">Times Favoritos ({{ perfil.top_clubes|length }}):</p>
-                                            <div class="space-y-0.5 overflow-y-auto flex-1" style="min-height: 0;">
-                                                {% for clube in perfil.top_clubes %}
-                                                <div class="bg-slate-900/70 rounded-lg px-2 py-1.5 hover:bg-slate-800/90 transition-colors border border-slate-700/30">
+                                        {% endif %}
+                                        <div {% if perfil.get('bloqueado') %}style="filter: blur(1px);"{% endif %} class="flex flex-col flex-1 min-h-0">
+                                            <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-700/50 flex-shrink-0">
+                                                <span class="text-white font-bold text-base font-serif">Perfil {{ perfil.perfil_id }}</span>
+                                                <i class="fas fa-check-circle text-dark-blue-400 opacity-0 peer-checked:opacity-100 transition-opacity duration-200 text-lg"></i>
+                                            </div>
+                                            <p class="text-dark-blue-300 text-xs font-medium mb-1 leading-tight flex-shrink-0">{{ perfil.descricao }}</p>
+                                            <p class="text-slate-400 text-xs mb-2 font-sans flex-shrink-0">Últimas {{ perfil.ultimas_partidas }} partidas</p>
+                                            
+                                            <!-- Ranking de Times Favoritos -->
+                                            <div class="ranking-container flex-1 min-h-0">
+                                                <p class="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide flex-shrink-0">Times Favoritos ({{ perfil.top_clubes|length }}):</p>
+                                                <div class="ranking-list space-y-0.5">
+                                                    {% for clube in perfil.top_clubes %}
+                                                    <div class="bg-slate-900/70 rounded-lg px-2 py-1.5 hover:bg-slate-800/90 transition-colors border border-slate-700/30">
                                                     <div class="flex items-center justify-between text-xs mb-0.5">
                                                         <div class="flex items-center space-x-1.5 flex-1 min-w-0">
                                                             {% if clube.clube_id in clubes_dict and clubes_dict[clube.clube_id].escudo_url %}
@@ -253,10 +315,11 @@
                                                     </div>
                                                     {% endif %}
                                                 </div>
-                                                {% endfor %}
-                                                {% if perfil.top_clubes|length == 0 %}
-                                                <p class="text-xs text-slate-500 italic">Sem dados disponíveis</p>
-                                                {% endif %}
+                                                    {% endfor %}
+                                                    {% if perfil.top_clubes|length == 0 %}
+                                                    <p class="text-xs text-slate-500 italic">Sem dados disponíveis</p>
+                                                    {% endif %}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -309,21 +372,30 @@
                                            value="{{ perfil.perfil_id }}" 
                                            class="peer sr-only"
                                            {% if config_default and config_default.perfil_peso_sg == perfil.perfil_id %}checked{% endif %}
-                                           required>
-                                    <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-3 hover:border-cyan-500/70 transition-all duration-200 peer-checked:border-cyan-500 peer-checked:bg-cyan-900/20 peer-checked:shadow-2xl h-full flex flex-col">
-                                        <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-700/50">
-                                            <span class="text-white font-bold text-base font-serif">Perfil {{ perfil.perfil_id }}</span>
-                                            <i class="fas fa-check-circle text-cyan-400 opacity-0 peer-checked:opacity-100 transition-opacity duration-200 text-lg"></i>
+                                           {% if perfil.get('bloqueado') %}disabled data-bloqueado="true"{% else %}required data-bloqueado="false"{% endif %}>
+                                    <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-3 hover:border-cyan-500/70 transition-all duration-200 peer-checked:border-cyan-500 peer-checked:bg-cyan-900/20 peer-checked:shadow-2xl h-full flex flex-col relative">
+                                        {% if perfil.get('bloqueado') %}
+                                        <div class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+                                            <a href="{{ url_for('pagamento.index') }}" class="pointer-events-auto inline-flex items-center justify-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-xl">
+                                                <i class="fas fa-arrow-up mr-2"></i>
+                                                Upgrade
+                                            </a>
                                         </div>
-                                        <p class="text-cyan-300 text-xs font-medium mb-1 leading-tight">{{ perfil.descricao }}</p>
-                                        <p class="text-slate-400 text-xs mb-2 font-sans">Últimas {{ perfil.ultimas_partidas }} partidas</p>
-                                        
-                                        <!-- Ranking de Defesas -->
-                                        <div class="flex flex-col flex-1 min-h-0">
-                                            <p class="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide">Melhor Defesa ({{ perfil.top_clubes|length }}):</p>
-                                            <div class="space-y-0.5 overflow-y-auto flex-1" style="min-height: 0;">
-                                                {% for clube in perfil.top_clubes %}
-                                                <div class="bg-slate-900/70 rounded-lg px-2 py-1.5 hover:bg-slate-800/90 transition-colors border border-slate-700/30">
+                                        {% endif %}
+                                        <div {% if perfil.get('bloqueado') %}style="filter: blur(1px);"{% endif %} class="flex flex-col flex-1 min-h-0">
+                                            <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-700/50 flex-shrink-0">
+                                                <span class="text-white font-bold text-base font-serif">Perfil {{ perfil.perfil_id }}</span>
+                                                <i class="fas fa-check-circle text-cyan-400 opacity-0 peer-checked:opacity-100 transition-opacity duration-200 text-lg"></i>
+                                            </div>
+                                            <p class="text-cyan-300 text-xs font-medium mb-1 leading-tight flex-shrink-0">{{ perfil.descricao }}</p>
+                                            <p class="text-slate-400 text-xs mb-2 font-sans flex-shrink-0">Últimas {{ perfil.ultimas_partidas }} partidas</p>
+                                            
+                                            <!-- Ranking de Defesas -->
+                                            <div class="ranking-container flex-1 min-h-0">
+                                                <p class="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide flex-shrink-0">Melhor Defesa ({{ perfil.top_clubes|length }}):</p>
+                                                <div class="ranking-list space-y-0.5">
+                                                    {% for clube in perfil.top_clubes %}
+                                                    <div class="bg-slate-900/70 rounded-lg px-2 py-1.5 hover:bg-slate-800/90 transition-colors border border-slate-700/30">
                                                     <div class="flex items-center justify-between text-xs mb-0.5">
                                                         <div class="flex items-center space-x-1.5 flex-1 min-w-0">
                                                             {% if clube.clube_id in clubes_dict and clubes_dict[clube.clube_id].escudo_url %}
@@ -371,10 +443,11 @@
                                                     </div>
                                                     {% endif %}
                                                 </div>
-                                                {% endfor %}
-                                                {% if perfil.top_clubes|length == 0 %}
-                                                <p class="text-xs text-slate-500 italic">Sem dados disponíveis</p>
-                                                {% endif %}
+                                                    {% endfor %}
+                                                    {% if perfil.top_clubes|length == 0 %}
+                                                    <p class="text-xs text-slate-500 italic">Sem dados disponíveis</p>
+                                                    {% endif %}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -413,7 +486,25 @@ function slideToNext() {
     // Verificar se peso de jogo foi selecionado
     const pesoJogoSelected = document.querySelector('input[name="perfil_peso_jogo"]:checked');
     if (!pesoJogoSelected) {
-        alert('Por favor, selecione um perfil de peso de jogo antes de continuar.');
+        Swal.fire({
+            icon: 'warning',
+            title: 'Atenção',
+            text: 'Por favor, selecione um perfil de peso de jogo antes de continuar.',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#0284c7'
+        });
+        return;
+    }
+    
+    // Verificar se o perfil selecionado está bloqueado
+    if (pesoJogoSelected.getAttribute('data-bloqueado') === 'true') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Permissão Negada',
+            text: 'Você não tem permissão para usar este perfil. Por favor, selecione um perfil disponível no seu plano.',
+            confirmButtonText: 'OK',
+            confirmButtonColor: '#0284c7'
+        });
         return;
     }
     
@@ -433,11 +524,51 @@ function updateButtons() {
     const pesoJogoSelected = document.querySelector('input[name="perfil_peso_jogo"]:checked');
     
     if (nextBtn) {
-        nextBtn.disabled = !pesoJogoSelected;
+        // Desabilitar se não houver seleção ou se o perfil selecionado estiver bloqueado
+        const isBlocked = pesoJogoSelected && pesoJogoSelected.getAttribute('data-bloqueado') === 'true';
+        nextBtn.disabled = !pesoJogoSelected || isBlocked;
     }
 }
 
+// Função para verificar e corrigir perfil bloqueado selecionado
+function verificarPerfisBloqueados() {
+    // Verificar perfil de peso de jogo
+    const pesoJogoSelected = document.querySelector('input[name="perfil_peso_jogo"]:checked');
+    if (pesoJogoSelected && pesoJogoSelected.getAttribute('data-bloqueado') === 'true') {
+        // Selecionar o primeiro perfil disponível
+        const primeiroDisponivel = document.querySelector('input[name="perfil_peso_jogo"][data-bloqueado="false"]');
+        if (primeiroDisponivel) {
+            primeiroDisponivel.checked = true;
+            primeiroDisponivel.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    // Verificar perfil de peso SG
+    const pesoSgSelected = document.querySelector('input[name="perfil_peso_sg"]:checked');
+    if (pesoSgSelected && pesoSgSelected.getAttribute('data-bloqueado') === 'true') {
+        // Selecionar o primeiro perfil disponível
+        const primeiroDisponivel = document.querySelector('input[name="perfil_peso_sg"][data-bloqueado="false"]');
+        if (primeiroDisponivel) {
+            primeiroDisponivel.checked = true;
+            primeiroDisponivel.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    // Atualizar botões após correção
+    updateButtons();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Verificar e corrigir perfis bloqueados ao carregar a página
+    verificarPerfisBloqueados();
+    
+    // Adicionar listener para mudanças nos perfis
+    document.querySelectorAll('input[name="perfil_peso_jogo"], input[name="perfil_peso_sg"]').forEach(input => {
+        input.addEventListener('change', function() {
+            updateButtons();
+        });
+    });
+    
     // Verificar se há time selecionado
     async function verificarTimeSelecionado() {
         try {
@@ -485,21 +616,54 @@ document.addEventListener('DOMContentLoaded', function() {
         // Verificar novamente antes de submeter
         const temTime = await verificarTimeSelecionado();
         if (!temTime) {
-            alert('Por favor, selecione um time antes de configurar os perfis.');
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atenção',
+                text: 'Por favor, selecione um time antes de configurar os perfis.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#0284c7'
+            });
             return;
         }
         
-        // Verificar se ambos os perfis foram selecionados
+        // Verificar se ambos os perfis foram selecionados e não estão bloqueados
         const pesoJogoSelected = document.querySelector('input[name="perfil_peso_jogo"]:checked');
         const pesoSgSelected = document.querySelector('input[name="perfil_peso_sg"]:checked');
         
-        if (!pesoJogoSelected) {
-            alert('Por favor, selecione um perfil de Peso de Jogo.');
+        if (!pesoJogoSelected || !pesoSgSelected) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atenção',
+                text: 'Por favor, selecione ambos os perfis antes de continuar.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#0284c7'
+            });
+            e.preventDefault();
             return;
         }
         
-        if (!pesoSgSelected) {
-            alert('Por favor, selecione um perfil de Peso de Saldo de Gols.');
+        // Verificar se algum perfil selecionado está bloqueado
+        if (pesoJogoSelected.getAttribute('data-bloqueado') === 'true') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Permissão Negada',
+                text: 'Você não tem permissão para usar o perfil de peso de jogo selecionado. Por favor, selecione um perfil disponível no seu plano.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#0284c7'
+            });
+            e.preventDefault();
+            return;
+        }
+        
+        if (pesoSgSelected.getAttribute('data-bloqueado') === 'true') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Permissão Negada',
+                text: 'Você não tem permissão para usar o perfil de peso SG selecionado. Por favor, selecione um perfil disponível no seu plano.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#0284c7'
+            });
+            e.preventDefault();
             return;
         }
         

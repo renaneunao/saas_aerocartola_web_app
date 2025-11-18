@@ -25,13 +25,13 @@
     <a href="{{ url_for('modulo_individual', modulo='goleiro') }}" 
        id="modulo-goleiro"
        data-modulo="goleiro"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
         <!-- Badge de status (será atualizado via JS) -->
         <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
             <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
             PENDENTE
         </div>
-        <div class="p-6">
+        <div class="p-6 flex-1">
             <div class="flex items-center space-x-4 mb-4">
                 <div class="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
                     <i class="fas fa-hand-paper text-white text-xl"></i>
@@ -43,7 +43,7 @@
             </div>
             <p class="text-dark-blue-400 text-sm">Módulo específico para análise de goleiros com pesos personalizados</p>
         </div>
-        <div class="px-6 py-3 bg-gradient-to-r from-green-500/10 to-green-600/10 border-t border-green-500/20">
+        <div class="px-6 py-3 bg-gradient-to-r from-green-500/10 to-green-600/10 border-t border-green-500/20 mt-auto">
             <div class="flex items-center justify-between">
                 <span class="text-green-300 text-sm font-medium">Ver Análise</span>
                 <i class="fas fa-arrow-right text-green-400 group-hover:translate-x-1 transition-transform duration-300"></i>
@@ -55,7 +55,7 @@
     <a href="{{ url_for('modulo_individual', modulo='lateral') }}" 
        id="modulo-lateral"
        data-modulo="lateral"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
         <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
             <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
             PENDENTE
@@ -84,7 +84,7 @@
     <a href="{{ url_for('modulo_individual', modulo='zagueiro') }}" 
        id="modulo-zagueiro"
        data-modulo="zagueiro"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
         <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
             <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
             PENDENTE
@@ -113,7 +113,7 @@
     <a href="{{ url_for('modulo_individual', modulo='meia') }}" 
        id="modulo-meia"
        data-modulo="meia"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
         <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
             <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
             PENDENTE
@@ -142,7 +142,7 @@
     <a href="{{ url_for('modulo_individual', modulo='atacante') }}" 
        id="modulo-atacante"
        data-modulo="atacante"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
         <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
             <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
             PENDENTE
@@ -171,7 +171,7 @@
     <a href="{{ url_for('modulo_individual', modulo='treinador') }}" 
        id="modulo-treinador"
        data-modulo="treinador"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
+       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
         <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
             <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
             PENDENTE
@@ -197,50 +197,129 @@
     </a>
 
     <!-- Escalação Ideal -->
-    <a href="{{ url_for('modulo_escalacao_ideal') }}" 
-       id="modulo-escalacao-ideal"
-       class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative">
-        <!-- Badge de status DESMARCADO/LIBERADO -->
-        <div id="escalacao-status-badge" class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10 bg-gray-500/80 text-white">
-            <i class="fas fa-minus-circle mr-1"></i>
-            <span id="escalacao-status-text">DESMARCADO</span>
-        </div>
-        <!-- Overlay de bloqueio -->
-        <div id="escalacao-overlay" class="hidden absolute inset-0 bg-dark-blue-900/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6">
-            <i class="fas fa-exclamation-triangle text-yellow-400 text-4xl mb-4"></i>
-            <p class="text-white text-lg font-bold mb-2 text-center">Calcule todos os módulos primeiro</p>
-            <p class="text-dark-blue-300 text-sm text-center" id="modulos-pendentes-text">Faltam módulos a calcular</p>
-        </div>
-        <div class="p-6">
-            <div class="flex items-center space-x-4 mb-4">
-                <div class="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                    <i class="fas fa-trophy text-white text-xl"></i>
+    <div class="relative overflow-hidden rounded-2xl h-52">
+        {% if not permissions.verEscalacaoIdealCompleta %}
+        <a href="{{ url_for('pagamento.index') }}" 
+           id="modulo-escalacao-ideal"
+           class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative block bloqueado-plano h-full flex flex-col">
+            <!-- Badge de status DESMARCADO/LIBERADO -->
+            <div id="escalacao-status-badge" class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10 bg-gray-500/80 text-white" style="filter: blur(1px);">
+                <i class="fas fa-minus-circle mr-1"></i>
+                <span id="escalacao-status-text">DESMARCADO</span>
+            </div>
+            <!-- Overlay de bloqueio por módulos pendentes -->
+            <div id="escalacao-overlay" class="hidden absolute inset-0 bg-dark-blue-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 rounded-2xl">
+                <i class="fas fa-exclamation-triangle text-yellow-400 text-4xl mb-4"></i>
+                <p class="text-white text-lg font-bold mb-2 text-center">Calcule todos os módulos primeiro</p>
+                <p class="text-dark-blue-300 text-sm text-center" id="modulos-pendentes-text">Faltam módulos a calcular</p>
+            </div>
+            <div class="p-6 flex-1" style="filter: blur(1px);">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                        <i class="fas fa-trophy text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white group-hover:text-yellow-300 transition-colors duration-300">Escalação Ideal</h3>
+                        <p class="text-dark-blue-300 text-sm">Calcule seu time ideal</p>
+                    </div>
                 </div>
-                <div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-yellow-300 transition-colors duration-300">Escalação Ideal</h3>
-                    <p class="text-dark-blue-300 text-sm">Calcule seu time ideal</p>
+                <p class="text-dark-blue-400 text-sm">Calcule a escalação ideal baseada nos rankings de cada posição</p>
+            </div>
+            <div class="px-6 py-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border-t border-yellow-500/20 mt-auto" style="filter: blur(1px);">
+                <div class="flex items-center justify-between">
+                    <span class="text-yellow-300 text-sm font-medium">Calcular Escalação</span>
+                    <i class="fas fa-arrow-right text-yellow-400 group-hover:translate-x-1 transition-transform duration-300"></i>
                 </div>
             </div>
-            <p class="text-dark-blue-400 text-sm">Calcule a escalação ideal baseada nos rankings de cada posição</p>
-        </div>
-        <div class="px-6 py-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border-t border-yellow-500/20">
-            <div class="flex items-center justify-between">
-                <span class="text-yellow-300 text-sm font-medium">Calcular Escalação</span>
-                <i class="fas fa-arrow-right text-yellow-400 group-hover:translate-x-1 transition-transform duration-300"></i>
+            <span class="absolute bottom-2 right-2 bg-emerald-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
+        </a>
+        {% else %}
+        <a href="{{ url_for('modulo_escalacao_ideal') }}" 
+           id="modulo-escalacao-ideal"
+           class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative block h-full flex flex-col">
+            <!-- Badge de status DESMARCADO/LIBERADO -->
+            <div id="escalacao-status-badge" class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10 bg-gray-500/80 text-white">
+                <i class="fas fa-minus-circle mr-1"></i>
+                <span id="escalacao-status-text">DESMARCADO</span>
             </div>
-        </div>
-    </a>
+            <!-- Overlay de bloqueio por módulos pendentes -->
+            <div id="escalacao-overlay" class="hidden absolute inset-0 bg-dark-blue-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 rounded-2xl">
+                <i class="fas fa-exclamation-triangle text-yellow-400 text-4xl mb-4"></i>
+                <p class="text-white text-lg font-bold mb-2 text-center">Calcule todos os módulos primeiro</p>
+                <p class="text-dark-blue-300 text-sm text-center" id="modulos-pendentes-text">Faltam módulos a calcular</p>
+            </div>
+            <div class="p-6 flex-1">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                        <i class="fas fa-trophy text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white group-hover:text-yellow-300 transition-colors duration-300">Escalação Ideal</h3>
+                        <p class="text-dark-blue-300 text-sm">Calcule seu time ideal</p>
+                    </div>
+                </div>
+                <p class="text-dark-blue-400 text-sm">Calcule a escalação ideal baseada nos rankings de cada posição</p>
+            </div>
+            <div class="px-6 py-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border-t border-yellow-500/20 mt-auto">
+                <div class="flex items-center justify-between">
+                    <span class="text-yellow-300 text-sm font-medium">Calcular Escalação</span>
+                    <i class="fas fa-arrow-right text-yellow-400 group-hover:translate-x-1 transition-transform duration-300"></i>
+                </div>
+            </div>
+        </a>
+        {% endif %}
+    </div>
 
-</div>
+    <!-- Escalação Rápida -->
+    <div class="relative overflow-hidden rounded-2xl h-52">
+        {% if not permissions.podeEscalar %}
+        <a href="{{ url_for('pagamento.index') }}" 
+           class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative block w-full text-left h-full flex flex-col">
+            <div class="p-6 flex-1" style="filter: blur(1px);">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                        <i class="fas fa-bolt text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white group-hover:text-green-300 transition-colors duration-300">⚡ Escalação Rápida</h3>
+                        <p class="text-dark-blue-300 text-sm">Calcule e escale automaticamente</p>
+                    </div>
+                </div>
+                <p class="text-dark-blue-400 text-sm">Calcule todos os rankings e escale o time no Cartola automaticamente</p>
+            </div>
+            <div class="px-6 py-3 bg-gradient-to-r from-green-500/10 to-emerald-600/10 border-t border-green-500/20 mt-auto" style="filter: blur(1px);">
+                <div class="flex items-center justify-between">
+                    <span class="text-green-300 text-sm font-medium">Executar Escalação</span>
+                    <i class="fas fa-arrow-right text-green-400 group-hover:translate-x-1 transition-transform duration-300"></i>
+                </div>
+            </div>
+            <span class="absolute bottom-2 right-2 bg-emerald-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
+        </a>
+        {% else %}
+        <button id="escalacaoRapidaBtn" 
+                class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative block w-full text-left h-full flex flex-col">
+            <div class="p-6 flex-1">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
+                        <i class="fas fa-bolt text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white group-hover:text-green-300 transition-colors duration-300">⚡ Escalação Rápida</h3>
+                        <p class="text-dark-blue-300 text-sm">Calcule e escale automaticamente</p>
+                    </div>
+                </div>
+                <p class="text-dark-blue-400 text-sm">Calcule todos os rankings e escale o time no Cartola automaticamente</p>
+            </div>
+            <div class="px-6 py-3 bg-gradient-to-r from-green-500/10 to-emerald-600/10 border-t border-green-500/20 mt-auto">
+                <div class="flex items-center justify-between">
+                    <span class="text-green-300 text-sm font-medium">Executar Escalação</span>
+                    <i class="fas fa-arrow-right text-green-400 group-hover:translate-x-1 transition-transform duration-300"></i>
+                </div>
+            </div>
+        </button>
+        {% endif %}
+    </div>
 
-<!-- Botão de Escalação Rápida -->
-<div class="mt-8 mb-6 flex justify-center">
-    <button id="escalacaoRapidaBtn" 
-            class="group bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 flex items-center space-x-3">
-        <i class="fas fa-bolt text-2xl"></i>
-        <span class="text-lg">⚡ Escalação Rápida</span>
-        <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform duration-300"></i>
-    </button>
 </div>
 
 <!-- Info Section -->
@@ -415,14 +494,20 @@
             const escalacaoStatusText = document.getElementById('escalacao-status-text');
             const modulosPendentesText = document.getElementById('modulos-pendentes-text');
             
-            if (data.todos_calculados) {
+            // Verificar se há bloqueio por plano - se tem a classe bloqueado-plano, está bloqueado
+            const temPermissaoPlano = escalacaoCard && !escalacaoCard.classList.contains('bloqueado-plano');
+            
+            if (!temPermissaoPlano) {
+                // Bloqueado por plano - não fazer nada, o HTML já está configurado corretamente
+                return; // Não verificar status de módulos se estiver bloqueado por plano
+            } else if (data.todos_calculados) {
                 // LIBERADO - badge verde com visto
                 escalacaoOverlay.classList.add('hidden');
                 escalacaoBadge.className = 'absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
                 escalacaoStatusText.innerHTML = '<i class="fas fa-check-circle mr-1"></i>LIBERADO';
                 escalacaoCard.style.cursor = 'pointer';
             } else {
-                // DESMARCADO - badge cinza
+                // DESMARCADO - badge cinza (módulos pendentes)
                 escalacaoOverlay.classList.remove('hidden');
                 escalacaoBadge.className = 'absolute top-3 right-3 bg-gray-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
                 escalacaoStatusText.innerHTML = '<i class="fas fa-minus-circle mr-1"></i>DESMARCADO';

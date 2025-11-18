@@ -443,7 +443,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const btn = document.getElementById('escalacaoRapidaBtn');
     if (!btn) return;
     
+    // Verificar se o botão está desabilitado (sem permissão)
+    if (btn.disabled) {
+        return; // Não adicionar event listener se estiver desabilitado
+    }
+    
     btn.addEventListener('click', async function() {
+        // Verificação de segurança adicional
+        if (btn.disabled) {
+            return;
+        }
+        
         // Confirmar ação
         const confirmado = await showConfirm(
             'Deseja executar a Escalação Rápida?\n\n' +

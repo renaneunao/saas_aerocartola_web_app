@@ -46,10 +46,27 @@ async function carregarCardsTop5() {
 }
 
 /**
- * Exibe as informações do time (patrimônio, rodada, team ID)
+ * Exibe as informações do time (patrimônio, rodada, nome e escudo do time)
  */
 function exibirInfoInicial(data) {
     const container = document.getElementById('infoInicialContent');
+    
+    // Preparar escudo do time
+    let teamShieldHtml = '';
+    const hasShield = data.team_shield_url && data.team_shield_url.trim() !== '';
+    
+    if (hasShield) {
+        // Remover /45x45.png ou /60x60.png para pegar versão original de alta res
+        let highResUrl = data.team_shield_url;
+        if (highResUrl.includes('/45x45.png')) {
+            highResUrl = highResUrl.replace('/45x45.png', '');
+        } else if (highResUrl.includes('/60x60.png')) {
+            highResUrl = highResUrl.replace('/60x60.png', '');
+        }
+        teamShieldHtml = `<img src="${highResUrl}" alt="Escudo" class="w-10 h-10 rounded-lg border-2 border-white/20 shadow-lg team-shield-img" style="object-fit: contain; image-rendering: -webkit-optimize-contrast;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
+    }
+    
+    const teamName = data.team_name || `Time #${data.team_id || 'N/A'}`;
     
     container.innerHTML = `
         <div class="flex items-center gap-3 bg-dark-blue-800/30 rounded-lg px-4 py-3 border border-dark-blue-700">
@@ -68,10 +85,13 @@ function exibirInfoInicial(data) {
             </div>
         </div>
         <div class="flex items-center gap-3 bg-dark-blue-800/30 rounded-lg px-4 py-3 border border-dark-blue-700">
-            <i class="fas fa-shield-alt text-green-400 text-xl"></i>
+            ${teamShieldHtml}
+            <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg flex items-center justify-center team-shield-fallback" style="${hasShield ? 'display: none;' : ''}">
+                <i class="fas fa-futbol text-white text-lg"></i>
+            </div>
             <div>
-                <span class="text-gray-300 text-sm">Time ID</span>
-                <p class="text-white font-semibold text-lg">${data.team_id || 'N/A'}</p>
+                <span class="text-gray-300 text-sm">Time</span>
+                <p class="text-white font-semibold text-lg">${teamName}</p>
             </div>
         </div>
     `;

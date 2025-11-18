@@ -20,6 +20,10 @@ from models.users import (
 )
 from models.teams import get_all_user_teams, create_team, get_team, update_team
 
+# Registrar Blueprints
+from routes.pagamento import pagamento_bp
+app.register_blueprint(pagamento_bp)
+
 # Timezone: Brasília (America/Sao_Paulo)
 try:
     from zoneinfo import ZoneInfo
@@ -91,15 +95,35 @@ def get_current_user():
     
     try:
         cursor = conn.cursor()
+        # Verificar se a coluna plano existe
         cursor.execute('''
-            SELECT id, username, email, full_name, is_active, is_admin
-            FROM acw_users
-            WHERE id = %s AND is_active = TRUE
-        ''', (user_id,))
+            SELECT EXISTS (
+                SELECT FROM information_schema.columns 
+                WHERE table_schema = 'public' 
+                AND table_name = 'acw_users'
+                AND column_name = 'plano'
+            )
+        ''')
+        tem_coluna_plano = cursor.fetchone()[0]
+        
+        if tem_coluna_plano:
+            cursor.execute('''
+                SELECT id, username, email, full_name, is_active, is_admin, plano
+                FROM acw_users
+                WHERE id = %s AND is_active = TRUE
+            ''', (user_id,))
+        else:
+            cursor.execute('''
+                SELECT id, username, email, full_name, is_active, is_admin
+                FROM acw_users
+                WHERE id = %s AND is_active = TRUE
+            ''', (user_id,))
+        
         row = cursor.fetchone()
         if not row:
             return None
-        return {
+        
+        user_data = {
             'id': row[0],
             'username': row[1],
             'email': row[2],
@@ -107,6 +131,14 @@ def get_current_user():
             'is_active': row[4],
             'is_admin': row[5]
         }
+        
+        # Adicionar plano se a coluna existir
+        if tem_coluna_plano and len(row) > 6:
+            user_data['plano'] = row[6] or 'free'
+        else:
+            user_data['plano'] = 'free'
+        
+        return user_data
     except Exception as e:
         print(f"Erro ao buscar usuário: {e}")
         return None
@@ -121,8 +153,32 @@ def logout_user():
 def inject_user():
     """Injeta variáveis globais em todos os templates"""
     user = get_current_user()
+    
+    # Buscar permissões do plano se o usuário estiver logado
+    permissions = None
+    plan_key = 'free'
+    if user:
+        from utils.permissions import get_user_permissions
+        try:
+            user_perms = get_user_permissions(user['id'])
+            permissions = user_perms['permissions']
+            plan_key = user_perms['planKey']
+        except Exception as e:
+            print(f"Erro ao buscar permissões: {e}")
+            # Se der erro, usar permissões do plano free
+            from models.plans import PLANS_CONFIG
+            permissions = PLANS_CONFIG['free'].copy()
+            plan_key = 'free'
+    else:
+        # Usuário não logado - usar permissões do plano free
+        from models.plans import PLANS_CONFIG
+        permissions = PLANS_CONFIG['free'].copy()
+        plan_key = 'free'
+    
     return {
-        'current_user': user
+        'current_user': user,
+        'permissions': permissions,
+        'plan_key': plan_key
     }
 
 # ========================================
@@ -631,14 +687,43 @@ def pagina_inicial():
     finally:
         close_db_connection(conn)
     
+    # Limitar perfis baseado no plano do usuário
+    from models.plans import get_max_perfis_jogo, get_max_perfis_sg
+    max_perfis_jogo = get_max_perfis_jogo(user['id'])
+    max_perfis_sg = get_max_perfis_sg(user['id'])
+    
+    # Filtrar perfis de jogo
+    perfis_peso_jogo_limitados = []
+    for i, perfil in enumerate(perfis_peso_jogo):
+        if i < max_perfis_jogo:
+            perfis_peso_jogo_limitados.append(perfil)
+        else:
+            # Adicionar perfil bloqueado (com flag)
+            perfil_bloqueado = perfil.copy()
+            perfil_bloqueado['bloqueado'] = True
+            perfis_peso_jogo_limitados.append(perfil_bloqueado)
+    
+    # Filtrar perfis de SG
+    perfis_peso_sg_limitados = []
+    for i, perfil in enumerate(perfis_peso_sg):
+        if i < max_perfis_sg:
+            perfis_peso_sg_limitados.append(perfil)
+        else:
+            # Adicionar perfil bloqueado (com flag)
+            perfil_bloqueado = perfil.copy()
+            perfil_bloqueado['bloqueado'] = True
+            perfis_peso_sg_limitados.append(perfil_bloqueado)
+    
     return render_template(
         'pagina_inicial.html',
         current_user=user,
-        perfis_peso_jogo=perfis_peso_jogo,
-        perfis_peso_sg=perfis_peso_sg,
+        perfis_peso_jogo=perfis_peso_jogo_limitados,
+        perfis_peso_sg=perfis_peso_sg_limitados,
         clubes_dict=clubes_dict,
         rodada_atual=rodada_atual,
-        config_default=config_default
+        config_default=config_default,
+        max_perfis_jogo=max_perfis_jogo,
+        max_perfis_sg=max_perfis_sg
     )
 
 @app.route('/salvar-configuracao-perfis', methods=['POST'])
@@ -683,14 +768,27 @@ def credenciais():
     
     from models.teams import get_all_user_teams, create_teams_table
     from api_cartola import fetch_team_info_by_team_id
+    from models.plans import get_max_times
+    
     conn = get_db_connection()
     try:
         create_teams_table(conn)
         all_times = get_all_user_teams(conn, user['id'])
         
+        # Buscar limite de times do plano
+        max_times = get_max_times(user['id'])
+        total_times = len(all_times)
+        
         # Buscar escudos dinamicamente para cada time
-        for time in all_times:
+        for i, time in enumerate(all_times):
             time['team_shield_url'] = None
+            time['token_error'] = False
+            # Marcar times além do limite como bloqueados
+            if i >= max_times:
+                time['bloqueado'] = True
+            else:
+                time['bloqueado'] = False
+                
             try:
                 team_info = fetch_team_info_by_team_id(conn, time['id'])
                 if team_info and 'time' in team_info and isinstance(team_info['time'], dict):
@@ -702,12 +800,18 @@ def credenciais():
                         time['team_shield_url'] = time_data['url_escudo_svg']
                     elif 'foto_perfil' in time_data:
                         time['team_shield_url'] = time_data['foto_perfil']
+                elif team_info is None:
+                    # Se team_info é None, provavelmente houve erro de token (401)
+                    time['token_error'] = True
             except Exception as e:
                 print(f"Erro ao buscar escudo do time {time['id']}: {e}")
+                # Se o erro for relacionado a token, marcar como erro de token
+                if '401' in str(e) or 'token' in str(e).lower():
+                    time['token_error'] = True
     finally:
         close_db_connection(conn)
     
-    return render_template('credenciais.html', current_user=user, all_times=all_times)
+    return render_template('credenciais.html', current_user=user, all_times=all_times, max_times=max_times, total_times=total_times)
 
 @app.route('/credenciais/editar/<int:time_id>', methods=['GET', 'POST'])
 @login_required
@@ -2974,7 +3078,19 @@ def modulo_escalacao_ideal():
     if not team_id:
         flash('Selecione um time primeiro na sidebar para calcular a escalação ideal', 'warning')
         return redirect(url_for('modulos'))
-    return render_template('modulo_escalacao_ideal.html')
+    
+    # Buscar permissões do usuário
+    from utils.permissions import get_user_permissions
+    from models.plans import check_permission
+    user = get_current_user()
+    permissions = get_user_permissions(user['id'])
+    
+    # Se não tiver permissão para ver escalação ideal (usuário Free), redirecionar para upgrade
+    if not check_permission(user['id'], 'verEscalacaoIdealCompleta'):
+        flash('A Escalação Ideal está disponível apenas no plano Avançado ou Pro. Faça upgrade para acessar!', 'warning')
+        return redirect(url_for('pagamento.index'))
+    
+    return render_template('modulo_escalacao_ideal.html', permissions=permissions['permissions'])
 
 @app.route('/api/credenciais/lista')
 @login_required
@@ -2998,29 +3114,49 @@ def api_credenciais_lista():
         # Buscar escudos dinamicamente para cada time
         from api_cartola import fetch_team_info_by_team_id
         times_list = []
-        for time in times:
+        for idx, time in enumerate(times):
             team_shield_url = None
+            token_error = False
             try:
+                print(f"[DEBUG API] Buscando escudo do time {idx + 1}/{len(times)}: ID={time['id']}, Nome={time.get('team_name', 'N/A')}")
                 team_info = fetch_team_info_by_team_id(conn, time['id'])
                 if team_info and 'time' in team_info and isinstance(team_info['time'], dict):
                     time_data = team_info['time']
                     # Priorizar url_escudo_png, depois url_escudo_svg, depois foto_perfil
-                    if 'url_escudo_png' in time_data:
+                    if 'url_escudo_png' in time_data and time_data['url_escudo_png']:
                         team_shield_url = time_data['url_escudo_png']
-                    elif 'url_escudo_svg' in time_data:
+                        print(f"[DEBUG API] Time {time['id']}: Escudo encontrado (url_escudo_png): {team_shield_url}")
+                    elif 'url_escudo_svg' in time_data and time_data['url_escudo_svg']:
                         team_shield_url = time_data['url_escudo_svg']
-                    elif 'foto_perfil' in time_data:
+                        print(f"[DEBUG API] Time {time['id']}: Escudo encontrado (url_escudo_svg): {team_shield_url}")
+                    elif 'foto_perfil' in time_data and time_data['foto_perfil']:
                         team_shield_url = time_data['foto_perfil']
+                        print(f"[DEBUG API] Time {time['id']}: Escudo encontrado (foto_perfil): {team_shield_url}")
+                    else:
+                        print(f"[DEBUG API] Time {time['id']}: Nenhum escudo encontrado na resposta. Chaves disponíveis: {list(time_data.keys())}")
+                elif team_info is None:
+                    # Se team_info é None, provavelmente houve erro de token (401)
+                    print(f"[DEBUG API] Time {time['id']}: team_info é None - provável erro de token (401)")
+                    token_error = True
+                else:
+                    print(f"[DEBUG API] Time {time['id']}: Resposta inválida ou sem 'time'. team_info: {team_info}")
             except Exception as e:
-                print(f"Erro ao buscar escudo do time {time['id']}: {e}")
+                print(f"[DEBUG API] Erro ao buscar escudo do time {time['id']}: {e}")
+                import traceback
+                traceback.print_exc()
+                # Se o erro for relacionado a token, marcar como erro de token
+                if '401' in str(e) or 'token' in str(e).lower():
+                    token_error = True
             
             times_list.append({
                 'id': time['id'],
                 'team_name': time['team_name'] or f"Time {time['id']}",
                 'team_shield_url': team_shield_url,
+                'token_error': token_error,  # Indicador de erro de token
                 'created_at': time['created_at'].isoformat() if time['created_at'] else None,
                 'selected': time['id'] == selected_id
             })
+            print(f"[DEBUG API] Time {time['id']} adicionado à lista com shield_url: {team_shield_url}, token_error: {token_error}")
         
         return jsonify({
             'times': times_list,
@@ -3078,31 +3214,94 @@ def api_time_escudo(team_id):
         from models.teams import get_team
         from api_cartola import fetch_team_info_by_team_id
         
+        print(f"[DEBUG API] /api/time/{team_id}/escudo - Buscando escudo para time {team_id}")
+        
+        # Verificar se o time pertence ao usuário
+        team = get_team(conn, team_id, user['id'])
+        if not team:
+            print(f"[DEBUG API] Time {team_id} não encontrado ou não pertence ao usuário {user['id']}")
+            return jsonify({'error': 'Time não encontrado ou não pertence ao usuário'}), 404
+        
+        print(f"[DEBUG API] Time {team_id} encontrado: {team.get('team_name', 'N/A')}")
+        
+        # Buscar informações do time
+        team_info = fetch_team_info_by_team_id(conn, team_id)
+        print(f"[DEBUG API] Resposta fetch_team_info_by_team_id para time {team_id}:", team_info is not None)
+        
+        if not team_info or 'time' not in team_info:
+            print(f"[DEBUG API] Time {team_id}: Resposta inválida ou sem 'time'. team_info: {team_info}")
+            # Se team_info é None, provavelmente houve erro de token (401)
+            if team_info is None:
+                return jsonify({'team_shield_url': None, 'token_error': True})
+            return jsonify({'team_shield_url': None, 'token_error': False})
+        
+        time_data = team_info['time']
+        print(f"[DEBUG API] Time {team_id}: Chaves disponíveis em time_data: {list(time_data.keys()) if isinstance(time_data, dict) else 'N/A'}")
+        
+        team_shield_url = None
+        
+        # Priorizar url_escudo_png, depois url_escudo_svg, depois foto_perfil
+        if 'url_escudo_png' in time_data and time_data['url_escudo_png']:
+            team_shield_url = time_data['url_escudo_png']
+            print(f"[DEBUG API] Time {team_id}: Escudo encontrado (url_escudo_png): {team_shield_url}")
+        elif 'url_escudo_svg' in time_data and time_data['url_escudo_svg']:
+            team_shield_url = time_data['url_escudo_svg']
+            print(f"[DEBUG API] Time {team_id}: Escudo encontrado (url_escudo_svg): {team_shield_url}")
+        elif 'foto_perfil' in time_data and time_data['foto_perfil']:
+            team_shield_url = time_data['foto_perfil']
+            print(f"[DEBUG API] Time {team_id}: Escudo encontrado (foto_perfil): {team_shield_url}")
+        else:
+            print(f"[DEBUG API] Time {team_id}: Nenhum escudo encontrado. url_escudo_png: {time_data.get('url_escudo_png')}, url_escudo_svg: {time_data.get('url_escudo_svg')}, foto_perfil: {time_data.get('foto_perfil')}")
+        
+        return jsonify({'team_shield_url': team_shield_url, 'token_error': False})
+    except Exception as e:
+        print(f"[DEBUG API] Erro ao buscar escudo do time {team_id}: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        close_db_connection(conn)
+
+@app.route('/api/time/excluir/<int:team_id>', methods=['DELETE'])
+@login_required
+def api_excluir_time(team_id):
+    """API para excluir um time"""
+    user = get_current_user()
+    conn = get_db_connection()
+    
+    try:
+        from models.teams import get_team, delete_team
+        
         # Verificar se o time pertence ao usuário
         team = get_team(conn, team_id, user['id'])
         if not team:
             return jsonify({'error': 'Time não encontrado ou não pertence ao usuário'}), 404
         
-        # Buscar informações do time
-        team_info = fetch_team_info_by_team_id(conn, team_id)
+        # Verificar se é o último time do usuário
+        from models.teams import get_all_user_teams
+        all_teams = get_all_user_teams(conn, user['id'])
+        if len(all_teams) <= 1:
+            return jsonify({'error': 'Não é possível excluir o último time. Você precisa ter pelo menos um time associado.'}), 400
         
-        if not team_info or 'time' not in team_info:
-            return jsonify({'team_shield_url': None})
+        # Verificar se é o time selecionado
+        selected_team_id = session.get('selected_team_id')
+        if selected_team_id == team_id:
+            # Selecionar outro time antes de excluir
+            other_teams = [t for t in all_teams if t['id'] != team_id]
+            if other_teams:
+                session['selected_team_id'] = other_teams[0]['id']
         
-        time_data = team_info['time']
-        team_shield_url = None
+        # Excluir o time
+        deleted = delete_team(conn, team_id, user['id'])
         
-        # Priorizar url_escudo_png, depois url_escudo_svg, depois foto_perfil
-        if 'url_escudo_png' in time_data:
-            team_shield_url = time_data['url_escudo_png']
-        elif 'url_escudo_svg' in time_data:
-            team_shield_url = time_data['url_escudo_svg']
-        elif 'foto_perfil' in time_data:
-            team_shield_url = time_data['foto_perfil']
-        
-        return jsonify({'team_shield_url': team_shield_url})
+        if deleted:
+            return jsonify({'success': True, 'message': 'Time excluído com sucesso!'})
+        else:
+            return jsonify({'error': 'Erro ao excluir time'}), 500
+            
     except Exception as e:
-        print(f"Erro ao buscar escudo do time: {e}")
+        conn.rollback()
+        print(f"Erro ao excluir time: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
@@ -3411,11 +3610,30 @@ def api_escalacao_dados():
         from models.user_escalacao_config import get_user_escalacao_config
         escalacao_config = get_user_escalacao_config(conn, user['id'], team_id)
         
-        # Buscar time para obter patrimônio
+        # Buscar time para obter patrimônio e informações
         from models.teams import get_team
+        from api_cartola import fetch_team_info_by_team_id
         team_data_db = None
+        team_name = None
+        team_shield_url = None
+        
         if team_id:
             team_data_db = get_team(conn, team_id, user['id'])
+            # Buscar nome e escudo do time
+            try:
+                team_info = fetch_team_info_by_team_id(conn, team_id)
+                if team_info and 'time' in team_info and isinstance(team_info['time'], dict):
+                    time_data = team_info['time']
+                    team_name = time_data.get('nome', None) or time_data.get('nome_cartola', None)
+                    # Priorizar url_escudo_png, depois url_escudo_svg, depois foto_perfil
+                    if 'url_escudo_png' in time_data:
+                        team_shield_url = time_data['url_escudo_png']
+                    elif 'url_escudo_svg' in time_data:
+                        team_shield_url = time_data['url_escudo_svg']
+                    elif 'foto_perfil' in time_data:
+                        team_shield_url = time_data['foto_perfil']
+            except Exception as e:
+                print(f"Erro ao buscar informações do time {team_id}: {e}")
         
         # Buscar patrimônio via API do Cartola
         patrimonio = 0
@@ -3593,6 +3811,8 @@ def api_escalacao_dados():
         
         response_data = {
             'team_id': team_id,
+            'team_name': team_name,
+            'team_shield_url': team_shield_url,
             'rodada_atual': rodada_atual,
             'rankings_por_posicao': rankings_por_posicao,
             'todos_goleiros': todos_goleiros,  # Lista completa de goleiros para hack
@@ -3937,6 +4157,63 @@ def api_escalar_time():
         return jsonify({'error': str(e)}), 500
     finally:
         close_db_connection(conn)
+
+@app.route('/api/user/permissions')
+@login_required
+def api_user_permissions():
+    """API para retornar permissões do usuário baseadas no plano"""
+    from utils.permissions import get_user_permissions
+    user = get_current_user()
+    if not user:
+        return jsonify({'error': 'Usuário não autenticado'}), 401
+    
+    permissions = get_user_permissions(user['id'])
+    return jsonify(permissions)
+
+@app.route('/admin/planos')
+@login_required
+def admin_planos():
+    """Página de administração de planos (apenas para admins)"""
+    user = get_current_user()
+    if not user or not user.get('is_admin', False):
+        flash('Você precisa ser administrador para acessar esta página.', 'error')
+        return redirect(url_for('index'))
+    
+    return render_template('admin_planos.html')
+
+@app.route('/admin/classes')
+@login_required
+def admin_classes():
+    """Página para visualizar as classes de planos (apenas para admins)"""
+    user = get_current_user()
+    if not user or not user.get('is_admin', False):
+        flash('Você precisa ser administrador para acessar esta página.', 'error')
+        return redirect(url_for('index'))
+    
+    from models.plans import PLANS_CONFIG
+    return render_template('admin_classes.html', plans_config=PLANS_CONFIG)
+
+@app.route('/api/admin/alterar-plano', methods=['POST'])
+@login_required
+def api_admin_alterar_plano():
+    """API para alterar plano do próprio usuário (apenas para admins)"""
+    from models.plans import set_user_plan
+    from flask import request
+    
+    user = get_current_user()
+    if not user or not user.get('is_admin', False):
+        return jsonify({'success': False, 'error': 'Acesso negado'}), 403
+    
+    data = request.get_json()
+    plano = data.get('plano')
+    
+    if not plano or plano not in ['free', 'avancado', 'pro']:
+        return jsonify({'success': False, 'error': 'Plano inválido'}), 400
+    
+    if set_user_plan(user['id'], plano, motivo='Alteração via painel admin'):
+        return jsonify({'success': True, 'message': f'Plano alterado para {plano}'})
+    else:
+        return jsonify({'success': False, 'error': 'Erro ao alterar plano'}), 500
 
 @app.route('/health')
 def health_check():

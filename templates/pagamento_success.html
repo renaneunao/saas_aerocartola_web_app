@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Assinatura Confirmada - Cartola Manager{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-gradient-to-br from-dark-blue-800 to-dark-blue-900 rounded-xl shadow-2xl border border-green-500/50 overflow-hidden">
+        <div class="p-8 text-center">
+            <div class="mb-6">
+                <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check text-3xl text-white"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-white mb-2">✅ Assinatura Confirmada!</h2>
+                <p class="text-dark-blue-300 text-lg">Sua assinatura do Aero Cartola foi ativada com sucesso.</p>
+            </div>
+
+            <div class="bg-dark-blue-700/50 rounded-lg p-6 mb-6">
+                <p class="text-dark-blue-200 mb-4">
+                    Obrigado por assinar! Agora você tem acesso completo a todas as funcionalidades do Cartola Manager.
+                </p>
+                <p class="text-dark-blue-300 text-sm">
+                    Você receberá um email de confirmação em breve com os detalhes da sua assinatura.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <form action="{{ url_for('pagamento.customer_portal') }}" method="POST" class="inline-block">
+                    <input type="hidden" id="session-id" name="session_id" value="{{ session_id }}" />
+                    <button type="submit" class="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 px-8 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-cog mr-2"></i>
+                        Gerenciar Assinatura
+                    </button>
+                </form>
+                
+                <div>
+                    <a href="{{ url_for('index') }}" class="text-dark-blue-300 hover:text-white transition-colors duration-200 inline-flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar para o Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

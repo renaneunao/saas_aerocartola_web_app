@@ -16,21 +16,25 @@
 </div>
 
 <div class="max-w-6xl mx-auto">
-    <!-- Botão para adicionar novo time -->
-    <div class="mb-6 flex justify-end">
-        <a href="{{ url_for('associar_credenciais') }}" 
-           class="inline-flex items-center space-x-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg">
-            <i class="fas fa-plus"></i>
-            <span>Adicionar Novo Time</span>
-        </a>
-    </div>
-
     {% if all_times and all_times|length > 0 %}
     <!-- Lista de Times -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for time in all_times %}
-        <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 {% if session.get('selected_team_id') == time.id %}ring-2 ring-blue-500{% endif %}">
-            <div class="bg-gradient-to-r from-orange-700/80 to-orange-800/80 p-4 border-b border-dark-blue-700/50">
+        <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 {% if session.get('selected_team_id') == time.id %}ring-2 ring-blue-500{% endif %} relative {% if time.get('bloqueado') %}overflow-hidden{% endif %} flex flex-col h-full">
+            {% if time.get('token_error') %}
+            <!-- Badge de erro de token -->
+            <div class="absolute top-2 right-2 z-40 bg-red-600 text-white text-[9px] px-2 py-1 rounded-full font-bold shadow-lg flex items-center space-x-1" title="Erro de autenticação. Tente atualizar o token ou remover e adicionar o time novamente.">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Erro</span>
+            </div>
+            {% endif %}
+            {% if time.get('bloqueado') %}
+            <!-- Overlay de bloqueio -->
+            <div class="absolute inset-0 bg-dark-blue-900/80 backdrop-blur-sm z-30 flex items-center justify-center pointer-events-none">
+                <span class="bg-emerald-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-lg">Upgrade</span>
+            </div>
+            {% endif %}
+            <div class="bg-gradient-to-r from-orange-700/80 to-orange-800/80 p-4 border-b border-dark-blue-700/50" {% if time.get('bloqueado') %}style="filter: blur(1px);"{% endif %}>
                 <div class="flex items-center justify-between">
                     <div class="flex items-center space-x-3">
                         {% if time.team_shield_url %}
@@ -58,29 +62,7 @@
                 </div>
             </div>
 
-            <div class="p-4 space-y-3">
-                <!-- Access Token -->
-                <div>
-                    <label class="block text-xs font-medium text-dark-blue-400 mb-1">
-                        <i class="fas fa-key text-green-400 mr-1"></i>
-                        Access Token
-                    </label>
-                    <div class="bg-dark-blue-800/30 rounded-lg p-2">
-                        <code class="text-green-300 text-xs break-all">{{ time.access_token[:30] }}...</code>
-                    </div>
-                </div>
-
-                <!-- Refresh Token -->
-                <div>
-                    <label class="block text-xs font-medium text-dark-blue-400 mb-1">
-                        <i class="fas fa-sync text-blue-400 mr-1"></i>
-                        Refresh Token
-                    </label>
-                    <div class="bg-dark-blue-800/30 rounded-lg p-2">
-                        <code class="text-blue-300 text-xs break-all">{{ time.refresh_token[:30] }}...</code>
-                    </div>
-                </div>
-
+            <div class="p-4 space-y-3 flex-1" {% if time.get('bloqueado') %}style="filter: blur(1px);"{% endif %}>
                 <!-- Timestamps -->
                 <div class="grid grid-cols-2 gap-2 pt-2 border-t border-dark-blue-700/50">
                     <div>
@@ -99,30 +81,92 @@
 
                 <!-- Ações -->
                 <div class="flex flex-col space-y-2 pt-2 border-t border-dark-blue-700/50">
-                    <div class="flex space-x-2">
-                        {% if session.get('selected_team_id') != time.id %}
-                        <button onclick="selecionarTime({{ time.id }})" 
-                                class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1">
-                            <i class="fas fa-check"></i>
-                            <span>Selecionar</span>
-                        </button>
-                        {% endif %}
-                        <a href="{{ url_for('editar_credenciais', time_id=time.id) }}" 
-                           class="flex-1 bg-dark-blue-700 hover:bg-dark-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1">
-                            <i class="fas fa-edit"></i>
-                            <span>Editar</span>
-                        </a>
-                    </div>
+                    {% if not time.get('bloqueado') %}
                     <button onclick="atualizarTokens({{ time.id }})" 
                             id="btn-atualizar-{{ time.id }}"
                             class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1">
                         <i class="fas fa-sync-alt"></i>
                         <span>Atualizar Token</span>
                     </button>
+                    {% else %}
+                    <div class="flex space-x-2">
+                        <button disabled class="flex-1 bg-gray-600 text-gray-400 px-3 py-2 rounded-lg text-sm font-medium cursor-not-allowed flex items-center justify-center space-x-1">
+                            <i class="fas fa-lock"></i>
+                            <span>Bloqueado</span>
+                        </button>
+                    </div>
+                    {% endif %}
+                    {% if time.get('token_error') %}
+                    <div class="bg-red-900/30 border border-red-500/50 rounded-lg p-2 text-xs text-red-300">
+                        <p class="font-semibold mb-1"><i class="fas fa-exclamation-circle mr-1"></i>Erro de Autenticação</p>
+                        <p class="text-red-400">Tente atualizar o token ou remover e adicionar o time novamente por conta de algum erro no Cartola.</p>
+                    </div>
+                    {% endif %}
+                    {% set time_display_name = time.team_name if time.team_name else 'Time #' ~ time.id|string %}
+                    <button onclick="excluirTime({{ time.id }}, '{{ time_display_name }}')" 
+                            id="btn-excluir-{{ time.id }}"
+                            class="w-full bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1">
+                        <i class="fas fa-trash"></i>
+                        <span>Excluir Time</span>
+                    </button>
                 </div>
             </div>
         </div>
         {% endfor %}
+        
+        <!-- Card de Adicionar Novo Time -->
+        {% if total_times >= max_times %}
+        <div class="relative overflow-hidden rounded-2xl">
+            <a href="{{ url_for('pagamento.index') }}" 
+               class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 relative block h-full flex flex-col">
+                <div class="bg-gradient-to-r from-green-700/80 to-green-800/80 p-4 border-b border-dark-blue-700/50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg flex items-center justify-center">
+                                <i class="fas fa-plus text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-white">Adicionar Novo Time</h3>
+                                <p class="text-green-200 text-xs">Adicione mais times ao seu perfil</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 space-y-3 flex-1">
+                    <div>
+                        <p class="text-dark-blue-300 text-sm">Você atingiu o limite de times do seu plano atual.</p>
+                        <p class="text-dark-blue-400 text-xs mt-2">Faça upgrade para adicionar mais times.</p>
+                    </div>
+                </div>
+                <span class="absolute bottom-2 right-2 bg-emerald-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
+            </a>
+        </div>
+        {% else %}
+        <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 relative block h-full flex flex-col">
+            <a href="{{ url_for('associar_credenciais') }}" 
+               class="group h-full flex flex-col">
+                <div class="bg-gradient-to-r from-green-700/80 to-green-800/80 p-4 border-b border-dark-blue-700/50">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <i class="fas fa-plus text-white text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-white group-hover:text-green-300 transition-colors duration-300">Adicionar Novo Time</h3>
+                                <p class="text-green-200 text-xs">Adicione mais times ao seu perfil</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 space-y-3 flex-1 flex items-center justify-center">
+                    <div class="text-center">
+                        <i class="fas fa-plus-circle text-green-400 text-4xl mb-2"></i>
+                        <p class="text-dark-blue-300 text-sm font-medium">Clique para adicionar</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endif %}
     </div>
     {% else %}
     <!-- Nenhuma Credencial -->
@@ -197,6 +241,56 @@ async function atualizarTokens(timeId) {
     } catch (error) {
         console.error('Erro ao atualizar tokens:', error);
         showAlert('Erro ao atualizar tokens', 'Erro de Conexão', 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    } finally {
+        hideLoader();
+    }
+}
+
+async function excluirTime(timeId, teamName) {
+    const confirmado = await showConfirm(
+        `Tem certeza que deseja excluir o time "${teamName}"? Esta ação não pode ser desfeita.`,
+        '🗑️ Excluir Time',
+        {
+            confirmText: 'Sim, excluir',
+            cancelText: 'Cancelar',
+            confirmClass: 'bg-red-600 hover:bg-red-700'
+        }
+    );
+    
+    if (!confirmado) return;
+    
+    const btn = document.getElementById(`btn-excluir-${timeId}`);
+    if (!btn) return;
+    
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Excluindo...</span>';
+    
+    showLoader('Excluindo time...');
+    
+    try {
+        const response = await fetch(`/api/time/excluir/${timeId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showToast('Time excluído com sucesso!', 'success');
+            setTimeout(() => window.location.reload(), 1000);
+        } else {
+            showAlert('Erro ao excluir time: ' + (data.error || 'Erro desconhecido'), 'Erro', 'error');
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    } catch (error) {
+        console.error('Erro ao excluir time:', error);
+        showAlert('Erro ao excluir time', 'Erro de Conexão', 'error');
         btn.disabled = false;
         btn.innerHTML = originalHtml;
     } finally {

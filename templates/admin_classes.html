@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Visualizar Classes de Planos - Admin{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Cabeçalho -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-white mb-2">
+            <i class="fas fa-code text-purple-400 mr-2"></i>
+            Classes de Planos (PLANS_CONFIG)
+        </h1>
+        <p class="text-dark-blue-300">Visualização completa das configurações de cada plano</p>
+    </div>
+
+    <!-- Cards dos Planos -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {% for plan_key, plan_config in plans_config.items() %}
+        <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl border-2 {% if plan_key == 'free' %}border-slate-600/50{% elif plan_key == 'avancado' %}border-blue-600/50{% else %}border-yellow-600/50{% endif %} shadow-xl p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-2xl font-bold text-white">
+                    {% if plan_key == 'free' %}
+                    <span class="text-slate-300">Free</span>
+                    {% elif plan_key == 'avancado' %}
+                    <span class="text-blue-400">Avançado</span>
+                    {% else %}
+                    <span class="text-yellow-400">Pro</span>
+                    {% endif %}
+                </h2>
+                <span class="px-3 py-1 rounded-lg text-xs font-bold {% if plan_key == 'free' %}bg-slate-600 text-slate-100{% elif plan_key == 'avancado' %}bg-blue-600 text-blue-100{% else %}bg-yellow-600 text-yellow-100{% endif %}">
+                    {{ plan_key|upper }}
+                </span>
+            </div>
+            
+            <div class="space-y-3">
+                {% for key, value in plan_config.items() %}
+                <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-700/50">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <p class="text-xs text-slate-400 font-mono mb-1">{{ key }}</p>
+                            <p class="text-white font-semibold">
+                                {% if value is sameas true %}
+                                <span class="text-green-400">True</span>
+                                {% elif value is sameas false %}
+                                <span class="text-red-400">False</span>
+                                {% elif value == "infinite" %}
+                                <span class="text-yellow-400">∞ Infinite</span>
+                                {% else %}
+                                <span class="text-blue-300">{{ value }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- JSON Raw -->
+    <div class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 backdrop-blur-sm rounded-2xl border-2 border-slate-700/50 shadow-xl p-6">
+        <h2 class="text-xl font-bold text-white mb-4">
+            <i class="fas fa-file-code text-cyan-400 mr-2"></i>
+            JSON Completo
+        </h2>
+        <pre class="bg-slate-900/80 rounded-lg p-4 overflow-x-auto text-xs text-slate-300 font-mono border border-slate-700/50"><code>{{ plans_config|tojson(indent=2) }}</code></pre>
+    </div>
+
+    <!-- Link de volta -->
+    <div class="mt-6">
+        <a href="{{ url_for('admin_planos') }}" class="inline-flex items-center text-blue-400 hover:text-blue-300">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Voltar para Gerenciar Planos
+        </a>
+    </div>
+</div>
+{% endblock %}
+

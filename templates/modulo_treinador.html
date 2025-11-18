@@ -51,7 +51,7 @@
 
 <!-- Painel de Configuração de Pesos -->
 <div class="mb-8">
-    <div class="bg-gradient-to-br from-indigo-900/50 to-indigo-900/50 backdrop-blur-sm rounded-2xl border border-indigo-500/50 shadow-xl overflow-hidden">
+    <div class="bg-gradient-to-br from-indigo-900/50 to-indigo-900/50 backdrop-blur-sm rounded-2xl border border-indigo-500/50 shadow-xl overflow-hidden relative">
         <div class="bg-gradient-to-r from-indigo-700/80 to-indigo-800/80 p-4 border-b border-indigo-500/50">
             <div class="flex items-center space-x-3">
                 <div class="p-2 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg shadow-lg">
@@ -64,8 +64,20 @@
             </div>
         </div>
         
-        <form id="pesosForm" class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% if not permissions.editarPesosModulos %}
+        <!-- Overlay de bloqueio para edição de pesos -->
+        <div class="absolute inset-0 bg-dark-blue-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6">
+            <i class="fas fa-lock text-yellow-400 text-4xl mb-4"></i>
+            <p class="text-white text-lg font-bold mb-2 text-center">Edição de Pesos Bloqueada</p>
+            <p class="text-indigo-300 text-sm text-center mb-4">Esta funcionalidade está disponível apenas no plano Pro</p>
+            <a href="{{ url_for('pagamento.index') }}" class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-xl">
+                <i class="fas fa-arrow-up mr-2"></i>
+                Upgrade para Pro
+            </a>
+        </div>
+        {% endif %}
+        <form id="pesosForm" class="p-6 relative">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 {% if not permissions.editarPesosModulos %}opacity-50{% endif %}" {% if not permissions.editarPesosModulos %}style="filter: blur(0.3px); pointer-events: none;"{% endif %}>
                 <div class="space-y-2">
                     <label class="block text-sm font-medium text-indigo-200">
                         FATOR_PESO_JOGO
@@ -74,7 +86,8 @@
                            id="FATOR_PESO_JOGO"
                            name="FATOR_PESO_JOGO" 
                            value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 1.0) }}" 
-                           step="0.1" 
+                           step="0.1"
+                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-3 py-2 bg-dark-blue-800/50 border border-indigo-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200">
                 </div>
             </div>
@@ -82,11 +95,16 @@
             <div class="flex items-center justify-between mt-6 pt-4 border-t border-indigo-500/30">
                 <div class="text-sm text-indigo-300">
                     <i class="fas fa-info-circle mr-2"></i>
+                    {% if permissions.editarPesosModulos %}
                     Alterações serão aplicadas ao recalcular
+                    {% else %}
+                    Edição disponível apenas no plano Pro
+                    {% endif %}
                 </div>
                 <div class="flex space-x-3">
                     <button type="button" onclick="salvarPesos()"
-                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105">
+                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
+                            class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i class="fas fa-save mr-2"></i>
                         Salvar Pesos
                     </button>
@@ -175,7 +193,7 @@
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Ações</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody style="position: relative;">
                         <!-- Dados serão preenchidos via JavaScript -->
                     </tbody>
                 </table>
@@ -430,7 +448,7 @@ async function carregarDados(forcarRecalculo = false) {
                 
                 // Renderizar ranking salvo diretamente
                 const resultados = data.ranking_salvo.map((r, i) => ({ ...r, rank: i + 1 }));
-                renderizarTabelaTreinadores(resultados);
+                await renderizarTabelaTreinadores(resultados);
                 
                 const totalRegistrosEl = document.getElementById('totalRegistros');
                 if (totalRegistrosEl) {
@@ -677,21 +695,42 @@ async function carregarDados(forcarRecalculo = false) {
 }
 
 // Função para renderizar tabela de treinadores
-function renderizarTabelaTreinadores(resultados) {
+async function renderizarTabelaTreinadores(resultados) {
     const tbody = document.querySelector('#tabelaTreinadores tbody');
     if (!tbody) {
                 console.error('Tabela de treinadores não encontrada');
         return;
     }
     
+    // Buscar permissão rankingCompleto
+    let temRankingCompleto = true;
+    try {
+        const permsResponse = await fetch('/api/user/permissions');
+        if (permsResponse.ok) {
+            const permsData = await permsResponse.json();
+            temRankingCompleto = permsData.permissions.rankingCompleto === true;
+        }
+    } catch (error) {
+        console.error('Erro ao buscar permissões:', error);
+    }
+    
     tbody.innerHTML = '';
     
     resultados.forEach((jogador) => {
+        // Se não tem ranking completo e rank <= 2, aplicar blur agressivo (invertido)
+        const isBloqueado = !temRankingCompleto && jogador.rank <= 2;
+        
         const tr = document.createElement('tr');
         tr.className = `border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 ${jogador.rank <= 3 ? `bg-gradient-to-r ${jogador.rank == 1 ? 'from-yellow-900/20 to-yellow-800/20' : jogador.rank == 2 ? 'from-gray-800/20 to-gray-700/20' : 'from-orange-900/20 to-orange-800/20'}` : ''}`;
+        if (isBloqueado) {
+            tr.style.position = 'relative';
+        }
+        
+        const blurClass = isBloqueado ? 'opacity-30' : '';
+        const blurStyle = isBloqueado ? 'style="filter: blur(8px);"' : '';
         
         tr.innerHTML = `
-            <td class="py-4 px-2">
+            <td class="py-4 px-2 ${isBloqueado ? 'relative z-50' : ''}">
                 ${jogador.rank <= 3 ? `
                 <div class="flex items-center justify-center w-8 h-8 rounded-full ${jogador.rank == 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' : jogador.rank == 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' : 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'} shadow-lg">
                     ${jogador.rank == 1 ? '<i class="fas fa-crown text-sm"></i>' : jogador.rank == 2 ? '<i class="fas fa-medal text-sm"></i>' : '<i class="fas fa-award text-sm"></i>'}
@@ -702,7 +741,7 @@ function renderizarTabelaTreinadores(resultados) {
                 </div>
                 `}
             </td>
-            <td class="py-4 px-2">
+            <td class="py-4 px-2 ${blurClass}" ${blurStyle}>
                 <div class="flex items-center space-x-2">
                     <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
                         <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover">
@@ -722,34 +761,34 @@ function renderizarTabelaTreinadores(resultados) {
                     </div>
                 </div>
             </td>
-            <td class="py-4 px-2">
+            <td class="py-4 px-2 ${blurClass}" ${blurStyle}>
                 <div class="font-medium text-white">${jogador.clube_nome}</div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
                 <div class="text-lg font-bold ${jogador.pontuacao_total >= 10 ? 'text-green-400' : jogador.pontuacao_total >= 5 ? 'text-yellow-400' : 'text-red-400'}">
                     ${jogador.pontuacao_total.toFixed(2)}
                 </div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
                 <div class="font-medium text-white">${jogador.media.toFixed(2)}</div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
                 <div class="font-medium text-white">${jogador.jogos}</div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
                 <div class="font-medium ${jogador.peso_jogo > 0 ? 'text-green-400' : jogador.peso_jogo < 0 ? 'text-red-400' : 'text-gray-400'}">
                     ${jogador.peso_jogo.toFixed(2)}
                 </div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
                 <div class="font-medium ${jogador.peso_sg > 0 ? 'text-green-400' : jogador.peso_sg < 0 ? 'text-red-400' : 'text-gray-400'}">
                     ${jogador.peso_sg.toFixed(2)}
                 </div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
                 <div class="font-medium text-green-400">R$ ${jogador.preco.toFixed(2)}</div>
             </td>
-            <td class="py-4 px-2 text-center">
+            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
                 <button onclick="openTreinadorModal('${jogador.atleta_id}')" 
                         class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
                     <i class="fas fa-eye mr-1"></i>
@@ -757,6 +796,32 @@ function renderizarTabelaTreinadores(resultados) {
                 </button>
             </td>
         `;
+        
+        // Se bloqueado, adicionar overlay com botão de upgrade
+        if (isBloqueado) {
+            const overlayTd = document.createElement('td');
+            overlayTd.colSpan = 10;
+            overlayTd.className = 'relative';
+            overlayTd.style.position = 'absolute';
+            overlayTd.style.top = '0';
+            overlayTd.style.left = '0';
+            overlayTd.style.width = '100%';
+            overlayTd.style.height = '100%';
+            overlayTd.style.display = 'flex';
+            overlayTd.style.alignItems = 'center';
+            overlayTd.style.justifyContent = 'center';
+            overlayTd.style.zIndex = '50';
+            overlayTd.style.pointerEvents = 'auto';
+            overlayTd.style.background = 'transparent';
+            overlayTd.style.padding = '0';
+            overlayTd.innerHTML = `
+                <a href="/pagamento/" class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition-all duration-200 shadow-xl">
+                    <i class="fas fa-arrow-up mr-2"></i>
+                    Upgrade para Ver
+                </a>
+            `;
+            tr.appendChild(overlayTd);
+        }
         
         tbody.appendChild(tr);
     });

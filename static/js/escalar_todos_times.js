@@ -381,21 +381,77 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Função para verificar e adicionar botão na sidebar
-    function verificarEAdicionarBotaoSidebar() {
+    // Função para verificar e adicionar botão na sidebar (exposta globalmente)
+    window.verificarEAdicionarBotaoSidebar = async function verificarEAdicionarBotaoSidebar() {
+        console.log('[DEBUG] verificarEAdicionarBotaoSidebar chamada');
         const timesListEl = document.getElementById('timesList');
-        if (!timesListEl) return;
+        if (!timesListEl) {
+            console.log('[DEBUG] timesListEl não encontrado, retornando');
+            return;
+        }
         
-        // Verificar se já existe o botão
-        if (document.getElementById('escalarTodosTimesBtnSidebar')) return;
+        // Verificar se já existe o botão (verificação mais robusta)
+        const botaoExistente = document.getElementById('escalarTodosTimesBtnSidebar');
+        console.log('[DEBUG] Botão existente encontrado?', !!botaoExistente);
         
-        // Verificar se há mais de um time (verificar elementos com data-team-id ou itens clicáveis)
-        const times = timesListEl.querySelectorAll('div[class*="cursor-pointer"]');
-        if (times.length <= 1) return;
+        if (botaoExistente && timesListEl.contains(botaoExistente)) {
+            console.log('[DEBUG] Botão já existe e está na lista correta, retornando');
+            return; // Botão já existe e está na lista correta
+        }
         
-        // Criar botão como se fosse o primeiro item da lista
+        // Se o botão existe mas não está na lista, removê-lo (caso de elemento órfão)
+        if (botaoExistente) {
+            console.log('[DEBUG] Botão existe mas não está na lista, removendo elemento órfão');
+            botaoExistente.remove();
+        }
+        
+        // Verificar permissão multiEscalacao
+        let temPermissao = false;
+        try {
+            console.log('[DEBUG] Verificando permissões...');
+            const permsResponse = await fetch('/api/user/permissions');
+            if (permsResponse.ok) {
+                const permsData = await permsResponse.json();
+                temPermissao = permsData.permissions.multiEscalacao === true;
+                console.log('[DEBUG] Permissão multiEscalacao:', temPermissao);
+            }
+        } catch (error) {
+            console.error('[DEBUG] Erro ao verificar permissões:', error);
+            return; // Se não conseguir verificar, não mostrar o botão
+        }
+        
+        // Se não tiver permissão, não mostrar o botão
+        if (!temPermissao) {
+            console.log('[DEBUG] Sem permissão, retornando');
+            return;
+        }
+        
+        // Verificar se há mais de um time
+        // Buscar por elementos com data-team-id (tanto no layout vertical quanto no grid)
+        const times = timesListEl.querySelectorAll('[data-team-id]');
+        console.log('[DEBUG] Times encontrados:', times.length);
+        
+        // Excluir o próprio botão se tiver data-team-id (não deve ter, mas por segurança)
+        const timesFiltrados = Array.from(times).filter(el => el.id !== 'escalarTodosTimesBtnSidebar');
+        console.log('[DEBUG] Times filtrados (excluindo botão):', timesFiltrados.length);
+        
+        if (timesFiltrados.length <= 1) {
+            console.log('[DEBUG] Menos de 2 times, retornando');
+            return;
+        }
+        
+        // Verificar novamente se o botão já existe (double-check)
+        const botaoExistenteNovamente = document.getElementById('escalarTodosTimesBtnSidebar');
+        if (botaoExistenteNovamente) {
+            console.log('[DEBUG] ⚠️ Botão já existe no double-check! Não adicionando novamente.');
+            return;
+        }
+        
+        console.log('[DEBUG] ✅ Criando e adicionando botão...');
+        
+        // Criar botão
         const botaoItem = document.createElement('div');
-        botaoItem.className = 'px-3 py-2 text-sm rounded-l-lg cursor-pointer transition-all duration-200 text-green-300 hover:bg-green-600/20 hover:text-white';
+        botaoItem.className = 'px-3 py-2 text-sm rounded-l-lg cursor-pointer transition-all duration-200 text-green-300 hover:bg-green-600/20 hover:text-white mb-2';
         botaoItem.innerHTML = `
             <div class="flex items-center">
                 <div class="w-8 h-8 rounded mr-2 flex items-center justify-center bg-green-500/20">
@@ -406,8 +462,16 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
         botaoItem.id = 'escalarTodosTimesBtnSidebar';
         
-        // Adicionar como primeiro item da lista
+        // Adicionar como primeiro item da lista (antes de qualquer time)
         timesListEl.insertBefore(botaoItem, timesListEl.firstChild);
+        console.log('[DEBUG] ✅ Botão adicionado com sucesso!');
+        
+        // Verificar quantos botões existem agora
+        const todosBotoes = document.querySelectorAll('#escalarTodosTimesBtnSidebar');
+        console.log('[DEBUG] ⚠️ Total de botões encontrados após adicionar:', todosBotoes.length);
+        if (todosBotoes.length > 1) {
+            console.error('[DEBUG] ❌ ERRO: Múltiplos botões detectados!', todosBotoes);
+        }
         
         // Adicionar event listener
         botaoItem.addEventListener('click', async function() {
@@ -415,15 +479,55 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Observar mudanças na lista de times
+    // Observar mudanças na lista de times (com debounce para evitar múltiplas execuções)
+    let timeoutId = null;
     const timesListEl = document.getElementById('timesList');
     if (timesListEl) {
-        const observer = new MutationObserver(() => {
-            setTimeout(verificarEAdicionarBotaoSidebar, 500);
+        const observer = new MutationObserver((mutations) => {
+            console.log('[DEBUG] MutationObserver: Mudanças detectadas', mutations.length);
+            
+            // Ignorar se a mudança foi causada pela adição do próprio botão
+            const foiAdicaoBotao = mutations.some(mutation => 
+                Array.from(mutation.addedNodes).some(node => 
+                    node.id === 'escalarTodosTimesBtnSidebar' || 
+                    (node.querySelector && node.querySelector('#escalarTodosTimesBtnSidebar'))
+                )
+            );
+            
+            if (foiAdicaoBotao) {
+                console.log('[DEBUG] MutationObserver: Mudança foi adição do botão, ignorando');
+                return;
+            }
+            
+            // Ignorar se estamos renderizando (evitar múltiplas chamadas durante o forEach)
+            // Verificar se há múltiplos itens sendo adicionados de uma vez (renderização em lote)
+            const totalNodesAdded = mutations.reduce((sum, mutation) => sum + mutation.addedNodes.length, 0);
+            console.log('[DEBUG] MutationObserver: Total de nós adicionados:', totalNodesAdded);
+            
+            if (totalNodesAdded > 1) {
+                // Múltiplos itens sendo adicionados = renderização em lote, ignorar
+                console.log('[DEBUG] MutationObserver: Renderização em lote detectada, ignorando');
+                return;
+            }
+            
+            // Debounce: cancelar timeout anterior e criar novo
+            if (timeoutId) {
+                console.log('[DEBUG] MutationObserver: Cancelando timeout anterior');
+                clearTimeout(timeoutId);
+            }
+            console.log('[DEBUG] MutationObserver: Agendando verificarEAdicionarBotaoSidebar em 500ms');
+            timeoutId = setTimeout(() => {
+                console.log('[DEBUG] MutationObserver: Executando verificarEAdicionarBotaoSidebar agora');
+                verificarEAdicionarBotaoSidebar();
+                timeoutId = null;
+            }, 500);
         });
-        observer.observe(timesListEl, { childList: true, subtree: true });
-        // Tentar adicionar imediatamente também
-        setTimeout(verificarEAdicionarBotaoSidebar, 1000);
+        
+        // Salvar observer globalmente para poder desabilitá-lo durante renderização
+        window.escalarTodosTimesObserver = observer;
+        observer.observe(timesListEl, { childList: true, subtree: false });
+        
+        // Não chamar imediatamente - deixar que a função renderizarTimesSidebar chame após renderizar
     }
     
     // Função principal
