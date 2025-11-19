@@ -86,13 +86,20 @@ def refresh_access_token(current_token, env_key="ACCESS_TOKEN_TIME1"):
                 close_db_connection(conn2)
             return new_access_token
         else:
-            print(f"Falha no refresh ({response.status_code}).")
+            print(f"Falha no refresh ({response.status_code}) para {env_key}.")
+            try:
+                error_data = response.json()
+                print(f"Resposta de erro: {error_data}")
+            except:
+                print(f"Resposta de erro (texto): {response.text[:500]}")
             return None
     except requests.exceptions.JSONDecodeError as e:
-        print(f"Erro ao parsear resposta do refresh: {e}")
+        print(f"Erro ao parsear resposta do refresh para {env_key}: {e}")
+        if hasattr(e, 'response') and e.response is not None:
+            print(f"Resposta recebida: {e.response.text[:500]}")
         return None
     except requests.exceptions.RequestException as e:
-        print(f"Erro de rede no refresh: {e}")
+        print(f"Erro de rede no refresh para {env_key}: {e}")
         return None
 
 def fetch_cartola_data():
@@ -283,9 +290,19 @@ def refresh_access_token_by_team_id(conn, team_id: int):
             return new_access_token
         else:
             printdbg(f"Falha no refresh ({response.status_code}) para ID {team_id}.")
+            try:
+                error_data = response.json()
+                printdbg(f"Resposta de erro: {error_data}")
+            except:
+                printdbg(f"Resposta de erro (texto): {response.text[:500]}")
             return None
+    except requests.exceptions.RequestException as e:
+        printdbg(f"Erro de rede ao atualizar token para ID {team_id}: {e}")
+        return None
     except Exception as e:
         printdbg(f"Erro ao atualizar token para ID {team_id}: {e}")
+        import traceback
+        printdbg(traceback.format_exc())
         return None
 
 def fetch_team_data(access_token=None, env_key="ACCESS_TOKEN_TIME1"):

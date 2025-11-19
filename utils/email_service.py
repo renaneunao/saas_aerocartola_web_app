@@ -204,11 +204,11 @@ def send_verification_email(email: str, username: str, verification_token: str) 
         <body>
             <div class="email-wrapper">
                 <div class="header">
-                    <h1>⚽ Cartola Manager</h1>
+                    <h1>⚽ Aero Cartola</h1>
                 </div>
                 <div class="content">
                     <h2>Olá, {username}!</h2>
-                    <p>Obrigado por se cadastrar no <strong>Cartola Manager</strong>!</p>
+                    <p>Obrigado por se cadastrar no <strong>Aero Cartola</strong>!</p>
                     <p>Para ativar sua conta, clique no botão abaixo para verificar seu email:</p>
                     <div class="button-container">
                         <a href="{verification_url}" class="button">Verificar Email</a>
@@ -223,7 +223,7 @@ def send_verification_email(email: str, username: str, verification_token: str) 
                 </div>
                 <div class="footer">
                     <p>Este é um email automático, por favor não responda.</p>
-                    <p>&copy; 2024 Cartola Manager. Todos os direitos reservados.</p>
+                    <p>&copy; 2024 Aero Cartola. Todos os direitos reservados.</p>
                 </div>
             </div>
         </body>
@@ -234,7 +234,7 @@ def send_verification_email(email: str, username: str, verification_token: str) 
         text_content = f"""
         Olá, {username}!
         
-        Obrigado por se cadastrar no Cartola Manager!
+        Obrigado por se cadastrar no Aero Cartola!
         
         Para ativar sua conta, acesse o link abaixo:
         {verification_url}
@@ -242,13 +242,13 @@ def send_verification_email(email: str, username: str, verification_token: str) 
         Se você não criou esta conta, pode ignorar este email.
         
         Atenciosamente,
-        Equipe Cartola Manager
+        Equipe Aero Cartola
         """
         
         return _send_email_smtp(
             to_email=email,
             to_name=username,
-            subject="Verifique seu email - Cartola Manager",
+            subject="Verifique seu email - Aero Cartola",
             html_content=html_content,
             text_content=text_content
         )
@@ -352,10 +352,10 @@ def send_welcome_email(email: str, username: str) -> Dict[str, Any]:
         <body>
             <div class="email-wrapper">
                 <div class="header">
-                    <h1>⚽ Cartola Manager</h1>
+                    <h1>⚽ Aero Cartola</h1>
                 </div>
                 <div class="content">
-                    <h2>Bem-vindo ao Cartola Manager, {username}!</h2>
+                    <h2>Bem-vindo ao Aero Cartola, {username}!</h2>
                     <p><strong>Sua conta foi verificada com sucesso! 🎉</strong></p>
                     <p>Agora você pode aproveitar todos os recursos da plataforma:</p>
                     <div class="features">
@@ -370,7 +370,7 @@ def send_welcome_email(email: str, username: str) -> Dict[str, Any]:
                 </div>
                 <div class="footer">
                     <p>Este é um email automático, por favor não responda.</p>
-                    <p>&copy; 2024 Cartola Manager. Todos os direitos reservados.</p>
+                    <p>&copy; 2024 Aero Cartola. Todos os direitos reservados.</p>
                 </div>
             </div>
         </body>
@@ -378,7 +378,7 @@ def send_welcome_email(email: str, username: str) -> Dict[str, Any]:
         """
         
         text_content = f"""
-        Bem-vindo ao Cartola Manager, {username}!
+        Bem-vindo ao Aero Cartola, {username}!
         
         Sua conta foi verificada com sucesso!
         
@@ -394,7 +394,7 @@ def send_welcome_email(email: str, username: str) -> Dict[str, Any]:
         return _send_email_smtp(
             to_email=email,
             to_name=username,
-            subject="Bem-vindo ao Cartola Manager!",
+            subject="Bem-vindo ao Aero Cartola!",
             html_content=html_content,
             text_content=text_content
         )

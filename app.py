@@ -505,7 +505,7 @@ def esqueceu_senha():
             <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; background-color: #f5f5f5; margin: 0; padding: 20px;">
                 <div class="email-wrapper" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
                     <div class="header" style="background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%); padding: 30px 20px; text-align: center; border-radius: 10px 10px 0 0;">
-                        <h1 style="margin: 0; font-size: 28px; color: #ffffff; font-weight: bold;">⚽ Cartola Manager</h1>
+                        <h1 style="margin: 0; font-size: 28px; color: #ffffff; font-weight: bold;">⚽ Aero Cartola</h1>
                     </div>
                     <div class="content" style="background: #ffffff; color: #1a1a1a; padding: 40px 30px; border-radius: 0 0 10px 10px;">
                         <h2 style="color: #0c4a6e; margin-top: 0; font-size: 24px;">Recuperação de Senha</h2>
@@ -531,7 +531,7 @@ def esqueceu_senha():
             """
             
             text_content = f"""
-            Recuperação de Senha - Cartola Manager
+            Recuperação de Senha - Aero Cartola
             
             Olá, {username}!
             
@@ -548,7 +548,7 @@ def esqueceu_senha():
             email_result = _send_email_smtp(
                 to_email=user_email,
                 to_name=username,
-                subject="Recuperação de Senha - Cartola Manager",
+                subject="Recuperação de Senha - Aero Cartola",
                 html_content=html_content,
                 text_content=text_content
             )
@@ -800,18 +800,49 @@ def dashboard():
         # Verificar se há time selecionado
         team_id = session.get('selected_team_id')
         
-        if not team_id:
-            # Buscar todos os times do usuário
-            all_teams = get_all_user_teams(conn, user['id'])
-            if not all_teams or len(all_teams) == 0:
-                flash('Por favor, associe suas credenciais do Cartola primeiro.', 'warning')
-                return redirect(url_for('associar_credenciais'))
+        # Buscar limite de times do plano
+        from models.plans import get_max_times
+        max_times = get_max_times(user['id'])
+        
+        # Buscar todos os times do usuário
+        all_teams = get_all_user_teams(conn, user['id'])
+        if not all_teams or len(all_teams) == 0:
+            flash('Por favor, associe suas credenciais do Cartola primeiro.', 'warning')
+            return redirect(url_for('associar_credenciais'))
+        
+        # Verificar se o time selecionado ainda está disponível (dentro do limite)
+        selected_team = None
+        if team_id:
+            # Encontrar o time selecionado e verificar se está disponível
+            selected_index = None
+            for idx, team in enumerate(all_teams):
+                if team['id'] == team_id:
+                    selected_index = idx
+                    break
             
-            # Selecionar o primeiro time como padrão
-            selected_team = all_teams[0]
-            team_id = selected_team['id']
-            session['selected_team_id'] = team_id
-        else:
+            # Verificar se o time está dentro do limite
+            if selected_index is not None and selected_index < max_times:
+                selected_team = get_team(conn, team_id, user['id'])
+            else:
+                # Time selecionado não está mais disponível
+                print(f"[DEBUG DASHBOARD] Time selecionado {team_id} não está mais disponível (índice: {selected_index}, limite: {max_times})")
+                team_id = None
+                session.pop('selected_team_id', None)
+        
+        # Se não houver time selecionado, selecionar o primeiro disponível
+        if not team_id:
+            # Selecionar o primeiro time dentro do limite (índice 0, desde que max_times > 0)
+            if max_times > 0 and len(all_teams) > 0:
+                selected_team = all_teams[0]
+                team_id = selected_team['id']
+                session['selected_team_id'] = team_id
+                print(f"[DEBUG DASHBOARD] Selecionando automaticamente o primeiro time disponível: {team_id}")
+            else:
+                flash('Nenhum time disponível no seu plano atual. Por favor, selecione um time.', 'warning')
+                return redirect(url_for('credenciais'))
+        
+        # Verificar se o time foi encontrado
+        if not selected_team:
             selected_team = get_team(conn, team_id, user['id'])
             if not selected_team:
                 flash('Time não encontrado. Por favor, selecione um time.', 'warning')
@@ -898,7 +929,7 @@ def pagina_inicial():
         create_teams_table(conn)
         times = get_all_user_teams(conn, user['id'])
         if not times or len(times) == 0:
-            flash('Bem-vindo ao Cartola Manager! Para começar, vamos adicionar seu primeiro time.', 'info')
+            flash('Bem-vindo ao Aero Cartola! Para começar, vamos adicionar seu primeiro time.', 'info')
             return redirect(url_for('associar_credenciais'))
     finally:
         close_db_connection(conn)
@@ -3545,15 +3576,41 @@ def api_credenciais_lista():
     
     try:
         from models.teams import get_all_user_teams, create_teams_table
+        from models.plans import get_max_times
         create_teams_table(conn)
         
         times = get_all_user_teams(conn, user['id'])
         selected_id = session.get('selected_team_id')
         
-        # Se não houver time selecionado e houver times disponíveis, selecionar o primeiro
+        # Buscar limite de times do plano
+        max_times = get_max_times(user['id'])
+        
+        # Verificar se o time selecionado ainda está disponível (dentro do limite)
+        selected_team_disponivel = False
+        if selected_id:
+            # Encontrar o índice do time selecionado
+            selected_index = None
+            for idx, time in enumerate(times):
+                if time['id'] == selected_id:
+                    selected_index = idx
+                    break
+            
+            # Verificar se o time está dentro do limite
+            if selected_index is not None and selected_index < max_times:
+                selected_team_disponivel = True
+            else:
+                # Time selecionado não está mais disponível
+                print(f"[DEBUG API] Time selecionado {selected_id} não está mais disponível (índice: {selected_index}, limite: {max_times})")
+                selected_id = None
+                session.pop('selected_team_id', None)
+        
+        # Se não houver time selecionado e houver times disponíveis, selecionar o primeiro disponível
         if not selected_id and times and len(times) > 0:
-            selected_id = times[0]['id']
-            session['selected_team_id'] = selected_id
+            # Selecionar o primeiro time dentro do limite (índice 0, desde que max_times > 0)
+            if max_times > 0 and len(times) > 0:
+                selected_id = times[0]['id']
+                session['selected_team_id'] = selected_id
+                print(f"[DEBUG API] Selecionando automaticamente o primeiro time disponível: {selected_id}")
         
         # Buscar escudos dinamicamente para cada time
         from api_cartola import fetch_team_info_by_team_id
@@ -3592,13 +3649,17 @@ def api_credenciais_lista():
                 if '401' in str(e) or 'token' in str(e).lower():
                     token_error = True
             
+            # Verificar se o time está disponível (dentro do limite do plano)
+            is_disponivel = idx < max_times
+            
             times_list.append({
                 'id': time['id'],
                 'team_name': time['team_name'] or f"Time {time['id']}",
                 'team_shield_url': team_shield_url,
                 'token_error': token_error,  # Indicador de erro de token
                 'created_at': time['created_at'].isoformat() if time['created_at'] else None,
-                'selected': time['id'] == selected_id
+                'selected': time['id'] == selected_id,
+                'disponivel': is_disponivel  # Indica se o time está disponível no plano atual
             })
             print(f"[DEBUG API] Time {time['id']} adicionado à lista com shield_url: {team_shield_url}, token_error: {token_error}")
         

@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}Configurar Perfis - Cartola Manager{% endblock %}
+{% block title %}Configurar Perfis - Aero Cartola{% endblock %}
 
 {% block content %}
 <div class="pagina-inicial-container">
@@ -218,18 +218,30 @@
                     <div class="bg-gradient-to-br from-slate-900/95 to-slate-950/95 backdrop-blur-sm rounded-2xl border-2 border-slate-700/50 shadow-2xl overflow-hidden flex flex-col h-full">
                         <!-- Header -->
                         <div class="bg-gradient-to-r from-dark-blue-700/90 to-dark-blue-800/90 p-4 border-b border-slate-700/50">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="p-2 bg-gradient-to-br from-dark-blue-500 to-dark-blue-600 rounded-lg shadow-lg">
-                                        <i class="fas fa-trophy text-white text-xl"></i>
+                            <div class="flex flex-col space-y-3">
+                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="p-2 bg-gradient-to-br from-dark-blue-500 to-dark-blue-600 rounded-lg shadow-lg">
+                                            <i class="fas fa-trophy text-white text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h2 class="text-xl sm:text-2xl font-bold text-white font-serif">Passo 1: Escolha o Perfil de Peso de Jogo</h2>
+                                            <p class="text-dark-blue-200 text-xs sm:text-sm mt-1">Selecione qual perfil melhor identifica os times favoritos para esta rodada</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h2 class="text-2xl font-bold text-white font-serif">Passo 1: Escolha o Perfil de Peso de Jogo</h2>
-                                        <p class="text-dark-blue-200 text-sm mt-1">Selecione qual perfil melhor identifica os times favoritos para esta rodada</p>
+                                    <div class="text-white/60 text-sm font-medium">
+                                        1 de 2
                                     </div>
                                 </div>
-                                <div class="text-white/60 text-sm font-medium">
-                                    1 de 2
+                                <!-- Botão Próximo no Header -->
+                                <div class="flex justify-end">
+                                    <button type="button" 
+                                            onclick="slideToNext()"
+                                            id="nextBtnPesoJogo"
+                                            class="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 hover:from-dark-blue-600 hover:to-dark-blue-700 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base">
+                                        <span>Próximo: Peso de Saldo de Gols</span>
+                                        <i class="fas fa-arrow-right"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -328,16 +340,6 @@
                             </div>
                         </div>
 
-                        <!-- Botão Próximo -->
-                        <div class="px-4 pt-4 pb-4 border-t border-slate-700/50 bg-slate-900/50 flex justify-end flex-shrink-0">
-                            <button type="button" 
-                                    onclick="slideToNext()"
-                                    id="nextBtnPesoJogo"
-                                    class="bg-gradient-to-r from-dark-blue-500 to-dark-blue-600 hover:from-dark-blue-600 hover:to-dark-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                                <span>Próximo: Peso de Saldo de Gols</span>
-                                <i class="fas fa-arrow-right"></i>
-                            </button>
-                        </div>
                     </div>
                 </div>
 
@@ -346,18 +348,34 @@
                     <div class="bg-gradient-to-br from-slate-900/95 to-slate-950/95 backdrop-blur-sm rounded-2xl border-2 border-slate-700/50 shadow-2xl overflow-hidden flex flex-col h-full">
                         <!-- Header -->
                         <div class="bg-gradient-to-r from-cyan-600/90 to-teal-600/90 p-4 border-b border-slate-700/50">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="p-2 bg-gradient-to-br from-cyan-500 to-teal-500 rounded-lg shadow-lg">
-                                        <i class="fas fa-shield-alt text-white text-xl"></i>
+                            <div class="flex flex-col space-y-3">
+                                <div class="flex items-center justify-between flex-wrap gap-2">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="p-2 bg-gradient-to-br from-cyan-500 to-teal-500 rounded-lg shadow-lg">
+                                            <i class="fas fa-shield-alt text-white text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h2 class="text-xl sm:text-2xl font-bold text-white font-serif">Passo 2: Escolha o Perfil de Peso de Saldo de Gols</h2>
+                                            <p class="text-cyan-100 text-xs sm:text-sm mt-1">Selecione qual perfil melhor avalia a chance dos times de não tomarem gols nesta rodada</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h2 class="text-2xl font-bold text-white font-serif">Passo 2: Escolha o Perfil de Peso de Saldo de Gols</h2>
-                                        <p class="text-cyan-100 text-sm mt-1">Selecione qual perfil melhor avalia a chance dos times de não tomarem gols nesta rodada</p>
+                                    <div class="text-white/60 text-sm font-medium">
+                                        2 de 2
                                     </div>
                                 </div>
-                                <div class="text-white/60 text-sm font-medium">
-                                    2 de 2
+                                <!-- Botões de Navegação no Header -->
+                                <div class="flex justify-between items-center gap-2 flex-wrap">
+                                    <button type="button" 
+                                            onclick="slideToPrevious()"
+                                            class="bg-slate-700 hover:bg-slate-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2 text-sm sm:text-base">
+                                        <i class="fas fa-arrow-left"></i>
+                                        <span>Voltar</span>
+                                    </button>
+                                    <button type="submit" 
+                                            class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-4 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center space-x-2 text-sm sm:text-base">
+                                        <i class="fas fa-check"></i>
+                                        <span>Salvar e Continuar</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -456,20 +474,6 @@
                             </div>
                         </div>
 
-                        <!-- Botões de Navegação -->
-                        <div class="px-4 pt-4 pb-4 border-t border-slate-700/50 bg-slate-900/50 flex justify-between items-center flex-shrink-0">
-                            <button type="button" 
-                                    onclick="slideToPrevious()"
-                                    class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center space-x-2">
-                                <i class="fas fa-arrow-left"></i>
-                                <span>Voltar</span>
-                            </button>
-                            <button type="submit" 
-                                    class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center space-x-2">
-                                <i class="fas fa-check"></i>
-                                <span>Salvar e Continuar</span>
-                            </button>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -613,20 +617,7 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // Verificar novamente antes de submeter
-        const temTime = await verificarTimeSelecionado();
-        if (!temTime) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Atenção',
-                text: 'Por favor, selecione um time antes de configurar os perfis.',
-                confirmButtonText: 'OK',
-                confirmButtonColor: '#0284c7'
-            });
-            return;
-        }
-        
-        // Verificar se ambos os perfis foram selecionados e não estão bloqueados
+        // Verificar se ambos os perfis foram selecionados e não estão bloqueados (validação rápida sem fetch)
         const pesoJogoSelected = document.querySelector('input[name="perfil_peso_jogo"]:checked');
         const pesoSgSelected = document.querySelector('input[name="perfil_peso_sg"]:checked');
         
@@ -667,9 +658,31 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // Mostrar spinner ANTES de qualquer verificação assíncrona
         const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Salvando...';
         submitBtn.disabled = true;
+        
+        // Mostrar spinner de carregamento global
+        showLoader('Salvando configurações de perfis...');
+        
+        // Verificar time selecionado (agora com spinner já visível)
+        const temTime = await verificarTimeSelecionado();
+        if (!temTime) {
+            // Esconder spinner se houver erro
+            hideLoader();
+            submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Salvar';
+            submitBtn.disabled = false;
+            
+            Swal.fire({
+                icon: 'warning',
+                title: 'Atenção',
+                text: 'Por favor, selecione um time antes de configurar os perfis.',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#0284c7'
+            });
+            return;
+        }
         
         // Submeter form
         form.submit();

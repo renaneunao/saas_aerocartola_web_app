@@ -28,7 +28,7 @@ def test_send_email_sdk():
     # Configurações
     api_key = os.getenv('BREVO_API_KEY', 'rS0MHk1zptXEOVvC')
     sender_email = os.getenv('BREVO_SENDER_EMAIL', '9bd33c001@smtp-brevo.com')
-    sender_name = os.getenv('BREVO_SENDER_NAME', 'Cartola Manager')
+    sender_name = os.getenv('BREVO_SENDER_NAME', 'Aero Cartola')
     
     print(f"[INFO] API Key: {'✅ Presente' if api_key else '❌ Não encontrada'}")
     if api_key:
@@ -45,7 +45,7 @@ def test_send_email_sdk():
     
     # Email de teste
     to_email = "renan_vianna7@icloud.com"
-    subject = "Teste de Email - Cartola Manager (SDK)"
+    subject = "Teste de Email - Aero Cartola (SDK)"
     
     html_content = """
     <!DOCTYPE html>

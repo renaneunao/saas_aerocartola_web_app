@@ -25,7 +25,7 @@ def test_send_email_smtp_detailed():
     smtp_login = os.getenv('BREVO_SMTP_LOGIN', '9bd33c001@smtp-brevo.com')
     smtp_password = os.getenv('BREVO_SMTP_PASSWORD', 'rS0MHk1zptXEOVvC')
     sender_email = os.getenv('BREVO_SENDER_EMAIL', '9bd33c001@smtp-brevo.com')
-    sender_name = os.getenv('BREVO_SENDER_NAME', 'Cartola Manager')
+    sender_name = os.getenv('BREVO_SENDER_NAME', 'Aero Cartola')
     
     print(f"[INFO] SMTP Server: {smtp_server}")
     print(f"[INFO] SMTP Port: {smtp_port}")
@@ -36,7 +36,7 @@ def test_send_email_smtp_detailed():
     
     # Email de teste
     to_email = "renan_vianna7@icloud.com"
-    subject = "Teste Detalhado - Cartola Manager"
+    subject = "Teste Detalhado - Aero Cartola"
     
     # Criar mensagem HTML
     html_body = """

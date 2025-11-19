@@ -451,13 +451,16 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Criar botão
         const botaoItem = document.createElement('div');
-        botaoItem.className = 'px-3 py-2 text-sm rounded-l-lg cursor-pointer transition-all duration-200 text-green-300 hover:bg-green-600/20 hover:text-white mb-2';
+        botaoItem.className = 'px-2 mb-2';
         botaoItem.innerHTML = `
-            <div class="flex items-center">
-                <div class="w-8 h-8 rounded mr-2 flex items-center justify-center bg-green-500/20">
-                    <i class="fas fa-bolt text-sm text-green-400"></i>
+            <div class="rounded-lg cursor-pointer transition-all duration-200 bg-gradient-to-r from-dark-blue-600/10 to-dark-blue-700/10 border border-dark-blue-500/30 hover:border-dark-blue-500/50 hover:from-dark-blue-600/15 hover:to-dark-blue-700/15 flex items-center space-x-2 py-2 px-3 w-full">
+                <div class="w-8 h-8 rounded flex items-center justify-center bg-dark-blue-500/20 flex-shrink-0">
+                    <i class="fas fa-users text-sm text-dark-blue-400"></i>
                 </div>
-                <span class="flex-1 truncate">Escalar Todos os Times</span>
+                <div class="flex-1 min-w-0">
+                    <p class="text-white font-semibold text-xs leading-tight">⚡ Escalar Todos os Times</p>
+                    <p class="text-gray-400 text-[10px] leading-tight">Escalar todos de uma vez</p>
+                </div>
             </div>
         `;
         botaoItem.id = 'escalarTodosTimesBtnSidebar';
@@ -465,6 +468,48 @@ document.addEventListener('DOMContentLoaded', function() {
         // Adicionar como primeiro item da lista (antes de qualquer time)
         timesListEl.insertBefore(botaoItem, timesListEl.firstChild);
         console.log('[DEBUG] ✅ Botão adicionado com sucesso!');
+        
+        // DEBUG: Comparar tamanhos dos botões
+        setTimeout(() => {
+            const btnEscalarTodos = document.getElementById('escalarTodosTimesBtnSidebar');
+            const btnEscalacaoIdeal = document.querySelector('a[href*="escalacao-ideal"]')?.closest('div.px-3');
+            
+            if (btnEscalarTodos && btnEscalacaoIdeal) {
+                const rectEscalarTodos = btnEscalarTodos.getBoundingClientRect();
+                const rectEscalacaoIdeal = btnEscalacaoIdeal.getBoundingClientRect();
+                const stylesEscalarTodos = window.getComputedStyle(btnEscalarTodos);
+                const stylesEscalacaoIdeal = window.getComputedStyle(btnEscalacaoIdeal);
+                
+                console.log('🔍 DEBUG TAMANHOS DOS BOTÕES:');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('📏 ESCALAR TODOS OS TIMES:');
+                console.log('  Largura:', rectEscalarTodos.width, 'px');
+                console.log('  Altura:', rectEscalarTodos.height, 'px');
+                console.log('  Padding:', stylesEscalarTodos.padding);
+                console.log('  Margin:', stylesEscalarTodos.margin);
+                console.log('  Classes:', btnEscalarTodos.className);
+                console.log('  Parent:', btnEscalarTodos.parentElement?.className);
+                console.log('  Parent width:', btnEscalarTodos.parentElement?.getBoundingClientRect().width, 'px');
+                console.log('');
+                console.log('📏 ESCALAÇÃO IDEAL:');
+                console.log('  Largura:', rectEscalacaoIdeal.width, 'px');
+                console.log('  Altura:', rectEscalacaoIdeal.height, 'px');
+                console.log('  Padding:', stylesEscalacaoIdeal.padding);
+                console.log('  Margin:', stylesEscalacaoIdeal.margin);
+                console.log('  Classes:', btnEscalacaoIdeal.className);
+                console.log('  Parent:', btnEscalacaoIdeal.parentElement?.className);
+                console.log('  Parent width:', btnEscalacaoIdeal.parentElement?.getBoundingClientRect().width, 'px');
+                console.log('');
+                console.log('📊 DIFERENÇA:');
+                console.log('  Largura:', Math.abs(rectEscalarTodos.width - rectEscalacaoIdeal.width).toFixed(2), 'px');
+                console.log('  Altura:', Math.abs(rectEscalarTodos.height - rectEscalacaoIdeal.height).toFixed(2), 'px');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            } else {
+                console.log('⚠️ DEBUG: Um ou ambos os botões não foram encontrados');
+                console.log('  btnEscalarTodos:', !!btnEscalarTodos);
+                console.log('  btnEscalacaoIdeal:', !!btnEscalacaoIdeal);
+            }
+        }, 500);
         
         // Verificar quantos botões existem agora
         const todosBotoes = document.querySelectorAll('#escalarTodosTimesBtnSidebar');

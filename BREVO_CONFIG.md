@@ -11,7 +11,7 @@
 
 1. Acesse: https://app.brevo.com/settings/keys/api
 2. Clique em "Generate a new API key"
-3. Escolha "v3" e dê um nome (ex: "Cartola Manager")
+3. Escolha "v3" e dê um nome (ex: "Aero Cartola")
 4. Copie a chave gerada (ela começa com `xkeysib-`)
 5. **IMPORTANTE**: Você só verá a chave uma vez! Salve-a imediatamente.
 
