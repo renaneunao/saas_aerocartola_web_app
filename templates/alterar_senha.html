@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% block title %}Alterar Senha - Cartola Manager{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="text-center mb-8">
+    <div class="flex items-center justify-center space-x-3 mb-4">
+        <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+            <i class="fas fa-lock text-2xl text-white"></i>
+        </div>
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+            Alterar Senha
+        </h1>
+    </div>
+    <p class="text-xl text-dark-blue-200">Altere sua senha de acesso</p>
+</div>
+
+<!-- Form Card -->
+<div class="max-w-2xl mx-auto">
+    <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-700/80 to-indigo-800/80 p-6 border-b border-dark-blue-700/50">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg">
+                    <i class="fas fa-key text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-white">Nova Senha</h2>
+                    <p class="text-blue-200 text-sm">Digite sua senha atual e a nova senha</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8">
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="space-y-3 mb-6">
+                        {% for category, message in messages %}
+                        <div class="animate-fade-in p-4 rounded-lg border-l-4 {% if category == 'error' or category == 'danger' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'success' %}bg-green-900/50 border-green-500 text-green-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% else %}bg-blue-900/50 border-blue-500 text-blue-200{% endif %} backdrop-blur-sm shadow-lg">
+                            <div class="flex items-center space-x-2">
+                                <i class="fas {% if category == 'error' or category == 'danger' %}fa-exclamation-triangle{% elif category == 'success' %}fa-check-circle{% elif category == 'warning' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <form method="post" class="space-y-6">
+                <!-- Senha Atual -->
+                <div>
+                    <label for="senha_atual" class="block text-lg font-medium text-white mb-2">
+                        <i class="fas fa-lock text-yellow-400 mr-2"></i>
+                        Senha Atual
+                    </label>
+                    <div class="relative">
+                        <input type="password" 
+                               id="senha_atual" 
+                               name="senha_atual" 
+                               required
+                               class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 pr-12 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors duration-200 text-lg"
+                               placeholder="Digite sua senha atual">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-dark-blue-400"></i>
+                        </div>
+                        <button type="button" 
+                                onclick="togglePassword('senha_atual', 'toggleIconAtual')"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
+                            <i class="fas fa-eye" id="toggleIconAtual"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Nova Senha -->
+                <div>
+                    <label for="senha_nova" class="block text-lg font-medium text-white mb-2">
+                        <i class="fas fa-key text-green-400 mr-2"></i>
+                        Nova Senha
+                    </label>
+                    <div class="relative">
+                        <input type="password" 
+                               id="senha_nova" 
+                               name="senha_nova" 
+                               required
+                               minlength="6"
+                               class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 pr-12 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 text-lg"
+                               placeholder="Digite sua nova senha (mínimo 6 caracteres)">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-key text-dark-blue-400"></i>
+                        </div>
+                        <button type="button" 
+                                onclick="togglePassword('senha_nova', 'toggleIconNova')"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
+                            <i class="fas fa-eye" id="toggleIconNova"></i>
+                        </button>
+                    </div>
+                    <p class="mt-2 text-sm text-dark-blue-300">Mínimo de 6 caracteres</p>
+                </div>
+
+                <!-- Confirmar Nova Senha -->
+                <div>
+                    <label for="senha_nova_confirmar" class="block text-lg font-medium text-white mb-2">
+                        <i class="fas fa-check-circle text-blue-400 mr-2"></i>
+                        Confirmar Nova Senha
+                    </label>
+                    <div class="relative">
+                        <input type="password" 
+                               id="senha_nova_confirmar" 
+                               name="senha_nova_confirmar" 
+                               required
+                               minlength="6"
+                               class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 pr-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200 text-lg"
+                               placeholder="Confirme sua nova senha">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-check-circle text-dark-blue-400"></i>
+                        </div>
+                        <button type="button" 
+                                onclick="togglePassword('senha_nova_confirmar', 'toggleIconConfirmar')"
+                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
+                            <i class="fas fa-eye" id="toggleIconConfirmar"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-center space-x-4 pt-4">
+                    <button type="submit" 
+                            class="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center space-x-2">
+                        <i class="fas fa-save"></i>
+                        <span>Alterar Senha</span>
+                    </button>
+                    <a href="{{ url_for('index') }}" 
+                       class="bg-gradient-to-r from-dark-blue-700 to-dark-blue-800 hover:from-dark-blue-800 hover:to-dark-blue-900 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center space-x-2">
+                        <i class="fas fa-times"></i>
+                        <span>Cancelar</span>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Validação de senhas
+document.querySelector('form').addEventListener('submit', function(e) {
+    const senhaNova = document.getElementById('senha_nova').value;
+    const senhaConfirmar = document.getElementById('senha_nova_confirmar').value;
+    
+    if (senhaNova !== senhaConfirmar) {
+        e.preventDefault();
+        alert('As novas senhas não coincidem!');
+        return false;
+    }
+    
+    if (senhaNova.length < 6) {
+        e.preventDefault();
+        alert('A nova senha deve ter pelo menos 6 caracteres!');
+        return false;
+    }
+});
+</script>
+{% endblock %}
+

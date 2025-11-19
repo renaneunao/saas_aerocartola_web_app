@@ -94,13 +94,24 @@
                 <h1 class="text-4xl font-bold bg-gradient-to-r from-white via-blue-100 to-blue-200 bg-clip-text text-transparent mb-2">
                     Cartola Manager
                 </h1>
-                <p class="text-lg text-dark-blue-200 mb-2">Bem-vindo de volta!</p>
-                <p class="text-sm text-dark-blue-300">Faça login para acessar sua conta</p>
+                <p class="text-lg text-dark-blue-200 mb-2" id="welcomeText">Bem-vindo de volta!</p>
+                <p class="text-sm text-dark-blue-300" id="subtitleText">Faça login para acessar sua conta</p>
             </div>
 
+            <!-- Tabs: Login / Registro -->
+            <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-dark-blue-700/50 overflow-hidden animate-fade-in">
+                <div class="flex border-b border-dark-blue-700/50">
+                    <button type="button" id="loginTab" class="flex-1 py-4 px-6 text-center font-semibold text-white bg-dark-blue-700/50 transition-all duration-200" onclick="switchTab('login')">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Entrar
+                    </button>
+                    <button type="button" id="registerTab" class="flex-1 py-4 px-6 text-center font-semibold text-dark-blue-300 hover:text-white transition-all duration-200" onclick="switchTab('register')">
+                        <i class="fas fa-user-plus mr-2"></i>Criar Conta
+                    </button>
+                </div>
+
             <!-- Login Form -->
-            <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-dark-blue-700/50 p-8 animate-fade-in">
-                <form method="post" class="space-y-6" id="loginForm">
+            <div id="loginFormContainer" class="p-8">
+                <form method="post" action="{{ url_for('login') }}" class="space-y-6" id="loginForm">
                     <!-- Flash Messages -->
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
@@ -171,7 +182,7 @@
                                 Lembrar de mim
                             </label>
                         </div>
-                        <a href="#" class="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                        <a href="{{ url_for('esqueceu_senha') }}" class="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200">
                             Esqueceu a senha?
                         </a>
                     </div>
@@ -182,43 +193,146 @@
                         <i class="fas fa-sign-in-alt"></i>
                         <span>Entrar</span>
                     </button>
-
-                    <!-- Divider -->
-                    <div class="relative my-6">
-                        <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-dark-blue-700/50"></div>
-                        </div>
-                        <div class="relative flex justify-center text-sm">
-                            <span class="px-4 bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 text-dark-blue-300">
-                                ou continue com
-                            </span>
-                        </div>
-                    </div>
-
-                    <!-- Social Login Buttons -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <button type="button" 
-                                class="bg-dark-blue-800/50 border border-dark-blue-600/50 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:bg-dark-blue-700/50 hover:border-dark-blue-500/50 flex items-center justify-center space-x-2">
-                            <i class="fab fa-google text-red-400"></i>
-                            <span class="text-sm">Google</span>
-                        </button>
-                        <button type="button" 
-                                class="bg-dark-blue-800/50 border border-dark-blue-600/50 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:bg-dark-blue-700/50 hover:border-dark-blue-500/50 flex items-center justify-center space-x-2">
-                            <i class="fab fa-github text-gray-300"></i>
-                            <span class="text-sm">GitHub</span>
-                        </button>
-                    </div>
                 </form>
             </div>
 
-            <!-- Sign Up Link -->
-            <div class="text-center animate-fade-in">
-                <p class="text-dark-blue-300">
-                    Não tem uma conta? 
-                    <a href="#" class="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200">
-                        Cadastre-se aqui
-                    </a>
-                </p>
+            <!-- Register Form -->
+            <div id="registerFormContainer" class="p-8 hidden">
+                <form method="post" action="{{ url_for('register') }}" class="space-y-6" id="registerForm">
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="space-y-3 mb-6">
+                                {% for category, message in messages %}
+                                <div class="animate-fade-in p-4 rounded-lg border-l-4 {% if category == 'error' or category == 'danger' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'success' %}bg-green-900/50 border-green-500 text-green-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% else %}bg-blue-900/50 border-blue-500 text-blue-200{% endif %} backdrop-blur-sm shadow-lg">
+                                    <div class="flex items-center space-x-2">
+                                        <i class="fas {% if category == 'error' or category == 'danger' %}fa-exclamation-triangle{% elif category == 'success' %}fa-check-circle{% elif category == 'warning' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                                        <span>{{ message }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Username Field -->
+                    <div>
+                        <label for="reg_username" class="block text-sm font-medium text-dark-blue-200 mb-2">
+                            <i class="fas fa-user text-blue-400 mr-2"></i>
+                            Nome de Usuário
+                        </label>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="reg_username" 
+                                   name="username" 
+                                   required
+                                   minlength="3"
+                                   maxlength="50"
+                                   pattern="[a-zA-Z0-9_]+"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-lg"
+                                   placeholder="Digite seu nome de usuário">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-user text-dark-blue-400"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-dark-blue-400 mt-1">Apenas letras, números e underscore</p>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div>
+                        <label for="reg_email" class="block text-sm font-medium text-dark-blue-200 mb-2">
+                            <i class="fas fa-envelope text-green-400 mr-2"></i>
+                            Email
+                        </label>
+                        <div class="relative">
+                            <input type="email" 
+                                   id="reg_email" 
+                                   name="email" 
+                                   required
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-lg"
+                                   placeholder="Digite seu email">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-dark-blue-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Full Name Field -->
+                    <div>
+                        <label for="reg_full_name" class="block text-sm font-medium text-dark-blue-200 mb-2">
+                            <i class="fas fa-id-card text-purple-400 mr-2"></i>
+                            Nome Completo (Opcional)
+                        </label>
+                        <div class="relative">
+                            <input type="text" 
+                                   id="reg_full_name" 
+                                   name="full_name" 
+                                   maxlength="100"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 text-lg"
+                                   placeholder="Digite seu nome completo">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-id-card text-dark-blue-400"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div>
+                        <label for="reg_password" class="block text-sm font-medium text-dark-blue-200 mb-2">
+                            <i class="fas fa-lock text-yellow-400 mr-2"></i>
+                            Senha
+                        </label>
+                        <div class="relative">
+                            <input type="password" 
+                                   id="reg_password" 
+                                   name="password" 
+                                   required
+                                   minlength="6"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 pr-12 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-lg"
+                                   placeholder="Digite sua senha (mínimo 6 caracteres)">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-dark-blue-400"></i>
+                            </div>
+                            <button type="button" 
+                                    onclick="togglePassword('reg_password', 'reg_toggleIcon')"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
+                                <i class="fas fa-eye" id="reg_toggleIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password Field -->
+                    <div>
+                        <label for="reg_confirm_password" class="block text-sm font-medium text-dark-blue-200 mb-2">
+                            <i class="fas fa-lock text-yellow-400 mr-2"></i>
+                            Confirmar Senha
+                        </label>
+                        <div class="relative">
+                            <input type="password" 
+                                   id="reg_confirm_password" 
+                                   name="confirm_password" 
+                                   required
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 pr-12 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-lg"
+                                   placeholder="Confirme sua senha">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-dark-blue-400"></i>
+                            </div>
+                            <button type="button" 
+                                    onclick="togglePassword('reg_confirm_password', 'reg_confirm_toggleIcon')"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
+                                <i class="fas fa-eye" id="reg_confirm_toggleIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Register Button -->
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Criar Conta</span>
+                    </button>
+                </form>
+            </div>
             </div>
 
             <!-- Footer Links -->
@@ -234,9 +348,38 @@
 
     <!-- Scripts -->
     <script>
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const toggleIcon = document.getElementById('toggleIcon');
+        function switchTab(tab) {
+            const loginTab = document.getElementById('loginTab');
+            const registerTab = document.getElementById('registerTab');
+            const loginFormContainer = document.getElementById('loginFormContainer');
+            const registerFormContainer = document.getElementById('registerFormContainer');
+            const welcomeText = document.getElementById('welcomeText');
+            const subtitleText = document.getElementById('subtitleText');
+
+            if (tab === 'login') {
+                loginTab.classList.add('bg-dark-blue-700/50', 'text-white');
+                loginTab.classList.remove('text-dark-blue-300');
+                registerTab.classList.remove('bg-dark-blue-700/50', 'text-white');
+                registerTab.classList.add('text-dark-blue-300');
+                loginFormContainer.classList.remove('hidden');
+                registerFormContainer.classList.add('hidden');
+                welcomeText.textContent = 'Bem-vindo de volta!';
+                subtitleText.textContent = 'Faça login para acessar sua conta';
+            } else {
+                registerTab.classList.add('bg-dark-blue-700/50', 'text-white');
+                registerTab.classList.remove('text-dark-blue-300');
+                loginTab.classList.remove('bg-dark-blue-700/50', 'text-white');
+                loginTab.classList.add('text-dark-blue-300');
+                registerFormContainer.classList.remove('hidden');
+                loginFormContainer.classList.add('hidden');
+                welcomeText.textContent = 'Crie sua conta!';
+                subtitleText.textContent = 'Preencha os dados abaixo para começar';
+            }
+        }
+
+        function togglePassword(inputId, iconId) {
+            const passwordInput = document.getElementById(inputId);
+            const toggleIcon = document.getElementById(iconId);
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
@@ -250,17 +393,71 @@
         }
 
         // Form submission with loading state
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            const submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Entrando...';
-            submitBtn.disabled = true;
-            
-            // Re-enable after 5 seconds as fallback
-            setTimeout(() => {
-                submitBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Entrar';
-                submitBtn.disabled = false;
-            }, 5000);
-        });
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Entrando...';
+                submitBtn.disabled = true;
+                
+                // Re-enable after 5 seconds as fallback
+                setTimeout(() => {
+                    submitBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i><span>Entrar</span>';
+                    submitBtn.disabled = false;
+                }, 5000);
+            });
+        }
+
+        const registerForm = document.getElementById('registerForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                // Validar campos obrigatórios
+                const username = document.getElementById('reg_username').value.trim();
+                const email = document.getElementById('reg_email').value.trim();
+                const password = document.getElementById('reg_password').value;
+                const confirmPassword = document.getElementById('reg_confirm_password').value;
+                
+                // Verificar se os campos obrigatórios estão preenchidos
+                if (!username || !email || !password || !confirmPassword) {
+                    e.preventDefault();
+                    alert('Por favor, preencha todos os campos obrigatórios.');
+                    return false;
+                }
+                
+                // Validar tamanho mínimo do username
+                if (username.length < 3) {
+                    e.preventDefault();
+                    alert('O nome de usuário deve ter pelo menos 3 caracteres.');
+                    return false;
+                }
+                
+                // Validar tamanho mínimo da senha
+                if (password.length < 6) {
+                    e.preventDefault();
+                    alert('A senha deve ter pelo menos 6 caracteres.');
+                    return false;
+                }
+                
+                // Validar se as senhas coincidem
+                if (password !== confirmPassword) {
+                    e.preventDefault();
+                    alert('As senhas não coincidem!');
+                    return false;
+                }
+                
+                // Desabilitar botão e mostrar loading
+                const submitBtn = this.querySelector('button[type="submit"]');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Criando conta...';
+                submitBtn.disabled = true;
+                
+                // Re-enable after 10 seconds as fallback
+                setTimeout(() => {
+                    submitBtn.innerHTML = '<i class="fas fa-user-plus"></i><span>Criar Conta</span>';
+                    submitBtn.disabled = false;
+                }, 10000);
+            });
+        }
+
 
         // Input focus effects
         document.querySelectorAll('input').forEach(input => {

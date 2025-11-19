@@ -88,6 +88,51 @@
             box-shadow: 0 0 12px rgba(14, 165, 233, 0.8);
         }
         
+        /* Tooltip para itens desabilitados na sidebar */
+        .group-item {
+            position: relative;
+        }
+        
+        .tooltip-sidebar {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            margin-bottom: 8px;
+            padding: 10px 14px;
+            background-color: #082f49;
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+            border: 1px solid #0ea5e9;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.2s ease-in-out;
+        }
+        
+        .tooltip-sidebar::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #082f49;
+        }
+        
+        .group-item:hover .tooltip-sidebar {
+            opacity: 1;
+        }
+        
+        /* Garantir que sidebar não tenha overflow horizontal */
+        #sidebar {
+            overflow-x: hidden;
+        }
+        
         /* Mobile: Garantir que o sidebar tenha altura fixa e scroll próprio */
         @media (max-width: 1023px) {
             #sidebar {
@@ -165,49 +210,81 @@
         </div>
 
         <!-- Navigation Links -->
-        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto sidebar-scroll">
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto overflow-x-hidden sidebar-scroll">
             <!-- Main Navigation -->
             <div class="space-y-1">
                 <p class="px-3 text-xs font-semibold text-dark-blue-400 uppercase tracking-wider">Principal</p>
                 
-                <a href="{{ url_for('index') }}" 
-                   class="{% if request.path == url_for('index') %}bg-dark-blue-700 text-white border-r-2 border-blue-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
-                    <i class="fas fa-home mr-3 text-blue-400"></i>
-                    Dashboard
-                </a>
+                <div class="relative group-item">
+                    <a href="{% if has_teams %}{{ url_for('index') }}{% else %}#{% endif %}" 
+                       onclick="{% if not has_teams %}event.preventDefault(); return false;{% endif %}"
+                       class="{% if not has_teams %}opacity-40 cursor-not-allowed{% elif request.path == url_for('index') %}bg-dark-blue-700 text-white border-r-2 border-blue-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200 relative">
+                        <i class="fas fa-home mr-3 {% if not has_teams %}text-dark-blue-500{% else %}text-blue-400{% endif %}"></i>
+                        Dashboard
+                        {% if not has_teams %}
+                        <span class="tooltip-sidebar">Adicione um time primeiro</span>
+                        {% endif %}
+                    </a>
+                </div>
 
-                <a href="{{ url_for('pagina_inicial') }}" 
-                   class="{% if request.path.startswith('/pagina-inicial') %}bg-dark-blue-700 text-white border-r-2 border-green-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
-                    <i class="fas fa-cog mr-3 text-green-400"></i>
-                    Configurar Perfis
-                </a>
+                <div class="relative group-item">
+                    <a href="{% if has_teams %}{{ url_for('pagina_inicial') }}{% else %}#{% endif %}" 
+                       onclick="{% if not has_teams %}event.preventDefault(); return false;{% endif %}"
+                       class="{% if not has_teams %}opacity-40 cursor-not-allowed{% elif request.path.startswith('/pagina-inicial') %}bg-dark-blue-700 text-white border-r-2 border-green-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200 relative">
+                        <i class="fas fa-cog mr-3 {% if not has_teams %}text-dark-blue-500{% else %}text-green-400{% endif %}"></i>
+                        Configurar Perfis
+                        {% if not has_teams %}
+                        <span class="tooltip-sidebar">Adicione um time primeiro</span>
+                        {% endif %}
+                    </a>
+                </div>
             </div>
 
             <!-- Modules Section -->
             <div class="space-y-1 pt-6">
                 <p class="px-3 text-xs font-semibold text-dark-blue-400 uppercase tracking-wider">Módulos</p>
                 
-                <a href="{{ url_for('modulos') }}" 
-                   class="{% if request.path.startswith('/modulos') %}bg-dark-blue-700 text-white border-r-2 border-purple-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
-                    <i class="fas fa-cogs mr-3 text-purple-400"></i>
-                    Calcular Posições
-                </a>
+                <div class="relative group-item">
+                    <a href="{% if has_teams %}{{ url_for('modulos') }}{% else %}#{% endif %}" 
+                       onclick="{% if not has_teams %}event.preventDefault(); return false;{% endif %}"
+                       class="{% if not has_teams %}opacity-40 cursor-not-allowed{% elif request.path.startswith('/modulos') %}bg-dark-blue-700 text-white border-r-2 border-purple-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200 relative">
+                        <i class="fas fa-cogs mr-3 {% if not has_teams %}text-dark-blue-500{% else %}text-purple-400{% endif %}"></i>
+                        Calcular Posições
+                        {% if not has_teams %}
+                        <span class="tooltip-sidebar">Adicione um time primeiro</span>
+                        {% endif %}
+                    </a>
+                </div>
             </div>
 
             <!-- Credentials Section -->
             <div class="space-y-1 pt-6">
                 <p class="px-3 text-xs font-semibold text-dark-blue-400 uppercase tracking-wider">Configurações</p>
                 
-                <a href="{{ url_for('credenciais') }}" 
+                <a href="{{ url_for('associar_credenciais') }}" 
                    class="{% if request.path.startswith('/credenciais') or request.path.startswith('/associar-credenciais') %}bg-dark-blue-700 text-white border-r-2 border-orange-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
                     <i class="fas fa-users mr-3 text-orange-400"></i>
-                    Meus Times
+                    {% if has_teams %}Meus Times{% else %}Adicionar Time{% endif %}
                 </a>
+                
+                {% if has_teams %}
+                <a href="{{ url_for('credenciais') }}" 
+                   class="{% if request.path.startswith('/credenciais') and not request.path.startswith('/associar-credenciais') %}bg-dark-blue-700 text-white border-r-2 border-orange-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
+                    <i class="fas fa-list mr-3 text-orange-400"></i>
+                    Gerenciar Times
+                </a>
+                {% endif %}
                 
                 <a href="{{ url_for('pagamento.index') }}" 
                    class="{% if request.path.startswith('/pagamento') %}bg-dark-blue-700 text-white border-r-2 border-yellow-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
                     <i class="fas fa-credit-card mr-3 text-yellow-400"></i>
                     Planos e Assinaturas
+                </a>
+                
+                <a href="{{ url_for('alterar_senha') }}" 
+                   class="{% if request.path.startswith('/alterar-senha') %}bg-dark-blue-700 text-white border-r-2 border-blue-500{% else %}text-dark-blue-200 hover:bg-dark-blue-800 hover:text-white{% endif %} group flex items-center px-3 py-2 text-sm font-medium rounded-l-lg transition-all duration-200">
+                    <i class="fas fa-lock mr-3 text-blue-400"></i>
+                    Alterar Senha
                 </a>
                 
                 {% if current_user and current_user.is_admin %}

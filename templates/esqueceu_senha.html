@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Esqueceu a Senha - Cartola Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-blue': {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+  </head>
+  <body class="h-full bg-gradient-to-br from-dark-blue-950 via-dark-blue-900 to-slate-900 text-white flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <!-- Logo and Header -->
+        <div class="text-center mb-8">
+            <div class="inline-block p-4 bg-gradient-to-br from-dark-blue-500 to-dark-blue-600 rounded-2xl shadow-2xl mb-4 animate-pulse-glow">
+                <i class="fas fa-futbol text-4xl text-white"></i>
+            </div>
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-white to-dark-blue-200 bg-clip-text text-transparent mb-2">
+                Cartola Manager
+            </h1>
+            <p class="text-dark-blue-300">Recuperação de Senha</p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-gradient-to-br from-dark-blue-800/90 to-dark-blue-900/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-dark-blue-700/50 overflow-hidden">
+            <div class="p-8">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="space-y-3 mb-6">
+                            {% for category, message in messages %}
+                            <div class="animate-fade-in p-4 rounded-lg border-l-4 {% if category == 'error' or category == 'danger' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'success' %}bg-green-900/50 border-green-500 text-green-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% else %}bg-blue-900/50 border-blue-500 text-blue-200{% endif %} backdrop-blur-sm shadow-lg">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas {% if category == 'error' or category == 'danger' %}fa-exclamation-triangle{% elif category == 'success' %}fa-check-circle{% elif category == 'warning' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                                    <span>{{ message }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <form method="post" class="space-y-6">
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-dark-blue-200 mb-2">
+                            <i class="fas fa-envelope text-blue-400 mr-2"></i>
+                            Email
+                        </label>
+                        <div class="relative">
+                            <input type="email" 
+                                   id="email" 
+                                   name="email" 
+                                   required
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-lg"
+                                   placeholder="Digite seu email">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-dark-blue-400"></i>
+                            </div>
+                        </div>
+                        <p class="mt-2 text-xs text-dark-blue-400">
+                            Enviaremos uma nova senha temporária para este email
+                        </p>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Enviar Nova Senha</span>
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <a href="{{ url_for('login') }}" class="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar para o login
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6 text-sm text-dark-blue-400">
+            <p>&copy; 2024 Cartola Manager. Todos os direitos reservados.</p>
+        </div>
+    </div>
+  </body>
+</html>
+

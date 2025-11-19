@@ -5,8 +5,23 @@ Modelo para gerenciamento de usuários do sistema
 import psycopg2
 import hashlib
 import secrets
+import os
 from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
 from database import get_db_connection, close_db_connection, execute_query, execute_query
+
+# Para criptografia reversível da senha (para recuperação)
+try:
+    from cryptography.fernet import Fernet
+    CRYPTO_AVAILABLE = True
+    # Gerar ou usar chave de criptografia
+    CRYPTO_KEY = os.getenv('CRYPTO_KEY', Fernet.generate_key().decode())
+    if isinstance(CRYPTO_KEY, str):
+        CRYPTO_KEY = CRYPTO_KEY.encode()
+    fernet = Fernet(CRYPTO_KEY)
+except ImportError:
+    CRYPTO_AVAILABLE = False
+    fernet = None
 
 
 def create_users_table():
@@ -22,14 +37,49 @@ def create_users_table():
                 email VARCHAR(100) UNIQUE NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
                 salt VARCHAR(32) NOT NULL,
+                password_encrypted TEXT,
                 full_name VARCHAR(100),
                 is_active BOOLEAN DEFAULT TRUE,
                 is_admin BOOLEAN DEFAULT FALSE,
+                email_verified BOOLEAN DEFAULT FALSE,
+                email_verification_token VARCHAR(255),
+                password_reset_token VARCHAR(255),
+                password_reset_expires TIMESTAMP,
                 last_login TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        
+        # Adicionar colunas se não existirem
+        try:
+            cursor.execute('''
+                ALTER TABLE acw_users 
+                ADD COLUMN IF NOT EXISTS password_encrypted TEXT
+            ''')
+            cursor.execute('''
+                ALTER TABLE acw_users 
+                ADD COLUMN IF NOT EXISTS password_reset_token VARCHAR(255)
+            ''')
+            cursor.execute('''
+                ALTER TABLE acw_users 
+                ADD COLUMN IF NOT EXISTS password_reset_expires TIMESTAMP
+            ''')
+        except psycopg2.Error:
+            pass  # Colunas já existem
+        
+        # Adicionar colunas de verificação de email se não existirem (para tabelas antigas)
+        try:
+            cursor.execute('''
+                ALTER TABLE acw_users 
+                ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT FALSE
+            ''')
+            cursor.execute('''
+                ALTER TABLE acw_users 
+                ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255)
+            ''')
+        except psycopg2.Error:
+            pass  # Colunas já existem ou erro ao adicionar
         
         # Criar índices para melhor performance
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_users_username ON acw_users (username)')
@@ -46,10 +96,29 @@ def create_users_table():
 
 
 def hash_password(password: str) -> tuple:
-    """Gera hash da senha com salt"""
+    """Gera hash da senha com salt e também criptografa para recuperação"""
     salt = secrets.token_hex(16)
     password_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
-    return password_hash.hex(), salt
+    
+    # Criptografar senha para recuperação (reversível)
+    password_encrypted = None
+    if CRYPTO_AVAILABLE and fernet:
+        try:
+            password_encrypted = fernet.encrypt(password.encode('utf-8')).decode('utf-8')
+        except Exception as e:
+            print(f"[WARNING] Erro ao criptografar senha: {e}")
+    
+    return password_hash.hex(), salt, password_encrypted
+
+def decrypt_password(encrypted_password: str) -> Optional[str]:
+    """Descriptografa a senha armazenada"""
+    if not CRYPTO_AVAILABLE or not fernet or not encrypted_password:
+        return None
+    try:
+        return fernet.decrypt(encrypted_password.encode('utf-8')).decode('utf-8')
+    except Exception as e:
+        print(f"[WARNING] Erro ao descriptografar senha: {e}")
+        return None
 
 
 def verify_password(password: str, password_hash: str, salt: str) -> bool:
@@ -58,7 +127,7 @@ def verify_password(password: str, password_hash: str, salt: str) -> bool:
     return computed_hash.hex() == password_hash
 
 
-def create_user(username: str, email: str, password: str, full_name: str = None, is_admin: bool = False) -> dict:
+def create_user(username: str, email: str, password: str, full_name: str = None, is_admin: bool = False, email_verified: bool = False) -> dict:
     """Cria um novo usuário"""
     conn = get_db_connection()
     if not conn:
@@ -68,19 +137,30 @@ def create_user(username: str, email: str, password: str, full_name: str = None,
     
     try:
         # Verificar se usuário ou email já existem
-        cursor.execute('SELECT id FROM acw_users WHERE username = %s OR email = %s', (username, email))
-        if cursor.fetchone():
+        print(f"[DEBUG create_user] Verificando se usuário/email já existem: username={username}, email={email}")
+        cursor.execute('SELECT id, username, email FROM acw_users WHERE username = %s OR email = %s', (username, email))
+        existing = cursor.fetchone()
+        if existing:
+            existing_id, existing_username, existing_email = existing
+            print(f"[DEBUG create_user] Usuário/email já existe! ID: {existing_id}, Username: {existing_username}, Email: {existing_email}")
+            if existing_username == username:
+                return {'success': False, 'error': f'Nome de usuário "{username}" já está em uso.'}
+            elif existing_email == email:
+                return {'success': False, 'error': f'Email "{email}" já está cadastrado.'}
             return {'success': False, 'error': 'Usuário ou email já existem'}
         
-        # Gerar hash da senha
-        password_hash, salt = hash_password(password)
+        # Gerar hash da senha e criptografar para recuperação
+        password_hash, salt, password_encrypted = hash_password(password)
+        
+        # Gerar token de verificação de email
+        verification_token = secrets.token_urlsafe(32)
         
         # Inserir usuário
         cursor.execute('''
-            INSERT INTO acw_users (username, email, password_hash, salt, full_name, is_admin)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO acw_users (username, email, password_hash, salt, password_encrypted, full_name, is_admin, email_verified, email_verification_token)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
-        ''', (username, email, password_hash, salt, full_name, is_admin))
+        ''', (username, email, password_hash, salt, password_encrypted, full_name, is_admin, email_verified, verification_token))
         
         user_id = cursor.fetchone()[0]
         conn.commit()
@@ -88,6 +168,7 @@ def create_user(username: str, email: str, password: str, full_name: str = None,
         return {
             'success': True, 
             'user_id': user_id,
+            'verification_token': verification_token,
             'message': 'Usuário criado com sucesso!'
         }
         
@@ -110,7 +191,7 @@ def authenticate_user(username_or_email: str, password: str) -> dict:
     try:
         # Buscar usuário por username ou email
         cursor.execute('''
-            SELECT id, username, email, password_hash, salt, full_name, is_active, is_admin
+            SELECT id, username, email, password_hash, salt, full_name, is_active, is_admin, email_verified
             FROM acw_users 
             WHERE (username = %s OR email = %s) AND is_active = TRUE
         ''', (username_or_email, username_or_email))
@@ -119,11 +200,19 @@ def authenticate_user(username_or_email: str, password: str) -> dict:
         if not user:
             return {'success': False, 'error': 'Usuário não encontrado ou inativo'}
         
-        user_id, username, email, stored_hash, salt, full_name, is_active, is_admin = user
+        user_id, username, email, stored_hash, salt, full_name, is_active, is_admin, email_verified = user
         
         # Verificar senha
         if not verify_password(password, stored_hash, salt):
             return {'success': False, 'error': 'Senha incorreta'}
+        
+        # Verificar se email foi verificado
+        if not email_verified:
+            return {
+                'success': False, 
+                'error': 'Email não verificado. Por favor, verifique seu email antes de fazer login.',
+                'email_not_verified': True
+            }
         
         # Atualizar último login
         cursor.execute('UPDATE acw_users SET last_login = CURRENT_TIMESTAMP WHERE id = %s', (user_id,))
@@ -142,6 +231,91 @@ def authenticate_user(username_or_email: str, password: str) -> dict:
         
     except psycopg2.Error as e:
         return {'success': False, 'error': f'Erro na autenticação: {str(e)}'}
+    
+    finally:
+        close_db_connection(conn)
+
+
+def verify_email_token(token: str) -> Dict[str, Any]:
+    """Verifica o token de email e marca o email como verificado"""
+    conn = get_db_connection()
+    if not conn:
+        return {'success': False, 'error': 'Erro ao conectar ao banco de dados'}
+    
+    cursor = conn.cursor()
+    
+    try:
+        # Buscar usuário pelo token
+        cursor.execute('''
+            SELECT id, username, email, email_verified
+            FROM acw_users 
+            WHERE email_verification_token = %s
+        ''', (token,))
+        
+        user = cursor.fetchone()
+        if not user:
+            return {'success': False, 'error': 'Token inválido ou expirado'}
+        
+        user_id, username, email, already_verified = user
+        
+        if already_verified:
+            return {'success': True, 'message': 'Email já estava verificado', 'already_verified': True}
+        
+        # Marcar email como verificado e limpar token
+        cursor.execute('''
+            UPDATE acw_users 
+            SET email_verified = TRUE, email_verification_token = NULL, updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s
+        ''', (user_id,))
+        
+        conn.commit()
+        
+        return {
+            'success': True,
+            'message': 'Email verificado com sucesso!',
+            'user': {
+                'id': user_id,
+                'username': username,
+                'email': email
+            }
+        }
+        
+    except psycopg2.Error as e:
+        conn.rollback()
+        return {'success': False, 'error': f'Erro ao verificar email: {str(e)}'}
+    
+    finally:
+        close_db_connection(conn)
+
+
+def get_user_by_verification_token(token: str) -> Optional[Dict[str, Any]]:
+    """Busca usuário pelo token de verificação"""
+    conn = get_db_connection()
+    if not conn:
+        return None
+    
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('''
+            SELECT id, username, email, email_verified
+            FROM acw_users 
+            WHERE email_verification_token = %s
+        ''', (token,))
+        
+        user = cursor.fetchone()
+        if not user:
+            return None
+        
+        return {
+            'id': user[0],
+            'username': user[1],
+            'email': user[2],
+            'email_verified': user[3]
+        }
+        
+    except psycopg2.Error as e:
+        return None
     
     finally:
         close_db_connection(conn)
@@ -360,13 +534,13 @@ def update_user_password(user_id: int, new_password: str) -> bool:
     cursor = conn.cursor()
     
     try:
-        password_hash, salt = hash_password(new_password)
+        password_hash, salt, password_encrypted = hash_password(new_password)
         
         cursor.execute('''
             UPDATE acw_users 
-            SET password_hash = %s, salt = %s, updated_at = CURRENT_TIMESTAMP
+            SET password_hash = %s, salt = %s, password_encrypted = %s, updated_at = CURRENT_TIMESTAMP
             WHERE id = %s
-        ''', (password_hash, salt, user_id))
+        ''', (password_hash, salt, password_encrypted, user_id))
         
         conn.commit()
         return cursor.rowcount > 0
@@ -377,9 +551,3 @@ def update_user_password(user_id: int, new_password: str) -> bool:
     
     finally:
         close_db_connection(conn)
-
-
-if __name__ == "__main__":
-    # Teste das funções
-    create_users_table()
-    create_default_admin()

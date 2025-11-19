@@ -1,31 +1,5 @@
 services:
-  calculador:
-    image: renaneunao/saas-cartola-calculador:latest
-    container_name: cartola-aero-calculador-container
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-      CALCULATION_INTERVAL_MINUTES: ${CALCULATION_INTERVAL_MINUTES:-15}
-    volumes:
-      - ./logs:/app/logs
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-    networks:
-      - infra_network
-
   web-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: renaneunao/saas-cartola-web-app:latest
     container_name: cartola-aero-web-app-container
     restart: unless-stopped
@@ -45,21 +19,27 @@ services:
       # Stripe - IDs dos Produtos
       STRIPE_PRODUCT_STARTER: ${STRIPE_PRODUCT_STARTER}
       STRIPE_PRODUCT_PRO_PLUS: ${STRIPE_PRODUCT_PRO_PLUS}
+      STRIPE_PRODUCT_AVANCADO: ${STRIPE_PRODUCT_AVANCADO}
+      STRIPE_PRODUCT_PRO: ${STRIPE_PRODUCT_PRO}
       # Domínio da aplicação
-      DOMAIN: ${DOMAIN:-http://localhost:5000}
+      DOMAIN: ${DOMAIN:-http://194.163.142.108:5000}
+      BASE_URL: ${BASE_URL:-http://194.163.142.108:5000}
+      # Brevo - Configurações de Email
+      BREVO_SMTP_SERVER: ${BREVO_SMTP_SERVER:-smtp-relay.brevo.com}
+      BREVO_SMTP_PORT: ${BREVO_SMTP_PORT:-587}
+      BREVO_SMTP_LOGIN: ${BREVO_SMTP_LOGIN}
+      BREVO_SMTP_PASSWORD: ${BREVO_SMTP_PASSWORD}
+      BREVO_SENDER_EMAIL: ${BREVO_SENDER_EMAIL}
+      BREVO_SENDER_NAME: ${BREVO_SENDER_NAME:-Aero Cartola}
+      BREVO_API_KEY: ${BREVO_API_KEY}
+      # Criptografia para senhas (Fernet key)
+      CRYPTO_KEY: ${CRYPTO_KEY}
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
       - ./logs:/app/logs
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
     networks:
       - infra_network
-    depends_on:
-      - calculador
 
 networks:
   infra_network:

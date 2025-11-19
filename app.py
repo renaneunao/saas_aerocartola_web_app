@@ -16,8 +16,10 @@ from models.users import (
     authenticate_user,
     get_all_users,
     create_user,
-    update_user_password
+    update_user_password,
+    verify_email_token
 )
+from utils.email_service import send_verification_email, send_welcome_email
 from models.teams import get_all_user_teams, create_team, get_team, update_team
 
 # Registrar Blueprints
@@ -75,6 +77,36 @@ def admin_required(f):
         if not user or not user.get('is_admin', False):
             flash('Você precisa ser administrador para acessar esta página.', 'error')
             return redirect(url_for('index'))
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+def team_required(f):
+    """Decorator para proteger rotas que requerem que o usuário tenha pelo menos um time cadastrado"""
+    from functools import wraps
+    
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not is_user_authenticated():
+            flash('Você precisa fazer login para acessar esta página.', 'warning')
+            return redirect(url_for('login'))
+        
+        user = get_current_user()
+        if not user:
+            flash('Erro ao verificar usuário.', 'error')
+            return redirect(url_for('login'))
+        
+        # Verificar se o usuário tem times cadastrados
+        from models.teams import get_all_user_teams, create_teams_table
+        conn = get_db_connection()
+        try:
+            create_teams_table(conn)
+            teams = get_all_user_teams(conn, user['id'])
+            if not teams or len(teams) == 0:
+                flash('Você precisa adicionar um time antes de acessar esta página.', 'warning')
+                return redirect(url_for('associar_credenciais'))
+        finally:
+            close_db_connection(conn)
         
         return f(*args, **kwargs)
     return decorated_function
@@ -154,6 +186,21 @@ def inject_user():
     """Injeta variáveis globais em todos os templates"""
     user = get_current_user()
     
+    # Verificar se o usuário tem times cadastrados
+    has_teams = False
+    if user:
+        from models.teams import get_all_user_teams, create_teams_table
+        conn = get_db_connection()
+        if conn:
+            try:
+                create_teams_table(conn)
+                teams = get_all_user_teams(conn, user['id'])
+                has_teams = len(teams) > 0
+            except Exception as e:
+                print(f"Erro ao verificar times do usuário: {e}")
+            finally:
+                close_db_connection(conn)
+    
     # Buscar permissões do plano se o usuário estiver logado
     permissions = None
     plan_key = 'free'
@@ -178,7 +225,8 @@ def inject_user():
     return {
         'current_user': user,
         'permissions': permissions,
-        'plan_key': plan_key
+        'plan_key': plan_key,
+        'has_teams': has_teams
     }
 
 # ========================================
@@ -187,6 +235,7 @@ def inject_user():
 
 @app.route('/')
 @login_required
+@team_required
 def index():
     try:
         print("[DEBUG INDEX] Iniciando função index()")
@@ -225,8 +274,19 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """Página e processamento de login"""
+    print(f"[DEBUG LOGIN] Método: {request.method}")
+    print(f"[DEBUG LOGIN] URL: {request.url}")
+    print(f"[DEBUG LOGIN] Session flashes antes: {session.get('_flashes', [])}")
+    
     if is_user_authenticated():
         return redirect(url_for('index'))
+    
+    # Limpar mensagens flash antigas se for um GET request (sem POST)
+    # Isso evita que mensagens de registro apareçam na página de login
+    if request.method == 'GET':
+        # Limpar TODAS as mensagens flash antigas ao acessar /login
+        session.pop('_flashes', None)
+        print(f"[DEBUG LOGIN] Mensagens flash limpas no GET")
     
     if request.method == 'POST':
         username_or_email = request.form.get('username', '').strip()
@@ -262,7 +322,122 @@ def login():
         else:
             flash(auth_result['error'], 'error')
     
+    # GET request - renderizar página de login limpa
+    print(f"[DEBUG LOGIN] Renderizando template (GET request)")
+    print(f"[DEBUG LOGIN] Session flashes antes de renderizar: {session.get('_flashes', [])}")
     return render_template('login.html')
+
+@app.route('/register', methods=['POST'])
+def register():
+    """Processamento de registro - apenas POST"""
+    print(f"[DEBUG REGISTER] Método: {request.method}")
+    print(f"[DEBUG REGISTER] URL: {request.url}")
+    print(f"[DEBUG REGISTER] Form: {dict(request.form)}")
+    print(f"[DEBUG REGISTER] Session flashes antes: {session.get('_flashes', [])}")
+    
+    if is_user_authenticated():
+        return redirect(url_for('index'))
+    
+    # A rota /register só deve ser chamada via POST
+    # GET requests devem ir para /login
+    if request.method == 'GET':
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        full_name = request.form.get('full_name', '').strip() or None
+        
+        print(f"[DEBUG REGISTER] Dados recebidos - Username: {username}, Email: {email}, Password: {'*' * len(password) if password else 'vazio'}")
+        
+        # Validações básicas - verificar se os campos obrigatórios foram preenchidos
+        if not username or not email or not password or not confirm_password:
+            flash('Por favor, preencha todos os campos obrigatórios.', 'error')
+            return render_template('login.html')
+        
+        # Validações de formato
+        if len(username) < 3:
+            flash('O nome de usuário deve ter pelo menos 3 caracteres.', 'error')
+            return render_template('login.html')
+        
+        if len(password) < 6:
+            flash('A senha deve ter pelo menos 6 caracteres.', 'error')
+            return render_template('login.html')
+        
+        if password != confirm_password:
+            flash('As senhas não coincidem.', 'error')
+            return render_template('login.html')
+        
+        # Validar formato de email básico
+        if '@' not in email or '.' not in email.split('@')[1]:
+            flash('Por favor, insira um email válido.', 'error')
+            return render_template('login.html')
+        
+        # Criar usuário
+        print(f"[DEBUG REGISTER] Chamando create_user...")
+        result = create_user(username, email, password, full_name, is_admin=False, email_verified=False)
+        print(f"[DEBUG REGISTER] Resultado create_user: {result}")
+        
+        if result['success']:
+            # Enviar email de verificação
+            verification_token = result['verification_token']
+            print(f"[DEBUG] Usuário criado com sucesso! ID: {result['user_id']}")
+            print(f"[DEBUG] Token de verificação gerado: {verification_token[:20]}...")
+            print(f"[DEBUG] Tentando enviar email de verificação para: {email}")
+            email_result = send_verification_email(email, username, verification_token)
+            
+            if email_result['success']:
+                flash('Conta criada com sucesso! Verifique seu email para ativar sua conta.', 'success')
+            else:
+                error_detail = email_result.get("error", "Erro desconhecido")
+                print(f"[ERROR] Falha ao enviar email: {error_detail}")
+                flash(f'Conta criada, mas houve um erro ao enviar o email de verificação: {error_detail}. Entre em contato com o suporte.', 'warning')
+            
+            return render_template('login.html')
+        else:
+            # Erro ao criar usuário
+            error_msg = result.get('error', 'Erro desconhecido ao criar conta.')
+            print(f"[DEBUG REGISTER] Erro ao criar usuário: {error_msg}")
+            flash(error_msg, 'error')
+            print(f"[DEBUG REGISTER] Session flashes após flash error: {session.get('_flashes', [])}")
+            return render_template('login.html')
+    
+    # GET request - apenas renderizar a página
+    print(f"[DEBUG REGISTER] Renderizando template (GET request)")
+    print(f"[DEBUG REGISTER] Session flashes antes de renderizar: {session.get('_flashes', [])}")
+    return render_template('login.html')
+
+@app.route('/verify-email')
+def verify_email():
+    """Verifica o email do usuário através do token"""
+    token = request.args.get('token', '').strip()
+    
+    if not token:
+        flash('Token de verificação não fornecido.', 'error')
+        return redirect(url_for('login'))
+    
+    result = verify_email_token(token)
+    
+    if result['success']:
+        if result.get('already_verified'):
+            flash('ℹ️ Seu email já estava verificado! Você já pode fazer login.', 'info')
+        else:
+            # Enviar email de boas-vindas
+            try:
+                user = result['user']
+                send_welcome_email(user['email'], user['username'])
+            except Exception as e:
+                print(f"[WARNING] Erro ao enviar email de boas-vindas: {e}")
+                # Não falhar a verificação se o email de boas-vindas falhar
+            
+            flash('✅ Email verificado com sucesso! Sua conta foi ativada. Agora você pode fazer login.', 'success')
+        return redirect(url_for('login'))
+    else:
+        error_msg = result.get('error', 'Erro ao verificar email.')
+        flash(f'❌ {error_msg}', 'error')
+        return redirect(url_for('login'))
 
 @app.route('/logout')
 def logout():
@@ -270,6 +445,269 @@ def logout():
     logout_user()
     flash('Você foi desconectado com sucesso.', 'success')
     return redirect(url_for('login'))
+
+
+@app.route('/esqueceu-senha', methods=['GET', 'POST'])
+def esqueceu_senha():
+    """Página para recuperar senha - envia link para redefinir senha"""
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        
+        if not email:
+            flash('Por favor, informe seu email.', 'error')
+            return render_template('esqueceu_senha.html')
+        
+        # Buscar usuário pelo email
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro ao conectar ao banco de dados.', 'error')
+            return render_template('esqueceu_senha.html')
+        
+        try:
+            import secrets
+            from datetime import datetime, timedelta
+            
+            cursor = conn.cursor()
+            cursor.execute('SELECT id, username, email FROM acw_users WHERE email = %s', (email,))
+            user = cursor.fetchone()
+            
+            if not user:
+                # Por segurança, não revelar se o email existe ou não
+                flash('Se o email estiver cadastrado, você receberá um link para redefinir sua senha por email.', 'info')
+                return render_template('esqueceu_senha.html')
+            
+            user_id, username, user_email = user
+            
+            # Gerar token de reset de senha (válido por 1 hora)
+            reset_token = secrets.token_urlsafe(32)
+            expires_at = datetime.now() + timedelta(hours=1)
+            
+            # Salvar token no banco
+            cursor.execute('''
+                UPDATE acw_users 
+                SET password_reset_token = %s, password_reset_expires = %s
+                WHERE id = %s
+            ''', (reset_token, expires_at, user_id))
+            conn.commit()
+            
+            # Enviar email com link de reset
+            from utils.email_service import _send_email_smtp
+            base_url = os.getenv('BASE_URL', 'http://localhost:5000')
+            reset_url = f"{base_url}/redefinir-senha?token={reset_token}"
+            
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #1a1a1a; background-color: #f5f5f5; margin: 0; padding: 20px;">
+                <div class="email-wrapper" style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+                    <div class="header" style="background: linear-gradient(135deg, #0c4a6e 0%, #075985 100%); padding: 30px 20px; text-align: center; border-radius: 10px 10px 0 0;">
+                        <h1 style="margin: 0; font-size: 28px; color: #ffffff; font-weight: bold;">⚽ Cartola Manager</h1>
+                    </div>
+                    <div class="content" style="background: #ffffff; color: #1a1a1a; padding: 40px 30px; border-radius: 0 0 10px 10px;">
+                        <h2 style="color: #0c4a6e; margin-top: 0; font-size: 24px;">Recuperação de Senha</h2>
+                        <p>Olá, <strong>{username}</strong>!</p>
+                        <p>Você solicitou a recuperação de senha. Clique no botão abaixo para redefinir sua senha:</p>
+                        <div style="text-align: center; margin: 30px 0;">
+                            <a href="{reset_url}" style="display: inline-block; background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%); color: #ffffff !important; padding: 15px 40px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">Redefinir Senha</a>
+                        </div>
+                        <p style="text-align: center; color: #666; font-size: 14px;">Ou copie e cole este link no seu navegador:</p>
+                        <div style="background-color: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 15px; margin: 20px 0; border-radius: 4px; word-break: break-all;">
+                            <code style="color: #0369a1; font-size: 14px; font-family: 'Courier New', monospace;">{reset_url}</code>
+                        </div>
+                        <p><strong>⚠️ Importante:</strong></p>
+                        <ul style="color: #333333; margin: 15px 0; padding-left: 20px;">
+                            <li>Este link é válido por 1 hora</li>
+                            <li>Após clicar, você poderá definir uma nova senha</li>
+                            <li>Se você não solicitou esta recuperação, ignore este email</li>
+                        </ul>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            text_content = f"""
+            Recuperação de Senha - Cartola Manager
+            
+            Olá, {username}!
+            
+            Você solicitou a recuperação de senha. Acesse o link abaixo para redefinir sua senha:
+            
+            {reset_url}
+            
+            ⚠️ IMPORTANTE:
+            - Este link é válido por 1 hora
+            - Após clicar, você poderá definir uma nova senha
+            - Se você não solicitou esta recuperação, ignore este email
+            """
+            
+            email_result = _send_email_smtp(
+                to_email=user_email,
+                to_name=username,
+                subject="Recuperação de Senha - Cartola Manager",
+                html_content=html_content,
+                text_content=text_content
+            )
+            
+            if email_result['success']:
+                flash('Um link para redefinir sua senha foi enviado para seu email. Verifique sua caixa de entrada.', 'success')
+            else:
+                flash('Erro ao enviar email. Tente novamente mais tarde ou entre em contato com o suporte.', 'error')
+            
+        except Exception as e:
+            conn.rollback()
+            print(f"[ERROR] Erro ao processar esqueceu senha: {e}")
+            import traceback
+            traceback.print_exc()
+            flash('Erro ao processar solicitação. Tente novamente.', 'error')
+        finally:
+            close_db_connection(conn)
+    
+    return render_template('esqueceu_senha.html')
+
+@app.route('/redefinir-senha', methods=['GET', 'POST'])
+def redefinir_senha():
+    """Página para redefinir senha usando token"""
+    token = request.args.get('token', '').strip() if request.method == 'GET' else request.form.get('token', '').strip()
+    
+    if not token:
+        flash('Token de redefinição inválido ou ausente.', 'error')
+        return redirect(url_for('login'))
+    
+    conn = get_db_connection()
+    if not conn:
+        flash('Erro ao conectar ao banco de dados.', 'error')
+        return redirect(url_for('login'))
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT id, username, email 
+            FROM acw_users 
+            WHERE password_reset_token = %s 
+            AND password_reset_expires > CURRENT_TIMESTAMP
+        ''', (token,))
+        user = cursor.fetchone()
+        
+        if not user:
+            flash('Token inválido ou expirado. Solicite uma nova recuperação de senha.', 'error')
+            return redirect(url_for('esqueceu_senha'))
+        
+        user_id, username, user_email = user
+        
+        if request.method == 'POST':
+            nova_senha = request.form.get('nova_senha', '')
+            confirmar_senha = request.form.get('confirmar_senha', '')
+            
+            if not nova_senha or not confirmar_senha:
+                flash('Por favor, preencha todos os campos.', 'error')
+                return render_template('redefinir_senha.html', token=token)
+            
+            if nova_senha != confirmar_senha:
+                flash('As senhas não coincidem.', 'error')
+                return render_template('redefinir_senha.html', token=token)
+            
+            if len(nova_senha) < 6:
+                flash('A senha deve ter pelo menos 6 caracteres.', 'error')
+                return render_template('redefinir_senha.html', token=token)
+            
+            # Atualizar senha e limpar token
+            from models.users import hash_password
+            password_hash, salt, password_encrypted = hash_password(nova_senha)
+            
+            cursor.execute('''
+                UPDATE acw_users 
+                SET password_hash = %s, salt = %s, password_encrypted = %s,
+                    password_reset_token = NULL, password_reset_expires = NULL,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+            ''', (password_hash, salt, password_encrypted, user_id))
+            conn.commit()
+            
+            flash('Senha redefinida com sucesso! Agora você pode fazer login com sua nova senha.', 'success')
+            return redirect(url_for('login'))
+        
+        # GET - mostrar formulário
+        return render_template('redefinir_senha.html', token=token)
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"[ERROR] Erro ao redefinir senha: {e}")
+        import traceback
+        traceback.print_exc()
+        flash('Erro ao processar solicitação. Tente novamente.', 'error')
+        return redirect(url_for('login'))
+    finally:
+        close_db_connection(conn)
+
+@app.route('/alterar-senha', methods=['GET', 'POST'])
+@login_required
+def alterar_senha():
+    """Página para alterar senha do usuário"""
+    user = get_current_user()
+    
+    if request.method == 'POST':
+        senha_atual = request.form.get('senha_atual', '')
+        senha_nova = request.form.get('senha_nova', '')
+        senha_nova_confirmar = request.form.get('senha_nova_confirmar', '')
+        
+        if not senha_atual or not senha_nova or not senha_nova_confirmar:
+            flash('Por favor, preencha todos os campos.', 'error')
+            return render_template('alterar_senha.html', current_user=user)
+        
+        if senha_nova != senha_nova_confirmar:
+            flash('As novas senhas não coincidem.', 'error')
+            return render_template('alterar_senha.html', current_user=user)
+        
+        if len(senha_nova) < 6:
+            flash('A nova senha deve ter pelo menos 6 caracteres.', 'error')
+            return render_template('alterar_senha.html', current_user=user)
+        
+        # Verificar senha atual
+        conn = get_db_connection()
+        if not conn:
+            flash('Erro ao conectar ao banco de dados.', 'error')
+            return render_template('alterar_senha.html', current_user=user)
+        
+        try:
+            from models.users import verify_password, hash_password
+            cursor = conn.cursor()
+            cursor.execute('SELECT password_hash, salt FROM acw_users WHERE id = %s', (user['id'],))
+            result = cursor.fetchone()
+            
+            if not result:
+                flash('Erro ao buscar dados do usuário.', 'error')
+                return render_template('alterar_senha.html', current_user=user)
+            
+            stored_hash, stored_salt = result
+            
+            # Verificar senha atual
+            if not verify_password(senha_atual, stored_hash, stored_salt):
+                flash('Senha atual incorreta.', 'error')
+                return render_template('alterar_senha.html', current_user=user)
+            
+            # Atualizar senha
+            new_hash, new_salt, new_encrypted = hash_password(senha_nova)
+            cursor.execute('UPDATE acw_users SET password_hash = %s, salt = %s, password_encrypted = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s', 
+                         (new_hash, new_salt, new_encrypted, user['id']))
+            conn.commit()
+            
+            flash('Senha alterada com sucesso!', 'success')
+            return redirect(url_for('index'))
+            
+        except Exception as e:
+            conn.rollback()
+            print(f"[ERROR] Erro ao alterar senha: {e}")
+            flash('Erro ao alterar senha. Tente novamente.', 'error')
+            return render_template('alterar_senha.html', current_user=user)
+        finally:
+            close_db_connection(conn)
+    
+    return render_template('alterar_senha.html', current_user=user)
 
 @app.route('/associar-credenciais', methods=['GET', 'POST'])
 @login_required
@@ -449,6 +887,7 @@ def dashboard():
 
 @app.route('/pagina-inicial')
 @login_required
+@team_required
 def pagina_inicial():
     """Página inicial com seleção de perfis de peso de jogo e peso SG"""
     user = get_current_user()
@@ -762,6 +1201,7 @@ def salvar_configuracao_perfis():
 
 @app.route('/credenciais')
 @login_required
+@team_required
 def credenciais():
     """Página para visualizar e gerenciar todos os times do usuário"""
     user = get_current_user()
@@ -863,6 +1303,7 @@ def editar_credenciais(time_id):
 
 @app.route('/modulos')
 @login_required
+@team_required
 def modulos():
     """Página principal dos módulos individuais"""
     # Verificar se há time selecionado
@@ -1177,6 +1618,7 @@ def api_modulos_status():
 
 @app.route('/modulos/<modulo>')
 @login_required
+@team_required
 def modulo_individual(modulo):
     """Página individual de cada módulo (goleiro, lateral, etc)"""
     # Validar se o módulo é válido (apenas módulos de posição)
@@ -1278,6 +1720,7 @@ def modulo_individual(modulo):
 
 @app.route('/modulos/<modulo>/recalcular')
 @login_required
+@team_required
 def recalcular_modulo(modulo):
     """Endpoint para recalcular um módulo específico"""
     # Por enquanto apenas redireciona de volta (funcionalidade será implementada)
@@ -3071,6 +3514,7 @@ def api_modulo_dados(modulo):
 
 @app.route('/modulos/escalacao-ideal')
 @login_required
+@team_required
 def modulo_escalacao_ideal():
     """Página do módulo de escalação ideal"""
     # Verificar se há time selecionado

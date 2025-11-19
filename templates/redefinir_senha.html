@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redefinir Senha - Cartola Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-blue': {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+  </head>
+  <body class="h-full bg-gradient-to-br from-dark-blue-950 via-dark-blue-900 to-slate-900 text-white flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <!-- Logo and Header -->
+        <div class="text-center mb-8">
+            <div class="inline-block p-4 bg-gradient-to-br from-dark-blue-500 to-dark-blue-600 rounded-2xl shadow-2xl mb-4">
+                <i class="fas fa-key text-4xl text-white"></i>
+            </div>
+            <h1 class="text-3xl font-bold bg-gradient-to-r from-white to-dark-blue-200 bg-clip-text text-transparent mb-2">
+                Redefinir Senha
+            </h1>
+            <p class="text-dark-blue-300">Defina uma nova senha para sua conta</p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-gradient-to-br from-dark-blue-800/90 to-dark-blue-900/90 backdrop-blur-sm rounded-2xl shadow-2xl border border-dark-blue-700/50 overflow-hidden">
+            <div class="p-8">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="space-y-3 mb-6">
+                            {% for category, message in messages %}
+                            <div class="animate-fade-in p-4 rounded-lg border-l-4 {% if category == 'error' or category == 'danger' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'success' %}bg-green-900/50 border-green-500 text-green-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% else %}bg-blue-900/50 border-blue-500 text-blue-200{% endif %} backdrop-blur-sm shadow-lg">
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas {% if category == 'error' or category == 'danger' %}fa-exclamation-triangle{% elif category == 'success' %}fa-check-circle{% elif category == 'warning' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
+                                    <span>{{ message }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                <form method="post" class="space-y-6">
+                    <input type="hidden" name="token" value="{{ token }}">
+                    
+                    <div>
+                        <label for="nova_senha" class="block text-sm font-medium text-dark-blue-200 mb-2">
+                            <i class="fas fa-lock text-green-400 mr-2"></i>
+                            Nova Senha
+                        </label>
+                        <div class="relative">
+                            <input type="password" 
+                                   id="nova_senha" 
+                                   name="nova_senha" 
+                                   required
+                                   minlength="6"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 pr-12 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-lg"
+                                   placeholder="Digite sua nova senha (mínimo 6 caracteres)">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-dark-blue-400"></i>
+                            </div>
+                            <button type="button" 
+                                    onclick="togglePassword('nova_senha', 'toggleIconNova')"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
+                                <i class="fas fa-eye" id="toggleIconNova"></i>
+                            </button>
+                        </div>
+                        <p class="mt-2 text-xs text-dark-blue-400">Mínimo de 6 caracteres</p>
+                    </div>
+
+                    <div>
+                        <label for="confirmar_senha" class="block text-sm font-medium text-dark-blue-200 mb-2">
+                            <i class="fas fa-check-circle text-blue-400 mr-2"></i>
+                            Confirmar Nova Senha
+                        </label>
+                        <div class="relative">
+                            <input type="password" 
+                                   id="confirmar_senha" 
+                                   name="confirmar_senha" 
+                                   required
+                                   minlength="6"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 pr-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-lg"
+                                   placeholder="Confirme sua nova senha">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <i class="fas fa-check-circle text-dark-blue-400"></i>
+                            </div>
+                            <button type="button" 
+                                    onclick="togglePassword('confirmar_senha', 'toggleIconConfirmar')"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
+                                <i class="fas fa-eye" id="toggleIconConfirmar"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                            class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
+                        <i class="fas fa-save"></i>
+                        <span>Redefinir Senha</span>
+                    </button>
+                </form>
+
+                <div class="mt-6 text-center">
+                    <a href="{{ url_for('login') }}" class="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Voltar para o login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function togglePassword(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+
+    // Validação de senhas
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const senhaNova = document.getElementById('nova_senha').value;
+        const senhaConfirmar = document.getElementById('confirmar_senha').value;
+        
+        if (senhaNova !== senhaConfirmar) {
+            e.preventDefault();
+            alert('As senhas não coincidem!');
+            return false;
+        }
+        
+        if (senhaNova.length < 6) {
+            e.preventDefault();
+            alert('A senha deve ter pelo menos 6 caracteres!');
+            return false;
+        }
+    });
+    </script>
+  </body>
+</html>
+
