@@ -11,7 +11,7 @@ class CalculoZagueiro {
             console.trace('[CALCULO ZAGUEIRO] Stack trace do construtor bloqueado:');
             throw new Error('Cálculo bloqueado: ranking salvo encontrado');
         }
-        
+
         this.rodada_atual = data.rodada_atual;
         this.perfil_peso_jogo = data.perfil_peso_jogo;
         this.perfil_peso_sg = data.perfil_peso_sg;
@@ -38,16 +38,16 @@ class CalculoZagueiro {
             const atleta = this.atletas[i];
             const resultado = this.calcularPontuacao(atleta, totalEscalacoes);
             resultados.push(resultado);
-            
+
             // Debug apenas para os 3 primeiros
             if (i < 3) {
-                console.log(`[DEBUG ZAGUEIRO ${i+1}] ${atleta.apelido}: pontuacao_total = ${resultado.pontuacao_total}`);
+                console.log(`[DEBUG ZAGUEIRO ${i + 1}] ${atleta.apelido}: pontuacao_total = ${resultado.pontuacao_total}`);
             }
         }
 
         resultados.sort((a, b) => b.pontuacao_total - a.pontuacao_total);
         const topResultados = resultados.slice(0, topN);
-        
+
         return topResultados;
     }
 
@@ -59,18 +59,18 @@ class CalculoZagueiro {
     }
 
     calcularPontuacao(atleta, totalEscalacoes) {
-        const { 
-            atleta_id, 
-            apelido, 
-            clube_id, 
-            clube_nome, 
+        const {
+            atleta_id,
+            apelido,
+            clube_id,
+            clube_nome,
             clube_abrev,
             clube_escudo_url,
             pontos_num,
-            media_num, 
-            preco_num, 
-            jogos_num, 
-            peso_jogo, 
+            media_num,
+            preco_num,
+            jogos_num,
+            peso_jogo,
             peso_sg,
             adversario_id,
             adversario_nome
@@ -103,14 +103,24 @@ class CalculoZagueiro {
         const peso_jogo_original = peso_jogo || 0;
         console.log(`  peso_sg_final: ${peso_sg_final}, peso_jogo_original: ${peso_jogo_original}`);
 
-        // Buscar média de desarmes do atleta
+        // Buscar médias do atleta
         const atletaStats = this.pontuados_data[atleta_id] || {};
         console.log(`  atletaStats (pontuados_data[${atleta_id}]):`, atletaStats);
         const media_ds = atletaStats.avg_ds || 0;
+        const media_ff = atletaStats.avg_ff || 0;
+        const media_fs = atletaStats.avg_fs || 0;
+        const media_fd = atletaStats.avg_fd || 0;
+        const media_g = atletaStats.avg_g || 0;
+        const media_a = atletaStats.avg_a || 0;
         console.log(`  media_ds: ${media_ds}`);
 
         let peso_jogo_final = 0;
         let media_ds_cedidos = 0;
+        let media_ff_cedidos = 0;
+        let media_fs_cedidos = 0;
+        let media_fd_cedidos = 0;
+        let media_g_cedidos = 0;
+        let media_a_cedidos = 0;
 
         console.log(`  Verificando adversário: adversario_id=${adversario_id}, adversarios_dict[${clube_id}]=${this.adversarios_dict[clube_id]}`);
 
@@ -119,10 +129,15 @@ class CalculoZagueiro {
             peso_jogo_final = peso_jogo_original * this.pesos.FATOR_PESO_JOGO;
             console.log(`  ✅ Adversário encontrado! peso_jogo_final = ${peso_jogo_original} × ${this.pesos.FATOR_PESO_JOGO} = ${peso_jogo_final.toFixed(2)}`);
 
-            // Buscar média de desarmes cedidos pelo adversário
+            // Buscar médias de scouts cedidos pelo adversário
             const adversarioStats = this.pontuados_data[adversario_id] || {};
             console.log(`  adversarioStats (pontuados_data[${adversario_id}]):`, adversarioStats);
             media_ds_cedidos = adversarioStats.avg_ds_cedidos || 0;
+            media_ff_cedidos = adversarioStats.avg_ff_cedidos || 0;
+            media_fs_cedidos = adversarioStats.avg_fs_cedidos || 0;
+            media_fd_cedidos = adversarioStats.avg_fd_cedidos || 0;
+            media_g_cedidos = adversarioStats.avg_g_cedidos || 0;
+            media_a_cedidos = adversarioStats.avg_a_cedidos || 0;
             console.log(`  media_ds_cedidos: ${media_ds_cedidos}`);
         } else {
             console.log(`  ❌ Adversário NÃO encontrado ou não corresponde`);
@@ -132,12 +147,29 @@ class CalculoZagueiro {
         const pontos_ds = media_ds * media_ds_cedidos * this.pesos.FATOR_DS;
         console.log(`  pontos_ds: ${media_ds} × ${media_ds_cedidos} × ${this.pesos.FATOR_DS} = ${pontos_ds.toFixed(2)}`);
 
+        // Calcular contribuição dos outros scouts (com pesos opcionais)
+        const fator_ff = this.pesos.FATOR_FF || 0;
+        const fator_fs = this.pesos.FATOR_FS || 0;
+        const fator_fd = this.pesos.FATOR_FD || 0;
+        const fator_g = this.pesos.FATOR_G || 0;
+        const fator_a = this.pesos.FATOR_A || 0;
+
+        const pontos_ff = media_ff * media_ff_cedidos * fator_ff;
+        const pontos_fs = media_fs * media_fs_cedidos * fator_fs;
+        const pontos_fd = media_fd * media_fd_cedidos * fator_fd;
+        const pontos_g = media_g * media_g_cedidos * fator_g;
+        const pontos_a = media_a * media_a_cedidos * fator_a;
+
+        console.log(`  pontos_ff: ${pontos_ff.toFixed(2)}, pontos_fs: ${pontos_fs.toFixed(2)}, pontos_fd: ${pontos_fd.toFixed(2)}`);
+        console.log(`  pontos_g: ${pontos_g.toFixed(2)}, pontos_a: ${pontos_a.toFixed(2)}`);
+
         // Calcular pontuação base
         // No Python: peso_jogo já foi multiplicado por FATOR_PESO_JOGO (linha 149)
         // E na fórmula usa peso_jogo diretamente (linha 172): base_pontuacao = pontos_media + peso_jogo + pontos_ds
-        const base_pontuacao = pontos_media + peso_jogo_final + pontos_ds;
-        console.log(`  base_pontuacao: ${pontos_media.toFixed(2)} + ${peso_jogo_final.toFixed(2)} + ${pontos_ds.toFixed(2)} = ${base_pontuacao.toFixed(2)}`);
-        
+        const base_pontuacao = pontos_media + peso_jogo_final + pontos_ds +
+            pontos_ff + pontos_fs + pontos_fd + pontos_g + pontos_a;
+        console.log(`  base_pontuacao: ${pontos_media.toFixed(2)} + ${peso_jogo_final.toFixed(2)} + ${pontos_ds.toFixed(2)} + ${pontos_ff.toFixed(2)} + ${pontos_fs.toFixed(2)} + ${pontos_fd.toFixed(2)} + ${pontos_g.toFixed(2)} + ${pontos_a.toFixed(2)} = ${base_pontuacao.toFixed(2)}`);
+
         const pontuacao_total = base_pontuacao * (1 + peso_sg_final * this.pesos.FATOR_SG);
         console.log(`  pontuacao_total (antes raiz): ${base_pontuacao.toFixed(2)} × (1 + ${peso_sg_final} × ${this.pesos.FATOR_SG}) = ${pontuacao_total.toFixed(2)}`);
 
@@ -156,7 +188,7 @@ class CalculoZagueiro {
         // No Python: math.sqrt(max(0, pontuacao_total * peso_escalacao))
         const pontuacao_com_escalacao = pontuacao_total_non_neg * peso_escalacao;
         console.log(`  pontuacao_com_escalacao: ${pontuacao_total_non_neg.toFixed(2)} × ${peso_escalacao.toFixed(4)} = ${pontuacao_com_escalacao.toFixed(2)}`);
-        
+
         const pontuacao_total_final = Math.sqrt(Math.max(0, pontuacao_com_escalacao));
         console.log(`  sqrt(${pontuacao_com_escalacao.toFixed(2)}) = ${pontuacao_total_final.toFixed(2)}`);
         console.log(`[DEBUG ZAGUEIRO] ========================================\n`);

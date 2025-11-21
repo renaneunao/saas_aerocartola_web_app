@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="h-full">
-  <head>
+
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Aero Cartola{% endblock %}</title>
@@ -55,7 +56,7 @@
             }
         }
     </script>
-    
+
     <!-- Custom Scrollbar Styles -->
     <style>
         /* Sidebar Scrollbar - Mesmo estilo dos cards de peso do jogo */
@@ -63,31 +64,31 @@
             scrollbar-width: thin;
             scrollbar-color: #0284c7 rgba(15, 23, 42, 0.3);
         }
-        
+
         .sidebar-scroll::-webkit-scrollbar {
             width: 6px;
         }
-        
+
         .sidebar-scroll::-webkit-scrollbar-track {
             background: rgba(15, 23, 42, 0.3);
             border-radius: 10px;
         }
-        
+
         .sidebar-scroll::-webkit-scrollbar-thumb {
             background: linear-gradient(180deg, #0369a1, #0284c7);
             border-radius: 10px;
             transition: background 0.3s ease;
         }
-        
+
         .sidebar-scroll::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(180deg, #0284c7, #0ea5e9);
         }
-        
+
         /* Tooltip para itens desabilitados na sidebar */
         .group-item {
             position: relative;
         }
-        
+
         .tooltip-sidebar {
             position: absolute;
             bottom: 100%;
@@ -108,7 +109,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
             transition: opacity 0.2s ease-in-out;
         }
-        
+
         .tooltip-sidebar::after {
             content: '';
             position: absolute;
@@ -118,16 +119,16 @@
             border: 6px solid transparent;
             border-top-color: #082f49;
         }
-        
+
         .group-item:hover .tooltip-sidebar {
             opacity: 1;
         }
-        
+
         /* Garantir que sidebar não tenha overflow horizontal */
         #sidebar {
             overflow-x: hidden;
         }
-        
+
         /* Mobile: Garantir que o sidebar tenha altura fixa e scroll próprio */
         @media (max-width: 1023px) {
             #sidebar {
@@ -135,13 +136,14 @@
                 max-height: 100vh;
                 overflow: hidden;
             }
-            
+
             .sidebar-scroll {
-                max-height: calc(100vh - 200px); /* Altura total menos header e footer */
+                max-height: calc(100vh - 200px);
+                /* Altura total menos header e footer */
                 overflow-y: auto;
             }
         }
-        
+
         /* Desktop: Manter comportamento normal */
         @media (min-width: 1024px) {
             .sidebar-scroll {
@@ -149,17 +151,22 @@
             }
         }
     </style>
-  </head>
-<body data-user-id="{{ current_user.id if current_user and current_user.id else '' }}" class="h-full bg-gradient-to-br from-dark-blue-950 via-dark-blue-900 to-slate-900 text-white overflow-x-hidden">
+</head>
+
+<body data-user-id="{{ current_user.id if current_user and current_user.id else '' }}"
+    class="h-full bg-gradient-to-br from-dark-blue-950 via-dark-blue-900 to-slate-900 text-white overflow-x-hidden">
     <!-- Sidebar -->
-    <div class="fixed inset-y-0 left-0 z-50 w-64 shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out" id="sidebar" style="background-color: #0c1f36;">
+    <div class="fixed inset-y-0 left-0 z-50 w-64 shadow-2xl transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out"
+        id="sidebar" style="background-color: #0c1f36;">
         <!-- Sidebar Header -->
         <div class="flex items-center justify-center h-64 px-2 border-b border-gray-800 relative">
             <a href="{{ url_for('index') }}" class="flex items-center justify-center w-full h-full">
-                <img src="{{ url_for('static', filename='logo/aero-cartola-logo.png') }}" alt="Aero Cartola" class="h-full w-full max-w-[250px] max-h-[250px] object-contain">
+                <img src="{{ url_for('static', filename='logo/aero-cartola-logo.png') }}" alt="Aero Cartola"
+                    class="h-full w-full max-w-[250px] max-h-[250px] object-contain">
             </a>
             <!-- Close button for mobile -->
-            <button type="button" id="sidebar-close" class="lg:hidden text-gray-400 hover:text-white transition-colors duration-200 absolute right-4">
+            <button type="button" id="sidebar-close"
+                class="lg:hidden text-gray-400 hover:text-white transition-colors duration-200 absolute right-4">
                 <i class="fas fa-times text-lg"></i>
             </button>
         </div>
@@ -170,17 +177,18 @@
                 {% if current_user and current_user.plano %}
                 {% set plano = current_user.plano %}
                 {% set plano_nomes = {
-                    'free': 'FREE',
-                    'avancado': 'AVANÇADO',
-                    'pro': 'PRO'
+                'free': 'FREE',
+                'avancado': 'AVANÇADO',
+                'pro': 'PRO'
                 } %}
                 {% set plano_colors = {
-                    'free': 'bg-slate-600 text-slate-100 border-slate-500',
-                    'avancado': 'bg-blue-600 text-blue-100 border-blue-500',
-                    'pro': 'bg-yellow-600 text-yellow-100 border-yellow-500'
+                'free': 'bg-slate-600 text-slate-100 border-slate-500',
+                'avancado': 'bg-blue-600 text-blue-100 border-blue-500',
+                'pro': 'bg-yellow-600 text-yellow-100 border-yellow-500'
                 } %}
-                <span class="px-1.5 py-0.5 {{ plano_colors.get(plano, 'bg-slate-600 text-slate-100') }} border rounded text-[9px] font-bold leading-tight whitespace-nowrap" 
-                      title="Plano {{ plano_nomes.get(plano, plano|upper) }}">
+                <span
+                    class="px-1.5 py-0.5 {{ plano_colors.get(plano, 'bg-slate-600 text-slate-100') }} border rounded text-[9px] font-bold leading-tight whitespace-nowrap"
+                    title="Plano {{ plano_nomes.get(plano, plano|upper) }}">
                     {{ plano_nomes.get(plano, plano|upper) }}
                 </span>
                 {% endif %}
@@ -191,22 +199,32 @@
                 </div>
                 <!-- Engrenagem de configurações -->
                 <div class="relative group">
-                    <button type="button" class="text-gray-400 hover:text-white transition-colors duration-200 p-1" id="user-settings-btn">
+                    <button type="button" class="text-gray-400 hover:text-white transition-colors duration-200 p-1"
+                        id="user-settings-btn">
                         <i class="fas fa-cog text-sm"></i>
                     </button>
                     <!-- Dropdown menu -->
-                    <div id="user-settings-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
-                        <a href="{{ url_for('alterar_senha') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                    <div id="user-settings-menu"
+                        class="hidden absolute right-0 top-full mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
+                        <a href="{{ url_for('alterar_senha') }}"
+                            class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
                             <i class="fas fa-lock mr-2 text-blue-400"></i>
                             Alterar Senha
                         </a>
                         {% if current_user and current_user.is_admin %}
-                        <a href="{{ url_for('admin_planos') }}" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200 border-t border-gray-700">
+                        <a href="{{ url_for('admin_planos') }}"
+                            class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200 border-t border-gray-700">
                             <i class="fas fa-crown mr-2 text-purple-400"></i>
                             Testar Planos (Admin)
                         </a>
+                        <a href="{{ url_for('admin_laterais') }}"
+                            class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                            <i class="fas fa-users-cog mr-2 text-blue-400"></i>
+                            Admin Laterais
+                        </a>
                         {% endif %}
-                        <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-red-300 hover:bg-red-600/20 hover:text-white transition-colors duration-200 border-t border-gray-700">
+                        <a href="{{ url_for('logout') }}"
+                            class="block px-4 py-2 text-sm text-red-300 hover:bg-red-600/20 hover:text-white transition-colors duration-200 border-t border-gray-700">
                             <i class="fas fa-sign-out-alt mr-2 text-red-400"></i>
                             Sair
                         </a>
@@ -221,10 +239,11 @@
             <div class="grid grid-cols-3 gap-2">
                 <!-- Dashboard -->
                 <div class="relative group-item">
-                    <a href="{% if has_teams %}{{ url_for('index') }}{% else %}#{% endif %}" 
-                       onclick="{% if not has_teams %}event.preventDefault(); return false;{% endif %}"
-                       class="{% if not has_teams %}opacity-40 cursor-not-allowed{% elif request.path == url_for('index') %}bg-gray-800 border-2 border-blue-500{% else %}bg-gray-800/50 hover:bg-gray-800 border-2 border-transparent hover:border-gray-600{% endif %} flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 relative h-20">
-                        <img src="{{ url_for('static', filename='sidebar_icons/dashboard.png') }}" alt="Dashboard" class="w-8 h-8 object-contain mb-1 flex-shrink-0">
+                    <a href="{% if has_teams %}{{ url_for('index') }}{% else %}#{% endif %}"
+                        onclick="{% if not has_teams %}event.preventDefault(); return false;{% endif %}"
+                        class="{% if not has_teams %}opacity-40 cursor-not-allowed{% elif request.path == url_for('index') %}bg-gray-800 border-2 border-blue-500{% else %}bg-gray-800/50 hover:bg-gray-800 border-2 border-transparent hover:border-gray-600{% endif %} flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 relative h-20">
+                        <img src="{{ url_for('static', filename='sidebar_icons/dashboard.png') }}" alt="Dashboard"
+                            class="w-8 h-8 object-contain mb-1 flex-shrink-0">
                         <span class="text-[10px] text-gray-300 text-center font-medium leading-tight">Dashboard</span>
                         {% if not has_teams %}
                         <span class="tooltip-sidebar">Adicione um time primeiro</span>
@@ -234,11 +253,13 @@
 
                 <!-- Escolher Perfis -->
                 <div class="relative group-item">
-                    <a href="{% if has_teams %}{{ url_for('pagina_inicial') }}{% else %}#{% endif %}" 
-                       onclick="{% if not has_teams %}event.preventDefault(); return false;{% endif %}"
-                       class="{% if not has_teams %}opacity-40 cursor-not-allowed{% elif request.path.startswith('/pagina-inicial') %}bg-gray-800 border-2 border-green-500{% else %}bg-gray-800/50 hover:bg-gray-800 border-2 border-transparent hover:border-gray-600{% endif %} flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 relative h-20">
-                        <img src="{{ url_for('static', filename='sidebar_icons/calculo-perfis.png') }}" alt="Escolher Perfis" class="w-8 h-8 object-contain mb-1 flex-shrink-0">
-                        <span class="text-[10px] text-gray-300 text-center font-medium leading-tight">Escolher Perfis</span>
+                    <a href="{% if has_teams %}{{ url_for('pagina_inicial') }}{% else %}#{% endif %}"
+                        onclick="{% if not has_teams %}event.preventDefault(); return false;{% endif %}"
+                        class="{% if not has_teams %}opacity-40 cursor-not-allowed{% elif request.path.startswith('/pagina-inicial') %}bg-gray-800 border-2 border-green-500{% else %}bg-gray-800/50 hover:bg-gray-800 border-2 border-transparent hover:border-gray-600{% endif %} flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 relative h-20">
+                        <img src="{{ url_for('static', filename='sidebar_icons/calculo-perfis.png') }}"
+                            alt="Escolher Perfis" class="w-8 h-8 object-contain mb-1 flex-shrink-0">
+                        <span class="text-[10px] text-gray-300 text-center font-medium leading-tight">Escolher
+                            Perfis</span>
                         {% if not has_teams %}
                         <span class="tooltip-sidebar">Adicione um time primeiro</span>
                         {% endif %}
@@ -247,11 +268,13 @@
 
                 <!-- Calcular Posições -->
                 <div class="relative group-item">
-                    <a href="{% if has_teams %}{{ url_for('modulos') }}{% else %}#{% endif %}" 
-                       onclick="{% if not has_teams %}event.preventDefault(); return false;{% endif %}"
-                       class="{% if not has_teams %}opacity-40 cursor-not-allowed{% elif request.path.startswith('/modulos') and not request.path.startswith('/modulos/escalacao-ideal') %}bg-gray-800 border-2 border-purple-500{% else %}bg-gray-800/50 hover:bg-gray-800 border-2 border-transparent hover:border-gray-600{% endif %} flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 relative h-20">
-                        <img src="{{ url_for('static', filename='sidebar_icons/calcular-posicoes.png') }}" alt="Calcular Posições" class="w-8 h-8 object-contain mb-1 flex-shrink-0">
-                        <span class="text-[10px] text-gray-300 text-center font-medium leading-tight">Calcular Posições</span>
+                    <a href="{% if has_teams %}{{ url_for('modulos') }}{% else %}#{% endif %}"
+                        onclick="{% if not has_teams %}event.preventDefault(); return false;{% endif %}"
+                        class="{% if not has_teams %}opacity-40 cursor-not-allowed{% elif request.path.startswith('/modulos') and not request.path.startswith('/modulos/escalacao-ideal') %}bg-gray-800 border-2 border-purple-500{% else %}bg-gray-800/50 hover:bg-gray-800 border-2 border-transparent hover:border-gray-600{% endif %} flex flex-col items-center justify-center p-3 rounded-lg transition-all duration-200 relative h-20">
+                        <img src="{{ url_for('static', filename='sidebar_icons/calcular-posicoes.png') }}"
+                            alt="Calcular Posições" class="w-8 h-8 object-contain mb-1 flex-shrink-0">
+                        <span class="text-[10px] text-gray-300 text-center font-medium leading-tight">Calcular
+                            Posições</span>
                         {% if not has_teams %}
                         <span class="tooltip-sidebar">Adicione um time primeiro</span>
                         {% endif %}
@@ -261,11 +284,12 @@
 
             <!-- Botão Escalação Ideal -->
             <div class="px-2 mb-2">
-                <a href="{% if has_teams %}{{ url_for('modulo_escalacao_ideal') }}{% else %}#{% endif %}" 
-                   onclick="{% if not has_teams %}event.preventDefault(); return false;{% endif %}"
-                   class="{% if not has_teams %}opacity-40 cursor-not-allowed{% elif request.path.startswith('/modulos/escalacao-ideal') %}bg-gradient-to-r from-dark-blue-600/20 to-dark-blue-700/20 border border-dark-blue-500/60{% else %}bg-gradient-to-r from-dark-blue-600/10 to-dark-blue-700/10 border border-dark-blue-500/30 hover:border-dark-blue-500/50 hover:from-dark-blue-600/15 hover:to-dark-blue-700/15{% endif %} flex items-center space-x-2 py-2 px-3 rounded-lg transition-all duration-200 cursor-pointer w-full">
+                <a href="{% if has_teams %}{{ url_for('modulo_escalacao_ideal') }}{% else %}#{% endif %}"
+                    onclick="{% if not has_teams %}event.preventDefault(); return false;{% endif %}"
+                    class="{% if not has_teams %}opacity-40 cursor-not-allowed{% elif request.path.startswith('/modulos/escalacao-ideal') %}bg-gradient-to-r from-dark-blue-600/20 to-dark-blue-700/20 border border-dark-blue-500/60{% else %}bg-gradient-to-r from-dark-blue-600/10 to-dark-blue-700/10 border border-dark-blue-500/30 hover:border-dark-blue-500/50 hover:from-dark-blue-600/15 hover:to-dark-blue-700/15{% endif %} flex items-center space-x-2 py-2 px-3 rounded-lg transition-all duration-200 cursor-pointer w-full">
                     <div class="w-8 h-8 rounded flex items-center justify-center bg-dark-blue-500/20 flex-shrink-0">
-                        <img src="{{ url_for('static', filename='sidebar_icons/treinador.png') }}" alt="Escalação Ideal" class="w-6 h-6 object-contain">
+                        <img src="{{ url_for('static', filename='sidebar_icons/treinador.png') }}" alt="Escalação Ideal"
+                            class="w-6 h-6 object-contain">
                     </div>
                     <div class="flex-1 min-w-0">
                         <p class="text-white font-semibold text-xs leading-tight">⚡ Escalação Ideal</p>
@@ -277,22 +301,22 @@
             <!-- Credentials Section -->
             <div class="space-y-0.5 pt-3">
                 {% if not has_teams %}
-                <a href="{{ url_for('associar_credenciais') }}" 
-                   class="{% if request.path.startswith('/associar-credenciais') %}bg-gray-800 text-white border-r-2 border-orange-500{% else %}text-gray-300 hover:bg-gray-800 hover:text-white{% endif %} group flex items-center px-3 py-1.5 text-xs font-medium rounded-l-lg transition-all duration-200">
+                <a href="{{ url_for('associar_credenciais') }}"
+                    class="{% if request.path.startswith('/associar-credenciais') %}bg-gray-800 text-white border-r-2 border-orange-500{% else %}text-gray-300 hover:bg-gray-800 hover:text-white{% endif %} group flex items-center px-3 py-1.5 text-xs font-medium rounded-l-lg transition-all duration-200">
                     <i class="fas fa-users mr-2 text-orange-400 text-xs"></i>
                     Adicionar Time
                 </a>
                 {% endif %}
                 {% if has_teams %}
-                <a href="{{ url_for('credenciais') }}" 
-                   class="{% if request.path.startswith('/credenciais') and not request.path.startswith('/associar-credenciais') %}bg-gray-800 text-white border-r-2 border-orange-500{% else %}text-gray-300 hover:bg-gray-800 hover:text-white{% endif %} group flex items-center px-3 py-1.5 text-xs font-medium rounded-l-lg transition-all duration-200">
+                <a href="{{ url_for('credenciais') }}"
+                    class="{% if request.path.startswith('/credenciais') and not request.path.startswith('/associar-credenciais') %}bg-gray-800 text-white border-r-2 border-orange-500{% else %}text-gray-300 hover:bg-gray-800 hover:text-white{% endif %} group flex items-center px-3 py-1.5 text-xs font-medium rounded-l-lg transition-all duration-200">
                     <i class="fas fa-list mr-2 text-orange-400 text-xs"></i>
                     Gerenciar Times
                 </a>
                 {% endif %}
-                
-                <a href="{{ url_for('pagamento.index') }}" 
-                   class="{% if request.path.startswith('/pagamento') %}bg-gray-800 text-white border-r-2 border-yellow-500{% else %}text-gray-300 hover:bg-gray-800 hover:text-white{% endif %} group flex items-center px-3 py-1.5 text-xs font-medium rounded-l-lg transition-all duration-200">
+
+                <a href="{{ url_for('pagamento.index') }}"
+                    class="{% if request.path.startswith('/pagamento') %}bg-gray-800 text-white border-r-2 border-yellow-500{% else %}text-gray-300 hover:bg-gray-800 hover:text-white{% endif %} group flex items-center px-3 py-1.5 text-xs font-medium rounded-l-lg transition-all duration-200">
                     <i class="fas fa-credit-card mr-2 text-yellow-400 text-xs"></i>
                     Planos e Assinaturas
                 </a>
@@ -305,7 +329,9 @@
                     <div id="timesList" class="space-y-1">
                         <div id="timesLoading" class="px-3 py-4 flex items-center justify-center">
                             <div class="flex items-center space-x-2 text-gray-400">
-                                <div class="animate-spin rounded-full h-4 w-4 border-2 border-gray-400 border-t-transparent"></div>
+                                <div
+                                    class="animate-spin rounded-full h-4 w-4 border-2 border-gray-400 border-t-transparent">
+                                </div>
                                 <span class="text-xs">Carregando times</span>
                                 <span id="loadingDots" class="text-xs">...</span>
                             </div>
@@ -313,7 +339,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Escalar Todos os Times Button (será adicionado dinamicamente se houver mais de um time) -->
         </nav>
 
@@ -327,7 +353,8 @@
     <div class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden" id="sidebar-overlay"></div>
 
     <!-- Top Bar (Mobile) -->
-    <div class="lg:hidden border-b border-gray-800 px-4 py-3 flex items-center justify-between" style="background-color: #0c1f36;">
+    <div class="lg:hidden border-b border-gray-800 px-4 py-3 flex items-center justify-between"
+        style="background-color: #0c1f36;">
         <button type="button" id="sidebar-toggle" class="text-gray-300 hover:text-white transition-colors duration-200">
             <i class="fas fa-bars text-lg"></i>
         </button>
@@ -338,38 +365,39 @@
     <!-- Main Content -->
     <main class="lg:ml-64 overflow-x-hidden">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-4 pt-20 lg:pt-4">
-        <!-- Flash Messages -->
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-                <div class="mb-6 space-y-3">
-          {% for category, message in messages %}
-                    <div class="{% if category == 'error' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% elif category == 'info' %}bg-blue-900/50 border-blue-500 text-blue-200{% else %}bg-green-900/50 border-green-500 text-green-200{% endif %} border-l-4 p-4 rounded-r-lg backdrop-blur-sm">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                  {% if category == 'error' %}
-                                <i class="fas fa-exclamation-triangle text-red-400"></i>
-                  {% elif category == 'warning' %}
-                                <i class="fas fa-exclamation-circle text-yellow-400"></i>
-                  {% elif category == 'info' %}
-                                <i class="fas fa-info-circle text-blue-400"></i>
-                  {% else %}
-                                <i class="fas fa-check-circle text-green-400"></i>
-                  {% endif %}
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium">{{ message }}</p>
-                            </div>
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="mb-6 space-y-3">
+                {% for category, message in messages %}
+                <div
+                    class="{% if category == 'error' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% elif category == 'info' %}bg-blue-900/50 border-blue-500 text-blue-200{% else %}bg-green-900/50 border-green-500 text-green-200{% endif %} border-l-4 p-4 rounded-r-lg backdrop-blur-sm">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            {% if category == 'error' %}
+                            <i class="fas fa-exclamation-triangle text-red-400"></i>
+                            {% elif category == 'warning' %}
+                            <i class="fas fa-exclamation-circle text-yellow-400"></i>
+                            {% elif category == 'info' %}
+                            <i class="fas fa-info-circle text-blue-400"></i>
+                            {% else %}
+                            <i class="fas fa-check-circle text-green-400"></i>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm font-medium">{{ message }}</p>
                         </div>
                     </div>
-          {% endfor %}
                 </div>
-        {% endif %}
-      {% endwith %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
 
-        <!-- Page Content -->
-        <div class="animate-fade-in">
-      {% block content %}{% endblock %}
-        </div>
+            <!-- Page Content -->
+            <div class="animate-fade-in">
+                {% block content %}{% endblock %}
+            </div>
         </div>
     </main>
 
@@ -381,7 +409,8 @@
                     <div class="p-2 bg-gradient-to-br from-dark-blue-500 to-dark-blue-600 rounded-lg shadow-lg">
                         <i class="fas fa-futbol text-lg text-white"></i>
                     </div>
-                    <span class="text-xl font-bold bg-gradient-to-r from-white to-dark-blue-200 bg-clip-text text-transparent">
+                    <span
+                        class="text-xl font-bold bg-gradient-to-r from-white to-dark-blue-200 bg-clip-text text-transparent">
                         Aero Cartola
                     </span>
                 </div>
@@ -401,7 +430,7 @@
     <!-- Scripts -->
     <script>
         // Sidebar toggle functionality
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebar-toggle');
             const sidebarClose = document.getElementById('sidebar-close');
@@ -410,10 +439,10 @@
             // Toggle sidebar on mobile
             function toggleSidebar() {
                 const isOpen = !sidebar.classList.contains('-translate-x-full');
-                
+
                 sidebar.classList.toggle('-translate-x-full');
                 sidebarOverlay.classList.toggle('hidden');
-                
+
                 // Prevenir scroll da página quando sidebar estiver aberto no mobile
                 if (window.innerWidth < 1024) {
                     if (isOpen) {
@@ -430,7 +459,7 @@
             function closeSidebar() {
                 sidebar.classList.add('-translate-x-full');
                 sidebarOverlay.classList.add('hidden');
-                
+
                 // Liberar scroll da página quando fechar sidebar no mobile
                 if (window.innerWidth < 1024) {
                     document.body.style.overflow = '';
@@ -441,17 +470,17 @@
             if (sidebarToggle) {
                 sidebarToggle.addEventListener('click', toggleSidebar);
             }
-            
+
             if (sidebarClose) {
                 sidebarClose.addEventListener('click', closeSidebar);
             }
-            
+
             if (sidebarOverlay) {
                 sidebarOverlay.addEventListener('click', closeSidebar);
             }
 
             // Close sidebar on window resize if screen becomes large
-            window.addEventListener('resize', function() {
+            window.addEventListener('resize', function () {
                 if (window.innerWidth >= 1024) { // lg breakpoint
                     closeSidebar();
                     // Garantir que o scroll da página seja liberado ao redimensionar
@@ -462,7 +491,7 @@
             // Auto-close sidebar on mobile when clicking a link
             const sidebarLinks = sidebar.querySelectorAll('a[href]');
             sidebarLinks.forEach(link => {
-                link.addEventListener('click', function() {
+                link.addEventListener('click', function () {
                     if (window.innerWidth < 1024) { // Only on mobile
                         setTimeout(closeSidebar, 100); // Small delay for better UX
                     }
@@ -472,25 +501,25 @@
             // User settings dropdown functionality
             const userSettingsBtn = document.getElementById('user-settings-btn');
             const userSettingsMenu = document.getElementById('user-settings-menu');
-            
+
             if (userSettingsBtn && userSettingsMenu) {
                 // Toggle dropdown
-                userSettingsBtn.addEventListener('click', function(e) {
+                userSettingsBtn.addEventListener('click', function (e) {
                     e.stopPropagation();
                     userSettingsMenu.classList.toggle('hidden');
                 });
-                
+
                 // Close dropdown when clicking outside
-                document.addEventListener('click', function(e) {
+                document.addEventListener('click', function (e) {
                     if (!userSettingsBtn.contains(e.target) && !userSettingsMenu.contains(e.target)) {
                         userSettingsMenu.classList.add('hidden');
                     }
                 });
-                
+
                 // Close dropdown when clicking on a link inside
                 const menuLinks = userSettingsMenu.querySelectorAll('a');
                 menuLinks.forEach(link => {
-                    link.addEventListener('click', function() {
+                    link.addEventListener('click', function () {
                         userSettingsMenu.classList.add('hidden');
                         if (window.innerWidth < 1024) {
                             setTimeout(closeSidebar, 100);
@@ -502,9 +531,9 @@
             // Smooth scrolling for anchor links
             const anchorLinks = document.querySelectorAll('a[href^="#"]');
             anchorLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
+                link.addEventListener('click', function (e) {
                     e.preventDefault();
-                    
+
                     const target = document.querySelector(this.getAttribute('href'));
                     if (target) {
                         target.scrollIntoView({
@@ -517,18 +546,18 @@
 
             // Carregar lista de times
             carregarTimesSidebar();
-            
+
             // DEBUG: Verificar tamanhos dos botões após carregamento
             setTimeout(() => {
                 const btnEscalarTodos = document.getElementById('escalarTodosTimesBtnSidebar');
                 const btnEscalacaoIdeal = document.querySelector('a[href*="escalacao-ideal"]')?.closest('div.px-3');
-                
+
                 if (btnEscalarTodos && btnEscalacaoIdeal) {
                     const rectEscalarTodos = btnEscalarTodos.getBoundingClientRect();
                     const rectEscalacaoIdeal = btnEscalacaoIdeal.getBoundingClientRect();
                     const stylesEscalarTodos = window.getComputedStyle(btnEscalarTodos);
                     const stylesEscalacaoIdeal = window.getComputedStyle(btnEscalacaoIdeal);
-                    
+
                     console.log('🔍 DEBUG TAMANHOS DOS BOTÕES (onLoad):');
                     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
                     console.log('📏 ESCALAR TODOS OS TIMES:');
@@ -565,27 +594,27 @@
         async function renderizarTimesSidebar(data) {
             const timesList = document.getElementById('timesList');
             const timesLoading = document.getElementById('timesLoading');
-            
+
             if (!timesList) return;
-            
+
             // Remover loading se existir
             if (timesLoading) {
                 timesLoading.remove();
             }
-            
+
             // Remover botão "Escalar Todos os Times" se existir antes de limpar a lista
             const botaoExistente = document.getElementById('escalarTodosTimesBtnSidebar');
             if (botaoExistente) {
                 botaoExistente.remove();
             }
-            
+
             timesList.innerHTML = '';
-            
+
             if (!data.times || data.times.length === 0) {
                 timesList.innerHTML = '<div class="px-3 py-2 text-xs text-gray-400">Nenhum time cadastrado</div>';
                 return;
             }
-            
+
             // Buscar limite de times do plano
             let maxTimes = 999999; // Padrão: ilimitado
             try {
@@ -602,27 +631,26 @@
             } catch (error) {
                 console.error('Erro ao buscar permissões:', error);
             }
-            
+
             // Limitar quantidade de times mostrados
             const timesLimitados = data.times.slice(0, maxTimes);
-            
+
             // Desabilitar temporariamente o MutationObserver durante a renderização
             if (window.escalarTodosTimesObserver) {
                 window.escalarTodosTimesObserver.disconnect();
             }
-            
+
             // Se tiver apenas 1 time, mostrar nome e escudo (layout vertical)
             // Se tiver 2 ou mais, mostrar apenas escudos em grid de 4 colunas
             if (timesLimitados.length === 1) {
                 const time = timesLimitados[0];
                 const hasTokenError = time.token_error === true;
-                
+
                 const timeItem = document.createElement('div');
-                timeItem.className = `px-3 py-2 text-sm rounded-l-lg cursor-pointer transition-all duration-200 ${
-                    time.selected 
-                        ? 'bg-gray-800 text-white border-r-2 border-blue-500' 
-                        : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                }`;
+                timeItem.className = `px-3 py-2 text-sm rounded-l-lg cursor-pointer transition-all duration-200 ${time.selected
+                    ? 'bg-gray-800 text-white border-r-2 border-blue-500'
+                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    }`;
                 timeItem.innerHTML = `
                     <div class="flex items-center">
                         <div class="w-8 h-8 rounded mr-2 flex items-center justify-center team-shield-sidebar" data-team-id="${time.id}">
@@ -632,7 +660,7 @@
                         ${time.selected ? '<i class="fas fa-check text-blue-400 ml-2"></i>' : ''}
                     </div>
                 `;
-                
+
                 // Carregar escudo dinamicamente com ALTA RESOLUÇÃO
                 const shieldContainer = timeItem.querySelector('.team-shield-sidebar');
                 if (shieldContainer) {
@@ -653,23 +681,23 @@
                     } else if (time.team_shield_url) {
                         shieldContainer.innerHTML = '';
                         const img = document.createElement('img');
-                        
+
                         // Usar resolução MÁXIMA disponível da API do Cartola
                         let highResUrl = time.team_shield_url;
-                        
+
                         // Se for PNG do Cartola, usar versão SEM TAMANHO (original)
                         if (highResUrl.includes('/45x45.png')) {
                             highResUrl = highResUrl.replace('/45x45.png', '');
                         } else if (highResUrl.includes('/60x60.png')) {
                             highResUrl = highResUrl.replace('/60x60.png', '');
                         }
-                        
+
                         img.src = highResUrl;
                         img.alt = 'Escudo';
                         img.className = 'w-8 h-8 rounded border border-white/20';
                         img.style.objectFit = 'contain';
                         img.style.imageRendering = '-webkit-optimize-contrast';
-                        img.onerror = function() {
+                        img.onerror = function () {
                             shieldContainer.innerHTML = '<i class="fas fa-futbol text-sm text-gray-400"></i>';
                         };
                         shieldContainer.appendChild(img);
@@ -710,7 +738,7 @@
                             });
                     }
                 }
-                
+
                 // Adicionar listener de seleção apenas se não tiver erro de token
                 if (!hasTokenError) {
                     timeItem.addEventListener('click', async () => {
@@ -733,7 +761,7 @@
                 // 2 ou mais times: mostrar apenas escudos em grid de 4 colunas
                 const gridContainer = document.createElement('div');
                 gridContainer.className = 'grid grid-cols-4 gap-1.5 px-2';
-                
+
                 timesLimitados.forEach((time, index) => {
                     console.log(`[DEBUG] Renderizando time ${index + 1}/${timesLimitados.length}:`, {
                         id: time.id,
@@ -743,23 +771,22 @@
                         selected: time.selected,
                         fullTimeObject: time
                     });
-                    
+
                     const timeItem = document.createElement('div');
-                    timeItem.className = `relative cursor-pointer transition-all duration-200 rounded-lg p-1 ${
-                        time.selected 
-                            ? 'bg-gray-800 border-2 border-blue-500' 
-                            : 'bg-gray-800/50 hover:bg-gray-800 border-2 border-transparent hover:border-gray-600'
-                    }`;
+                    timeItem.className = `relative cursor-pointer transition-all duration-200 rounded-lg p-1 ${time.selected
+                        ? 'bg-gray-800 border-2 border-blue-500'
+                        : 'bg-gray-800/50 hover:bg-gray-800 border-2 border-transparent hover:border-gray-600'
+                        }`;
                     timeItem.setAttribute('data-team-id', time.id);
                     timeItem.setAttribute('title', time.team_name);
-                    
+
                     const shieldContainer = document.createElement('div');
                     shieldContainer.className = 'w-full aspect-square rounded flex items-center justify-center team-shield-sidebar';
                     shieldContainer.setAttribute('data-team-id', time.id);
-                    
+
                     // Verificar se há erro de token
                     const hasTokenError = time.token_error === true;
-                    
+
                     if (hasTokenError) {
                         // Mostrar "X" vermelho indicando erro de token
                         console.warn(`[DEBUG] ⚠️ Time ${time.id} (${time.team_name}) tem erro de token (401)`);
@@ -787,10 +814,10 @@
                         // Escudos proporcionais ao container (que é aspect-square)
                         img.className = 'w-full h-full rounded object-contain';
                         img.style.imageRendering = '-webkit-optimize-contrast';
-                        img.onload = function() {
+                        img.onload = function () {
                             console.log(`[DEBUG] ✅ Escudo do time ${time.id} (${time.team_name}) carregado com sucesso:`, highResUrl);
                         };
-                        img.onerror = function() {
+                        img.onerror = function () {
                             console.error(`[DEBUG] ❌ Erro ao carregar escudo do time ${time.id} (${time.team_name}):`, highResUrl);
                             shieldContainer.innerHTML = '<i class="fas fa-futbol text-gray-400 text-sm"></i>';
                         };
@@ -802,7 +829,7 @@
                         sessionStorage.removeItem('times_cache');
                         sessionStorage.removeItem('times_cache_timestamp');
                         console.log(`[DEBUG] Cache limpo devido à falta de escudo do time ${time.id}`);
-                        
+
                         // Tentar buscar escudo via API se não tiver
                         fetch(`/api/time/${time.id}/escudo`)
                             .then(response => {
@@ -811,7 +838,7 @@
                             })
                             .then(data => {
                                 console.log(`[DEBUG] Dados retornados da API para time ${time.id}:`, data);
-                                
+
                                 // Verificar se há erro de token
                                 if (data.token_error === true) {
                                     console.warn(`[DEBUG] ⚠️ Time ${time.id} tem erro de token (401) - mostrando X`);
@@ -841,10 +868,10 @@
                                     img.alt = time.team_name;
                                     img.className = 'w-full h-full rounded object-contain';
                                     img.style.imageRendering = '-webkit-optimize-contrast';
-                                    img.onload = function() {
+                                    img.onload = function () {
                                         console.log(`[DEBUG] ✅ Escudo do time ${time.id} carregado via API com sucesso`);
                                     };
-                                    img.onerror = function() {
+                                    img.onerror = function () {
                                         console.error(`[DEBUG] ❌ Erro ao carregar escudo via API para time ${time.id}`);
                                     };
                                     shieldContainer.innerHTML = '';
@@ -859,7 +886,7 @@
                                 shieldContainer.innerHTML = '<i class="fas fa-futbol text-dark-blue-400 text-sm"></i>';
                             });
                     }
-                    
+
                     // Indicador de selecionado (menor também)
                     if (time.selected) {
                         const checkBadge = document.createElement('div');
@@ -867,9 +894,9 @@
                         checkBadge.innerHTML = '<i class="fas fa-check text-white text-[8px]"></i>';
                         timeItem.appendChild(checkBadge);
                     }
-                    
+
                     timeItem.appendChild(shieldContainer);
-                    
+
                     // Adicionar listener de seleção apenas se não tiver erro de token
                     if (!hasTokenError) {
                         timeItem.addEventListener('click', async () => {
@@ -887,18 +914,18 @@
                             }
                         });
                     }
-                    
+
                     gridContainer.appendChild(timeItem);
                 });
-                
+
                 timesList.appendChild(gridContainer);
             }
-            
+
             // Reativar o observer após renderizar todos os times
             if (window.escalarTodosTimesObserver && timesList) {
                 window.escalarTodosTimesObserver.observe(timesList, { childList: true, subtree: false });
             }
-            
+
             // Verificar e adicionar botão de escalar todos os times após renderizar TODOS os times
             // Apenas se tiver mais de 1 time
             if (timesLimitados.length > 1 && typeof verificarEAdicionarBotaoSidebar === 'function') {
@@ -911,12 +938,12 @@
                 console.log('[DEBUG] renderizarTimesSidebar: Não chamando verificarEAdicionarBotaoSidebar - times:', timesLimitados.length, 'função existe?', typeof verificarEAdicionarBotaoSidebar === 'function');
             }
         }
-        
+
         // Função para animar os pontos de loading
         function animarLoadingDots() {
             const loadingDots = document.getElementById('loadingDots');
             if (!loadingDots) return null;
-            
+
             let dots = 0;
             const interval = setInterval(() => {
                 if (!document.getElementById('timesLoading')) {
@@ -926,7 +953,7 @@
                 dots = (dots % 3) + 1;
                 loadingDots.textContent = '.'.repeat(dots);
             }, 500);
-            
+
             return interval;
         }
 
@@ -936,19 +963,19 @@
             if (!forcarRecarregar) {
                 const cachedData = sessionStorage.getItem('times_cache');
                 const cacheTimestamp = sessionStorage.getItem('times_cache_timestamp');
-                
+
                 if (cachedData && cacheTimestamp) {
                     const cacheAge = Date.now() - parseInt(cacheTimestamp);
                     // Cache válido por 5 minutos (300000ms)
                     if (cacheAge < 300000) {
-                        console.log('📦 Usando times do cache (idade: ' + Math.round(cacheAge/1000) + 's)');
+                        console.log('📦 Usando times do cache (idade: ' + Math.round(cacheAge / 1000) + 's)');
                         const data = JSON.parse(cachedData);
                         await renderizarTimesSidebar(data);
                         return;
                     }
                 }
             }
-            
+
             // Iniciar animação de loading apenas se não houver times ainda
             const timesList = document.getElementById('timesList');
             let loadingInterval = null;
@@ -959,21 +986,21 @@
                     loadingInterval = animarLoadingDots();
                 }
             }
-            
+
             try {
                 const response = await fetch('/api/credenciais/lista');
                 const data = await response.json();
-                
+
                 // Parar animação de loading
                 if (loadingInterval) {
                     clearInterval(loadingInterval);
                 }
-                
+
                 // Salvar no cache
                 sessionStorage.setItem('times_cache', JSON.stringify(data));
                 sessionStorage.setItem('times_cache_timestamp', Date.now().toString());
                 console.log('💾 Times salvos no cache');
-                
+
                 await renderizarTimesSidebar(data);
             } catch (error) {
                 console.error('Erro ao carregar times:', error);
@@ -1005,13 +1032,13 @@
                         team_id: timeId
                     })
                 });
-                
+
                 if (response.ok) {
                     // Limpar cache e recarregar lista de times
                     sessionStorage.removeItem('times_cache');
                     sessionStorage.removeItem('times_cache_timestamp');
                     await carregarTimesSidebar(true); // Forçar recarregar
-                    
+
                     // Sempre redirecionar para o dashboard ao trocar de time
                     showToast('Time trocado com sucesso!', 'success', 2000);
                     setTimeout(() => {
@@ -1026,25 +1053,26 @@
             }
         }
     </script>
-    
+
     <!-- UI Components (Loader, Toast, Alert, Confirm) -->
     <script src="{{ url_for('static', filename='js/plan-permissions.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui-components.js') }}"></script>
-    
+
     <!-- Script de Escalar Todos os Times (carrega scripts de cálculo dinamicamente quando necessário) -->
     <script src="{{ url_for('static', filename='js/escalar_todos_times.js') }}"></script>
-    
+
     <!-- Expor user_id para extensão do navegador -->
     <script>
         {% if current_user and current_user.id %}
-        window.userId = {{ current_user.id|tojson }};
-        window.user_id = {{ current_user.id|tojson }};
+        window.userId = {{ current_user.id | tojson }};
+        window.user_id = {{ current_user.id | tojson }};
         console.log('✅ [Aero Cartola] User ID exposto:', window.userId);
         {% else %}
         console.warn('⚠️ [Aero Cartola] User ID não disponível');
         {% endif %}
     </script>
-    
+
     {% block scripts %}{% endblock %}
-  </body>
+</body>
+
 </html>

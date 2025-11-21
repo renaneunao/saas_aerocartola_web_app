@@ -11,7 +11,7 @@ class CalculoAtacante {
             console.trace('[CALCULO ATACANTE] Stack trace do construtor bloqueado:');
             throw new Error('Cálculo bloqueado: ranking salvo encontrado');
         }
-        
+
         this.rodada_atual = data.rodada_atual;
         this.perfil_peso_jogo = data.perfil_peso_jogo;
         this.perfil_peso_sg = data.perfil_peso_sg;
@@ -42,16 +42,16 @@ class CalculoAtacante {
             const atleta = this.atletas[i];
             const resultado = this.calcularPontuacao(atleta, totalEscalacoes);
             resultados.push(resultado);
-            
+
             // Debug apenas para os 3 primeiros
             if (i < 3) {
-                console.log(`[DEBUG ATACANTE ${i+1}] ${atleta.apelido}: pontuacao_total = ${resultado.pontuacao_total}`);
+                console.log(`[DEBUG ATACANTE ${i + 1}] ${atleta.apelido}: pontuacao_total = ${resultado.pontuacao_total}`);
             }
         }
 
         resultados.sort((a, b) => b.pontuacao_total - a.pontuacao_total);
         const topResultados = resultados.slice(0, topN);
-        
+
         return topResultados;
     }
 
@@ -63,18 +63,18 @@ class CalculoAtacante {
     }
 
     calcularPontuacao(atleta, totalEscalacoes) {
-        const { 
-            atleta_id, 
-            apelido, 
-            clube_id, 
-            clube_nome, 
+        const {
+            atleta_id,
+            apelido,
+            clube_id,
+            clube_nome,
             clube_abrev,
             clube_escudo_url,
             pontos_num,
-            media_num, 
-            preco_num, 
-            jogos_num, 
-            peso_jogo, 
+            media_num,
+            preco_num,
+            jogos_num,
+            peso_jogo,
             adversario_id,
             adversario_nome
         } = atleta;
@@ -101,29 +101,39 @@ class CalculoAtacante {
 
         let peso_jogo_final = 0;
         let media_ds_cedidos = 0;
+        let media_ff_cedidos = 0;
+        let media_fs_cedidos = 0;
+        let media_fd_cedidos = 0;
+        let media_g_cedidos = 0;
+        let media_a_cedidos = 0;
 
         // Encontrar o adversário na rodada atual
         if (adversario_id && this.adversarios_dict[clube_id] === adversario_id) {
             peso_jogo_final = peso_jogo_original * this.pesos.FATOR_PESO_JOGO;
 
-            // Buscar média de desarmes cedidos pelo adversário
+            // Buscar médias de scouts cedidos pelo adversário
             const adversarioStats = this.pontuados_data[adversario_id] || {};
             media_ds_cedidos = adversarioStats.avg_ds_cedidos || 0;
+            media_ff_cedidos = adversarioStats.avg_ff_cedidos || 0;
+            media_fs_cedidos = adversarioStats.avg_fs_cedidos || 0;
+            media_fd_cedidos = adversarioStats.avg_fd_cedidos || 0;
+            media_g_cedidos = adversarioStats.avg_g_cedidos || 0;
+            media_a_cedidos = adversarioStats.avg_a_cedidos || 0;
         }
 
         // Calcular contribuição dos desarmes
         const pontos_ds = media_ds * media_ds_cedidos * this.pesos.FATOR_DS;
 
-        // Calcular contribuição dos scouts ofensivos
-        const pontos_ff = media_ff * this.pesos.FATOR_FF;
-        const pontos_fs = media_fs * this.pesos.FATOR_FS;
-        const pontos_fd = media_fd * this.pesos.FATOR_FD;
-        const pontos_g = media_g * this.pesos.FATOR_G;
-        const pontos_a = media_a * this.pesos.FATOR_A;
+        // Calcular contribuição dos scouts ofensivos (AGORA COM CRUZAMENTO)
+        const pontos_ff = media_ff * media_ff_cedidos * this.pesos.FATOR_FF;
+        const pontos_fs = media_fs * media_fs_cedidos * this.pesos.FATOR_FS;
+        const pontos_fd = media_fd * media_fd_cedidos * this.pesos.FATOR_FD;
+        const pontos_g = media_g * media_g_cedidos * this.pesos.FATOR_G;
+        const pontos_a = media_a * media_a_cedidos * this.pesos.FATOR_A;
 
         // Calcular pontuação base (sem FATOR_SG para atacantes)
         const base_pontuacao = (pontos_media + peso_jogo_final + pontos_ds +
-                               pontos_ff + pontos_fs + pontos_fd + pontos_g + pontos_a);
+            pontos_ff + pontos_fs + pontos_fd + pontos_g + pontos_a);
         let pontuacao_total = base_pontuacao;
 
         // DEBUG DETALHADO PARA TODOS OS ATLETAS

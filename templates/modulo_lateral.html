@@ -598,8 +598,15 @@ async function carregarDados(forcarRecalculo = false) {
             }
         }
         
+        console.log('🔍 [DEBUG] Verificando ranking salvo:');
+        console.log('  - forcarRecalculo:', forcarRecalculo);
+        console.log('  - data.ranking_salvo:', data.ranking_salvo);
+        console.log('  - temRankingSalvo:', temRankingSalvo);
+        console.log('  - window.BLOQUEAR_CALCULO_LATERAL:', window.BLOQUEAR_CALCULO_LATERAL);
+        
         if (temRankingSalvo) {
             window.BLOQUEAR_CALCULO_LATERAL = true;
+            console.log('⚠️ [DEBUG] Ranking salvo encontrado! Bloqueando cálculo.');
             addProgressLog('💾 Ranking salvo encontrado! Carregando resultados...', 'success');
             updateProgress(50, 'Ranking salvo encontrado!');
             updateProgress(80, 'Preparando dados salvos...');
@@ -630,21 +637,32 @@ async function carregarDados(forcarRecalculo = false) {
         
         // Se bloqueador ativo, não calcular
         if (window.BLOQUEAR_CALCULO_LATERAL === true) {
+            console.log('⚠️ [DEBUG] Bloqueador ativo! Cálculo não será executado.');
             calculando = false;
             return;
         }
         
         // Calcular automaticamente
+        console.log('✅ [DEBUG] Iniciando cálculo de laterais...');
+        console.log('✅ [DEBUG] Dados recebidos:', {
+            total_atletas: data.atletas?.length || 0,
+            rodada_atual: data.rodada_atual,
+            pontuados_data_keys: Object.keys(data.pontuados_data || {})
+        });
+        
         addProgressLog('🔄 Nenhum ranking salvo encontrado. Iniciando cálculo de laterais...', 'info');
         updateProgress(40, 'Calculando pontuações...');
         addProgressLog('⚙️ Iniciando cálculos de pontuação para cada lateral...', 'info');
         
         if (window.BLOQUEAR_CALCULO_LATERAL === true) {
+            console.log('⚠️ [DEBUG] Bloqueador ativado durante o cálculo! Abortando...');
             calculando = false;
             return;
         }
         
+        console.log('🔵 [DEBUG] Criando instância CalculoLateral...');
         const calculo = new CalculoLateral(data);
+        console.log('🔵 [DEBUG] Instância criada! Iniciando cálculos...');
         const totalEscalacoes = calculo.calcularTotalEscalacoes();
         
         // Calcular com progresso customizado

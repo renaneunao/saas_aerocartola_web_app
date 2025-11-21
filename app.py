@@ -3141,12 +3141,15 @@ def api_modulo_dados(modulo):
             return jsonify({'error': 'Módulo inválido'}), 400
         
         # Buscar atletas com dados necessários (sem peso_jogo e peso_sg, eles vêm das tabelas de perfis)
+        # Incluir status de lateral esquerdo
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num, c.nome as clube_nome,
-                   c.abreviacao as clube_abrev
+                   c.abreviacao as clube_abrev,
+                   CASE WHEN le.atleta_id IS NOT NULL THEN TRUE ELSE FALSE END as is_esquerdo
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
+            LEFT JOIN laterais_esquerdos le ON a.atleta_id = le.atleta_id
             WHERE a.posicao_id = %s AND a.status_id = 7
         ''', (posicao_id,))
         atletas_raw = cursor.fetchall()
@@ -3200,10 +3203,10 @@ def api_modulo_dados(modulo):
         
         atletas = []
         for row in atletas_raw:
-            if not row or len(row) < 9:
+            if not row or len(row) < 10: # Agora são 10 colunas
                 continue
             try:
-                atleta_id, apelido, clube_id, pontos, media, preco, jogos, clube_nome, clube_abrev = row
+                atleta_id, apelido, clube_id, pontos, media, preco, jogos, clube_nome, clube_abrev, is_esquerdo = row
                 escudo_url = get_team_shield(clube_id, size='45x45')
                 adversario_id = adversarios_dict.get(clube_id)
                 
@@ -3220,7 +3223,8 @@ def api_modulo_dados(modulo):
                     'jogos_num': int(jogos) if jogos else 0,
                     'peso_jogo': peso_jogo_dict.get(clube_id, 0),
                     'peso_sg': peso_sg_dict.get(clube_id, 0),
-                    'adversario_id': adversario_id
+                    'adversario_id': adversario_id,
+                    'is_esquerdo': is_esquerdo
                 })
             except Exception as e:
                 print(f"Erro ao processar atleta: {e}, row: {row}")
@@ -3261,32 +3265,130 @@ def api_modulo_dados(modulo):
             except Exception as e:
                 print(f"Erro ao buscar dados de pontuados por atleta: {e}")
         
-        # 2. Buscar médias de desarmes cedidos por adversários (por posição)
+        # 2. Buscar médias de scouts cedidos por adversários (por posição)
         if adversarios_dict and posicao_id:
             adversario_ids = list(set(adversarios_dict.values()))
             if adversario_ids and len(adversario_ids) > 0:
                 placeholders = ','.join(['%s'] * len(adversario_ids))
                 try:
-                    # Buscar média de desarmes cedidos pelos adversários para esta posição
-                    cursor.execute(f'''
-                        SELECT p.clube_id, AVG(p.scout_ds) as avg_ds_cedidos
-                        FROM acf_pontuados p
-                        JOIN acf_partidas pt ON p.rodada_id = pt.rodada_id
-                        WHERE p.posicao_id = %s 
-                          AND ((pt.clube_casa_id IN ({placeholders}) AND p.clube_id = pt.clube_visitante_id)
-                               OR (pt.clube_visitante_id IN ({placeholders}) AND p.clube_id = pt.clube_casa_id))
-                          AND p.rodada_id <= %s AND p.entrou_em_campo = TRUE
-                        GROUP BY p.clube_id
-                    ''', [posicao_id] + adversario_ids + adversario_ids + [rodada_atual - 1])
+                    # Buscar média de scouts cedidos pelos adversários para esta posição
+                    # Com distinção entre laterais esquerdos e direitos se for lateral (posicao_id = 2)
                     
-                    for row in cursor.fetchall():
-                        if row and len(row) >= 2:
-                            clube_id, avg_ds_cedidos = row
-                            if clube_id not in pontuados_data:
-                                pontuados_data[clube_id] = {}
-                            pontuados_data[clube_id]['avg_ds_cedidos'] = float(avg_ds_cedidos) if avg_ds_cedidos else 0
+                    if posicao_id == 2: # Lateral
+                        cursor.execute(f'''
+                            SELECT 
+                                   CASE 
+                                       WHEN p.clube_id = pt.clube_casa_id THEN pt.clube_visitante_id
+                                       ELSE pt.clube_casa_id
+                                   END as adversario_id,
+                                   AVG(p.scout_ds) as avg_ds_cedidos,
+                                   AVG(CASE WHEN le.atleta_id IS NOT NULL THEN p.scout_ds END) as avg_ds_cedidos_esq,
+                                   AVG(CASE WHEN le.atleta_id IS NULL THEN p.scout_ds END) as avg_ds_cedidos_dir,
+                                   
+                                   AVG(p.scout_ff) as avg_ff_cedidos,
+                                   AVG(CASE WHEN le.atleta_id IS NOT NULL THEN p.scout_ff END) as avg_ff_cedidos_esq,
+                                   AVG(CASE WHEN le.atleta_id IS NULL THEN p.scout_ff END) as avg_ff_cedidos_dir,
+                                   
+                                   AVG(p.scout_fs) as avg_fs_cedidos,
+                                   AVG(CASE WHEN le.atleta_id IS NOT NULL THEN p.scout_fs END) as avg_fs_cedidos_esq,
+                                   AVG(CASE WHEN le.atleta_id IS NULL THEN p.scout_fs END) as avg_fs_cedidos_dir,
+                                   
+                                   AVG(p.scout_fd) as avg_fd_cedidos,
+                                   AVG(CASE WHEN le.atleta_id IS NOT NULL THEN p.scout_fd END) as avg_fd_cedidos_esq,
+                                   AVG(CASE WHEN le.atleta_id IS NULL THEN p.scout_fd END) as avg_fd_cedidos_dir,
+                                   
+                                   AVG(p.scout_g) as avg_g_cedidos,
+                                   AVG(CASE WHEN le.atleta_id IS NOT NULL THEN p.scout_g END) as avg_g_cedidos_esq,
+                                   AVG(CASE WHEN le.atleta_id IS NULL THEN p.scout_g END) as avg_g_cedidos_dir,
+                                   
+                                   AVG(p.scout_a) as avg_a_cedidos,
+                                   AVG(CASE WHEN le.atleta_id IS NOT NULL THEN p.scout_a END) as avg_a_cedidos_esq,
+                                   AVG(CASE WHEN le.atleta_id IS NULL THEN p.scout_a END) as avg_a_cedidos_dir
+                            FROM acf_pontuados p
+                            JOIN acf_partidas pt ON p.rodada_id = pt.rodada_id
+                            LEFT JOIN laterais_esquerdos le ON p.atleta_id = le.atleta_id
+                            WHERE p.posicao_id = %s 
+                              AND ((pt.clube_casa_id IN ({placeholders}) AND p.clube_id = pt.clube_visitante_id)
+                                   OR (pt.clube_visitante_id IN ({placeholders}) AND p.clube_id = pt.clube_casa_id))
+                              AND p.rodada_id <= %s AND p.entrou_em_campo = TRUE
+                            GROUP BY adversario_id
+                        ''', [posicao_id] + adversario_ids + adversario_ids + [rodada_atual - 1])
+                        
+                        for row in cursor.fetchall():
+                            if row:
+                                clube_id = row[0]
+                                if clube_id not in pontuados_data:
+                                    pontuados_data[clube_id] = {}
+                                
+                                # Mapear colunas para o dicionário
+                                # DS
+                                pontuados_data[clube_id]['avg_ds_cedidos'] = float(row[1]) if row[1] is not None else 0
+                                pontuados_data[clube_id]['avg_ds_cedidos_esq'] = float(row[2]) if row[2] is not None else 0
+                                pontuados_data[clube_id]['avg_ds_cedidos_dir'] = float(row[3]) if row[3] is not None else 0
+                                
+                                # FF
+                                pontuados_data[clube_id]['avg_ff_cedidos'] = float(row[4]) if row[4] is not None else 0
+                                pontuados_data[clube_id]['avg_ff_cedidos_esq'] = float(row[5]) if row[5] is not None else 0
+                                pontuados_data[clube_id]['avg_ff_cedidos_dir'] = float(row[6]) if row[6] is not None else 0
+                                
+                                # FS
+                                pontuados_data[clube_id]['avg_fs_cedidos'] = float(row[7]) if row[7] is not None else 0
+                                pontuados_data[clube_id]['avg_fs_cedidos_esq'] = float(row[8]) if row[8] is not None else 0
+                                pontuados_data[clube_id]['avg_fs_cedidos_dir'] = float(row[9]) if row[9] is not None else 0
+                                
+                                # FD
+                                pontuados_data[clube_id]['avg_fd_cedidos'] = float(row[10]) if row[10] is not None else 0
+                                pontuados_data[clube_id]['avg_fd_cedidos_esq'] = float(row[11]) if row[11] is not None else 0
+                                pontuados_data[clube_id]['avg_fd_cedidos_dir'] = float(row[12]) if row[12] is not None else 0
+                                
+                                # G
+                                pontuados_data[clube_id]['avg_g_cedidos'] = float(row[13]) if row[13] is not None else 0
+                                pontuados_data[clube_id]['avg_g_cedidos_esq'] = float(row[14]) if row[14] is not None else 0
+                                pontuados_data[clube_id]['avg_g_cedidos_dir'] = float(row[15]) if row[15] is not None else 0
+                                
+                                # A
+                                pontuados_data[clube_id]['avg_a_cedidos'] = float(row[16]) if row[16] is not None else 0
+                                pontuados_data[clube_id]['avg_a_cedidos_esq'] = float(row[17]) if row[17] is not None else 0
+                                pontuados_data[clube_id]['avg_a_cedidos_dir'] = float(row[18]) if row[18] is not None else 0
+                                
+                    else:
+                        # Comportamento padrão para outras posições (sem distinção)
+                        # AGORA BUSCANDO TODOS OS SCOUTS CEDIDOS
+                        cursor.execute(f'''
+                            SELECT 
+                                   CASE 
+                                       WHEN p.clube_id = pt.clube_casa_id THEN pt.clube_visitante_id
+                                       ELSE pt.clube_casa_id
+                                   END as adversario_id,
+                                   AVG(p.scout_ds) as avg_ds_cedidos,
+                                   AVG(p.scout_ff) as avg_ff_cedidos,
+                                   AVG(p.scout_fs) as avg_fs_cedidos,
+                                   AVG(p.scout_fd) as avg_fd_cedidos,
+                                   AVG(p.scout_g) as avg_g_cedidos,
+                                   AVG(p.scout_a) as avg_a_cedidos
+                            FROM acf_pontuados p
+                            JOIN acf_partidas pt ON p.rodada_id = pt.rodada_id
+                            WHERE p.posicao_id = %s 
+                              AND ((pt.clube_casa_id IN ({placeholders}) AND p.clube_id = pt.clube_visitante_id)
+                                   OR (pt.clube_visitante_id IN ({placeholders}) AND p.clube_id = pt.clube_casa_id))
+                              AND p.rodada_id <= %s AND p.entrou_em_campo = TRUE
+                            GROUP BY adversario_id
+                        ''', [posicao_id] + adversario_ids + adversario_ids + [rodada_atual - 1])
+                        
+                        for row in cursor.fetchall():
+                            if row:
+                                clube_id = row[0]
+                                if clube_id not in pontuados_data:
+                                    pontuados_data[clube_id] = {}
+                                
+                                pontuados_data[clube_id]['avg_ds_cedidos'] = float(row[1]) if row[1] is not None else 0
+                                pontuados_data[clube_id]['avg_ff_cedidos'] = float(row[2]) if row[2] is not None else 0
+                                pontuados_data[clube_id]['avg_fs_cedidos'] = float(row[3]) if row[3] is not None else 0
+                                pontuados_data[clube_id]['avg_fd_cedidos'] = float(row[4]) if row[4] is not None else 0
+                                pontuados_data[clube_id]['avg_g_cedidos'] = float(row[5]) if row[5] is not None else 0
+                                pontuados_data[clube_id]['avg_a_cedidos'] = float(row[6]) if row[6] is not None else 0
                 except Exception as e:
-                    print(f"Erro ao buscar desarmes cedidos por adversários: {e}")
+                    print(f"Erro ao buscar scouts cedidos por adversários: {e}")
         
         # 3. Buscar escalações (top 20 destaques)
         escalacoes_data = {}
@@ -4732,6 +4834,88 @@ def health_check():
     except Exception:
         pass
     return jsonify({"status": "unhealthy"}), 500
+
+# ========================================
+# ADMIN LATERAIS
+# ========================================
+
+@app.route('/admin/laterais')
+@admin_required
+def admin_laterais():
+    """Página de administração de laterais"""
+    return render_template('admin_laterais.html')
+
+@app.route('/api/admin/laterais')
+@admin_required
+def api_admin_laterais():
+    """API para listar laterais e status de esquerdo"""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        # Buscar todos os laterais (posicao_id = 2)
+        # Join com laterais_esquerdos para saber se é esquerdo
+        cursor.execute('''
+            SELECT a.atleta_id, a.apelido, c.nome as clube_nome, 
+                   CASE WHEN le.atleta_id IS NOT NULL THEN TRUE ELSE FALSE END as is_esquerdo,
+                   a.foto
+            FROM acf_atletas a
+            JOIN acf_clubes c ON a.clube_id = c.id
+            LEFT JOIN laterais_esquerdos le ON a.atleta_id = le.atleta_id
+            WHERE a.posicao_id = 2
+            ORDER BY c.nome, a.apelido
+        ''')
+        laterais = cursor.fetchall()
+        
+        result = []
+        for lat in laterais:
+            result.append({
+                'atleta_id': lat[0],
+                'apelido': lat[1],
+                'clube_nome': lat[2],
+                'is_esquerdo': lat[3],
+                'foto': lat[4]
+            })
+            
+        return jsonify(result)
+    except Exception as e:
+        print(f"Erro API laterais: {e}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        close_db_connection(conn)
+
+@app.route('/api/admin/laterais/toggle', methods=['POST'])
+@admin_required
+def api_admin_laterais_toggle():
+    """API para alternar status de lateral esquerdo"""
+    data = request.get_json()
+    atleta_id = data.get('atleta_id')
+    is_esquerdo = data.get('is_esquerdo')
+    
+    if not atleta_id:
+        return jsonify({'success': False, 'error': 'ID do atleta obrigatório'}), 400
+        
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        if is_esquerdo:
+            # Adicionar à tabela
+            cursor.execute('''
+                INSERT INTO laterais_esquerdos (atleta_id) 
+                VALUES (%s) 
+                ON CONFLICT (atleta_id) DO NOTHING
+            ''', (atleta_id,))
+        else:
+            # Remover da tabela
+            cursor.execute('DELETE FROM laterais_esquerdos WHERE atleta_id = %s', (atleta_id,))
+            
+        conn.commit()
+        return jsonify({'success': True})
+    except Exception as e:
+        conn.rollback()
+        print(f"Erro toggle lateral: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+    finally:
+        close_db_connection(conn)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
