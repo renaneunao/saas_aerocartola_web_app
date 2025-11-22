@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="fas fa-users text-sm text-dark-blue-400"></i>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-white font-semibold text-xs leading-tight">⚡ Escalar Todos os Times</p>
+                    <p class="text-white font-semibold text-[10px] leading-tight">⚡ Escalar Todos os Times</p>
                     <p class="text-gray-400 text-[10px] leading-tight">Escalar todos de uma vez</p>
                 </div>
             </div>

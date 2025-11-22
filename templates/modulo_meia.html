@@ -77,114 +77,130 @@
         </div>
         {% endif %}
         <form id="pesosForm" class="p-6 relative">
+            <style>
+                input[type="range"] {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 100%;
+                    height: 6px;
+                    border-radius: 3px;
+                    background: rgba(234, 179, 8, 0.2);
+                    outline: none;
+                    transition: background 0.3s;
+                }
+                input[type="range"]:hover {
+                    background: rgba(234, 179, 8, 0.3);
+                }
+                input[type="range"]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #eab308, #ca8a04);
+                    cursor: pointer;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                    transition: transform 0.2s, box-shadow 0.2s;
+                }
+                input[type="range"]::-webkit-slider-thumb:hover {
+                    transform: scale(1.15);
+                    box-shadow: 0 3px 6px rgba(234, 179, 8, 0.5);
+                }
+                input[type="range"]::-moz-range-thumb {
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #eab308, #ca8a04);
+                    cursor: pointer;
+                    border: none;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                    transition: transform 0.2s, box-shadow 0.2s;
+                }
+                input[type="range"]::-moz-range-thumb:hover {
+                    transform: scale(1.15);
+                    box-shadow: 0 3px 6px rgba(234, 179, 8, 0.5);
+                }
+                input[type="range"]:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+                input[type="range"]:disabled::-webkit-slider-thumb,
+                input[type="range"]:disabled::-moz-range-thumb {
+                    cursor: not-allowed;
+                }
+            </style>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 {% if not permissions.editarPesosModulos %}opacity-50{% endif %}" {% if not permissions.editarPesosModulos %}style="filter: blur(0.3px); pointer-events: none;"{% endif %}>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
-                        FATOR_MEDIA
-                    </label>
-                    <input type="number" 
-                           id="FATOR_MEDIA"
-                           name="FATOR_MEDIA" 
-                           value="{{ pesos_atuais.get('FATOR_MEDIA', 1.0) }}" 
-                           step="0.1"
-                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-yellow-200">FATOR_MEDIA</label>
+                        <span class="text-sm font-semibold text-yellow-300 min-w-[3rem] text-right" id="value_FATOR_MEDIA">{{ pesos_atuais.get('FATOR_MEDIA', 1.0) }}</span>
+                    </div>
+                    <input type="range" id="FATOR_MEDIA" name="FATOR_MEDIA" min="0" max="10" step="0.1" value="{{ pesos_atuais.get('FATOR_MEDIA', 1.0) }}" {% if not permissions.editarPesosModulos %}disabled{% endif %} class="w-full">
+                    <input type="hidden" name="FATOR_MEDIA" value="{{ pesos_atuais.get('FATOR_MEDIA', 1.0) }}" id="hidden_FATOR_MEDIA">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
-                        FATOR_DS
-                    </label>
-                    <input type="number" 
-                           id="FATOR_DS"
-                           name="FATOR_DS" 
-                           value="{{ pesos_atuais.get('FATOR_DS', 3.6) }}" 
-                           step="0.1"
-                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-yellow-200">FATOR_DS</label>
+                        <span class="text-sm font-semibold text-yellow-300 min-w-[3rem] text-right" id="value_FATOR_DS">{{ pesos_atuais.get('FATOR_DS', 3.6) }}</span>
+                    </div>
+                    <input type="range" id="FATOR_DS" name="FATOR_DS" min="0" max="10" step="0.1" value="{{ pesos_atuais.get('FATOR_DS', 3.6) }}" {% if not permissions.editarPesosModulos %}disabled{% endif %} class="w-full">
+                    <input type="hidden" name="FATOR_DS" value="{{ pesos_atuais.get('FATOR_DS', 3.6) }}" id="hidden_FATOR_DS">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
-                        FATOR_FF
-                    </label>
-                    <input type="number" 
-                           id="FATOR_FF"
-                           name="FATOR_FF" 
-                           value="{{ pesos_atuais.get('FATOR_FF', 0.7) }}" 
-                           step="0.1"
-                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-yellow-200">FATOR_FF</label>
+                        <span class="text-sm font-semibold text-yellow-300 min-w-[3rem] text-right" id="value_FATOR_FF">{{ pesos_atuais.get('FATOR_FF', 0.7) }}</span>
+                    </div>
+                    <input type="range" id="FATOR_FF" name="FATOR_FF" min="0" max="10" step="0.1" value="{{ pesos_atuais.get('FATOR_FF', 0.7) }}" {% if not permissions.editarPesosModulos %}disabled{% endif %} class="w-full">
+                    <input type="hidden" name="FATOR_FF" value="{{ pesos_atuais.get('FATOR_FF', 0.7) }}" id="hidden_FATOR_FF">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
-                        FATOR_FS
-                    </label>
-                    <input type="number" 
-                           id="FATOR_FS"
-                           name="FATOR_FS" 
-                           value="{{ pesos_atuais.get('FATOR_FS', 0.8) }}" 
-                           step="0.1"
-                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-yellow-200">FATOR_FS</label>
+                        <span class="text-sm font-semibold text-yellow-300 min-w-[3rem] text-right" id="value_FATOR_FS">{{ pesos_atuais.get('FATOR_FS', 0.8) }}</span>
+                    </div>
+                    <input type="range" id="FATOR_FS" name="FATOR_FS" min="0" max="10" step="0.1" value="{{ pesos_atuais.get('FATOR_FS', 0.8) }}" {% if not permissions.editarPesosModulos %}disabled{% endif %} class="w-full">
+                    <input type="hidden" name="FATOR_FS" value="{{ pesos_atuais.get('FATOR_FS', 0.8) }}" id="hidden_FATOR_FS">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
-                        FATOR_FD
-                    </label>
-                    <input type="number" 
-                           id="FATOR_FD"
-                           name="FATOR_FD" 
-                           value="{{ pesos_atuais.get('FATOR_FD', 0.9) }}" 
-                           step="0.1"
-                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-yellow-200">FATOR_FD</label>
+                        <span class="text-sm font-semibold text-yellow-300 min-w-[3rem] text-right" id="value_FATOR_FD">{{ pesos_atuais.get('FATOR_FD', 0.9) }}</span>
+                    </div>
+                    <input type="range" id="FATOR_FD" name="FATOR_FD" min="0" max="10" step="0.1" value="{{ pesos_atuais.get('FATOR_FD', 0.9) }}" {% if not permissions.editarPesosModulos %}disabled{% endif %} class="w-full">
+                    <input type="hidden" name="FATOR_FD" value="{{ pesos_atuais.get('FATOR_FD', 0.9) }}" id="hidden_FATOR_FD">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
-                        FATOR_G
-                    </label>
-                    <input type="number" 
-                           id="FATOR_G"
-                           name="FATOR_G" 
-                           value="{{ pesos_atuais.get('FATOR_G', 2.5) }}" 
-                           step="0.1"
-                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-yellow-200">FATOR_G</label>
+                        <span class="text-sm font-semibold text-yellow-300 min-w-[3rem] text-right" id="value_FATOR_G">{{ pesos_atuais.get('FATOR_G', 2.5) }}</span>
+                    </div>
+                    <input type="range" id="FATOR_G" name="FATOR_G" min="0" max="10" step="0.1" value="{{ pesos_atuais.get('FATOR_G', 2.5) }}" {% if not permissions.editarPesosModulos %}disabled{% endif %} class="w-full">
+                    <input type="hidden" name="FATOR_G" value="{{ pesos_atuais.get('FATOR_G', 2.5) }}" id="hidden_FATOR_G">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
-                        FATOR_A
-                    </label>
-                    <input type="number" 
-                           id="FATOR_A"
-                           name="FATOR_A" 
-                           value="{{ pesos_atuais.get('FATOR_A', 2.0) }}" 
-                           step="0.1"
-                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-yellow-200">FATOR_A</label>
+                        <span class="text-sm font-semibold text-yellow-300 min-w-[3rem] text-right" id="value_FATOR_A">{{ pesos_atuais.get('FATOR_A', 2.0) }}</span>
+                    </div>
+                    <input type="range" id="FATOR_A" name="FATOR_A" min="0" max="10" step="0.1" value="{{ pesos_atuais.get('FATOR_A', 2.0) }}" {% if not permissions.editarPesosModulos %}disabled{% endif %} class="w-full">
+                    <input type="hidden" name="FATOR_A" value="{{ pesos_atuais.get('FATOR_A', 2.0) }}" id="hidden_FATOR_A">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
-                        FATOR_ESCALACAO
-                    </label>
-                    <input type="number" 
-                           id="FATOR_ESCALACAO"
-                           name="FATOR_ESCALACAO" 
-                           value="{{ pesos_atuais.get('FATOR_ESCALACAO', 10.0) }}" 
-                           step="0.1"
-                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-yellow-200">FATOR_ESCALACAO</label>
+                        <span class="text-sm font-semibold text-yellow-300 min-w-[3rem] text-right" id="value_FATOR_ESCALACAO">{{ pesos_atuais.get('FATOR_ESCALACAO', 10.0) }}</span>
+                    </div>
+                    <input type="range" id="FATOR_ESCALACAO" name="FATOR_ESCALACAO" min="0" max="10" step="0.1" value="{{ pesos_atuais.get('FATOR_ESCALACAO', 10.0) }}" {% if not permissions.editarPesosModulos %}disabled{% endif %} class="w-full">
+                    <input type="hidden" name="FATOR_ESCALACAO" value="{{ pesos_atuais.get('FATOR_ESCALACAO', 10.0) }}" id="hidden_FATOR_ESCALACAO">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
-                        FATOR_PESO_JOGO
-                    </label>
-                    <input type="number" 
-                           id="FATOR_PESO_JOGO"
-                           name="FATOR_PESO_JOGO" 
-                           value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 9.5) }}" 
-                           step="0.1"
-                           {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-yellow-200">FATOR_PESO_JOGO</label>
+                        <span class="text-sm font-semibold text-yellow-300 min-w-[3rem] text-right" id="value_FATOR_PESO_JOGO">{{ pesos_atuais.get('FATOR_PESO_JOGO', 9.5) }}</span>
+                    </div>
+                    <input type="range" id="FATOR_PESO_JOGO" name="FATOR_PESO_JOGO" min="0" max="10" step="0.1" value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 9.5) }}" {% if not permissions.editarPesosModulos %}disabled{% endif %} class="w-full">
+                    <input type="hidden" name="FATOR_PESO_JOGO" value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 9.5) }}" id="hidden_FATOR_PESO_JOGO">
                 </div>
             </div>
             
@@ -986,6 +1002,34 @@ async function renderizarTabelaMeias(resultados) {
     });
 }
 
+// Sincronizar sliders com valores exibidos
+function inicializarSliders() {
+    const sliders = document.querySelectorAll('input[type="range"]');
+    sliders.forEach(slider => {
+        const factorName = slider.id;
+        const valueSpan = document.getElementById(`value_${factorName}`);
+        const hiddenInput = document.getElementById(`hidden_${factorName}`);
+        
+        slider.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (valueSpan) {
+                valueSpan.textContent = value.toFixed(1);
+            }
+            if (hiddenInput) {
+                hiddenInput.value = value;
+            }
+        });
+        
+        const initialValue = parseFloat(slider.value);
+        if (valueSpan) {
+            valueSpan.textContent = initialValue.toFixed(1);
+        }
+        if (hiddenInput) {
+            hiddenInput.value = initialValue;
+        }
+    });
+}
+
 // Função para salvar pesos
 async function salvarPesos() {
     showLoader('Salvando configurações de pesos...');
@@ -994,9 +1038,13 @@ async function salvarPesos() {
     const formData = new FormData(form);
     
     const pesos = {};
-    for (const [key, value] of formData.entries()) {
-        pesos[key] = parseFloat(value);
-    }
+    const hiddenInputs = form.querySelectorAll('input[type="hidden"]');
+    hiddenInputs.forEach(input => {
+        if (input.id.startsWith('hidden_')) {
+            const factorName = input.id.replace('hidden_', '');
+            pesos[factorName] = parseFloat(input.value);
+        }
+    });
     
     try {
         const response = await fetch('/api/modulos/meia/pesos', {
@@ -1092,6 +1140,9 @@ function recalcularMeias() {
 
 // Carregar automaticamente ao abrir a página (primeiro tenta carregar salvo, se não tiver, permite calcular)
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar sliders
+    inicializarSliders();
+    
     // Tentar carregar ranking salvo automaticamente (não forçar recálculo)
     carregarDados(false);
 });

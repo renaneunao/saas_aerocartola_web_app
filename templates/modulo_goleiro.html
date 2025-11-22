@@ -77,78 +77,177 @@
         </div>
         {% endif %}
         <form id="pesosForm" class="p-6 relative">
+            <style>
+                /* Estilo customizado para os sliders */
+                input[type="range"] {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 100%;
+                    height: 6px;
+                    border-radius: 3px;
+                    background: rgba(139, 92, 246, 0.2);
+                    outline: none;
+                    transition: background 0.3s;
+                }
+                
+                input[type="range"]:hover {
+                    background: rgba(139, 92, 246, 0.3);
+                }
+                
+                input[type="range"]::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+                    cursor: pointer;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                    transition: transform 0.2s, box-shadow 0.2s;
+                }
+                
+                input[type="range"]::-webkit-slider-thumb:hover {
+                    transform: scale(1.15);
+                    box-shadow: 0 3px 6px rgba(139, 92, 246, 0.5);
+                }
+                
+                input[type="range"]::-moz-range-thumb {
+                    width: 18px;
+                    height: 18px;
+                    border-radius: 50%;
+                    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+                    cursor: pointer;
+                    border: none;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                    transition: transform 0.2s, box-shadow 0.2s;
+                }
+                
+                input[type="range"]::-moz-range-thumb:hover {
+                    transform: scale(1.15);
+                    box-shadow: 0 3px 6px rgba(139, 92, 246, 0.5);
+                }
+                
+                input[type="range"]:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+                
+                input[type="range"]:disabled::-webkit-slider-thumb {
+                    cursor: not-allowed;
+                }
+                
+                input[type="range"]:disabled::-moz-range-thumb {
+                    cursor: not-allowed;
+                }
+            </style>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 {% if not permissions.editarPesosModulos %}opacity-50{% endif %}" {% if not permissions.editarPesosModulos %}style="filter: blur(0.3px); pointer-events: none;"{% endif %}>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-purple-200">
-                        FATOR_MEDIA
-                    </label>
-                    <input type="number" 
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-purple-200">
+                            FATOR_MEDIA
+                        </label>
+                        <span class="text-sm font-semibold text-purple-300 min-w-[3rem] text-right" id="value_FATOR_MEDIA">{{ pesos_atuais.get('FATOR_MEDIA', 0.2) }}</span>
+                    </div>
+                    <input type="range" 
                            id="FATOR_MEDIA"
                            name="FATOR_MEDIA" 
-                           value="{{ pesos_atuais.get('FATOR_MEDIA', 0.2) }}" 
+                           min="0" 
+                           max="10" 
                            step="0.1"
+                           value="{{ pesos_atuais.get('FATOR_MEDIA', 0.2) }}"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                           class="w-full">
+                    <input type="hidden" name="FATOR_MEDIA" value="{{ pesos_atuais.get('FATOR_MEDIA', 0.2) }}" id="hidden_FATOR_MEDIA">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-purple-200">
-                        FATOR_FF
-                    </label>
-                    <input type="number" 
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-purple-200">
+                            FATOR_FF
+                        </label>
+                        <span class="text-sm font-semibold text-purple-300 min-w-[3rem] text-right" id="value_FATOR_FF">{{ pesos_atuais.get('FATOR_FF', 4.5) }}</span>
+                    </div>
+                    <input type="range" 
                            id="FATOR_FF"
                            name="FATOR_FF" 
-                           value="{{ pesos_atuais.get('FATOR_FF', 4.5) }}" 
+                           min="0" 
+                           max="10" 
                            step="0.1"
+                           value="{{ pesos_atuais.get('FATOR_FF', 4.5) }}"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                           class="w-full">
+                    <input type="hidden" name="FATOR_FF" value="{{ pesos_atuais.get('FATOR_FF', 4.5) }}" id="hidden_FATOR_FF">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-purple-200">
-                        FATOR_FD
-                    </label>
-                    <input type="number" 
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-purple-200">
+                            FATOR_FD
+                        </label>
+                        <span class="text-sm font-semibold text-purple-300 min-w-[3rem] text-right" id="value_FATOR_FD">{{ pesos_atuais.get('FATOR_FD', 6.5) }}</span>
+                    </div>
+                    <input type="range" 
                            id="FATOR_FD"
                            name="FATOR_FD" 
-                           value="{{ pesos_atuais.get('FATOR_FD', 6.5) }}" 
+                           min="0" 
+                           max="10" 
                            step="0.1"
+                           value="{{ pesos_atuais.get('FATOR_FD', 6.5) }}"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                           class="w-full">
+                    <input type="hidden" name="FATOR_FD" value="{{ pesos_atuais.get('FATOR_FD', 6.5) }}" id="hidden_FATOR_FD">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-purple-200">
-                        FATOR_SG
-                    </label>
-                    <input type="number" 
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-purple-200">
+                            FATOR_SG
+                        </label>
+                        <span class="text-sm font-semibold text-purple-300 min-w-[3rem] text-right" id="value_FATOR_SG">{{ pesos_atuais.get('FATOR_SG', 1.5) }}</span>
+                    </div>
+                    <input type="range" 
                            id="FATOR_SG"
                            name="FATOR_SG" 
-                           value="{{ pesos_atuais.get('FATOR_SG', 1.5) }}" 
+                           min="0" 
+                           max="10" 
                            step="0.1"
+                           value="{{ pesos_atuais.get('FATOR_SG', 1.5) }}"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                           class="w-full">
+                    <input type="hidden" name="FATOR_SG" value="{{ pesos_atuais.get('FATOR_SG', 1.5) }}" id="hidden_FATOR_SG">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-purple-200">
-                        FATOR_PESO_JOGO
-                    </label>
-                    <input type="number" 
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-purple-200">
+                            FATOR_PESO_JOGO
+                        </label>
+                        <span class="text-sm font-semibold text-purple-300 min-w-[3rem] text-right" id="value_FATOR_PESO_JOGO">{{ pesos_atuais.get('FATOR_PESO_JOGO', 1.5) }}</span>
+                    </div>
+                    <input type="range" 
                            id="FATOR_PESO_JOGO"
                            name="FATOR_PESO_JOGO" 
-                           value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 1.5) }}" 
+                           min="0" 
+                           max="10" 
                            step="0.1"
+                           value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 1.5) }}"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                           class="w-full">
+                    <input type="hidden" name="FATOR_PESO_JOGO" value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 1.5) }}" id="hidden_FATOR_PESO_JOGO">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-purple-200">
-                        FATOR_GOL_ADVERSARIO
-                    </label>
-                    <input type="number" 
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-medium text-purple-200">
+                            FATOR_GOL_ADVERSARIO
+                        </label>
+                        <span class="text-sm font-semibold text-purple-300 min-w-[3rem] text-right" id="value_FATOR_GOL_ADVERSARIO">{{ pesos_atuais.get('FATOR_GOL_ADVERSARIO', 2.0) }}</span>
+                    </div>
+                    <input type="range" 
                            id="FATOR_GOL_ADVERSARIO"
                            name="FATOR_GOL_ADVERSARIO" 
-                           value="{{ pesos_atuais.get('FATOR_GOL_ADVERSARIO', 2.0) }}" 
+                           min="0" 
+                           max="10" 
                            step="0.1"
+                           value="{{ pesos_atuais.get('FATOR_GOL_ADVERSARIO', 2.0) }}"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                           class="w-full">
+                    <input type="hidden" name="FATOR_GOL_ADVERSARIO" value="{{ pesos_atuais.get('FATOR_GOL_ADVERSARIO', 2.0) }}" id="hidden_FATOR_GOL_ADVERSARIO">
                 </div>
             </div>
             
@@ -981,9 +1080,14 @@ async function salvarPesos() {
     const formData = new FormData(form);
     
     const pesos = {};
-    for (const [key, value] of formData.entries()) {
-        pesos[key] = parseFloat(value);
-    }
+    // Coletar valores dos hidden inputs (que são atualizados pelos sliders)
+    const hiddenInputs = form.querySelectorAll('input[type="hidden"]');
+    hiddenInputs.forEach(input => {
+        if (input.id.startsWith('hidden_')) {
+            const factorName = input.id.replace('hidden_', '');
+            pesos[factorName] = parseFloat(input.value);
+        }
+    });
     
     try {
         const response = await fetch('/api/modulos/goleiro/pesos', {
@@ -1070,8 +1174,41 @@ function recalcularGoleiros() {
     carregarDados(true); // Forçar recálculo quando chamado pelo botão de recalcular
 }
 
+// Sincronizar sliders com valores exibidos
+function inicializarSliders() {
+    const sliders = document.querySelectorAll('input[type="range"]');
+    sliders.forEach(slider => {
+        const factorName = slider.id;
+        const valueSpan = document.getElementById(`value_${factorName}`);
+        const hiddenInput = document.getElementById(`hidden_${factorName}`);
+        
+        // Atualizar valor ao mover o slider
+        slider.addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            if (valueSpan) {
+                valueSpan.textContent = value.toFixed(1);
+            }
+            if (hiddenInput) {
+                hiddenInput.value = value;
+            }
+        });
+        
+        // Inicializar valores
+        const initialValue = parseFloat(slider.value);
+        if (valueSpan) {
+            valueSpan.textContent = initialValue.toFixed(1);
+        }
+        if (hiddenInput) {
+            hiddenInput.value = initialValue;
+        }
+    });
+}
+
 // Carregar automaticamente ao abrir a página (primeiro tenta carregar salvo, se não tiver, permite calcular)
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar sliders
+    inicializarSliders();
+    
     // Tentar carregar ranking salvo automaticamente (não forçar recálculo)
     carregarDados(false);
 });

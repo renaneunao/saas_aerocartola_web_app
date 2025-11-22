@@ -27,4 +27,6 @@ tqdm
 cloudscraper
 psycopg2-binary==2.9.9
 stripe==11.1.0
+redis==5.0.1
+Flask-Session==0.8.0
 # sib-api-v3-sdk removido - estamos usando SMTP diretamente (bibliotecas padrão do Python)

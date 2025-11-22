@@ -59,64 +59,64 @@
         }
     </script>
 </head>
-<body class="min-h-full bg-gradient-to-br from-dark-blue-950 via-dark-blue-900 to-slate-900 text-white">
+<body class="min-h-full text-white" style="background-color: #0c1f36;">
     <!-- Background Elements -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
         <!-- Floating Soccer Balls -->
-        <div class="absolute top-20 left-10 text-dark-blue-800/30 text-4xl animate-float">
+        <div class="absolute top-10 left-8 text-dark-blue-800/20 text-2xl animate-float">
             <i class="fas fa-futbol"></i>
         </div>
-        <div class="absolute top-40 right-16 text-dark-blue-800/20 text-6xl animate-float" style="animation-delay: -2s;">
+        <div class="absolute top-20 right-12 text-dark-blue-800/15 text-3xl animate-float" style="animation-delay: -2s;">
             <i class="fas fa-futbol"></i>
         </div>
-        <div class="absolute bottom-32 left-20 text-dark-blue-800/25 text-5xl animate-float" style="animation-delay: -4s;">
+        <div class="absolute bottom-16 left-12 text-dark-blue-800/15 text-2xl animate-float" style="animation-delay: -4s;">
             <i class="fas fa-futbol"></i>
         </div>
-        <div class="absolute bottom-20 right-8 text-dark-blue-800/20 text-3xl animate-float" style="animation-delay: -1s;">
+        <div class="absolute bottom-10 right-6 text-dark-blue-800/15 text-xl animate-float" style="animation-delay: -1s;">
             <i class="fas fa-futbol"></i>
         </div>
         
         <!-- Geometric Shapes -->
-        <div class="absolute top-1/4 left-1/4 w-32 h-32 bg-gradient-to-br from-blue-500/10 to-blue-600/10 rounded-full blur-xl animate-pulse"></div>
-        <div class="absolute bottom-1/4 right-1/4 w-48 h-48 bg-gradient-to-br from-purple-500/10 to-purple-600/10 rounded-full blur-2xl animate-pulse" style="animation-delay: -1s;"></div>
+        <div class="absolute top-1/4 left-1/4 w-24 h-24 bg-gradient-to-br from-blue-500/8 to-blue-600/8 rounded-full blur-xl animate-pulse"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-32 h-32 bg-gradient-to-br from-purple-500/8 to-purple-600/8 rounded-full blur-2xl animate-pulse" style="animation-delay: -1s;"></div>
     </div>
 
     <!-- Main Content -->
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="max-w-md w-full space-y-8">
+    <div class="h-screen flex items-center justify-center py-4 px-4 sm:px-6 lg:px-8 relative z-10 overflow-y-auto">
+        <div class="max-w-md w-full space-y-4">
             <!-- Header -->
             <div class="text-center animate-fade-in">
-                <div class="flex justify-center mb-6">
+                <div class="flex justify-center mb-3">
                     <div class="flex items-center justify-center">
                         <img src="{{ url_for('static', filename='logo/aero-cartola-logo.png') }}" 
                              alt="Aero Cartola" 
-                             class="max-w-[280px] w-full h-auto object-contain">
+                             class="max-w-[220px] w-full h-auto object-contain">
                     </div>
                 </div>
-                <p class="text-lg text-dark-blue-200 mb-2" id="welcomeText">Bem-vindo de volta!</p>
-                <p class="text-sm text-dark-blue-300" id="subtitleText">Faça login para acessar sua conta</p>
+                <p class="text-base text-dark-blue-200 mb-1" id="welcomeText">Bem-vindo de volta!</p>
+                <p class="text-xs text-dark-blue-300" id="subtitleText">Faça login para acessar sua conta</p>
             </div>
 
             <!-- Tabs: Login / Registro -->
-            <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl shadow-2xl border border-dark-blue-700/50 overflow-hidden animate-fade-in">
+            <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-xl shadow-2xl border border-dark-blue-700/50 overflow-hidden animate-fade-in">
                 <div class="flex border-b border-dark-blue-700/50">
-                    <button type="button" id="loginTab" class="flex-1 py-4 px-6 text-center font-semibold text-white bg-dark-blue-700/50 transition-all duration-200" onclick="switchTab('login')">
-                        <i class="fas fa-sign-in-alt mr-2"></i>Entrar
+                    <button type="button" id="loginTab" class="flex-1 py-2.5 px-4 text-center font-semibold text-white bg-dark-blue-700/50 transition-all duration-200 text-sm" onclick="switchTab('login')">
+                        <i class="fas fa-sign-in-alt mr-1.5"></i>Entrar
                     </button>
-                    <button type="button" id="registerTab" class="flex-1 py-4 px-6 text-center font-semibold text-dark-blue-300 hover:text-white transition-all duration-200" onclick="switchTab('register')">
-                        <i class="fas fa-user-plus mr-2"></i>Criar Conta
+                    <button type="button" id="registerTab" class="flex-1 py-2.5 px-4 text-center font-semibold text-dark-blue-300 hover:text-white transition-all duration-200 text-sm" onclick="switchTab('register')">
+                        <i class="fas fa-user-plus mr-1.5"></i>Criar Conta
                     </button>
                 </div>
 
             <!-- Login Form -->
-            <div id="loginFormContainer" class="p-8">
-                <form method="post" action="{{ url_for('login') }}" class="space-y-6" id="loginForm">
+            <div id="loginFormContainer" class="p-5">
+                <form method="post" action="{{ url_for('login') }}" class="space-y-4" id="loginForm">
                     <!-- Flash Messages -->
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
-                            <div class="space-y-3 mb-6">
+                            <div class="space-y-2 mb-4">
                                 {% for category, message in messages %}
-                                <div class="animate-fade-in p-4 rounded-lg border-l-4 {% if category == 'error' or category == 'danger' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'success' %}bg-green-900/50 border-green-500 text-green-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% else %}bg-blue-900/50 border-blue-500 text-blue-200{% endif %} backdrop-blur-sm shadow-lg">
+                                <div class="animate-fade-in p-2.5 rounded-lg border-l-4 {% if category == 'error' or category == 'danger' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'success' %}bg-green-900/50 border-green-500 text-green-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% else %}bg-blue-900/50 border-blue-500 text-blue-200{% endif %} backdrop-blur-sm shadow-lg text-sm">
                                     <div class="flex items-center space-x-2">
                                         <i class="fas {% if category == 'error' or category == 'danger' %}fa-exclamation-triangle{% elif category == 'success' %}fa-check-circle{% elif category == 'warning' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
                                         <span>{{ message }}</span>
@@ -129,8 +129,8 @@
 
                     <!-- Username/Email Field -->
                     <div>
-                        <label for="username" class="block text-sm font-medium text-dark-blue-200 mb-2">
-                            <i class="fas fa-user text-blue-400 mr-2"></i>
+                        <label for="username" class="block text-xs font-medium text-dark-blue-200 mb-1.5">
+                            <i class="fas fa-user text-blue-400 mr-1.5"></i>
                             Usuário ou Email
                         </label>
                         <div class="relative">
@@ -138,18 +138,18 @@
                                    id="username" 
                                    name="username" 
                                    required
-                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-lg"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                                    placeholder="Digite seu usuário ou email">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-user text-dark-blue-400"></i>
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                <i class="fas fa-user text-dark-blue-400 text-sm"></i>
                             </div>
                         </div>
                     </div>
 
                     <!-- Password Field -->
                     <div>
-                        <label for="password" class="block text-sm font-medium text-dark-blue-200 mb-2">
-                            <i class="fas fa-lock text-green-400 mr-2"></i>
+                        <label for="password" class="block text-xs font-medium text-dark-blue-200 mb-1.5">
+                            <i class="fas fa-lock text-green-400 mr-1.5"></i>
                             Senha
                         </label>
                         <div class="relative">
@@ -157,15 +157,15 @@
                                    id="password" 
                                    name="password" 
                                    required
-                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 pr-12 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-lg"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-3 py-2 pl-10 pr-10 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-sm"
                                    placeholder="Digite sua senha">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-lock text-dark-blue-400"></i>
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-dark-blue-400 text-sm"></i>
                             </div>
                             <button type="button" 
                                     onclick="togglePassword()"
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
-                                <i class="fas fa-eye" id="toggleIcon"></i>
+                                    class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
+                                <i class="fas fa-eye text-sm" id="toggleIcon"></i>
                             </button>
                         </div>
                     </div>
@@ -176,19 +176,19 @@
                             <input type="checkbox" 
                                    id="remember" 
                                    name="remember"
-                                   class="w-4 h-4 bg-dark-blue-800/50 border-dark-blue-600/50 rounded focus:ring-2 focus:ring-blue-500 text-blue-600 transition-colors duration-200">
-                            <label for="remember" class="ml-2 text-sm text-dark-blue-300 cursor-pointer">
+                                   class="w-3.5 h-3.5 bg-dark-blue-800/50 border-dark-blue-600/50 rounded focus:ring-2 focus:ring-blue-500 text-blue-600 transition-colors duration-200">
+                            <label for="remember" class="ml-1.5 text-xs text-dark-blue-300 cursor-pointer">
                                 Lembrar de mim
                             </label>
                         </div>
-                        <a href="{{ url_for('esqueceu_senha') }}" class="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                        <a href="{{ url_for('esqueceu_senha') }}" class="text-xs text-blue-400 hover:text-blue-300 transition-colors duration-200">
                             Esqueceu a senha?
                         </a>
                     </div>
 
                     <!-- Login Button -->
                     <button type="submit" 
-                            class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
+                            class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm">
                         <i class="fas fa-sign-in-alt"></i>
                         <span>Entrar</span>
                     </button>
@@ -196,14 +196,14 @@
             </div>
 
             <!-- Register Form -->
-            <div id="registerFormContainer" class="p-8 hidden">
-                <form method="post" action="{{ url_for('register') }}" class="space-y-6" id="registerForm">
+            <div id="registerFormContainer" class="p-5 hidden">
+                <form method="post" action="{{ url_for('register') }}" class="space-y-4" id="registerForm">
                     <!-- Flash Messages -->
                     {% with messages = get_flashed_messages(with_categories=true) %}
                         {% if messages %}
-                            <div class="space-y-3 mb-6">
+                            <div class="space-y-2 mb-4">
                                 {% for category, message in messages %}
-                                <div class="animate-fade-in p-4 rounded-lg border-l-4 {% if category == 'error' or category == 'danger' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'success' %}bg-green-900/50 border-green-500 text-green-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% else %}bg-blue-900/50 border-blue-500 text-blue-200{% endif %} backdrop-blur-sm shadow-lg">
+                                <div class="animate-fade-in p-2.5 rounded-lg border-l-4 {% if category == 'error' or category == 'danger' %}bg-red-900/50 border-red-500 text-red-200{% elif category == 'success' %}bg-green-900/50 border-green-500 text-green-200{% elif category == 'warning' %}bg-yellow-900/50 border-yellow-500 text-yellow-200{% else %}bg-blue-900/50 border-blue-500 text-blue-200{% endif %} backdrop-blur-sm shadow-lg text-sm">
                                     <div class="flex items-center space-x-2">
                                         <i class="fas {% if category == 'error' or category == 'danger' %}fa-exclamation-triangle{% elif category == 'success' %}fa-check-circle{% elif category == 'warning' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"></i>
                                         <span>{{ message }}</span>
@@ -216,8 +216,8 @@
 
                     <!-- Username Field -->
                     <div>
-                        <label for="reg_username" class="block text-sm font-medium text-dark-blue-200 mb-2">
-                            <i class="fas fa-user text-blue-400 mr-2"></i>
+                        <label for="reg_username" class="block text-xs font-medium text-dark-blue-200 mb-1.5">
+                            <i class="fas fa-user text-blue-400 mr-1.5"></i>
                             Nome de Usuário
                         </label>
                         <div class="relative">
@@ -228,19 +228,19 @@
                                    minlength="3"
                                    maxlength="50"
                                    pattern="[a-zA-Z0-9_]+"
-                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-lg"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
                                    placeholder="Digite seu nome de usuário">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-user text-dark-blue-400"></i>
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                <i class="fas fa-user text-dark-blue-400 text-sm"></i>
                             </div>
                         </div>
-                        <p class="text-xs text-dark-blue-400 mt-1">Apenas letras, números e underscore</p>
+                        <p class="text-xs text-dark-blue-400 mt-0.5">Apenas letras, números e underscore</p>
                     </div>
 
                     <!-- Email Field -->
                     <div>
-                        <label for="reg_email" class="block text-sm font-medium text-dark-blue-200 mb-2">
-                            <i class="fas fa-envelope text-green-400 mr-2"></i>
+                        <label for="reg_email" class="block text-xs font-medium text-dark-blue-200 mb-1.5">
+                            <i class="fas fa-envelope text-green-400 mr-1.5"></i>
                             Email
                         </label>
                         <div class="relative">
@@ -248,18 +248,18 @@
                                    id="reg_email" 
                                    name="email" 
                                    required
-                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-lg"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 text-sm"
                                    placeholder="Digite seu email">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-envelope text-dark-blue-400"></i>
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                <i class="fas fa-envelope text-dark-blue-400 text-sm"></i>
                             </div>
                         </div>
                     </div>
 
                     <!-- Full Name Field -->
                     <div>
-                        <label for="reg_full_name" class="block text-sm font-medium text-dark-blue-200 mb-2">
-                            <i class="fas fa-id-card text-purple-400 mr-2"></i>
+                        <label for="reg_full_name" class="block text-xs font-medium text-dark-blue-200 mb-1.5">
+                            <i class="fas fa-id-card text-purple-400 mr-1.5"></i>
                             Nome Completo (Opcional)
                         </label>
                         <div class="relative">
@@ -267,18 +267,18 @@
                                    id="reg_full_name" 
                                    name="full_name" 
                                    maxlength="100"
-                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 text-lg"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-3 py-2 pl-10 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 text-sm"
                                    placeholder="Digite seu nome completo">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-id-card text-dark-blue-400"></i>
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                <i class="fas fa-id-card text-dark-blue-400 text-sm"></i>
                             </div>
                         </div>
                     </div>
 
                     <!-- Password Field -->
                     <div>
-                        <label for="reg_password" class="block text-sm font-medium text-dark-blue-200 mb-2">
-                            <i class="fas fa-lock text-yellow-400 mr-2"></i>
+                        <label for="reg_password" class="block text-xs font-medium text-dark-blue-200 mb-1.5">
+                            <i class="fas fa-lock text-yellow-400 mr-1.5"></i>
                             Senha
                         </label>
                         <div class="relative">
@@ -287,23 +287,23 @@
                                    name="password" 
                                    required
                                    minlength="6"
-                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 pr-12 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-lg"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-3 py-2 pl-10 pr-10 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-sm"
                                    placeholder="Digite sua senha (mínimo 6 caracteres)">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-lock text-dark-blue-400"></i>
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-dark-blue-400 text-sm"></i>
                             </div>
                             <button type="button" 
                                     onclick="togglePassword('reg_password', 'reg_toggleIcon')"
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
-                                <i class="fas fa-eye" id="reg_toggleIcon"></i>
+                                    class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
+                                <i class="fas fa-eye text-sm" id="reg_toggleIcon"></i>
                             </button>
                         </div>
                     </div>
 
                     <!-- Confirm Password Field -->
                     <div>
-                        <label for="reg_confirm_password" class="block text-sm font-medium text-dark-blue-200 mb-2">
-                            <i class="fas fa-lock text-yellow-400 mr-2"></i>
+                        <label for="reg_confirm_password" class="block text-xs font-medium text-dark-blue-200 mb-1.5">
+                            <i class="fas fa-lock text-yellow-400 mr-1.5"></i>
                             Confirmar Senha
                         </label>
                         <div class="relative">
@@ -311,22 +311,22 @@
                                    id="reg_confirm_password" 
                                    name="confirm_password" 
                                    required
-                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-4 py-3 pl-12 pr-12 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-lg"
+                                   class="w-full bg-dark-blue-800/50 border border-dark-blue-600/50 text-white rounded-lg px-3 py-2 pl-10 pr-10 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all duration-200 text-sm"
                                    placeholder="Confirme sua senha">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <i class="fas fa-lock text-dark-blue-400"></i>
+                            <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                                <i class="fas fa-lock text-dark-blue-400 text-sm"></i>
                             </div>
                             <button type="button" 
                                     onclick="togglePassword('reg_confirm_password', 'reg_confirm_toggleIcon')"
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
-                                <i class="fas fa-eye" id="reg_confirm_toggleIcon"></i>
+                                    class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-dark-blue-400 hover:text-white transition-colors duration-200">
+                                <i class="fas fa-eye text-sm" id="reg_confirm_toggleIcon"></i>
                             </button>
                         </div>
                     </div>
 
                     <!-- Register Button -->
                     <button type="submit" 
-                            class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
+                            class="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 text-sm">
                         <i class="fas fa-user-plus"></i>
                         <span>Criar Conta</span>
                     </button>
@@ -335,7 +335,7 @@
             </div>
 
             <!-- Footer Links -->
-            <div class="text-center text-xs text-dark-blue-400 space-x-4 animate-fade-in">
+            <div class="text-center text-xs text-dark-blue-400 space-x-4 animate-fade-in mt-2">
                 <a href="#" class="hover:text-dark-blue-200 transition-colors duration-200">Termos de Uso</a>
                 <span>•</span>
                 <a href="#" class="hover:text-dark-blue-200 transition-colors duration-200">Privacidade</a>

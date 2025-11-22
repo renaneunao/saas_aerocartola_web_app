@@ -39,6 +39,11 @@ services:
       BREVO_SENDER_NAME: ${BREVO_SENDER_NAME:-Aero Cartola}
       # Criptografia para senhas (Fernet key)
       CRYPTO_KEY: ${CRYPTO_KEY}
+      # Redis - Configurações de Sessão
+      REDIS_HOST: ${REDIS_HOST:-redis_cache}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB: ${REDIS_DB:-0}
     ports:
       - "5000:5000"
     volumes:

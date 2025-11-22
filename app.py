@@ -11,6 +11,67 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'change-me-to-a-secure-random-value')
 
+# Configuração do Redis para sessões
+# Detectar se está rodando dentro do Docker ou fora (para testes)
+# Dentro do Docker: usar 'redis_cache' (nome do serviço na rede Docker)
+# Fora do Docker: usar o IP do VPS
+import socket
+try:
+    # Tentar resolver o hostname 'redis_cache' - se funcionar, estamos no Docker
+    socket.gethostbyname('redis_cache')
+    REDIS_HOST = 'redis_cache'
+except socket.gaierror:
+    # Se não conseguir resolver, estamos fora do Docker, usar IP do VPS
+    REDIS_HOST = os.getenv('REDIS_HOST', '194.163.142.108')
+
+REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
+REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', '')
+REDIS_DB = int(os.getenv('REDIS_DB', '0'))
+
+# Criar conexão Redis para Flask-Session
+import redis
+redis_available = False
+redis_client = None
+
+try:
+    redis_client = redis.Redis(
+        host=REDIS_HOST,
+        port=REDIS_PORT,
+        password=REDIS_PASSWORD if REDIS_PASSWORD else None,
+        db=REDIS_DB,
+        decode_responses=False,  # Flask-Session precisa de bytes
+        socket_connect_timeout=3,
+        socket_timeout=3
+    )
+    # Testar conexão
+    redis_client.ping()
+    redis_available = True
+    print(f"✅ Redis conectado com sucesso em {REDIS_HOST}:{REDIS_PORT}")
+except Exception as e:
+    print(f"⚠️  Redis não disponível ({e}). Usando sessões em memória (não persistem após reiniciar).")
+    redis_available = False
+
+# Configurar Flask-Session
+if redis_available and redis_client:
+    # Usar Redis para sessões persistentes
+    app.config['SESSION_TYPE'] = 'redis'
+    app.config['SESSION_REDIS'] = redis_client
+    app.config['SESSION_PERMANENT'] = True
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # Padrão: 1 dia (será ajustado no login se "Lembrar de mim")
+    app.config['SESSION_USE_SIGNER'] = True
+    app.config['SESSION_KEY_PREFIX'] = 'session:'
+else:
+    # Fallback: usar sessões em memória (não persistem)
+    app.config['SESSION_TYPE'] = 'filesystem'
+    app.config['SESSION_PERMANENT'] = True
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)
+    app.config['SESSION_USE_SIGNER'] = True
+    print("⚠️  Usando sessões em memória. As sessões serão perdidas ao reiniciar a aplicação.")
+
+# Inicializar Flask-Session
+from flask_session import Session
+Session(app)
+
 from database import get_db_connection, close_db_connection
 from models.users import (
     authenticate_user,
@@ -178,8 +239,11 @@ def get_current_user():
         close_db_connection(conn)
 
 def logout_user():
-    """Faz logout do usuário atual"""
+    """Faz logout do usuário atual - limpa sessão do Redis"""
+    # Limpar todos os dados da sessão
     session.clear()
+    # Garantir que a sessão seja marcada como não permanente
+    session.permanent = False
 
 @app.context_processor
 def inject_user():
@@ -301,6 +365,20 @@ def login():
         
         if auth_result['success']:
             user = auth_result['user']
+            # Configurar sessão permanente baseado no "Lembrar de mim"
+            session.permanent = True
+            
+            # Configurar duração da sessão baseado no "Lembrar de mim"
+            if remember_me:
+                # Se "Lembrar de mim" marcado: sessão dura 30 dias
+                app.permanent_session_lifetime = timedelta(days=30)
+            else:
+                # Se não marcado: sessão dura 1 dia
+                app.permanent_session_lifetime = timedelta(days=1)
+            
+            # Marcar sessão como modificada para aplicar o novo tempo de expiração
+            session.modified = True
+            
             # Usar sessão do Flask diretamente (sem sessões customizadas)
             session['user_id'] = user['id']
             session['username'] = user['username']
