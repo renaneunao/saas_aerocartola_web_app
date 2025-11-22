@@ -645,10 +645,21 @@ function exibirResultado(resultado, clubesDict = {}) {
         const escudoUrl = clube.escudo_url || 'https://s.glbimg.com/es/sde/f/organizacoes/2018/03/10/flamengo_60x60.png';
         const escudo = `<img src="${escudoUrl}" alt="${clube.nome || ''}" class="w-5 h-5 rounded inline-block" onerror="this.style.display='none'">`;
         
+        // Foto do jogador
+        const fotoJogador = `
+            <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden bg-gray-600 flex-shrink-0">
+                <img id="player-img-${j.atleta_id}" src="" alt="${j.apelido}" class="w-full h-full object-cover" style="display: none;">
+                <div class="player-fallback w-full h-full bg-red-600 rounded-full flex items-center justify-center" style="display: none;">
+                    <span class="text-white font-bold text-xs">X</span>
+                </div>
+            </div>
+        `;
+        
         const bgColor = isLuxo ? 'bg-purple-900/40 border border-purple-500/30' : 'bg-dark-blue-900/40';
         
         return `
             <div class="flex items-start gap-2 ${bgColor} rounded px-3 py-2">
+                ${fotoJogador}
                 <div class="flex-shrink-0 mt-0.5">${escudo}</div>
                 <div class="flex-1 min-w-0">
                     <div class="text-white font-semibold text-sm">${j.apelido}${capitao}${luxoBadge}</div>
@@ -721,6 +732,13 @@ function exibirResultado(resultado, clubesDict = {}) {
     
     content.innerHTML = html;
     panel.classList.remove('hidden');
+    
+    // Carregar fotos dos jogadores após renderizar
+    setTimeout(function() {
+        if (typeof loadAllPlayerImages === 'function') {
+            loadAllPlayerImages();
+        }
+    }, 100);
 }
 
 // Escalar time no Cartola

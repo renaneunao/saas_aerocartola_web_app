@@ -238,10 +238,10 @@ console.log('[DEBUG] Painel de pesos será exibido para:', '{{ modulo }}');
                         <td class="py-3 px-1 {% if not permissions.rankingCompleto and jogador.rank <= 2 %}opacity-30{% endif %}" {% if not permissions.rankingCompleto and jogador.rank <= 2 %}style="filter: blur(8px);"{% endif %}>
                             <div class="flex items-center space-x-1">
                                 <!-- Imagem do jogador -->
-                                <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
-                                    <img id="player-img-{{ jogador.atleta_id }}" src="" alt="{{ jogador.apelido }}" class="w-full h-full object-cover" >
-                                    <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
-                                        <span class="text-white font-bold text-xs">{{ jogador.apelido[:2] }}</span>
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden bg-gray-600">
+                                    <img id="player-img-{{ jogador.atleta_id }}" src="" alt="{{ jogador.apelido }}" class="w-full h-full object-cover" style="display: none;">
+                                    <div class="player-fallback w-full h-full bg-red-600 rounded-full flex items-center justify-center" style="display: none;">
+                                        <span class="text-white font-bold text-xs">X</span>
                                     </div>
                                 </div>
                                 <!-- Escudo do clube -->
@@ -373,10 +373,10 @@ console.log('[DEBUG] Painel de pesos será exibido para:', '{{ modulo }}');
                         <td class="py-3 px-1 {% if not permissions.rankingCompleto and jogador.rank <= 2 %}opacity-30{% endif %}" {% if not permissions.rankingCompleto and jogador.rank <= 2 %}style="filter: blur(8px);"{% endif %}>
                             <div class="flex items-center space-x-1">
                                 <!-- Imagem do jogador -->
-                                <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
-                                    <img id="player-img-{{ jogador.atleta_id }}" src="" alt="{{ jogador.apelido }}" class="w-full h-full object-cover" >
-                                    <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
-                                        <span class="text-white font-bold text-xs">{{ jogador.apelido[:2] }}</span>
+                                <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden bg-gray-600">
+                                    <img id="player-img-{{ jogador.atleta_id }}" src="" alt="{{ jogador.apelido }}" class="w-full h-full object-cover" style="display: none;">
+                                    <div class="player-fallback w-full h-full bg-red-600 rounded-full flex items-center justify-center" style="display: none;">
+                                        <span class="text-white font-bold text-xs">X</span>
                                     </div>
                                 </div>
                                 <!-- Escudo do clube -->
@@ -1212,10 +1212,10 @@ function renderizarTabelaGoleiros(resultados) {
             </td>
             <td class="py-4 px-2">
                 <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
-                        <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover">
-                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
-                            <span class="text-white font-bold text-xs">${jogador.apelido.substring(0, 2)}</span>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden bg-gray-600">
+                        <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover" style="display: none;">
+                        <div class="player-fallback w-full h-full bg-red-600 rounded-full flex items-center justify-center" style="display: none;">
+                            <span class="text-white font-bold text-xs">X</span>
                         </div>
                     </div>
                     <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
@@ -1292,31 +1292,19 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function() {
     // Aguardar um pouco para garantir que o script foi carregado
     setTimeout(function() {
-        // Buscar todas as imagens de jogadores
-        const playerImages = document.querySelectorAll('[id^="player-img-"]');
-        
-        playerImages.forEach(function(img) {
-            const atletaId = img.id.replace('player-img-', '');
-            const imageUrl = getPlayerImage(parseInt(atletaId));
-            
-            if (imageUrl) {
-                // Remover o onerror temporariamente
-                img.onerror = null;
-                img.src = imageUrl;
-                
-                // Adicionar listener para mostrar a imagem quando carregar
-                img.onload = function() {
-                    this.style.display = 'block';
-                    this.nextElementSibling.style.display = 'none';
-                };
-                
-                // Se falhar, mostrar fallback
-                img.onerror = function() {
-                    this.style.display = 'none';
-                    this.nextElementSibling.style.display = 'flex';
-                };
-            }
-        });
+        // Usar a função global loadAllPlayerImages
+        if (typeof loadAllPlayerImages === 'function') {
+            loadAllPlayerImages();
+        } else {
+            // Fallback: tentar carregar manualmente
+            const playerImages = document.querySelectorAll('[id^="player-img-"]');
+            playerImages.forEach(function(img) {
+                const atletaId = img.id.replace('player-img-', '');
+                if (atletaId && typeof loadPlayerImage === 'function') {
+                    loadPlayerImage(img, parseInt(atletaId));
+                }
+            });
+        }
     }, 100);
 });
 </script>

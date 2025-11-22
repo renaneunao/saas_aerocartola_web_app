@@ -222,6 +222,16 @@
                             <i class="fas fa-users-cog mr-2 text-blue-400"></i>
                             Admin Laterais
                         </a>
+                        <a href="{{ url_for('admin_fotos_atletas') }}"
+                            class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                            <i class="fas fa-images mr-2 text-green-400"></i>
+                            Admin Fotos Atletas
+                        </a>
+                        <a href="{{ url_for('admin_visualizar_atletas') }}"
+                            class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                            <i class="fas fa-users mr-2 text-blue-400"></i>
+                            Visualizar Atletas
+                        </a>
                         {% endif %}
                         <a href="{{ url_for('logout') }}"
                             class="block px-4 py-2 text-sm text-red-300 hover:bg-red-600/20 hover:text-white transition-colors duration-200 border-t border-gray-700">
@@ -989,11 +999,22 @@
 
             try {
                 const response = await fetch('/api/credenciais/lista');
+                
+                // Verificar se a resposta é OK
+                if (!response.ok) {
+                    throw new Error(`Erro HTTP: ${response.status} ${response.statusText}`);
+                }
+                
                 const data = await response.json();
 
                 // Parar animação de loading
                 if (loadingInterval) {
                     clearInterval(loadingInterval);
+                }
+
+                // Verificar se data é válido
+                if (!data || typeof data !== 'object') {
+                    throw new Error('Resposta inválida da API');
                 }
 
                 // Salvar no cache
@@ -1004,14 +1025,24 @@
                 await renderizarTimesSidebar(data);
             } catch (error) {
                 console.error('Erro ao carregar times:', error);
-                showToast('Erro ao carregar times', 'error');
+                // Usar showToast apenas se estiver disponível
+                if (typeof showToast === 'function') {
+                    try {
+                        showToast('Erro ao carregar times', 'error');
+                    } catch (toastError) {
+                        console.error('Erro ao mostrar toast:', toastError);
+                    }
+                } else {
+                    console.error('showToast não está disponível. Erro:', error.message || error);
+                }
                 const timesList = document.getElementById('timesList');
                 const timesLoading = document.getElementById('timesLoading');
                 if (timesList) {
                     if (timesLoading) {
                         timesLoading.remove();
                     }
-                    timesList.innerHTML = '<div class="px-3 py-2 text-xs text-red-400">Erro ao carregar times</div>';
+                    const errorMsg = error.message || 'Erro desconhecido';
+                    timesList.innerHTML = `<div class="px-3 py-2 text-xs text-red-400">Erro ao carregar times: ${errorMsg}</div>`;
                 }
                 if (loadingInterval) {
                     clearInterval(loadingInterval);

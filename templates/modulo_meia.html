@@ -567,14 +567,45 @@ async function carregarDados(forcarRecalculo = false) {
         
         // Se apenasRankingSalvo for true, adicionar parâmetro na URL para indicar ao servidor
         const url = apenasRankingSalvo ? '/api/modulos/meia/dados?apenas_ranking=true' : '/api/modulos/meia/dados';
-        const response = await fetch(url);
+        
+        // Criar AbortController para timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 segundos de timeout
+        
+        let response;
+        try {
+            response = await fetch(url, {
+                signal: controller.signal,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            clearTimeout(timeoutId);
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (fetchError.name === 'AbortError') {
+                throw new Error('Tempo de conexão excedido. O servidor pode estar sobrecarregado. Tente novamente.');
+            } else if (fetchError.message.includes('ERR_CONNECTION_RESET') || fetchError.message.includes('Failed to fetch')) {
+                throw new Error('Conexão com o servidor foi interrompida. Verifique sua conexão e tente novamente.');
+            }
+            throw fetchError;
+        }
+        
         console.log(`[DEBUG] 🔵 DEPOIS DO FETCH, ANTES DO JSON (ID: ${chamadaId})`);
-        const data = await response.json();
-        console.log(`[DEBUG] 🔵 DEPOIS DO JSON, VERIFICANDO RANKING (ID: ${chamadaId})`);
         
         if (!response.ok) {
-            throw new Error(data.error || 'Erro ao carregar dados');
+            let errorMessage = `Erro HTTP ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMessage = errorData.error || errorMessage;
+            } catch (e) {
+                errorMessage = await response.text() || errorMessage;
+            }
+            throw new Error(errorMessage);
         }
+        
+        const data = await response.json();
+        console.log(`[DEBUG] 🔵 DEPOIS DO JSON, VERIFICANDO RANKING (ID: ${chamadaId})`);
         
         // VERIFICAÇÃO IMEDIATA: Se bloqueador ativo, EXIBIR RANKING DIRETAMENTE E RETORNAR
         if (window.BLOQUEAR_CALCULO_MEIA === true) {
@@ -828,9 +859,29 @@ async function carregarDados(forcarRecalculo = false) {
         console.error('Erro ao carregar dados:', error);
         loadingState.classList.add('hidden');
         errorState.classList.remove('hidden');
-        errorMessage.textContent = error.message;
+        
+        // Mensagem de erro mais detalhada
+        let errorMsg = error.message || 'Erro desconhecido ao carregar dados';
+        if (error.message && error.message.includes('ERR_CONNECTION_RESET')) {
+            errorMsg = 'Conexão com o servidor foi interrompida. Verifique sua conexão e tente novamente.';
+        } else if (error.message && error.message.includes('Failed to fetch')) {
+            errorMsg = 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.';
+        } else if (error.message && error.message.includes('Tempo de conexão')) {
+            errorMsg = error.message;
+        }
+        
+        errorMessage.textContent = errorMsg;
         calculando = false; // Liberar flag em caso de erro
-        showToast('Erro ao carregar dados de meias', 'error');
+        
+        // Usar showToast apenas se estiver disponível
+        if (typeof showToast === 'function') {
+            try {
+                showToast('Erro ao carregar dados de meias', 'error');
+            } catch (toastError) {
+                console.error('Erro ao mostrar toast:', toastError);
+            }
+        }
+        
         console.log('[DEBUG] ========== FINALIZANDO carregarDados (erro) ==========');
     } finally {
         hideLoader();
@@ -894,16 +945,16 @@ async function renderizarTabelaMeias(resultados) {
             </td>
             <td class="py-4 px-2 ${blurClass}" ${blurStyle}>
                 <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
-                        <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover">
-                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
-                            <span class="text-white font-bold text-xs">${jogador.apelido.substring(0, 2)}</span>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden bg-gray-600">
+                        <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover" style="display: none;">
+                        <div class="player-fallback w-full h-full bg-red-600 rounded-full flex items-center justify-center" style="display: none;">
+                            <span class="text-white font-bold text-xs">X</span>
                         </div>
                     </div>
-                    <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
-                        <img src="${jogador.clube_escudo_url || ''}" alt="${jogador.clube_nome}" class="w-full h-full object-cover">
-                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
-                            <span class="text-white font-bold text-xs">${jogador.clube_abrev}</span>
+                    <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden bg-gray-600">
+                        <img src="${jogador.clube_escudo_url || ''}" alt="${jogador.clube_nome}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: ${jogador.clube_escudo_url ? 'none' : 'flex'};">
+                            <span class="text-white font-bold text-xs">${(jogador.clube_abrev || jogador.clube_nome || '').substring(0, 3).toUpperCase()}</span>
                         </div>
                     </div>
                     <div>
@@ -1000,6 +1051,13 @@ async function renderizarTabelaMeias(resultados) {
         
         tbody.appendChild(tr);
     });
+    
+    // Carregar fotos dos jogadores após renderizar
+    setTimeout(function() {
+        if (typeof loadAllPlayerImages === 'function') {
+            loadAllPlayerImages();
+        }
+    }, 100);
 }
 
 // Sincronizar sliders com valores exibidos

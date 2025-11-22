@@ -4995,6 +4995,673 @@ def api_admin_laterais_toggle():
     finally:
         close_db_connection(conn)
 
+# ========================================
+# ADMIN FOTOS ATLETAS
+# ========================================
+
+@app.route('/admin/fotos-atletas')
+@admin_required
+def admin_fotos_atletas():
+    """Página de administração de fotos dos atletas"""
+    return render_template('admin_fotos_atletas.html')
+
+@app.route('/admin/visualizar-atletas')
+@admin_required
+def admin_visualizar_atletas():
+    """Página para visualizar atletas e adicionar URLs de fotos"""
+    return render_template('admin_visualizar_atletas.html')
+
+@app.route('/api/admin/fotos-atletas')
+@admin_required
+def api_admin_fotos_atletas():
+    """API para listar atletas com múltiplas fotos (que ainda precisam de confirmação)"""
+    import os
+    from pathlib import Path
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = 20
+    
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        # Buscar todos os atletas
+        cursor.execute('''
+            SELECT a.atleta_id, a.apelido, a.nome, c.nome as clube_nome
+            FROM acf_atletas a
+            LEFT JOIN acf_clubes c ON a.clube_id = c.id
+            ORDER BY c.nome, a.apelido
+        ''')
+        atletas = cursor.fetchall()
+        
+        # Diretório de fotos
+        foto_dir = Path('static/cartola_imgs/foto_atletas')
+        
+        result = []
+        for atleta_id, apelido, nome, clube_nome in atletas:
+            # Buscar fotos disponíveis (apenas as que têm sufixo de fonte)
+            fotos_disponiveis = []
+            
+            # Verificar foto ogol
+            for ext in ['.jpg', '.jpeg', '.png']:
+                foto_path = foto_dir / f"{atleta_id}_ogol{ext}"
+                if foto_path.exists():
+                    fotos_disponiveis.append({
+                        'fonte': 'ogol',
+                        'arquivo': foto_path.name,
+                        'url': f"/static/cartola_imgs/foto_atletas/{foto_path.name}"
+                    })
+                    break
+            
+            # Verificar foto transfermarkt
+            for ext in ['.jpg', '.jpeg', '.png']:
+                foto_path = foto_dir / f"{atleta_id}_transfermarkt{ext}"
+                if foto_path.exists():
+                    fotos_disponiveis.append({
+                        'fonte': 'transfermarkt',
+                        'arquivo': foto_path.name,
+                        'url': f"/static/cartola_imgs/foto_atletas/{foto_path.name}"
+                    })
+                    break
+            
+            # Verificar foto custom
+            for ext in ['.jpg', '.jpeg', '.png', '.gif']:
+                foto_path = foto_dir / f"{atleta_id}_custom{ext}"
+                if foto_path.exists():
+                    fotos_disponiveis.append({
+                        'fonte': 'custom',
+                        'arquivo': foto_path.name,
+                        'url': f"/static/cartola_imgs/foto_atletas/{foto_path.name}"
+                    })
+                    break
+            
+            # Verificar se já tem foto processada (sem sufixo)
+            tem_foto_processada = False
+            for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+                foto_processada = foto_dir / f"{atleta_id}{ext}"
+                if foto_processada.exists():
+                    tem_foto_processada = True
+                    break
+            
+            # Adicionar se:
+            # 1. Tiver múltiplas fotos com sufixo (precisa escolher)
+            # 2. OU tiver pelo menos 1 foto com sufixo mas NÃO tiver foto processada (precisa confirmar)
+            if len(fotos_disponiveis) > 1 or (len(fotos_disponiveis) == 1 and not tem_foto_processada):
+                result.append({
+                    'atleta_id': atleta_id,
+                    'apelido': apelido or nome or f"Atleta {atleta_id}",
+                    'nome': nome or '',
+                    'clube_nome': clube_nome or 'Sem clube',
+                    'fotos': fotos_disponiveis
+                })
+        
+        # Paginação
+        total = len(result)
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated_result = result[start:end]
+        
+        return jsonify({
+            'atletas': paginated_result,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': total,
+                'pages': (total + per_page - 1) // per_page
+            }
+        })
+    except Exception as e:
+        print(f"Erro API fotos atletas: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        close_db_connection(conn)
+
+@app.route('/api/admin/fotos-atletas/selecionar', methods=['POST'])
+@admin_required
+def api_admin_fotos_atletas_selecionar():
+    """API para selecionar uma foto e excluir a(s) outra(s)"""
+    import os
+    from pathlib import Path
+    
+    data = request.get_json()
+    atleta_id = data.get('atleta_id')
+    foto_selecionada = data.get('foto_selecionada')  # Nome do arquivo selecionado
+    excluir_todas = data.get('excluir_todas', False)  # Se True, exclui todas as fotos
+    
+    if not atleta_id:
+        return jsonify({'success': False, 'error': 'ID do atleta obrigatório'}), 400
+    
+    foto_dir = Path('static/cartola_imgs/foto_atletas')
+    
+    try:
+        if excluir_todas:
+            # Excluir todas as fotos do atleta
+            for ext in ['.jpg', '.jpeg', '.png']:
+                for fonte in ['ogol', 'transfermarkt']:
+                    foto_path = foto_dir / f"{atleta_id}_{fonte}{ext}"
+                    if foto_path.exists():
+                        os.remove(foto_path)
+            
+            return jsonify({'success': True, 'message': 'Todas as fotos foram excluídas'})
+        else:
+            if not foto_selecionada:
+                return jsonify({'success': False, 'error': 'Foto selecionada obrigatória'}), 400
+            
+            # Excluir todas as fotos exceto a selecionada
+            for ext in ['.jpg', '.jpeg', '.png']:
+                for fonte in ['ogol', 'transfermarkt']:
+                    foto_path = foto_dir / f"{atleta_id}_{fonte}{ext}"
+                    if foto_path.exists() and foto_path.name != foto_selecionada:
+                        os.remove(foto_path)
+            
+            return jsonify({'success': True, 'message': 'Foto selecionada e outras excluídas'})
+            
+    except Exception as e:
+        print(f"Erro ao selecionar/excluir foto: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/admin/fotos-atletas/baixar-url', methods=['POST'])
+@admin_required
+def api_admin_fotos_atletas_baixar_url():
+    """API para baixar foto de uma URL e salvar com ID do atleta"""
+    import os
+    import requests
+    from pathlib import Path
+    from urllib.parse import urlparse
+    
+    data = request.get_json()
+    atleta_id = data.get('atleta_id')
+    url_foto = data.get('url_foto')
+    
+    if not atleta_id:
+        return jsonify({'success': False, 'error': 'ID do atleta obrigatório'}), 400
+    
+    if not url_foto:
+        return jsonify({'success': False, 'error': 'URL da foto obrigatória'}), 400
+    
+    foto_dir = Path('static/cartola_imgs/foto_atletas')
+    foto_dir.mkdir(parents=True, exist_ok=True)
+    
+    try:
+        # Headers para evitar bloqueios
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+            'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
+        }
+        
+        # Fazer download da imagem com timeout maior
+        print(f"Baixando foto de: {url_foto}")
+        response = requests.get(url_foto, headers=headers, timeout=30, stream=True, allow_redirects=True)
+        response.raise_for_status()
+        
+        # Verificar se é realmente uma imagem
+        content_type = response.headers.get('content-type', '').lower()
+        if 'image' not in content_type:
+            return jsonify({
+                'success': False, 
+                'error': f'URL não é uma imagem válida. Content-Type: {content_type}'
+            }), 400
+        
+        # Verificar tamanho máximo (10MB)
+        content_length = response.headers.get('content-length')
+        if content_length and int(content_length) > 10 * 1024 * 1024:
+            return jsonify({
+                'success': False,
+                'error': 'Imagem muito grande (máximo 10MB)'
+            }), 400
+        
+        # Detectar extensão do arquivo
+        parsed_url = urlparse(url_foto)
+        path = parsed_url.path.lower()
+        
+        if path.endswith('.jpg') or path.endswith('.jpeg'):
+            ext = '.jpg'
+        elif path.endswith('.png'):
+            ext = '.png'
+        elif path.endswith('.gif'):
+            ext = '.gif'
+        elif path.endswith('.webp'):
+            ext = '.webp'
+        else:
+            # Tentar detectar pelo content-type
+            if 'jpeg' in content_type or 'jpg' in content_type:
+                ext = '.jpg'
+            elif 'png' in content_type:
+                ext = '.png'
+            elif 'gif' in content_type:
+                ext = '.gif'
+            elif 'webp' in content_type:
+                ext = '.webp'
+            else:
+                ext = '.jpg'  # Padrão
+        
+        # Salvar arquivo como "atleta_id_custom.ext"
+        foto_path = foto_dir / f"{atleta_id}_custom{ext}"
+        
+        print(f"[DOWNLOAD] Salvando foto do atleta {atleta_id} em: {foto_path}")
+        
+        # Baixar em chunks para não travar
+        total_size = 0
+        max_size = 10 * 1024 * 1024  # 10MB
+        
+        with open(foto_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+                    total_size += len(chunk)
+                    if total_size > max_size:
+                        # Remover arquivo parcial
+                        foto_path.unlink()
+                        return jsonify({
+                            'success': False,
+                            'error': 'Imagem muito grande (máximo 10MB)'
+                        }), 400
+        
+        # Verificar se o arquivo foi salvo corretamente
+        if not foto_path.exists():
+            print(f"[DOWNLOAD] ERRO: Arquivo não foi criado: {foto_path}")
+            return jsonify({
+                'success': False,
+                'error': 'Erro ao salvar arquivo (arquivo não foi criado)'
+            }), 500
+        
+        file_size = foto_path.stat().st_size
+        if file_size == 0:
+            foto_path.unlink()  # Remover arquivo vazio
+            print(f"[DOWNLOAD] ERRO: Arquivo vazio foi removido: {foto_path}")
+            return jsonify({
+                'success': False,
+                'error': 'Erro ao salvar arquivo (arquivo vazio)'
+            }), 500
+        
+        tamanho_kb = file_size / 1024
+        print(f"[DOWNLOAD] ✅ Foto baixada: {foto_path.name} ({tamanho_kb:.1f} KB) - Atleta {atleta_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Foto baixada com sucesso ({tamanho_kb:.1f} KB)',
+            'arquivo': foto_path.name,
+            'url': f"/static/cartola_imgs/foto_atletas/{foto_path.name}"
+        })
+        
+    except requests.exceptions.Timeout:
+        return jsonify({
+            'success': False,
+            'error': 'Timeout: A URL demorou muito para responder (máximo 30 segundos)'
+        }), 408
+    except requests.exceptions.ConnectionError as e:
+        return jsonify({
+            'success': False,
+            'error': f'Erro de conexão: Não foi possível conectar à URL. Verifique se a URL está correta.'
+        }), 400
+    except requests.exceptions.HTTPError as e:
+        return jsonify({
+            'success': False,
+            'error': f'Erro HTTP {e.response.status_code}: {e.response.reason}'
+        }), 400
+    except requests.exceptions.RequestException as e:
+        return jsonify({
+            'success': False,
+            'error': f'Erro na requisição: {str(e)}'
+        }), 400
+    except Exception as e:
+        print(f"Erro ao baixar foto: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'success': False,
+            'error': f'Erro inesperado: {str(e)}'
+        }), 500
+
+@app.route('/api/admin/fotos-atletas/salvar-multiplas', methods=['POST'])
+@admin_required
+def api_admin_fotos_atletas_salvar_multiplas():
+    """API para salvar múltiplas seleções de uma vez"""
+    import os
+    from pathlib import Path
+    
+    data = request.get_json()
+    selecoes = data.get('selecoes', [])  # Lista de {atleta_id, foto_selecionada, excluir_todas}
+    
+    if not selecoes:
+        return jsonify({'success': False, 'error': 'Nenhuma seleção fornecida'}), 400
+    
+    foto_dir = Path('static/cartola_imgs/foto_atletas')
+    resultados = []
+    erros = []
+    
+    for selecao in selecoes:
+        atleta_id = selecao.get('atleta_id')
+        foto_selecionada = selecao.get('foto_selecionada')
+        excluir_todas = selecao.get('excluir_todas', False)
+        
+        if not atleta_id:
+            erros.append(f"ID do atleta obrigatório para seleção: {selecao}")
+            continue
+        
+        try:
+            if excluir_todas:
+                # Excluir todas as fotos do atleta
+                for ext in ['.jpg', '.jpeg', '.png', '.gif']:
+                    for fonte in ['ogol', 'transfermarkt', 'custom']:
+                        foto_path = foto_dir / f"{atleta_id}_{fonte}{ext}"
+                        if foto_path.exists():
+                            os.remove(foto_path)
+                resultados.append({'atleta_id': atleta_id, 'status': 'todas_excluidas'})
+            else:
+                if not foto_selecionada:
+                    erros.append(f"Foto selecionada obrigatória para atleta {atleta_id}")
+                    continue
+                
+                # Encontrar a foto selecionada
+                foto_selecionada_path = foto_dir / foto_selecionada
+                if not foto_selecionada_path.exists():
+                    erros.append(f"Foto selecionada não encontrada para atleta {atleta_id}: {foto_selecionada}")
+                    continue
+                
+                # Extrair extensão do arquivo selecionado
+                ext = foto_selecionada_path.suffix
+                
+                # Renomear a foto selecionada removendo o sufixo da fonte (ex: 100084_ogol.jpg -> 100084.jpg)
+                novo_nome = f"{atleta_id}{ext}"
+                novo_path = foto_dir / novo_nome
+                
+                # Se já existe uma foto sem sufixo, excluir primeiro
+                if novo_path.exists() and novo_path != foto_selecionada_path:
+                    os.remove(novo_path)
+                
+                # Renomear a foto selecionada
+                print(f"[SALVAR] Renomeando: {foto_selecionada} -> {novo_nome} (Atleta {atleta_id})")
+                os.rename(foto_selecionada_path, novo_path)
+                
+                # Excluir todas as outras fotos (com sufixo de fonte)
+                # IMPORTANTE: A foto renomeada (novo_path) já não tem sufixo, então não será excluída
+                # Mas ainda pode haver outras fotos com sufixo que precisam ser removidas
+                fotos_removidas = []
+                for ext_other in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+                    for fonte in ['ogol', 'transfermarkt', 'custom']:
+                        foto_path = foto_dir / f"{atleta_id}_{fonte}{ext_other}"
+                        # Excluir apenas se existir (a foto original já foi renomeada, então não existe mais)
+                        if foto_path.exists():
+                            os.remove(foto_path)
+                            fotos_removidas.append(foto_path.name)
+                            print(f"  [SALVAR] Removida: {foto_path.name}")
+                
+                print(f"[SALVAR] ✅ Atleta {atleta_id}: {novo_nome} salvo. {len(fotos_removidas)} foto(s) removida(s).")
+                resultados.append({'atleta_id': atleta_id, 'status': 'selecionada', 'foto': novo_nome})
+        except Exception as e:
+            erros.append(f"Erro ao processar atleta {atleta_id}: {str(e)}")
+    
+    return jsonify({
+        'success': len(erros) == 0,
+        'resultados': resultados,
+        'erros': erros,
+        'total_processados': len(resultados),
+        'total_erros': len(erros)
+    })
+
+@app.route('/api/admin/visualizar-atletas')
+@admin_required
+def api_admin_visualizar_atletas():
+    """API para listar todos os atletas com suas fotos"""
+    from pathlib import Path
+    
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT a.atleta_id, a.apelido, a.nome, c.nome as clube_nome, c.id as clube_id
+            FROM acf_atletas a
+            LEFT JOIN acf_clubes c ON a.clube_id = c.id
+            ORDER BY c.nome, a.apelido, a.nome
+        ''')
+        atletas_raw = cursor.fetchall()
+        
+        foto_dir = Path('static/cartola_imgs/foto_atletas')
+        from utils.team_shields import get_team_shield
+        
+        result = []
+        for atleta_id, apelido, nome, clube_nome, clube_id in atletas_raw:
+            # Verificar se tem foto (sem sufixo ou com sufixo)
+            tem_foto = False
+            foto_url = None
+            
+            # Primeiro verificar foto processada (sem sufixo)
+            for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+                foto_path = foto_dir / f"{atleta_id}{ext}"
+                if foto_path.exists():
+                    tem_foto = True
+                    foto_url = f"/static/cartola_imgs/foto_atletas/{foto_path.name}"
+                    break
+            
+            # Se não tem foto processada, verificar fotos com sufixo
+            if not tem_foto:
+                for fonte in ['transfermarkt', 'ogol', 'custom']:
+                    for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+                        foto_path = foto_dir / f"{atleta_id}_{fonte}{ext}"
+                        if foto_path.exists():
+                            tem_foto = True
+                            foto_url = f"/static/cartola_imgs/foto_atletas/{foto_path.name}"
+                            break
+                    if tem_foto:
+                        break
+            
+            escudo_url = get_team_shield(clube_id, size='45x45') if clube_id else ''
+            
+            result.append({
+                'atleta_id': atleta_id,
+                'apelido': apelido or '',
+                'nome': nome or '',
+                'clube_nome': clube_nome or 'Sem clube',
+                'clube_id': clube_id,
+                'clube_escudo_url': escudo_url,
+                'tem_foto': tem_foto,
+                'foto_url': foto_url
+            })
+        
+        return jsonify({'atletas': result})
+    except Exception as e:
+        print(f"Erro API visualizar atletas: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        close_db_connection(conn)
+
+@app.route('/api/admin/visualizar-atletas/salvar-urls', methods=['POST'])
+@admin_required
+def api_admin_visualizar_atletas_salvar_urls():
+    """API para salvar múltiplas URLs de fotos de uma vez"""
+    import os
+    import requests
+    from pathlib import Path
+    from urllib.parse import urlparse
+    
+    data = request.get_json()
+    urls = data.get('urls', [])  # Lista de {atleta_id, url}
+    
+    if not urls:
+        return jsonify({'success': False, 'error': 'Nenhuma URL fornecida'}), 400
+    
+    foto_dir = Path('static/cartola_imgs/foto_atletas')
+    foto_dir.mkdir(parents=True, exist_ok=True)
+    
+    resultados = []
+    
+    for item in urls:
+        atleta_id = item.get('atleta_id')
+        url_foto = item.get('url')
+        
+        if not atleta_id:
+            resultados.append({
+                'atleta_id': None,
+                'success': False,
+                'error': 'ID do atleta obrigatório'
+            })
+            continue
+        
+        if not url_foto:
+            resultados.append({
+                'atleta_id': atleta_id,
+                'success': False,
+                'error': 'URL obrigatória'
+            })
+            continue
+        
+        try:
+            # Headers para evitar bloqueios
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+                'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
+            }
+            
+            # Fazer download da imagem
+            print(f"[DOWNLOAD] Baixando foto do atleta {atleta_id} de: {url_foto}")
+            response = requests.get(url_foto, headers=headers, timeout=30, stream=True, allow_redirects=True)
+            response.raise_for_status()
+            
+            # Verificar se é realmente uma imagem
+            content_type = response.headers.get('content-type', '').lower()
+            if 'image' not in content_type:
+                resultados.append({
+                    'atleta_id': atleta_id,
+                    'success': False,
+                    'error': f'URL não é uma imagem válida. Content-Type: {content_type}'
+                })
+                continue
+            
+            # Verificar tamanho máximo (10MB)
+            content_length = response.headers.get('content-length')
+            if content_length and int(content_length) > 10 * 1024 * 1024:
+                resultados.append({
+                    'atleta_id': atleta_id,
+                    'success': False,
+                    'error': 'Imagem muito grande (máximo 10MB)'
+                })
+                continue
+            
+            # Detectar extensão
+            parsed_url = urlparse(url_foto)
+            path = parsed_url.path.lower()
+            
+            if path.endswith('.jpg') or path.endswith('.jpeg'):
+                ext = '.jpg'
+            elif path.endswith('.png'):
+                ext = '.png'
+            elif path.endswith('.gif'):
+                ext = '.gif'
+            elif path.endswith('.webp'):
+                ext = '.webp'
+            else:
+                if 'jpeg' in content_type or 'jpg' in content_type:
+                    ext = '.jpg'
+                elif 'png' in content_type:
+                    ext = '.png'
+                elif 'gif' in content_type:
+                    ext = '.gif'
+                elif 'webp' in content_type:
+                    ext = '.webp'
+                else:
+                    ext = '.jpg'
+            
+            # Salvar como foto processada (sem sufixo)
+            foto_path = foto_dir / f"{atleta_id}{ext}"
+            
+            # Remover foto antiga se existir (com ou sem sufixo)
+            for ext_old in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+                # Remover foto processada antiga
+                old_path = foto_dir / f"{atleta_id}{ext_old}"
+                if old_path.exists() and old_path != foto_path:
+                    old_path.unlink()
+                
+                # Remover fotos com sufixo
+                for fonte in ['transfermarkt', 'ogol', 'custom']:
+                    old_path = foto_dir / f"{atleta_id}_{fonte}{ext_old}"
+                    if old_path.exists():
+                        old_path.unlink()
+            
+            # Baixar em chunks
+            total_size = 0
+            max_size = 10 * 1024 * 1024
+            
+            with open(foto_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        f.write(chunk)
+                        total_size += len(chunk)
+                        if total_size > max_size:
+                            if foto_path.exists():
+                                foto_path.unlink()
+                            resultados.append({
+                                'atleta_id': atleta_id,
+                                'success': False,
+                                'error': 'Imagem muito grande (máximo 10MB)'
+                            })
+                            break
+                else:
+                    # Verificar se foi salvo corretamente
+                    if foto_path.exists() and foto_path.stat().st_size > 0:
+                        tamanho_kb = foto_path.stat().st_size / 1024
+                        print(f"[DOWNLOAD] ✅ Foto salva: {foto_path.name} ({tamanho_kb:.1f} KB)")
+                        resultados.append({
+                            'atleta_id': atleta_id,
+                            'success': True,
+                            'arquivo': foto_path.name,
+                            'tamanho_kb': round(tamanho_kb, 1)
+                        })
+                    else:
+                        if foto_path.exists():
+                            foto_path.unlink()
+                        resultados.append({
+                            'atleta_id': atleta_id,
+                            'success': False,
+                            'error': 'Arquivo vazio ou não foi criado'
+                        })
+                    continue
+                # Se saiu do loop por break (tamanho excedido), já foi tratado acima
+                continue
+        
+        except requests.exceptions.Timeout:
+            resultados.append({
+                'atleta_id': atleta_id,
+                'success': False,
+                'error': 'Timeout: A URL demorou muito para responder'
+            })
+        except requests.exceptions.ConnectionError:
+            resultados.append({
+                'atleta_id': atleta_id,
+                'success': False,
+                'error': 'Erro de conexão: Não foi possível conectar à URL'
+            })
+        except requests.exceptions.HTTPError as e:
+            resultados.append({
+                'atleta_id': atleta_id,
+                'success': False,
+                'error': f'Erro HTTP {e.response.status_code}: {e.response.reason}'
+            })
+        except Exception as e:
+            print(f"Erro ao baixar foto do atleta {atleta_id}: {e}")
+            resultados.append({
+                'atleta_id': atleta_id,
+                'success': False,
+                'error': str(e)[:100]
+            })
+    
+    sucesso = len([r for r in resultados if r.get('success')])
+    erros = len([r for r in resultados if not r.get('success')])
+    
+    return jsonify({
+        'success': erros == 0,
+        'resultados': resultados,
+        'total_sucesso': sucesso,
+        'total_erros': erros
+    })
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
 

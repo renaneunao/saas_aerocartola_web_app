@@ -2,12 +2,17 @@
   "processados": [
     98306,
     108548,
+    145413,
+    145412,
     92171,
+    143377,
     71701,
     92182,
+    145436,
     81952,
     122922,
     108588,
+    131116,
     73781,
     104502,
     112709,
@@ -16,95 +21,161 @@
     84042,
     92237,
     98384,
+    139345,
     96340,
     96342,
+    141401,
+    143452,
+    141405,
     106593,
+    143460,
     79973,
     114790,
+    143463,
+    145510,
+    141419,
     122990,
     114802,
     122994,
+    141433,
     123004,
     123005,
     84094,
     123007,
+    143488,
+    141451,
+    141453,
     69783,
+    145560,
+    141465,
+    141467,
+    145563,
+    137375,
     102561,
     110759,
     108713,
     90285,
     98484,
+    139455,
     104640,
+    145602,
+    90307,
     90309,
+    145612,
     106708,
     51413,
     98517,
+    141526,
     94444,
+    141551,
+    143600,
+    145648,
+    145647,
     104693,
+    145659,
+    145660,
     80129,
     90370,
     112906,
+    127242,
     86292,
+    141595,
     78117,
     84263,
+    145705,
+    141610,
+    141609,
     100652,
     94509,
+    141611,
+    141614,
+    141615,
     94514,
     98619,
+    141628,
     80196,
     117061,
     106822,
+    137542,
     88393,
+    141643,
     106829,
     104783,
+    145744,
     72018,
+    145750,
     96610,
     98672,
     94583,
+    131455,
     100742,
     86410,
     113034,
     96652,
+    137618,
     80287,
     88479,
+    37281,
     90532,
     106918,
+    133543,
     78248,
     96684,
     113078,
+    141751,
     80313,
+    141754,
+    131515,
+    131516,
+    141763,
     115141,
+    141771,
     84428,
+    141776,
     86485,
     100830,
     123359,
     123360,
+    141795,
     104933,
     82407,
     86508,
     100846,
+    141806,
     90608,
+    133623,
     113158,
     86536,
     102928,
     88597,
     92696,
     96793,
+    125469,
+    131617,
     100898,
     61987,
     92708,
     104994,
     102950,
+    133669,
     109096,
+    133671,
+    133673,
+    141868,
+    133679,
+    141873,
+    141874,
     111156,
     98873,
     51772,
     96831,
     102975,
+    133696,
     107075,
     70221,
     84558,
     90703,
+    37457,
     109138,
     117330,
     107093,
@@ -119,13 +190,23 @@
     96874,
     105068,
     100987,
+    129663,
+    129665,
+    129666,
     92811,
+    144015,
     105114,
     117403,
     107170,
     101027,
     107174,
+    131753,
     107179,
+    141995,
+    141996,
+    131762,
+    142004,
+    131765,
     86711,
     80570,
     84674,
@@ -136,18 +217,23 @@
     94931,
     105175,
     107231,
+    142047,
+    142049,
     86757,
     86766,
     113397,
     84735,
     123649,
+    142086,
     103179,
     72460,
     86820,
     90917,
+    138021,
     72493,
     99119,
     111407,
+    142130,
     92981,
     121668,
     97095,
@@ -163,7 +249,9 @@
     109426,
     105337,
     99198,
+    146303,
     117632,
+    144255,
     95106,
     88963,
     115586,
@@ -177,18 +265,30 @@
     121766,
     101290,
     99248,
+    142257,
+    142261,
+    142265,
+    142268,
     70592,
     101314,
     99267,
+    146374,
     101319,
+    146375,
+    142279,
     99274,
     115674,
     105436,
     91101,
+    136156,
     121824,
+    146400,
     111594,
+    146410,
     99316,
     91130,
+    146430,
+    130048,
     78850,
     78851,
     109573,
@@ -196,7 +296,9 @@
     70666,
     103445,
     91158,
+    144417,
     107554,
+    144424,
     97321,
     93236,
     85048,
@@ -206,40 +308,71 @@
     111682,
     111683,
     111690,
+    140364,
     68685,
     85083,
     105568,
     68708,
     101478,
+    134246,
+    142445,
     99440,
     105584,
     105585,
+    136306,
     95354,
     111757,
+    130190,
+    70800,
+    146577,
+    146578,
+    142484,
     117910,
     42135,
     103576,
+    132264,
     117930,
+    124077,
+    144561,
     89274,
     89275,
+    146623,
+    146624,
+    146625,
     81091,
+    140484,
     89285,
     101574,
+    146632,
     68811,
+    140492,
+    130252,
+    140494,
+    130255,
+    130254,
     111829,
     111831,
     79066,
     87258,
     101594,
+    101597,
     99552,
     81121,
     93411,
     107748,
+    146663,
+    130279,
+    130280,
     97520,
     103672,
     81150,
+    140542,
+    130305,
     70916,
     68872,
+    130316,
+    146701,
+    130319,
     101651,
     89368,
     70944,
@@ -250,28 +383,37 @@
     68920,
     83257,
     105786,
+    68928,
     116034,
     95556,
     118090,
     109899,
     101708,
+    130382,
     105807,
     91473,
+    130386,
     107859,
     103764,
+    124247,
     68952,
+    130393,
     107873,
     116065,
     116067,
     101733,
+    124264,
     97645,
     105842,
     91509,
     97653,
+    146807,
     101752,
     68991,
     107908,
+    101768,
     109966,
+    146833,
     89493,
     69014,
     95638,
@@ -280,37 +422,55 @@
     105900,
     87470,
     91573,
+    140726,
     69051,
     122300,
     122302,
+    132553,
+    130507,
     122318,
     122320,
+    132560,
     71123,
     107989,
+    91607,
     85465,
     105949,
+    132580,
     91627,
     71162,
     62977,
     42500,
     97810,
+    142867,
     69140,
     93716,
     101908,
+    142868,
     122396,
     63007,
     63013,
     89637,
+    142890,
+    130608,
     99889,
     122420,
+    130612,
     95799,
     91706,
+    130620,
     101960,
     97868,
+    128590,
+    130650,
+    104027,
     93790,
     106082,
     73318,
+    145000,
+    140906,
     97899,
+    140908,
     122485,
     122486,
     122487,
@@ -321,6 +481,7 @@
     108176,
     104084,
     104085,
+    130711,
     114334,
     73384,
     122538,
@@ -328,41 +489,73 @@
     104118,
     87742,
     95936,
+    143040,
     87747,
     104134,
+    145099,
     122573,
     106202,
     114400,
+    143072,
     114405,
     98022,
     116461,
+    141039,
     89840,
+    141040,
     102130,
     108274,
     100084,
     89846,
     102137,
+    139001,
+    136955,
+    130811,
     104191,
     87808,
+    61188,
     104204,
     79631,
     89883,
+    141084,
+    124701,
     118563,
     93988,
     122660,
     73515,
     87853,
+    130869,
     87863,
+    139076,
+    141125,
+    130889,
     83786,
+    141131,
     87887,
+    141138,
     106323,
+    141139,
     79701,
+    141145,
+    143194,
+    141150,
+    141151,
     85856,
+    141153,
+    141154,
+    141156,
+    141158,
+    141160,
+    141161,
+    141162,
     116589,
     71536,
     102256,
+    145269,
     104330,
     71571,
+    143253,
+    143255,
     122781,
     77738,
     85930,
@@ -373,13 +566,21 @@
     92085,
     108474,
     87999,
+    143295,
+    139200,
     94154,
     90061,
     118752,
+    145379,
     98280,
     112616,
+    145387,
     122861,
+    145396,
     118774,
+    143350,
+    145400,
+    145404,
     94207
   ],
   "erros": [],
@@ -2669,6 +2870,1212 @@
       "timestamp": "2025-11-20T21:29:39.340350",
       "transfermarkt": "ja_existia",
       "ogol": "ja_existia"
+    },
+    {
+      "atleta_id": 140726,
+      "timestamp": "2025-11-22T13:13:09.314899",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141419,
+      "timestamp": "2025-11-22T13:13:36.238371",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145379,
+      "timestamp": "2025-11-22T13:13:53.262391",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130393,
+      "timestamp": "2025-11-22T13:14:10.682979",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146303,
+      "timestamp": "2025-11-22T13:14:29.803002",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 136955,
+      "timestamp": "2025-11-22T13:14:53.689408",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 129663,
+      "timestamp": "2025-11-22T13:15:10.311892",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 142265,
+      "timestamp": "2025-11-22T13:15:34.549266",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 142890,
+      "timestamp": "2025-11-22T13:16:00.151171",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141751,
+      "timestamp": "2025-11-22T13:16:17.562471",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146833,
+      "timestamp": "2025-11-22T13:16:35.137311",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145269,
+      "timestamp": "2025-11-22T13:17:03.817542",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 143072,
+      "timestamp": "2025-11-22T13:17:30.450074",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146430,
+      "timestamp": "2025-11-22T13:18:03.527253",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 142484,
+      "timestamp": "2025-11-22T13:18:22.819009",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146375,
+      "timestamp": "2025-11-22T13:18:45.669238",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 144015,
+      "timestamp": "2025-11-22T13:19:07.551225",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 142086,
+      "timestamp": "2025-11-22T13:19:25.942870",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141084,
+      "timestamp": "2025-11-22T13:19:49.826826",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146410,
+      "timestamp": "2025-11-22T13:20:06.497753",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130305,
+      "timestamp": "2025-11-22T13:20:23.804241",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 125469,
+      "timestamp": "2025-11-22T13:20:51.858451",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 139455,
+      "timestamp": "2025-11-22T13:21:08.948927",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141551,
+      "timestamp": "2025-11-22T13:21:32.498578",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 124247,
+      "timestamp": "2025-11-22T13:21:50.388010",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146578,
+      "timestamp": "2025-11-22T13:22:07.612876",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 140364,
+      "timestamp": "2025-11-22T13:22:25.678175",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 70800,
+      "timestamp": "2025-11-22T13:22:42.877266",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141138,
+      "timestamp": "2025-11-22T13:23:06.199579",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141139,
+      "timestamp": "2025-11-22T13:23:29.103388",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141125,
+      "timestamp": "2025-11-22T13:23:52.613548",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 91607,
+      "timestamp": "2025-11-22T13:24:09.687205",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141131,
+      "timestamp": "2025-11-22T13:24:26.185202",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146577,
+      "timestamp": "2025-11-22T13:24:43.694023",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141763,
+      "timestamp": "2025-11-22T13:25:00.705386",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 142047,
+      "timestamp": "2025-11-22T13:25:24.651124",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141806,
+      "timestamp": "2025-11-22T13:25:42.622172",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 37457,
+      "timestamp": "2025-11-22T13:26:07.266807",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145602,
+      "timestamp": "2025-11-22T13:26:31.777028",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145744,
+      "timestamp": "2025-11-22T13:26:49.039623",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141995,
+      "timestamp": "2025-11-22T13:27:18.419937",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 131753,
+      "timestamp": "2025-11-22T13:27:42.721181",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 143452,
+      "timestamp": "2025-11-22T13:28:05.701838",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 133543,
+      "timestamp": "2025-11-22T13:28:23.057104",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141873,
+      "timestamp": "2025-11-22T13:28:39.824635",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 127242,
+      "timestamp": "2025-11-22T13:28:56.973413",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 142049,
+      "timestamp": "2025-11-22T13:29:21.684527",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 137542,
+      "timestamp": "2025-11-22T13:29:38.490235",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 143600,
+      "timestamp": "2025-11-22T13:30:01.211812",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 139345,
+      "timestamp": "2025-11-22T13:30:17.902428",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 132264,
+      "timestamp": "2025-11-22T13:30:35.410850",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 142130,
+      "timestamp": "2025-11-22T13:30:58.786182",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 143350,
+      "timestamp": "2025-11-22T13:31:15.602403",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 146807,
+      "timestamp": "2025-11-22T13:31:38.079565",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 144424,
+      "timestamp": "2025-11-22T13:31:59.998112",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 143295,
+      "timestamp": "2025-11-22T13:32:22.730952",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 145705,
+      "timestamp": "2025-11-22T13:32:45.652961",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 139076,
+      "timestamp": "2025-11-22T13:33:08.503453",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130382,
+      "timestamp": "2025-11-22T13:33:31.263349",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 140494,
+      "timestamp": "2025-11-22T13:33:55.270903",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 140492,
+      "timestamp": "2025-11-22T13:34:12.184007",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130190,
+      "timestamp": "2025-11-22T13:34:30.217606",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 142868,
+      "timestamp": "2025-11-22T13:34:46.916088",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 90307,
+      "timestamp": "2025-11-22T13:35:04.131262",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141628,
+      "timestamp": "2025-11-22T13:35:21.716026",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 128590,
+      "timestamp": "2025-11-22T13:35:39.719788",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141040,
+      "timestamp": "2025-11-22T13:36:03.867271",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130650,
+      "timestamp": "2025-11-22T13:36:23.127813",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141433,
+      "timestamp": "2025-11-22T13:36:47.494245",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145560,
+      "timestamp": "2025-11-22T13:37:04.564514",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141039,
+      "timestamp": "2025-11-22T13:37:22.247626",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 143377,
+      "timestamp": "2025-11-22T13:37:39.520514",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 140484,
+      "timestamp": "2025-11-22T13:37:58.335615",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 143460,
+      "timestamp": "2025-11-22T13:38:22.227651",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 133696,
+      "timestamp": "2025-11-22T13:38:40.053165",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 143463,
+      "timestamp": "2025-11-22T13:39:04.013098",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 143040,
+      "timestamp": "2025-11-22T13:39:21.707073",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 145648,
+      "timestamp": "2025-11-22T13:39:45.314922",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141401,
+      "timestamp": "2025-11-22T13:40:04.020594",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 144561,
+      "timestamp": "2025-11-22T13:40:23.481596",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141526,
+      "timestamp": "2025-11-22T13:40:54.384835",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 143194,
+      "timestamp": "2025-11-22T13:41:22.317747",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 133669,
+      "timestamp": "2025-11-22T13:41:44.863733",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 124077,
+      "timestamp": "2025-11-22T13:42:08.590884",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130048,
+      "timestamp": "2025-11-22T13:42:27.610749",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 142004,
+      "timestamp": "2025-11-22T13:42:51.724799",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141595,
+      "timestamp": "2025-11-22T13:43:15.441336",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 131455,
+      "timestamp": "2025-11-22T13:43:38.268057",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 142261,
+      "timestamp": "2025-11-22T13:44:01.936615",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 37281,
+      "timestamp": "2025-11-22T13:44:29.538410",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 142257,
+      "timestamp": "2025-11-22T13:44:53.395735",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130889,
+      "timestamp": "2025-11-22T13:45:19.763193",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 146632,
+      "timestamp": "2025-11-22T13:45:47.069074",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146701,
+      "timestamp": "2025-11-22T13:46:08.920141",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141465,
+      "timestamp": "2025-11-22T13:46:41.990935",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 137618,
+      "timestamp": "2025-11-22T13:47:07.068589",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 124264,
+      "timestamp": "2025-11-22T13:47:26.759733",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 136306,
+      "timestamp": "2025-11-22T13:47:51.078515",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145660,
+      "timestamp": "2025-11-22T13:48:08.526335",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141467,
+      "timestamp": "2025-11-22T13:48:26.877743",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 139200,
+      "timestamp": "2025-11-22T13:48:44.684824",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 143488,
+      "timestamp": "2025-11-22T13:49:02.177973",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 134246,
+      "timestamp": "2025-11-22T13:49:25.454229",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 145647,
+      "timestamp": "2025-11-22T13:49:57.833685",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 61188,
+      "timestamp": "2025-11-22T13:50:15.520037",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146625,
+      "timestamp": "2025-11-22T13:50:33.065748",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 142268,
+      "timestamp": "2025-11-22T13:50:50.385007",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130507,
+      "timestamp": "2025-11-22T13:51:13.066467",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 130316,
+      "timestamp": "2025-11-22T13:51:36.340764",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 140908,
+      "timestamp": "2025-11-22T13:52:00.363112",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 130386,
+      "timestamp": "2025-11-22T13:52:25.035868",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 132553,
+      "timestamp": "2025-11-22T13:52:49.861149",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 104027,
+      "timestamp": "2025-11-22T13:53:07.782890",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141451,
+      "timestamp": "2025-11-22T13:53:29.768928",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 145404,
+      "timestamp": "2025-11-22T13:53:53.323995",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145436,
+      "timestamp": "2025-11-22T13:54:11.493799",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146374,
+      "timestamp": "2025-11-22T13:54:33.654692",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146624,
+      "timestamp": "2025-11-22T13:54:52.887474",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 146663,
+      "timestamp": "2025-11-22T13:55:16.637012",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 136156,
+      "timestamp": "2025-11-22T13:55:40.414965",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 130612,
+      "timestamp": "2025-11-22T13:56:04.279373",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 146623,
+      "timestamp": "2025-11-22T13:56:29.134867",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 145612,
+      "timestamp": "2025-11-22T13:56:52.241835",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 133679,
+      "timestamp": "2025-11-22T13:57:09.356454",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145413,
+      "timestamp": "2025-11-22T13:57:27.050849",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 130608,
+      "timestamp": "2025-11-22T13:57:50.509745",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 139001,
+      "timestamp": "2025-11-22T13:58:14.673004",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141771,
+      "timestamp": "2025-11-22T13:58:38.428831",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145400,
+      "timestamp": "2025-11-22T13:58:56.078672",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 140906,
+      "timestamp": "2025-11-22T13:59:13.394559",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141643,
+      "timestamp": "2025-11-22T13:59:31.302807",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 133671,
+      "timestamp": "2025-11-22T13:59:49.142970",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 131765,
+      "timestamp": "2025-11-22T14:00:06.356952",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 138021,
+      "timestamp": "2025-11-22T14:00:23.890340",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130711,
+      "timestamp": "2025-11-22T14:00:41.613234",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 132580,
+      "timestamp": "2025-11-22T14:00:58.406903",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141754,
+      "timestamp": "2025-11-22T14:01:16.487037",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141776,
+      "timestamp": "2025-11-22T14:01:45.583936",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 131515,
+      "timestamp": "2025-11-22T14:02:16.814360",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 144255,
+      "timestamp": "2025-11-22T14:02:41.377496",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145563,
+      "timestamp": "2025-11-22T14:02:59.917196",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 131516,
+      "timestamp": "2025-11-22T14:03:18.538712",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130811,
+      "timestamp": "2025-11-22T14:03:36.681641",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 133673,
+      "timestamp": "2025-11-22T14:03:57.968182",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 144417,
+      "timestamp": "2025-11-22T14:04:19.419823",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 142867,
+      "timestamp": "2025-11-22T14:04:44.853181",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141868,
+      "timestamp": "2025-11-22T14:05:03.242259",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 131617,
+      "timestamp": "2025-11-22T14:05:21.323978",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 131116,
+      "timestamp": "2025-11-22T14:05:44.934837",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 133623,
+      "timestamp": "2025-11-22T14:06:09.859143",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 131762,
+      "timestamp": "2025-11-22T14:06:28.389141",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141610,
+      "timestamp": "2025-11-22T14:06:46.361756",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 124701,
+      "timestamp": "2025-11-22T14:07:03.943133",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141609,
+      "timestamp": "2025-11-22T14:07:26.912844",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141611,
+      "timestamp": "2025-11-22T14:07:51.191678",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145659,
+      "timestamp": "2025-11-22T14:08:09.700454",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141614,
+      "timestamp": "2025-11-22T14:08:28.472139",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141615,
+      "timestamp": "2025-11-22T14:08:51.395056",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 68928,
+      "timestamp": "2025-11-22T14:09:15.662865",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 140542,
+      "timestamp": "2025-11-22T14:09:41.376431",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141156,
+      "timestamp": "2025-11-22T14:10:06.736837",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141158,
+      "timestamp": "2025-11-22T14:10:25.248426",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145412,
+      "timestamp": "2025-11-22T14:10:48.075890",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141145,
+      "timestamp": "2025-11-22T14:11:06.205673",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141151,
+      "timestamp": "2025-11-22T14:11:23.667380",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141154,
+      "timestamp": "2025-11-22T14:11:41.078552",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141162,
+      "timestamp": "2025-11-22T14:11:58.178708",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141996,
+      "timestamp": "2025-11-22T14:12:15.764581",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141160,
+      "timestamp": "2025-11-22T14:12:33.612160",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141874,
+      "timestamp": "2025-11-22T14:12:55.679832",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141161,
+      "timestamp": "2025-11-22T14:13:18.197351",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 137375,
+      "timestamp": "2025-11-22T14:13:35.597023",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141150,
+      "timestamp": "2025-11-22T14:13:53.711799",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141153,
+      "timestamp": "2025-11-22T14:14:13.145590",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141453,
+      "timestamp": "2025-11-22T14:14:32.232319",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145750,
+      "timestamp": "2025-11-22T14:14:49.858723",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145396,
+      "timestamp": "2025-11-22T14:15:07.771041",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 146400,
+      "timestamp": "2025-11-22T14:15:25.220733",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 130252,
+      "timestamp": "2025-11-22T14:15:49.616840",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 130255,
+      "timestamp": "2025-11-22T14:16:13.487204",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 101768,
+      "timestamp": "2025-11-22T14:16:37.368732",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 129666,
+      "timestamp": "2025-11-22T14:16:54.259237",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130254,
+      "timestamp": "2025-11-22T14:17:11.478952",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130279,
+      "timestamp": "2025-11-22T14:17:30.185731",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 142279,
+      "timestamp": "2025-11-22T14:17:53.449598",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 129665,
+      "timestamp": "2025-11-22T14:18:10.306360",
+      "transfermarkt": "timeout",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 130280,
+      "timestamp": "2025-11-22T14:18:54.941294",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 141405,
+      "timestamp": "2025-11-22T14:19:17.959552",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 130869,
+      "timestamp": "2025-11-22T14:19:35.475211",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 132560,
+      "timestamp": "2025-11-22T14:19:52.991777",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 130620,
+      "timestamp": "2025-11-22T14:20:17.361843",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 141795,
+      "timestamp": "2025-11-22T14:20:34.471581",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 143255,
+      "timestamp": "2025-11-22T14:20:51.447166",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145000,
+      "timestamp": "2025-11-22T14:21:09.173477",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 130319,
+      "timestamp": "2025-11-22T14:21:32.052225",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145510,
+      "timestamp": "2025-11-22T14:21:49.628190",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 101597,
+      "timestamp": "2025-11-22T14:22:06.917802",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145099,
+      "timestamp": "2025-11-22T14:22:24.354032",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 145387,
+      "timestamp": "2025-11-22T14:22:40.704278",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
+    },
+    {
+      "atleta_id": 142445,
+      "timestamp": "2025-11-22T14:22:57.821362",
+      "transfermarkt": "sucesso",
+      "ogol": "sucesso"
+    },
+    {
+      "atleta_id": 143253,
+      "timestamp": "2025-11-22T14:23:21.043643",
+      "transfermarkt": "sucesso",
+      "ogol": "jogador_nao_encontrado"
     }
   ]
 }

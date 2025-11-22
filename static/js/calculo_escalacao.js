@@ -113,8 +113,8 @@ function exibirCardsTop5(data) {
         { key: 'treinador', nome: 'Treinadores', icon: 'fas fa-clipboard-list' }
     ];
     
-    // Layout: Rankings de posições (6 colunas) e Pesos (2 colunas) na mesma linha
-    html += '<div class="grid grid-cols-1 lg:grid-cols-8 gap-4">';
+    // Layout: Rankings de posições (6 colunas) em uma linha
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">';
     
     // Rankings de Posições (6 colunas)
     for (const pos of posicoes) {
@@ -140,9 +140,20 @@ function exibirCardsTop5(data) {
                 const preco = parseFloat(jogador.preco_num || jogador.preco || 0).toFixed(2);
                 const pontos = parseFloat(jogador.pontuacao_total || 0).toFixed(1);
                 
+                // Foto do jogador
+                const fotoJogador = `
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden bg-gray-600 flex-shrink-0">
+                        <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido || 'Jogador'}" class="w-full h-full object-cover" style="display: none;">
+                        <div class="player-fallback w-full h-full bg-red-600 rounded-full flex items-center justify-center" style="display: none;">
+                            <span class="text-white font-bold text-xs">X</span>
+                        </div>
+                    </div>
+                `;
+                
                 html += `
                     <div class="bg-dark-blue-900/50 rounded p-3 border border-dark-blue-700 hover:border-yellow-500/50 transition-all">
                         <div class="flex items-start gap-2 mb-2">
+                            ${fotoJogador}
                             <img src="${escudo}" alt="${clube.nome || 'Clube'}" class="w-6 h-6 rounded flex-shrink-0" onerror="this.src='https://s.glbimg.com/es/sde/f/organizacoes/2018/03/10/flamengo_60x60.png'">
                             <span class="text-white text-sm font-semibold flex-1">${jogador.apelido || 'N/A'}</span>
                         </div>
@@ -157,6 +168,11 @@ function exibirCardsTop5(data) {
         
         html += '</div></div>';
     }
+    
+    html += '</div>'; // Fecha grid de posições
+    
+    // Linha separada para Pesos (2 colunas)
+    html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
     
     // Peso de Jogo (1 coluna)
     html += `
@@ -225,8 +241,15 @@ function exibirCardsTop5(data) {
     }
     
     html += '</div></div>';
-    html += '</div>'; // Fecha grid principal
+    html += '</div>'; // Fecha grid de pesos
     
     container.innerHTML = html;
+    
+    // Carregar fotos dos jogadores após renderizar
+    setTimeout(function() {
+        if (typeof loadAllPlayerImages === 'function') {
+            loadAllPlayerImages();
+        }
+    }, 100);
 }
 

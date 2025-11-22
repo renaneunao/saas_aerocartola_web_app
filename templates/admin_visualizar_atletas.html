@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+{% block title %}Admin - Visualizar Atletas{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-center mb-8">
+        <div class="mb-4 md:mb-0">
+            <h1 class="text-3xl font-bold text-white mb-2">Visualizar Atletas</h1>
+            <p class="text-blue-200">Adicione URLs de fotos para os atletas. Clique em "Salvar URLs" no final para processar todas.</p>
+        </div>
+        <div class="flex gap-4 items-center">
+            <button id="btnSalvarUrls" onclick="salvarTodasUrls()" 
+                    class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium">
+                <i class="fas fa-save mr-2"></i>
+                Salvar URLs (<span id="contadorUrls">0</span>)
+            </button>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-dark-blue-800 rounded-lg p-4 mb-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Filtrar por Time</label>
+                <select id="filtroTime" onchange="aplicarFiltros()" 
+                        class="w-full px-4 py-2 bg-dark-blue-900 border border-dark-blue-600 rounded-lg text-white focus:outline-none focus:border-blue-500">
+                    <option value="">Todos os times</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Filtrar por Status de Foto</label>
+                <select id="filtroFoto" onchange="aplicarFiltros()" 
+                        class="w-full px-4 py-2 bg-dark-blue-900 border border-dark-blue-600 rounded-lg text-white focus:outline-none focus:border-blue-500">
+                    <option value="">Todos</option>
+                    <option value="sem_foto">Sem foto</option>
+                    <option value="com_foto">Com foto</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Buscar</label>
+                <input type="text" id="searchInput" placeholder="Buscar jogador..." 
+                       onkeyup="aplicarFiltros()"
+                       class="w-full px-4 py-2 bg-dark-blue-900 border border-dark-blue-600 rounded-lg text-white focus:outline-none focus:border-blue-500">
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-12">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-500/20 rounded-full mb-4 animate-pulse">
+            <i class="fas fa-spinner fa-spin text-blue-400 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-white">Carregando atletas...</h3>
+    </div>
+
+    <!-- Content -->
+    <div id="content" class="hidden">
+        <div id="atletasContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Atletas serão inseridos aqui via JavaScript -->
+        </div>
+    </div>
+</div>
+
+<script>
+let todosAtletas = [];
+let urlsPendentes = {}; // {atleta_id: url}
+
+function loadAtletas() {
+    document.getElementById('loadingState').classList.remove('hidden');
+    document.getElementById('content').classList.add('hidden');
+    
+    fetch('/api/admin/visualizar-atletas')
+        .then(response => response.json())
+        .then(data => {
+            todosAtletas = data.atletas || [];
+            
+            // Preencher filtro de times
+            const times = [...new Set(todosAtletas.map(a => a.clube_nome).filter(Boolean))].sort();
+            const selectTime = document.getElementById('filtroTime');
+            selectTime.innerHTML = '<option value="">Todos os times</option>';
+            times.forEach(time => {
+                const option = document.createElement('option');
+                option.value = time;
+                option.textContent = time;
+                selectTime.appendChild(option);
+            });
+            
+            aplicarFiltros();
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            Swal.fire('Erro', 'Falha ao carregar atletas', 'error');
+        });
+}
+
+function aplicarFiltros() {
+    const filtroTime = document.getElementById('filtroTime').value;
+    const filtroFoto = document.getElementById('filtroFoto').value;
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    
+    let filtrados = todosAtletas.filter(atleta => {
+        // Filtro por time
+        if (filtroTime && atleta.clube_nome !== filtroTime) {
+            return false;
+        }
+        
+        // Filtro por foto
+        if (filtroFoto === 'sem_foto' && atleta.tem_foto) {
+            return false;
+        }
+        if (filtroFoto === 'com_foto' && !atleta.tem_foto) {
+            return false;
+        }
+        
+        // Busca
+        if (search) {
+            const busca = search.toLowerCase();
+            const matchNome = atleta.apelido?.toLowerCase().includes(busca) || 
+                            atleta.nome?.toLowerCase().includes(busca);
+            const matchTime = atleta.clube_nome?.toLowerCase().includes(busca);
+            if (!matchNome && !matchTime) {
+                return false;
+            }
+        }
+        
+        return true;
+    });
+    
+    renderAtletas(filtrados);
+}
+
+function renderAtletas(atletas) {
+    const container = document.getElementById('atletasContainer');
+    container.innerHTML = '';
+    
+    if (atletas.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-12 text-gray-400">Nenhum atleta encontrado</div>';
+        return;
+    }
+    
+    atletas.forEach(atleta => {
+        const card = document.createElement('div');
+        card.className = 'bg-dark-blue-800 rounded-lg p-4 border border-dark-blue-600';
+        card.innerHTML = `
+            <div class="flex gap-4 mb-4">
+                <div class="flex-shrink-0">
+                    ${atleta.foto_url ? 
+                        `<img src="${atleta.foto_url}" alt="${atleta.apelido}" class="w-20 h-20 object-cover rounded-lg border-2 border-dark-blue-600">` :
+                        `<div class="w-20 h-20 bg-dark-blue-700 rounded-lg border-2 border-dark-blue-600 flex items-center justify-center">
+                            <i class="fas fa-user text-gray-500 text-2xl"></i>
+                        </div>`
+                    }
+                </div>
+                <div class="flex-grow">
+                    <h3 class="text-white font-semibold text-lg">${atleta.apelido || atleta.nome || `Atleta ${atleta.atleta_id}`}</h3>
+                    <p class="text-gray-400 text-sm">${atleta.clube_nome || 'Sem clube'}</p>
+                    ${atleta.tem_foto ? 
+                        '<span class="inline-block mt-1 px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded">Tem foto</span>' :
+                        '<span class="inline-block mt-1 px-2 py-1 bg-red-500/20 text-red-400 text-xs rounded">Sem foto</span>'
+                    }
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">URL da Foto</label>
+                <input type="url" 
+                       id="url_${atleta.atleta_id}" 
+                       placeholder="https://exemplo.com/foto.jpg"
+                       value="${urlsPendentes[atleta.atleta_id] || ''}"
+                       onchange="atualizarUrl(${atleta.atleta_id}, this.value)"
+                       class="w-full px-3 py-2 bg-dark-blue-900 border border-dark-blue-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500">
+            </div>
+        `;
+        container.appendChild(card);
+    });
+    
+    document.getElementById('loadingState').classList.add('hidden');
+    document.getElementById('content').classList.remove('hidden');
+    updateContadorUrls();
+}
+
+function atualizarUrl(atletaId, url) {
+    if (url && url.trim()) {
+        urlsPendentes[atletaId] = url.trim();
+    } else {
+        delete urlsPendentes[atletaId];
+    }
+    updateContadorUrls();
+}
+
+function updateContadorUrls() {
+    const count = Object.keys(urlsPendentes).length;
+    document.getElementById('contadorUrls').textContent = count;
+    const btn = document.getElementById('btnSalvarUrls');
+    if (count > 0) {
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    } else {
+        btn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+async function salvarTodasUrls() {
+    const urls = Object.entries(urlsPendentes).map(([atleta_id, url]) => ({
+        atleta_id: parseInt(atleta_id),
+        url: url
+    }));
+    
+    if (urls.length === 0) {
+        Swal.fire('Aviso', 'Nenhuma URL para salvar', 'warning');
+        return;
+    }
+    
+    try {
+        Swal.fire({
+            title: 'Salvando fotos...',
+            html: `Processando ${urls.length} foto(s)...<br><small>Isso pode levar alguns minutos</small>`,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+        
+        const response = await fetch('/api/admin/visualizar-atletas/salvar-urls', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ urls: urls })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const sucesso = data.resultados.filter(r => r.success).length;
+            const erros = data.resultados.filter(r => !r.success).length;
+            
+            Swal.fire({
+                title: 'Concluído!',
+                html: `<p>${sucesso} foto(s) salva(s) com sucesso</p>${erros > 0 ? `<p class="text-red-400">${erros} erro(s)</p>` : ''}`,
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+            
+            // Limpar URLs pendentes
+            urlsPendentes = {};
+            updateContadorUrls();
+            
+            // Recarregar atletas
+            loadAtletas();
+        } else {
+            throw new Error(data.error || 'Erro ao salvar fotos');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        Swal.fire('Erro', 'Falha ao salvar fotos: ' + error.message, 'error');
+    }
+}
+
+// Carregar atletas ao iniciar
+loadAtletas();
+</script>
+{% endblock %}
+

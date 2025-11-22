@@ -984,10 +984,10 @@ async function renderizarTabelaGoleiros(resultados) {
             </td>
             <td class="py-4 px-2 ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
-                        <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover">
-                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
-                            <span class="text-white font-bold text-xs">${jogador.apelido.substring(0, 2)}</span>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden bg-gray-600">
+                        <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover" style="display: none;">
+                        <div class="player-fallback w-full h-full bg-red-600 rounded-full flex items-center justify-center" style="display: none;">
+                            <span class="text-white font-bold text-xs">X</span>
                         </div>
                     </div>
                     <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
@@ -1070,6 +1070,13 @@ async function renderizarTabelaGoleiros(resultados) {
         
         tbody.appendChild(tr);
     });
+    
+    // Carregar fotos dos jogadores após renderizar
+    setTimeout(function() {
+        if (typeof loadAllPlayerImages === 'function') {
+            loadAllPlayerImages();
+        }
+    }, 100);
 }
 
 // Função para salvar pesos

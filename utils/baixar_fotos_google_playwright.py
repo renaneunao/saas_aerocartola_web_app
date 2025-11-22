@@ -45,11 +45,14 @@ def baixar_imagem(url, filepath):
     except Exception as e:
         return False, str(e)[:50]
 
-def buscar_foto_transfermarkt(page, nome_atleta, clube_nome):
+def buscar_foto_transfermarkt(page, nome_atleta, clube_nome, posicao=None):
     """Busca foto no Transfermarkt via Google"""
     try:
-        # Buscar no Google
-        query = f"transfermarkt.com {nome_atleta} {clube_nome}"
+        # Buscar no Google com nome completo, clube completo e posição
+        query_parts = ["transfermarkt.com", nome_atleta, clube_nome]
+        if posicao:
+            query_parts.append(posicao)
+        query = " ".join(query_parts)
         google_url = f"https://www.google.com/search?q={quote(query)}"
         print(f"    [DEBUG] Acessando Google: {google_url}")
         
@@ -153,11 +156,14 @@ def buscar_foto_transfermarkt(page, nome_atleta, clube_nome):
         print(f"    [DEBUG] Traceback: {traceback.format_exc()[:200]}")
         return None
 
-def buscar_foto_ogol(page, nome_atleta, clube_nome):
+def buscar_foto_ogol(page, nome_atleta, clube_nome, posicao=None):
     """Busca foto no Ogol via Google"""
     try:
-        # Buscar no Google
-        query = f"ogol.com.br {nome_atleta} {clube_nome}"
+        # Buscar no Google com nome completo, clube completo e posição
+        query_parts = ["ogol.com.br", nome_atleta, clube_nome]
+        if posicao:
+            query_parts.append(posicao)
+        query = " ".join(query_parts)
         google_url = f"https://www.google.com/search?q={quote(query)}"
         print(f"    [DEBUG] Acessando Google: {google_url}")
         
@@ -252,7 +258,7 @@ def buscar_foto_ogol(page, nome_atleta, clube_nome):
         return None
 
 def obter_atletas_sem_foto():
-    """Obtém lista de atletas que não têm foto de ambas as fontes"""
+    """Obtém lista de atletas que não têm foto de nenhuma fonte"""
     conn = get_db_connection()
     if not conn:
         print("ERRO: Nao foi possivel conectar ao banco de dados")
@@ -261,51 +267,68 @@ def obter_atletas_sem_foto():
     try:
         cursor = conn.cursor()
         
+        # Mapeamento de posição ID para nome
+        posicao_map = {
+            1: 'Goleiro',
+            2: 'Lateral',
+            3: 'Zagueiro',
+            4: 'Meia',
+            5: 'Atacante',
+            6: 'Técnico'
+        }
+        
         # Buscar TODOS os atletas (sem filtro de status)
+        # Usar nome completo (campo nome), nome completo do clube (c.nome) e posicao_id
         cursor.execute('''
-            SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, c.nome as clube_nome
+            SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, c.nome as clube_nome, a.posicao_id
             FROM acf_atletas a
             LEFT JOIN acf_clubes c ON a.clube_id = c.id
-            ORDER BY c.nome, a.apelido
+            ORDER BY c.nome, a.nome
         ''')
         
         atletas = cursor.fetchall()
         
-        # Verificar quais não têm foto de ambas as fontes
+        # Verificar quais não têm foto de nenhuma fonte
         atletas_sem_foto = []
-        for atleta_id, apelido, nome, clube_id, clube_nome in atletas:
-            # Verificar se existe foto do transfermarkt
-            tem_transfermarkt = False
-            for ext in ['.jpg', '.jpeg', '.png']:
-                foto_path = FOTO_DIR / f"{atleta_id}_transfermarkt{ext}"
+        for atleta_id, apelido, nome, clube_id, clube_nome, posicao_id in atletas:
+            # Verificar se existe foto (qualquer uma, com ou sem sufixo)
+            tem_foto = False
+            for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']:
+                # Verificar foto sem sufixo (já processada)
+                foto_path = FOTO_DIR / f"{atleta_id}{ext}"
                 if foto_path.exists():
-                    tem_transfermarkt = True
+                    tem_foto = True
+                    break
+                # Verificar fotos com sufixo
+                for fonte in ['transfermarkt', 'ogol', 'custom']:
+                    foto_path = FOTO_DIR / f"{atleta_id}_{fonte}{ext}"
+                    if foto_path.exists():
+                        tem_foto = True
+                        break
+                if tem_foto:
                     break
             
-            # Verificar se existe foto do ogol
-            tem_ogol = False
-            for ext in ['.jpg', '.jpeg', '.png']:
-                foto_path = FOTO_DIR / f"{atleta_id}_ogol{ext}"
-                if foto_path.exists():
-                    tem_ogol = True
-                    break
-            
-            # Se não tem ambas, adicionar à lista
-            if not tem_transfermarkt or not tem_ogol:
-                nome_completo = apelido or nome or f"Atleta {atleta_id}"
+            # Se não tem nenhuma foto, adicionar à lista
+            if not tem_foto:
+                # Usar nome completo (campo nome), não apelido
+                nome_completo = nome or apelido or f"Atleta {atleta_id}"
+                posicao_nome = posicao_map.get(posicao_id, '')
+                
                 atletas_sem_foto.append({
                     'atleta_id': atleta_id,
                     'nome': nome_completo,
                     'clube_nome': clube_nome or 'Sem clube',
                     'clube_id': clube_id,
-                    'tem_transfermarkt': tem_transfermarkt,
-                    'tem_ogol': tem_ogol
+                    'posicao_id': posicao_id,
+                    'posicao': posicao_nome
                 })
         
         return atletas_sem_foto
     
     except Exception as e:
         print(f"ERRO ao buscar atletas: {e}")
+        import traceback
+        traceback.print_exc()
         return []
     finally:
         close_db_connection(conn)
@@ -327,11 +350,12 @@ def main():
     atletas_sem_foto = obter_atletas_sem_foto()
     
     if not atletas_sem_foto:
-        print("Todos os atletas ja tem fotos de ambas as fontes!")
+        print("Todos os atletas ja tem fotos!")
         return
     
     total = len(atletas_sem_foto)
-    print(f"Encontrados {total} atletas que precisam de fotos")
+    print(f"Encontrados {total} atletas sem foto")
+    print("Usando: Nome completo + Nome completo do clube + Posição")
     print()
     print("=" * 70)
     print("Iniciando busca automatica...")
@@ -366,76 +390,74 @@ def main():
         try:
             for idx, atleta in enumerate(atletas_sem_foto, 1):
                 atleta_id = atleta['atleta_id']
-                nome = atleta['nome']
-                clube = atleta['clube_nome']
-                tem_tm = atleta['tem_transfermarkt']
-                tem_ogol = atleta['tem_ogol']
+                nome = atleta['nome']  # Nome completo
+                clube = atleta['clube_nome']  # Nome completo do clube
+                posicao = atleta.get('posicao', '')  # Nome da posição
                 
                 print(f"[{idx}/{total}] Atleta ID: {atleta_id}")
-                print(f"  Nome: {nome}")
+                print(f"  Nome completo: {nome}")
                 print(f"  Clube: {clube}")
+                print(f"  Posição: {posicao}")
                 
-                # Buscar Transfermarkt se não tiver
-                if not tem_tm:
-                    print(f"  Buscando Transfermarkt...", end=' ', flush=True)
-                    img_url = buscar_foto_transfermarkt(page, nome, clube)
-                    
-                    if img_url:
-                        print(f"Encontrado!")
-                        print(f"    URL: {img_url[:80]}...")
-                        
-                        # Determinar extensão
-                        ext = '.jpg'
-                        if '.png' in img_url.lower():
-                            ext = '.png'
-                        elif '.jpeg' in img_url.lower():
-                            ext = '.jpeg'
-                        
-                        filepath = FOTO_DIR / f"{atleta_id}_transfermarkt{ext}"
-                        sucesso, resultado = baixar_imagem(img_url, filepath)
-                        
-                        if sucesso:
-                            print(f"    Baixado: {resultado:.1f} KB")
-                            baixados_tm += 1
-                        else:
-                            print(f"    ERRO: {resultado}")
-                            erros += 1
-                    else:
-                        print("Nao encontrado")
-                        nao_encontrados_tm += 1
-                else:
-                    print(f"  Transfermarkt: ja existe")
+                # Buscar Transfermarkt
+                print(f"  Buscando Transfermarkt...", end=' ', flush=True)
+                img_url = buscar_foto_transfermarkt(page, nome, clube, posicao)
                 
-                # Buscar Ogol se não tiver
-                if not tem_ogol:
-                    print(f"  Buscando Ogol...", end=' ', flush=True)
-                    img_url = buscar_foto_ogol(page, nome, clube)
+                if img_url:
+                    print(f"Encontrado!")
+                    print(f"    URL: {img_url[:80]}...")
                     
-                    if img_url:
-                        print(f"Encontrado!")
-                        print(f"    URL: {img_url[:80]}...")
-                        
-                        # Determinar extensão
-                        ext = '.jpg'
-                        if '.png' in img_url.lower():
-                            ext = '.png'
-                        elif '.jpeg' in img_url.lower():
-                            ext = '.jpeg'
-                        
-                        filepath = FOTO_DIR / f"{atleta_id}_ogol{ext}"
-                        sucesso, resultado = baixar_imagem(img_url, filepath)
-                        
-                        if sucesso:
-                            print(f"    Baixado: {resultado:.1f} KB")
-                            baixados_ogol += 1
-                        else:
-                            print(f"    ERRO: {resultado}")
-                            erros += 1
+                    # Determinar extensão
+                    ext = '.jpg'
+                    if '.png' in img_url.lower():
+                        ext = '.png'
+                    elif '.jpeg' in img_url.lower():
+                        ext = '.jpeg'
+                    elif '.webp' in img_url.lower():
+                        ext = '.webp'
+                    
+                    filepath = FOTO_DIR / f"{atleta_id}_transfermarkt{ext}"
+                    sucesso, resultado = baixar_imagem(img_url, filepath)
+                    
+                    if sucesso:
+                        print(f"    Baixado: {resultado:.1f} KB")
+                        baixados_tm += 1
                     else:
-                        print("Nao encontrado")
-                        nao_encontrados_ogol += 1
+                        print(f"    ERRO: {resultado}")
+                        erros += 1
                 else:
-                    print(f"  Ogol: ja existe")
+                    print("Nao encontrado")
+                    nao_encontrados_tm += 1
+                
+                # Buscar Ogol
+                print(f"  Buscando Ogol...", end=' ', flush=True)
+                img_url = buscar_foto_ogol(page, nome, clube, posicao)
+                
+                if img_url:
+                    print(f"Encontrado!")
+                    print(f"    URL: {img_url[:80]}...")
+                    
+                    # Determinar extensão
+                    ext = '.jpg'
+                    if '.png' in img_url.lower():
+                        ext = '.png'
+                    elif '.jpeg' in img_url.lower():
+                        ext = '.jpeg'
+                    elif '.webp' in img_url.lower():
+                        ext = '.webp'
+                    
+                    filepath = FOTO_DIR / f"{atleta_id}_ogol{ext}"
+                    sucesso, resultado = baixar_imagem(img_url, filepath)
+                    
+                    if sucesso:
+                        print(f"    Baixado: {resultado:.1f} KB")
+                        baixados_ogol += 1
+                    else:
+                        print(f"    ERRO: {resultado}")
+                        erros += 1
+                else:
+                    print("Nao encontrado")
+                    nao_encontrados_ogol += 1
                 
                 print()
                 
