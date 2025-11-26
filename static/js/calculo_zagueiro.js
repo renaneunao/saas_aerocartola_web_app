@@ -30,6 +30,8 @@ class CalculoZagueiro {
     }
 
     calcularMelhoresZagueiros(topN = 20) {
+        console.log(`[DEBUG ZAGUEIRO] escalacoes_data recebido:`, this.escalacoes_data);
+        console.log(`[DEBUG ZAGUEIRO] Total de keys em escalacoes_data:`, Object.keys(this.escalacoes_data || {}).length);
         const resultados = [];
         const totalEscalacoes = this.calcularTotalEscalacoes();
         console.log(`[DEBUG ZAGUEIRO] Total de escalações: ${totalEscalacoes}`);
@@ -94,10 +96,6 @@ class CalculoZagueiro {
 
         console.log(`  Valores numéricos: media_num_val=${media_num_val}, preco_num_val=${preco_num_val}, jogos_num_val=${jogos_num_val}`);
 
-        // Fator 1: Média do jogador
-        const pontos_media = media_num_val * this.pesos.FATOR_MEDIA;
-        console.log(`  pontos_media: ${media_num_val} × ${this.pesos.FATOR_MEDIA} = ${pontos_media.toFixed(2)}`);
-
         // Valores padrão
         const peso_sg_final = peso_sg || 0;
         const peso_jogo_original = peso_jogo || 0;
@@ -114,20 +112,20 @@ class CalculoZagueiro {
         const media_a = atletaStats.avg_a || 0;
         console.log(`  media_ds: ${media_ds}`);
 
-        let peso_jogo_final = 0;
         let media_ds_cedidos = 0;
         let media_ff_cedidos = 0;
         let media_fs_cedidos = 0;
         let media_fd_cedidos = 0;
         let media_g_cedidos = 0;
         let media_a_cedidos = 0;
+        let tem_adversario = false;
 
         console.log(`  Verificando adversário: adversario_id=${adversario_id}, adversarios_dict[${clube_id}]=${this.adversarios_dict[clube_id]}`);
 
         // Encontrar o adversário na rodada atual
         if (adversario_id && this.adversarios_dict[clube_id] === adversario_id) {
-            peso_jogo_final = peso_jogo_original * this.pesos.FATOR_PESO_JOGO;
-            console.log(`  ✅ Adversário encontrado! peso_jogo_final = ${peso_jogo_original} × ${this.pesos.FATOR_PESO_JOGO} = ${peso_jogo_final.toFixed(2)}`);
+            tem_adversario = true;
+            console.log(`  ✅ Adversário encontrado!`);
 
             // Buscar médias de scouts cedidos pelo adversário
             const adversarioStats = this.pontuados_data[adversario_id] || {};
@@ -143,54 +141,86 @@ class CalculoZagueiro {
             console.log(`  ❌ Adversário NÃO encontrado ou não corresponde`);
         }
 
-        // Calcular contribuição dos desarmes
-        const pontos_ds = media_ds * media_ds_cedidos * this.pesos.FATOR_DS;
-        console.log(`  pontos_ds: ${media_ds} × ${media_ds_cedidos} × ${this.pesos.FATOR_DS} = ${pontos_ds.toFixed(2)}`);
+        // Calcular base BRUTA (sem fatores) - apenas valores brutos multiplicados
+        const base_bruta = media_num_val + 
+            (tem_adversario ? peso_jogo_original : 0) +
+            (media_ds * media_ds_cedidos) +
+            (media_ff * media_ff_cedidos) +
+            (media_fs * media_fs_cedidos) +
+            (media_fd * media_fd_cedidos) +
+            (media_g * media_g_cedidos) +
+            (media_a * media_a_cedidos);
 
-        // Calcular contribuição dos outros scouts (com pesos opcionais)
-        const fator_ff = this.pesos.FATOR_FF || 0;
-        const fator_fs = this.pesos.FATOR_FS || 0;
-        const fator_fd = this.pesos.FATOR_FD || 0;
-        const fator_g = this.pesos.FATOR_G || 0;
-        const fator_a = this.pesos.FATOR_A || 0;
+        // Garantir que base_bruta seja não negativa antes de calcular a raiz quadrada
+        const base_bruta_non_neg = Math.max(0, base_bruta);
 
-        const pontos_ff = media_ff * media_ff_cedidos * fator_ff;
-        const pontos_fs = media_fs * media_fs_cedidos * fator_fs;
-        const pontos_fd = media_fd * media_fd_cedidos * fator_fd;
-        const pontos_g = media_g * media_g_cedidos * fator_g;
-        const pontos_a = media_a * media_a_cedidos * fator_a;
+        // Aplicar raiz quadrada na base bruta PRIMEIRO
+        const base_raiz = Math.sqrt(base_bruta_non_neg);
 
-        console.log(`  pontos_ff: ${pontos_ff.toFixed(2)}, pontos_fs: ${pontos_fs.toFixed(2)}, pontos_fd: ${pontos_fd.toFixed(2)}`);
-        console.log(`  pontos_g: ${pontos_g.toFixed(2)}, pontos_a: ${pontos_a.toFixed(2)}`);
+        console.log(`  base_bruta: ${base_bruta.toFixed(2)} (sem fatores)`);
+        console.log(`  base_raiz: sqrt(${base_bruta_non_neg.toFixed(2)}) = ${base_raiz.toFixed(2)}`);
 
-        // Calcular pontuação base
-        // No Python: peso_jogo já foi multiplicado por FATOR_PESO_JOGO (linha 149)
-        // E na fórmula usa peso_jogo diretamente (linha 172): base_pontuacao = pontos_media + peso_jogo + pontos_ds
-        const base_pontuacao = pontos_media + peso_jogo_final + pontos_ds +
-            pontos_ff + pontos_fs + pontos_fd + pontos_g + pontos_a;
-        console.log(`  base_pontuacao: ${pontos_media.toFixed(2)} + ${peso_jogo_final.toFixed(2)} + ${pontos_ds.toFixed(2)} + ${pontos_ff.toFixed(2)} + ${pontos_fs.toFixed(2)} + ${pontos_fd.toFixed(2)} + ${pontos_g.toFixed(2)} + ${pontos_a.toFixed(2)} = ${base_pontuacao.toFixed(2)}`);
-
-        const pontuacao_total = base_pontuacao * (1 + peso_sg_final * this.pesos.FATOR_SG);
-        console.log(`  pontuacao_total (antes raiz): ${base_pontuacao.toFixed(2)} × (1 + ${peso_sg_final} × ${this.pesos.FATOR_SG}) = ${pontuacao_total.toFixed(2)}`);
-
-        // Garantir que pontuacao_total seja não negativa
-        const pontuacao_total_non_neg = Math.max(0, pontuacao_total);
-        console.log(`  pontuacao_total_non_neg: ${pontuacao_total_non_neg.toFixed(2)}`);
+        // Aplicar TODOS os fatores DEPOIS da raiz quadrada para ter impacto proporcional
+        // Calcular soma ponderada dos fatores baseada na proporção de cada componente
+        let soma_fatores_ponderada = 0;
+        
+        if (base_bruta_non_neg > 0) {
+            // Cada componente contribui proporcionalmente ao seu peso na base
+            if (media_num_val > 0) {
+                const peso_media = media_num_val / base_bruta_non_neg;
+                soma_fatores_ponderada += peso_media * this.pesos.FATOR_MEDIA;
+            }
+            
+            if (tem_adversario && peso_jogo_original > 0) {
+                const peso_jogo_na_base = peso_jogo_original / base_bruta_non_neg;
+                soma_fatores_ponderada += peso_jogo_na_base * this.pesos.FATOR_PESO_JOGO;
+            }
+            
+            const contrib_ds = (media_ds * media_ds_cedidos) / base_bruta_non_neg;
+            const contrib_ff = (media_ff * media_ff_cedidos) / base_bruta_non_neg;
+            const contrib_fs = (media_fs * media_fs_cedidos) / base_bruta_non_neg;
+            const contrib_fd = (media_fd * media_fd_cedidos) / base_bruta_non_neg;
+            const contrib_g = (media_g * media_g_cedidos) / base_bruta_non_neg;
+            const contrib_a = (media_a * media_a_cedidos) / base_bruta_non_neg;
+            
+            // Aplicar fatores opcionais (podem ser 0)
+            const fator_ff = this.pesos.FATOR_FF || 0;
+            const fator_fs = this.pesos.FATOR_FS || 0;
+            const fator_fd = this.pesos.FATOR_FD || 0;
+            const fator_g = this.pesos.FATOR_G || 0;
+            const fator_a = this.pesos.FATOR_A || 0;
+            
+            soma_fatores_ponderada += contrib_ds * this.pesos.FATOR_DS;
+            soma_fatores_ponderada += contrib_ff * fator_ff;
+            soma_fatores_ponderada += contrib_fs * fator_fs;
+            soma_fatores_ponderada += contrib_fd * fator_fd;
+            soma_fatores_ponderada += contrib_g * fator_g;
+            soma_fatores_ponderada += contrib_a * fator_a;
+        } else {
+            // Se base_bruta é 0, usar apenas o fator da média como mínimo
+            soma_fatores_ponderada = this.pesos.FATOR_MEDIA;
+        }
+        
+        // Aplicar FATOR_SG (multiplicador adicional)
+        const fator_sg = 1 + peso_sg_final * this.pesos.FATOR_SG;
+        const fator_multiplicador = soma_fatores_ponderada * fator_sg;
 
         // Calcular peso de escalação
         const escalacoes = this.escalacoes_data[atleta_id] || 0;
+        console.log(`[DEBUG ZAGUEIRO] ${apelido} (ID: ${atleta_id}): escalacoes_data[${atleta_id}] = ${escalacoes}, tipo: ${typeof escalacoes}`);
+        console.log(`[DEBUG ZAGUEIRO] escalacoes_data keys disponíveis:`, Object.keys(this.escalacoes_data || {}).slice(0, 10));
         console.log(`  escalacoes: ${escalacoes}, totalEscalacoes: ${totalEscalacoes}`);
         const percentual_escalacoes = totalEscalacoes > 0 ? escalacoes / totalEscalacoes : 0;
         const peso_escalacao = 1 + percentual_escalacoes * this.pesos.FATOR_ESCALACAO;
-        console.log(`  percentual_escalacoes: ${percentual_escalacoes.toFixed(4)}, peso_escalacao: ${peso_escalacao.toFixed(4)}`);
 
-        // Ajustar pontuação final com peso de escalação e aplicar raiz quadrada
-        // No Python: math.sqrt(max(0, pontuacao_total * peso_escalacao))
-        const pontuacao_com_escalacao = pontuacao_total_non_neg * peso_escalacao;
-        console.log(`  pontuacao_com_escalacao: ${pontuacao_total_non_neg.toFixed(2)} × ${peso_escalacao.toFixed(4)} = ${pontuacao_com_escalacao.toFixed(2)}`);
-
-        const pontuacao_total_final = Math.sqrt(Math.max(0, pontuacao_com_escalacao));
-        console.log(`  sqrt(${pontuacao_com_escalacao.toFixed(2)}) = ${pontuacao_total_final.toFixed(2)}`);
+        // Aplicar todos os fatores DEPOIS da raiz
+        const pontuacao_total_final = base_raiz * fator_multiplicador * peso_escalacao;
+        
+        console.log(`  fator_multiplicador (soma ponderada): ${soma_fatores_ponderada.toFixed(4)}`);
+        console.log(`  fator_sg: ${fator_sg.toFixed(4)}`);
+        console.log(`  fator_multiplicador_total: ${fator_multiplicador.toFixed(4)}`);
+        console.log(`  peso_escalacao: ${peso_escalacao.toFixed(4)}`);
+        console.log(`  pontuacao_total_final: ${base_raiz.toFixed(2)} × ${fator_multiplicador.toFixed(4)} × ${peso_escalacao.toFixed(4)} = ${pontuacao_total_final.toFixed(2)}`);
         console.log(`[DEBUG ZAGUEIRO] ========================================\n`);
 
         return {
@@ -204,13 +234,14 @@ class CalculoZagueiro {
             media: isNaN(media_num_val) ? 0 : parseFloat(media_num_val.toFixed(2)),
             preco: isNaN(preco_num_val) ? 0 : parseFloat(preco_num_val.toFixed(2)),
             jogos: jogos_num_val,
-            peso_jogo: parseFloat(peso_jogo_final.toFixed(2)),
+            peso_jogo: parseFloat((tem_adversario ? peso_jogo_original * this.pesos.FATOR_PESO_JOGO : 0).toFixed(2)),
             peso_sg: parseFloat(peso_sg_final.toFixed(2)),
             media_ds: parseFloat(media_ds.toFixed(2)),
             media_ds_cedidos: parseFloat(media_ds_cedidos.toFixed(2)),
             adversario_id,
             adversario_nome,
-            peso_escalacao: parseFloat(peso_escalacao.toFixed(4))
+            peso_escalacao: parseFloat(peso_escalacao.toFixed(4)),
+            escalacoes: escalacoes
         };
     }
 }

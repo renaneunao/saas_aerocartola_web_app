@@ -350,6 +350,7 @@
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso SG</th>
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Preço</th>
+                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Escalações</th>
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Ações</th>
                         </tr>
                     </thead>
@@ -641,11 +642,20 @@ async function carregarDados(forcarRecalculo = false) {
                     // Não retornar, deixar continuar para o cálculo
                 } else {
                     console.log(`[DEBUG] ✅✅✅ EXIBINDO RANKING SALVO DIRETAMENTE (ID: ${chamadaId}) - ${data.ranking_salvo.length} itens`);
+                    console.log(`[DEBUG GOLEIRO] escalacoes_data recebido:`, data.escalacoes_data);
+                    console.log(`[DEBUG GOLEIRO] Total de keys em escalacoes_data:`, Object.keys(data.escalacoes_data || {}).length);
                     updateProgress(80, 'Exibindo ranking salvo...');
                     addProgressLog('💾 Exibindo ranking salvo...', 'success');
                     
-                    // Renderizar ranking salvo diretamente
-                    const resultados = data.ranking_salvo.map((r, i) => ({ ...r, rank: i + 1 }));
+                    // Enriquecer ranking salvo com escalações
+                    const escalacoes_data = data.escalacoes_data || {};
+                    const resultados = data.ranking_salvo.map((r, i) => {
+                        // Converter atleta_id para string para comparar com as keys (que são strings)
+                        const atleta_id_str = String(r.atleta_id);
+                        const escalacoes = escalacoes_data[atleta_id_str] || escalacoes_data[r.atleta_id] || 0;
+                        console.log(`[DEBUG GOLEIRO] ${r.apelido} (ID: ${r.atleta_id}, tipo: ${typeof r.atleta_id}): escalacoes_data["${atleta_id_str}"] = ${escalacoes}, escalacoes_data[${r.atleta_id}] = ${escalacoes_data[r.atleta_id]}`);
+                        return { ...r, rank: i + 1, escalacoes: escalacoes };
+                    });
                     await renderizarTabelaGoleiros(resultados);
                 
                     const totalRegistrosEl = document.getElementById('totalRegistros');
@@ -765,8 +775,17 @@ async function carregarDados(forcarRecalculo = false) {
             addProgressLog('💾 Ranking salvo encontrado! Exibindo resultados salvos...', 'success');
             updateProgress(80, 'Preparando dados salvos...');
             
-            // Renderizar ranking salvo diretamente
-            const resultados = data.ranking_salvo.map((r, i) => ({ ...r, rank: i + 1 }));
+            // Enriquecer ranking salvo com escalações
+            const escalacoes_data = data.escalacoes_data || {};
+            console.log(`[DEBUG GOLEIRO] escalacoes_data recebido:`, escalacoes_data);
+            console.log(`[DEBUG GOLEIRO] Total de keys em escalacoes_data:`, Object.keys(escalacoes_data || {}).length);
+            const resultados = data.ranking_salvo.map((r, i) => {
+                // Converter atleta_id para string para comparar com as keys (que são strings)
+                const atleta_id_str = String(r.atleta_id);
+                const escalacoes = escalacoes_data[atleta_id_str] || escalacoes_data[r.atleta_id] || 0;
+                console.log(`[DEBUG GOLEIRO] ${r.apelido} (ID: ${r.atleta_id}, tipo: ${typeof r.atleta_id}): escalacoes_data["${atleta_id_str}"] = ${escalacoes}`);
+                return { ...r, rank: i + 1, escalacoes: escalacoes };
+            });
             
             updateProgress(90, 'Renderizando tabela...');
             renderizarTabelaGoleiros(resultados);
@@ -938,6 +957,18 @@ async function carregarDados(forcarRecalculo = false) {
     }
 }
 
+// Função para formatar escalações com "k" para milhares
+function formatEscalacoes(num) {
+    if (num === null || num === undefined || isNaN(num) || num === 0) {
+        return '0';
+    }
+    const numValue = parseInt(num);
+    if (numValue >= 1000) {
+        return (numValue / 1000).toFixed(0) + 'k';
+    }
+    return numValue.toString();
+}
+
 // Função para renderizar tabela de goleiros
 async function renderizarTabelaGoleiros(resultados) {
     const tbody = document.querySelector('#tabelaGoleiros tbody');
@@ -1033,6 +1064,9 @@ async function renderizarTabelaGoleiros(resultados) {
                 <div class="font-medium text-green-400">R$ ${jogador.preco.toFixed(2)}</div>
             </td>
             <td class="py-4 px-2 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
+                <div class="font-medium text-white">${formatEscalacoes(jogador.escalacoes)}</div>
+            </td>
+            <td class="py-4 px-2 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <button onclick="openGoleiroModal(${jogador.atleta_id})" 
                         class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
                     <i class="fas fa-eye mr-1"></i>
@@ -1045,7 +1079,7 @@ async function renderizarTabelaGoleiros(resultados) {
         if (isBloqueado) {
             // Criar td com colspan que cobre toda a linha
             const overlayTd = document.createElement('td');
-            overlayTd.colSpan = 11;
+            overlayTd.colSpan = 12;
             overlayTd.className = 'relative';
             overlayTd.style.position = 'absolute';
             overlayTd.style.top = '0';
