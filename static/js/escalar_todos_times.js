@@ -260,11 +260,14 @@ class EscalarTodosTimes {
             // Configurar callbacks
             escalacaoRapida.setProgressCallback((percent, mensagem) => {
                 // Ajustar progresso para o time atual
-                const progressBase = (this.timesProcessados / this.timesTotal) * 100;
-                const progressTime = (percent / this.timesTotal);
+                // percent já é 0-100, então dividimos por 100 para obter 0-1
+                // Cada time ocupa (100 / timesTotal) % do progresso total
+                const progressPorTime = 100 / this.timesTotal;
+                const progressBase = ((this.timesProcessados - 1) / this.timesTotal) * 100;
+                const progressTime = (percent / 100) * progressPorTime;
                 const progressTotal = progressBase + progressTime;
                 this.updateProgress(
-                    Math.min(progressTotal, 100),
+                    Math.min(progressTotal, 99), // Manter em 99% até completar todos os times
                     `${time.team_name}: ${mensagem}`
                 );
             });
@@ -323,6 +326,13 @@ class EscalarTodosTimes {
                 
                 const resultado = await this.escalarTime(time);
                 this.resultados.push(resultado);
+                
+                // Atualizar progresso após completar cada time
+                const progressCompleto = (this.timesProcessados / this.timesTotal) * 100;
+                this.updateProgress(
+                    Math.min(progressCompleto, 99), // Manter em 99% até completar todos
+                    `Time ${this.timesProcessados}/${this.timesTotal} concluído`
+                );
                 
                 // Pequena pausa entre times para não sobrecarregar
                 if (this.timesProcessados < this.timesTotal) {

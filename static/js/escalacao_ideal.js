@@ -514,50 +514,43 @@ class EscalacaoIdeal {
         
         this.log(`   📋 Total de goleiros NULOS encontrados: ${goleirosNulos.length}`);
         
-        // Mostrar os goleiros nulos e seus preços (ordenados por preço decrescente)
-        if (goleirosNulos.length > 0) {
-            const goleirosNulosOrdenados = goleirosNulos
+        // Filtrar apenas os mais caros que o titular
+        const goleirosNulosMaisCaros = goleirosNulos.filter(g => this.getPreco(g) > precoTitular);
+        
+        if (goleirosNulosMaisCaros.length > 0) {
+            // Ordenar por preço decrescente para mostrar resumo
+            const goleirosNulosOrdenados = goleirosNulosMaisCaros
                 .map(g => ({ apelido: g.apelido, preco: this.getPreco(g), status_id: g.status_id }))
                 .sort((a, b) => b.preco - a.preco);
             
-            this.log(`\n   📊 LISTA DE GOLEIROS NULOS (ordenados por preço):`);
-            goleirosNulosOrdenados.forEach((g, idx) => {
-                const marcador = g.preco > precoTitular ? '✅' : '❌';
-                this.log(`      ${marcador} ${idx + 1}. ${g.apelido} - R$ ${g.preco.toFixed(2)} (status_id: ${g.status_id})`);
-            });
+            this.log(`   🔍 Goleiros nulos MAIS CAROS que R$ ${precoTitular.toFixed(2)}: ${goleirosNulosMaisCaros.length}`);
             
-            // Filtrar apenas os mais caros que o titular
-            const goleirosNulosMaisCaros = goleirosNulos.filter(g => this.getPreco(g) > precoTitular);
+            // Mostrar apenas os top 5 mais caros (resumo)
+            const top5 = goleirosNulosOrdenados.slice(0, 5);
+            this.log(`   📊 Top 5 mais caros: ${top5.map((g) => `${g.apelido} (R$ ${g.preco.toFixed(2)})`).join(', ')}`);
             
-            this.log(`\n   🔍 Goleiros nulos MAIS CAROS que R$ ${precoTitular.toFixed(2)}: ${goleirosNulosMaisCaros.length}`);
+            // Pegar o mais barato entre os mais caros (ordenar por preço crescente e pegar o primeiro)
+            goleirosNulosMaisCaros.sort((a, b) => this.getPreco(a) - this.getPreco(b));
+            const goleiroNulo = goleirosNulosMaisCaros[0];
             
-            if (goleirosNulosMaisCaros.length > 0) {
-                // Pegar o mais barato entre os mais caros (ordenar por preço crescente e pegar o primeiro)
-                goleirosNulosMaisCaros.sort((a, b) => this.getPreco(a) - this.getPreco(b));
-                const goleiroNulo = goleirosNulosMaisCaros[0];
+            const precoNulo = this.getPreco(goleiroNulo);
+            const diferenca = precoNulo - precoTitular;
+            
+            this.log(`   🎯 Goleiro nulo selecionado: ${goleiroNulo.apelido} (status_id=${goleiroNulo.status_id})`);
+            
+            if (escalacao.custoTotal + diferenca <= this.patrimonio) {
+                this.log(`   ✅ Hack aplicado!`);
+                this.log(`      Titular (nulo): ${goleiroNulo.apelido} (R$ ${precoNulo.toFixed(2)})`);
+                this.log(`      Reserva (joga): ${goleiroTitular.apelido} (R$ ${precoTitular.toFixed(2)}) - SEM CUSTO`);
                 
-                const precoNulo = this.getPreco(goleiroNulo);
-                const diferenca = precoNulo - precoTitular;
-                
-                this.log(`   🎯 Goleiro nulo selecionado: ${goleiroNulo.apelido} (status_id=${goleiroNulo.status_id})`);
-                
-                if (escalacao.custoTotal + diferenca <= this.patrimonio) {
-                    this.log(`   ✅ Hack aplicado!`);
-                    this.log(`      Titular (nulo): ${goleiroNulo.apelido} (R$ ${precoNulo.toFixed(2)})`);
-                    this.log(`      Reserva (joga): ${goleiroTitular.apelido} (R$ ${precoTitular.toFixed(2)}) - SEM CUSTO`);
-                    
-                    escalacao.titulares.goleiros = [goleiroNulo];
-                    escalacao.reservas.goleiros = [goleiroTitular];
-                    escalacao.custoTotal += diferenca;
-                } else {
-                    this.log(`   ❌ Hack não cabe no orçamento (diferença: R$ ${diferenca.toFixed(2)})`);
-                }
+                escalacao.titulares.goleiros = [goleiroNulo];
+                escalacao.reservas.goleiros = [goleiroTitular];
+                escalacao.custoTotal += diferenca;
             } else {
-                this.log(`   ❌ Não existem goleiros nulos mais caros que R$ ${precoTitular.toFixed(2)}`);
+                this.log(`   ❌ Hack não cabe no orçamento (diferença: R$ ${diferenca.toFixed(2)})`);
             }
         } else {
-            this.log(`   ❌ Nenhum goleiro nulo encontrado na base de dados!`);
-            this.log(`      (Isto é estranho - verifique se a tabela acf_atletas tem goleiros com status_id != 7 e != 2)`);
+            this.log(`   ❌ Não existem goleiros nulos mais caros que R$ ${precoTitular.toFixed(2)}`);
         }
     }
     

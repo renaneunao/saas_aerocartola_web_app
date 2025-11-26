@@ -274,7 +274,9 @@ class CalculoLateral {
         console.log(`[DEBUG LATERAL] escalacoes_data keys disponíveis:`, Object.keys(this.escalacoes_data || {}).slice(0, 10));
         console.log(`  escalacoes: ${escalacoes}, totalEscalacoes: ${totalEscalacoes}`);
         const percentual_escalacoes = totalEscalacoes > 0 ? escalacoes / totalEscalacoes : 0;
-        const peso_escalacao = 1 + percentual_escalacoes * this.pesos.FATOR_ESCALACAO;
+        // Usar raiz quadrada do percentual para amplificar a influência (valores pequenos têm impacto maior)
+        const percentual_ajustado = Math.sqrt(percentual_escalacoes);
+        const peso_escalacao = 1 + percentual_ajustado * this.pesos.FATOR_ESCALACAO;
 
         // Aplicar todos os fatores DEPOIS da raiz
         const pontuacao_total_final = base_raiz * fator_multiplicador * peso_escalacao;

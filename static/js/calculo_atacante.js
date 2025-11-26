@@ -185,7 +185,10 @@ class CalculoAtacante {
         console.log(`[DEBUG ATACANTE] ${apelido} (ID: ${atleta_id}): escalacoes_data[${atleta_id}] = ${escalacoes}, tipo: ${typeof escalacoes}`);
         console.log(`[DEBUG ATACANTE] escalacoes_data keys disponíveis:`, Object.keys(this.escalacoes_data || {}).slice(0, 10));
         const percentual_escalacoes = totalEscalacoes > 0 ? escalacoes / totalEscalacoes : 0;
-        const peso_escalacao = 1 + percentual_escalacoes * this.pesos.FATOR_ESCALACAO;
+        // Usar raiz quadrada do percentual para amplificar a influência (valores pequenos têm impacto maior)
+        // Exemplo: 3.90% → sqrt(0.039) = 0.197 = 19.7% (amplificado)
+        const percentual_ajustado = Math.sqrt(percentual_escalacoes);
+        const peso_escalacao = 1 + percentual_ajustado * this.pesos.FATOR_ESCALACAO;
 
         // Aplicar todos os fatores DEPOIS da raiz
         const pontuacao_total_final = base_raiz * fator_multiplicador * peso_escalacao;
