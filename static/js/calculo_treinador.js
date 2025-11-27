@@ -19,7 +19,7 @@ class CalculoTreinador {
         this.adversarios_dict = data.adversarios_dict || {};
         this.clubes_dict = data.clubes_dict || {};
         this.pesos = data.pesos || {
-            FATOR_PESO_JOGO: 1.0
+            FATOR_PESO_JOGO: 3.5
         };
     }
 

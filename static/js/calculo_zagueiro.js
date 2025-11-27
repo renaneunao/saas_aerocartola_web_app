@@ -21,11 +21,11 @@ class CalculoZagueiro {
         this.escalacoes_data = data.escalacoes_data || {};
         this.clubes_dict = data.clubes_dict || {};
         this.pesos = data.pesos || {
-            FATOR_MEDIA: 1.5,
-            FATOR_DS: 4.5,
-            FATOR_SG: 4.0,
-            FATOR_ESCALACAO: 5.0,
-            FATOR_PESO_JOGO: 5.0
+            FATOR_MEDIA: 0.4,
+            FATOR_DS: 0.8,
+            FATOR_SG: 2.2,
+            FATOR_ESCALACAO: 0.7,
+            FATOR_PESO_JOGO: 2.2
         };
     }
 

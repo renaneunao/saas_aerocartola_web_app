@@ -277,6 +277,11 @@
                     {% endif %}
                 </div>
                 <div class="flex space-x-3">
+                    <button type="button" onclick="restaurarPesosPadrao()" {% if not permissions.editarPesosModulos %}disabled{% endif %}
+                        class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-undo mr-2"></i>
+                        Restaurar ao Recomendado
+                    </button>
                     <button type="button" onclick="salvarPesos()" {% if not permissions.editarPesosModulos %}disabled{%
                         endif %}
                         class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -1092,6 +1097,88 @@
             showAlert('Erro ao salvar pesos: ' + error.message, 'Erro', 'error');
         } finally {
             hideLoader();
+        }
+    }
+
+    // Função para restaurar pesos padrão recomendados
+    async function restaurarPesosPadrao() {
+        const confirmado = await showConfirm(
+            'Deseja restaurar os pesos ao padrão recomendado? Os valores atuais serão substituídos.',
+            '🔄 Restaurar Pesos Padrão',
+            {
+                confirmText: 'Sim, restaurar',
+                cancelText: 'Cancelar'
+            }
+        );
+        
+        if (!confirmado) {
+            return;
+        }
+
+        showLoader('Carregando pesos padrão recomendados...');
+
+        try {
+            const response = await fetch('/api/modulos/lateral/pesos-padrao');
+            if (!response.ok) {
+                throw new Error('Erro ao buscar pesos padrão');
+            }
+
+            const data = await response.json();
+            const pesosPadrao = data.pesos || data; // Fallback caso a estrutura seja diferente
+
+            console.log('[DEBUG] Pesos padrão recebidos:', pesosPadrao);
+
+            // Preencher os campos com os pesos padrão
+            const form = document.getElementById('pesosForm');
+            if (!form) {
+                throw new Error('Formulário de pesos não encontrado');
+            }
+            
+            // Atualizar sliders, spans de valor e hidden inputs
+            Object.keys(pesosPadrao).forEach(factorName => {
+                const value = pesosPadrao[factorName];
+                
+                // Atualizar slider (input[type="range"])
+                const slider = document.getElementById(factorName);
+                if (slider && slider.type === 'range') {
+                    slider.value = value;
+                    // Disparar evento 'input' para sincronizar
+                    slider.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                
+                // Atualizar span de valor
+                const valueSpan = document.getElementById(`value_${factorName}`);
+                if (valueSpan) {
+                    valueSpan.textContent = value.toFixed(1);
+                }
+                
+                // Atualizar hidden input
+                const hiddenInput = document.getElementById(`hidden_${factorName}`);
+                if (hiddenInput) {
+                    hiddenInput.value = value;
+                }
+                
+                // Atualizar inputs number (se existirem)
+                const numberInput = form.querySelector(`input[type="number"][name="f_${factorName}"]`);
+                if (numberInput) {
+                    numberInput.value = value;
+                }
+            });
+
+            // Salvar automaticamente (salvarPesos já gerencia o loader)
+            hideLoader(); // Esconder loader de restauração antes de salvar
+            
+            console.log('[DEBUG] Chamando salvarPesos() após restaurar pesos padrão...');
+            if (typeof salvarPesos === 'function') {
+                await salvarPesos();
+            } else {
+                console.error('[DEBUG] salvarPesos não é uma função!', typeof salvarPesos);
+                showAlert('Erro: função salvarPesos não encontrada', 'Erro', 'error');
+            }
+        } catch (error) {
+            console.error('Erro ao restaurar pesos padrão:', error);
+            hideLoader();
+            showAlert('Erro ao restaurar pesos padrão: ' + error.message, 'Erro', 'error');
         }
     }
 

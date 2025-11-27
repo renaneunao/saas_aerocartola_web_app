@@ -21,15 +21,15 @@ class CalculoMeia {
         this.escalacoes_data = data.escalacoes_data || {};
         this.clubes_dict = data.clubes_dict || {};
         this.pesos = data.pesos || {
-            FATOR_MEDIA: 1.0,
-            FATOR_DS: 3.6,
-            FATOR_FF: 0.7,
-            FATOR_FS: 0.8,
-            FATOR_FD: 0.9,
-            FATOR_G: 2.5,
-            FATOR_A: 2.0,
-            FATOR_ESCALACAO: 10.0,
-            FATOR_PESO_JOGO: 9.5
+            FATOR_MEDIA: 3.1,
+            FATOR_DS: 2.0,
+            FATOR_FF: 2.0,
+            FATOR_FS: 1.8,
+            FATOR_FD: 2.5,
+            FATOR_G: 5.0,
+            FATOR_A: 4.5,
+            FATOR_ESCALACAO: 1.0,
+            FATOR_PESO_JOGO: 2.2
         };
     }
 
