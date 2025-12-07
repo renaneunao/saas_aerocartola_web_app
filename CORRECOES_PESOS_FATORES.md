@@ -81,3 +81,6 @@ Após essas correções, teste alterando um fator (ex: `FATOR_PESO_JOGO` de 3 pa
 
 
 
+
+
+

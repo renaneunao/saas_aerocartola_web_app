@@ -31,9 +31,19 @@ def close_db_connection(conn):
     """Fecha a conexão com o banco de dados"""
     if conn:
         try:
+            # Sempre tentar fazer rollback antes de fechar para evitar "current transaction is aborted"
+            # Isso é seguro mesmo se não houver transação ativa ou se já foi commitado
+            try:
+                conn.rollback()
+            except Exception as rollback_error:
+                # Se o rollback falhar (ex: já foi commitado ou fechado), ignorar
+                pass
             conn.close()
         except psycopg2.Error as e:
             print(f"Erro ao fechar conexão: {e}")
+        except Exception as e:
+            # Capturar qualquer outro erro ao fechar
+            print(f"Erro inesperado ao fechar conexão: {e}")
 
 def execute_query(query, params=None, fetch_one=False, fetch_all=False):
     """Executa uma query e retorna o resultado"""

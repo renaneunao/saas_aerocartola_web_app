@@ -3306,6 +3306,13 @@ def api_modulo_dados(modulo):
                         peso_jogo_dict[clube_id] = float(peso_jogo) if peso_jogo else 0
             except Exception as e:
                 print(f"Erro ao buscar peso_jogo: {e}")
+                import traceback
+                traceback.print_exc()
+                # Fazer rollback para evitar "current transaction is aborted"
+                try:
+                    conn.rollback()
+                except Exception as rollback_error:
+                    print(f"Erro ao fazer rollback após erro em peso_jogo: {rollback_error}")
         
         # Buscar peso_sg para todos os clubes dos atletas
         peso_sg_dict = {}
@@ -3324,6 +3331,13 @@ def api_modulo_dados(modulo):
                         peso_sg_dict[clube_id] = float(peso_sg) if peso_sg else 0
             except Exception as e:
                 print(f"Erro ao buscar peso_sg: {e}")
+                import traceback
+                traceback.print_exc()
+                # Fazer rollback para evitar "current transaction is aborted"
+                try:
+                    conn.rollback()
+                except Exception as rollback_error:
+                    print(f"Erro ao fazer rollback após erro em peso_sg: {rollback_error}")
         
         # Buscar escudos
         from utils.team_shields import get_team_shield
@@ -3391,6 +3405,13 @@ def api_modulo_dados(modulo):
                         }
             except Exception as e:
                 print(f"Erro ao buscar dados de pontuados por atleta: {e}")
+                import traceback
+                traceback.print_exc()
+                # Fazer rollback para evitar "current transaction is aborted"
+                try:
+                    conn.rollback()
+                except Exception as rollback_error:
+                    print(f"Erro ao fazer rollback após erro em pontuados: {rollback_error}")
         
         # 2. Buscar médias de scouts cedidos por adversários (por posição)
         if adversarios_dict and posicao_id:
@@ -3516,6 +3537,13 @@ def api_modulo_dados(modulo):
                                 pontuados_data[clube_id]['avg_a_cedidos'] = float(row[6]) if row[6] is not None else 0
                 except Exception as e:
                     print(f"Erro ao buscar scouts cedidos por adversários: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    # Fazer rollback para evitar "current transaction is aborted"
+                    try:
+                        conn.rollback()
+                    except Exception as rollback_error:
+                        print(f"Erro ao fazer rollback após erro em scouts cedidos: {rollback_error}")
         
         # 3. Buscar escalações (top 20 destaques)
         escalacoes_data = {}
@@ -3532,6 +3560,13 @@ def api_modulo_dados(modulo):
                     escalacoes_data[atleta_id] = float(escalacoes) if escalacoes else 0
         except Exception as e:
             print(f"Erro ao buscar escalações: {e}")
+            import traceback
+            traceback.print_exc()
+            # Fazer rollback para evitar "current transaction is aborted"
+            try:
+                conn.rollback()
+            except Exception as rollback_error:
+                print(f"Erro ao fazer rollback após erro em escalações: {rollback_error}")
         
         # Buscar dados de partidas para média de gols
         gols_data = {}
@@ -3595,6 +3630,11 @@ def api_modulo_dados(modulo):
                     print(f"Erro ao buscar dados de gols: {e}")
                     import traceback
                     traceback.print_exc()
+                    # Fazer rollback para evitar "current transaction is aborted"
+                    try:
+                        conn.rollback()
+                    except Exception as rollback_error:
+                        print(f"Erro ao fazer rollback após erro em gols: {rollback_error}")
         
         # Buscar nomes dos clubes adversários
         clubes_dict = {}
@@ -3768,6 +3808,12 @@ def api_modulo_dados(modulo):
         print(f"Erro ao buscar dados do módulo: {e}")
         import traceback
         traceback.print_exc()
+        # Fazer rollback em caso de erro para evitar "current transaction is aborted"
+        if conn:
+            try:
+                conn.rollback()
+            except Exception as rollback_error:
+                print(f"Erro ao fazer rollback: {rollback_error}")
         return jsonify({'error': str(e)}), 500
     finally:
         close_db_connection(conn)
