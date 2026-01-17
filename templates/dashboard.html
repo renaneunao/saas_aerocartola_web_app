@@ -8,12 +8,12 @@
         padding-top: 0.5rem;
         padding-bottom: 0.5rem;
     }
-    
+
     /* Reduzir espaçamentos entre seções */
     .dashboard-section {
         margin-bottom: 0.75rem;
     }
-    
+
     /* Ocultar footer no dashboard */
     footer {
         display: none !important;
@@ -24,13 +24,44 @@
     <div class="mb-2 dashboard-section">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-xl font-bold text-white mb-1">Dashboard</h1>
-                <p class="text-dark-blue-300 text-xs">Acompanhe o progresso da configuração do seu time</p>
+                <div class="flex items-center space-x-2">
+                    <h1 class="text-xl font-bold text-white">Dashboard</h1>
+                    <span
+                        class="bg-blue-600/30 text-blue-400 px-2 py-0.5 rounded text-[10px] border border-blue-500/20 font-bold">
+                        R{{ rodada_atual }}
+                    </span>
+                    <span
+                        class="bg-slate-700/50 text-slate-300 px-2 py-0.5 rounded text-[10px] border border-slate-600/30">
+                        {{ temporada_atual }}
+                    </span>
+
+                    {% if fechamento_mercado %}
+                    <div
+                        class="flex items-center space-x-2 ml-2 px-2 py-0.5 rounded bg-black/30 border {% if status_mercado == 1 %}border-green-500/30{% else %}border-red-500/30{% endif %}">
+                        <div
+                            class="w-1.5 h-1.5 rounded-full {% if status_mercado == 1 %}bg-green-500 animate-pulse{% else %}bg-red-500{% endif %}">
+                        </div>
+                        <span
+                            class="text-[9px] font-bold {% if status_mercado == 1 %}text-green-400{% else %}text-red-400{% endif %}">
+                            {% if status_mercado == 1 %}MERCADO ABERTO{% else %}MERCADO FECHADO{% endif %}
+                        </span>
+                        {% if status_mercado == 1 %}
+                        <span class="text-[9px] text-slate-400 border-l border-slate-700 ml-1 pl-2" id="mercado-timer"
+                            data-timestamp="{{ fechamento_mercado.timestamp }}">
+                            Fecha em: --:--:--
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                <p class="text-dark-blue-300 text-xs mt-0.5">Acompanhe o progresso da configuração do seu time</p>
             </div>
             {% if team %}
-            <div class="flex items-center space-x-2 bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 px-3 py-2 rounded-lg border border-dark-blue-700/50">
+            <div
+                class="flex items-center space-x-2 bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 px-3 py-2 rounded-lg border border-dark-blue-700/50">
                 {% if team.team_shield_url %}
-                <img src="{{ team.team_shield_url }}" alt="Escudo" class="w-8 h-8 rounded-full border-2 border-blue-400/30">
+                <img src="{{ team.team_shield_url }}" alt="Escudo"
+                    class="w-8 h-8 rounded-full border-2 border-blue-400/30">
                 {% else %}
                 <i class="fas fa-futbol text-lg text-blue-400"></i>
                 {% endif %}
@@ -46,11 +77,14 @@
     <!-- Cards de Status -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-2 dashboard-section">
         <!-- Card 1: Perfis de Jogo -->
-        <div class="bg-gradient-to-br from-slate-900/90 to-slate-950/90 rounded-xl border-2 {% if status.tem_perfis %}border-green-500/50{% else %}border-slate-700/50{% endif %} shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105">
+        <div
+            class="bg-gradient-to-br from-slate-900/90 to-slate-950/90 rounded-xl border-2 {% if status.tem_perfis %}border-green-500/50{% else %}border-slate-700/50{% endif %} shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105">
             <div class="p-3">
                 <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 rounded-lg {% if status.tem_perfis %}bg-green-500/20{% else %}bg-slate-700/50{% endif %}">
-                        <i class="fas fa-chart-line text-lg {% if status.tem_perfis %}text-green-400{% else %}text-slate-400{% endif %}"></i>
+                    <div
+                        class="p-2 rounded-lg {% if status.tem_perfis %}bg-green-500/20{% else %}bg-slate-700/50{% endif %}">
+                        <i
+                            class="fas fa-chart-line text-lg {% if status.tem_perfis %}text-green-400{% else %}text-slate-400{% endif %}"></i>
                     </div>
                     {% if status.tem_perfis %}
                     <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-[10px] font-semibold">
@@ -65,13 +99,16 @@
                 <h3 class="text-sm font-bold text-white mb-1">Perfis de Jogo</h3>
                 <p class="text-dark-blue-300 text-xs mb-2">
                     {% if status.tem_perfis %}
-                    Perfil Peso Jogo: <span class="text-blue-400 font-semibold">{{ status.perfis_info.perfil_peso_jogo }}</span><br>
-                    Perfil Peso SG: <span class="text-cyan-400 font-semibold">{{ status.perfis_info.perfil_peso_sg }}</span>
+                    Perfil Peso Jogo: <span class="text-blue-400 font-semibold">{{ status.perfis_info.perfil_peso_jogo
+                        }}</span><br>
+                    Perfil Peso SG: <span class="text-cyan-400 font-semibold">{{ status.perfis_info.perfil_peso_sg
+                        }}</span>
                     {% else %}
                     Configure os perfis de peso de jogo e saldo de gols para começar a análise.
                     {% endif %}
                 </p>
-                <a href="{{ url_for('pagina_inicial') }}" class="inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r {% if status.tem_perfis %}from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800{% else %}from-green-600 to-green-700 hover:from-green-700 hover:to-green-800{% endif %} text-white rounded-lg text-xs font-semibold transition-all duration-200">
+                <a href="{{ url_for('pagina_inicial') }}"
+                    class="inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r {% if status.tem_perfis %}from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800{% else %}from-green-600 to-green-700 hover:from-green-700 hover:to-green-800{% endif %} text-white rounded-lg text-xs font-semibold transition-all duration-200">
                     <i class="fas {% if status.tem_perfis %}fa-edit{% else %}fa-plus{% endif %} mr-1 text-xs"></i>
                     {% if status.tem_perfis %}Editar Perfis{% else %}Configurar Perfis{% endif %}
                 </a>
@@ -79,11 +116,14 @@
         </div>
 
         <!-- Card 2: Cálculo de Posições -->
-        <div class="bg-gradient-to-br from-slate-900/90 to-slate-950/90 rounded-xl border-2 {% if status.tem_calculos %}border-green-500/50{% else %}border-slate-700/50{% endif %} shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105">
+        <div
+            class="bg-gradient-to-br from-slate-900/90 to-slate-950/90 rounded-xl border-2 {% if status.tem_calculos %}border-green-500/50{% else %}border-slate-700/50{% endif %} shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105">
             <div class="p-3">
                 <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 rounded-lg {% if status.tem_calculos %}bg-green-500/20{% else %}bg-slate-700/50{% endif %}">
-                        <i class="fas fa-calculator text-lg {% if status.tem_calculos %}text-green-400{% else %}text-slate-400{% endif %}"></i>
+                    <div
+                        class="p-2 rounded-lg {% if status.tem_calculos %}bg-green-500/20{% else %}bg-slate-700/50{% endif %}">
+                        <i
+                            class="fas fa-calculator text-lg {% if status.tem_calculos %}text-green-400{% else %}text-slate-400{% endif %}"></i>
                     </div>
                     {% if status.tem_calculos %}
                     <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-[10px] font-semibold">
@@ -107,19 +147,25 @@
                     {% endif %}
                     {% endif %}
                 </p>
-                <a href="{{ url_for('modulos') }}" class="inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r {% if not status.tem_perfis %}from-gray-600 to-gray-700 cursor-not-allowed{% elif status.tem_calculos %}from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800{% else %}from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800{% endif %} text-white rounded-lg text-xs font-semibold transition-all duration-200" {% if not status.tem_perfis %}disabled{% endif %}>
-                    <i class="fas {% if status.tem_calculos %}fa-eye{% else %}fa-calculator{% endif %} mr-1 text-xs"></i>
+                <a href="{{ url_for('modulos') }}"
+                    class="inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r {% if not status.tem_perfis %}from-gray-600 to-gray-700 cursor-not-allowed{% elif status.tem_calculos %}from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800{% else %}from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800{% endif %} text-white rounded-lg text-xs font-semibold transition-all duration-200"
+                    {% if not status.tem_perfis %}disabled{% endif %}>
+                    <i
+                        class="fas {% if status.tem_calculos %}fa-eye{% else %}fa-calculator{% endif %} mr-1 text-xs"></i>
                     {% if status.tem_calculos %}Ver Rankings{% else %}Calcular Posições{% endif %}
                 </a>
             </div>
         </div>
 
         <!-- Card 3: Escalação do Time -->
-        <div class="bg-gradient-to-br from-slate-900/90 to-slate-950/90 rounded-xl border-2 {% if status.tem_escalacao %}border-green-500/50{% else %}border-slate-700/50{% endif %} shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105">
+        <div
+            class="bg-gradient-to-br from-slate-900/90 to-slate-950/90 rounded-xl border-2 {% if status.tem_escalacao %}border-green-500/50{% else %}border-slate-700/50{% endif %} shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105">
             <div class="p-3">
                 <div class="flex items-center justify-between mb-2">
-                    <div class="p-2 rounded-lg {% if status.tem_escalacao %}bg-green-500/20{% else %}bg-slate-700/50{% endif %}">
-                        <i class="fas fa-users text-lg {% if status.tem_escalacao %}text-green-400{% else %}text-slate-400{% endif %}"></i>
+                    <div
+                        class="p-2 rounded-lg {% if status.tem_escalacao %}bg-green-500/20{% else %}bg-slate-700/50{% endif %}">
+                        <i
+                            class="fas fa-users text-lg {% if status.tem_escalacao %}text-green-400{% else %}text-slate-400{% endif %}"></i>
                     </div>
                     {% if status.tem_escalacao %}
                     <span class="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-[10px] font-semibold">
@@ -144,15 +190,19 @@
                     {% endif %}
                 </p>
                 {% if not permissions.podeEscalar %}
-                <a href="{{ url_for('pagamento.index') }}" class="relative inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-lg text-xs font-semibold transition-all duration-200">
+                <a href="{{ url_for('pagamento.index') }}"
+                    class="relative inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white rounded-lg text-xs font-semibold transition-all duration-200">
                     <span style="filter: blur(1px);">
                         <i class="fas fa-plus mr-1 text-xs"></i>
                         Escalar Time
                     </span>
-                    <span class="absolute bottom-1 right-1 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
+                    <span
+                        class="absolute bottom-1 right-1 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
                 </a>
                 {% else %}
-                <a href="{{ url_for('modulo_escalacao_ideal') }}" class="inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r {% if not status.tem_calculos %}from-gray-600 to-gray-700 cursor-not-allowed{% elif status.tem_escalacao %}from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800{% else %}from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800{% endif %} text-white rounded-lg text-xs font-semibold transition-all duration-200" {% if not status.tem_calculos %}disabled{% endif %}>
+                <a href="{{ url_for('modulo_escalacao_ideal') }}"
+                    class="inline-flex items-center justify-center w-full px-3 py-1.5 bg-gradient-to-r {% if not status.tem_calculos %}from-gray-600 to-gray-700 cursor-not-allowed{% elif status.tem_escalacao %}from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800{% else %}from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800{% endif %} text-white rounded-lg text-xs font-semibold transition-all duration-200"
+                    {% if not status.tem_calculos %}disabled{% endif %}>
                     <i class="fas {% if status.tem_escalacao %}fa-edit{% else %}fa-plus{% endif %} mr-1 text-xs"></i>
                     {% if status.tem_escalacao %}Ver Escalação{% else %}Escalar Time{% endif %}
                 </a>
@@ -162,13 +212,15 @@
     </div>
 
     <!-- Seção de Ações Rápidas -->
-    <div class="bg-gradient-to-br from-slate-900/90 to-slate-950/90 rounded-xl border-2 border-slate-700/50 shadow-lg p-2 dashboard-section">
+    <div
+        class="bg-gradient-to-br from-slate-900/90 to-slate-950/90 rounded-xl border-2 border-slate-700/50 shadow-lg p-2 dashboard-section">
         <h2 class="text-xs font-bold text-white mb-1 flex items-center">
             <i class="fas fa-bolt text-yellow-400 mr-1 text-[10px]"></i>
             Ações Rápidas
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1.5">
-            <a href="{{ url_for('credenciais') }}" class="flex items-center space-x-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-blue-500/50 transition-all duration-200 hover:bg-slate-800/70">
+            <a href="{{ url_for('credenciais') }}"
+                class="flex items-center space-x-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-blue-500/50 transition-all duration-200 hover:bg-slate-800/70">
                 <div class="p-1.5 bg-blue-500/20 rounded-lg">
                     <i class="fas fa-cog text-blue-400 text-sm"></i>
                 </div>
@@ -178,7 +230,8 @@
                 </div>
             </a>
 
-            <a href="{{ url_for('modulos') }}" class="flex items-center space-x-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-purple-500/50 transition-all duration-200 hover:bg-slate-800/70">
+            <a href="{{ url_for('modulos') }}"
+                class="flex items-center space-x-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-purple-500/50 transition-all duration-200 hover:bg-slate-800/70">
                 <div class="p-1.5 bg-purple-500/20 rounded-lg">
                     <i class="fas fa-calculator text-purple-400 text-sm"></i>
                 </div>
@@ -189,7 +242,8 @@
             </a>
 
             {% if not permissions.podeEscalar %}
-            <a href="{{ url_for('pagamento.index') }}" class="flex items-center space-x-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-green-500/50 transition-all duration-200 hover:bg-slate-800/70 relative">
+            <a href="{{ url_for('pagamento.index') }}"
+                class="flex items-center space-x-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-green-500/50 transition-all duration-200 hover:bg-slate-800/70 relative">
                 <div class="p-1.5 bg-green-500/20 rounded-lg" style="filter: blur(1px);">
                     <i class="fas fa-users text-green-400 text-sm"></i>
                 </div>
@@ -197,10 +251,12 @@
                     <p class="text-white font-semibold text-xs">Escalação Ideal</p>
                     <p class="text-dark-blue-400 text-[10px]">Monte seu time</p>
                 </div>
-                <span class="absolute bottom-1 right-1 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
+                <span
+                    class="absolute bottom-1 right-1 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
             </a>
             {% else %}
-            <a href="{{ url_for('modulo_escalacao_ideal') }}" class="flex items-center space-x-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-green-500/50 transition-all duration-200 hover:bg-slate-800/70">
+            <a href="{{ url_for('modulo_escalacao_ideal') }}"
+                class="flex items-center space-x-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-green-500/50 transition-all duration-200 hover:bg-slate-800/70">
                 <div class="p-1.5 bg-green-500/20 rounded-lg">
                     <i class="fas fa-users text-green-400 text-sm"></i>
                 </div>
@@ -213,7 +269,8 @@
 
             {% if status.tem_perfis %}
             {% if not permissions.podeEscalar %}
-            <a href="{{ url_for('pagamento.index') }}" class="flex items-center space-x-2 p-2 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg border-2 border-green-500/50 hover:border-green-500 transition-all duration-200 hover:from-green-600/30 hover:to-emerald-600/30 cursor-pointer relative">
+            <a href="{{ url_for('pagamento.index') }}"
+                class="flex items-center space-x-2 p-2 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg border-2 border-green-500/50 hover:border-green-500 transition-all duration-200 hover:from-green-600/30 hover:to-emerald-600/30 cursor-pointer relative">
                 <div class="p-1.5 bg-green-500/30 rounded-lg" style="filter: blur(1px);">
                     <i class="fas fa-bolt text-green-400 text-sm"></i>
                 </div>
@@ -221,11 +278,12 @@
                     <p class="text-white font-semibold text-xs">⚡ Escalação Rápida</p>
                     <p class="text-dark-blue-400 text-[10px]">Calcular e escalar automaticamente</p>
                 </div>
-                <span class="absolute bottom-1 right-1 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
+                <span
+                    class="absolute bottom-1 right-1 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
             </a>
             {% else %}
-            <button id="escalacaoRapidaBtn" 
-                    class="flex items-center space-x-2 p-2 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg border-2 border-green-500/50 hover:border-green-500 transition-all duration-200 hover:from-green-600/30 hover:to-emerald-600/30 cursor-pointer">
+            <button id="escalacaoRapidaBtn"
+                class="flex items-center space-x-2 p-2 bg-gradient-to-r from-green-600/20 to-emerald-600/20 rounded-lg border-2 border-green-500/50 hover:border-green-500 transition-all duration-200 hover:from-green-600/30 hover:to-emerald-600/30 cursor-pointer">
                 <div class="p-1.5 bg-green-500/30 rounded-lg">
                     <i class="fas fa-bolt text-green-400 text-sm"></i>
                 </div>
@@ -235,9 +293,10 @@
                 </div>
             </button>
             {% endif %}
-            
+
             {% if not permissions.multiEscalacao %}
-            <a href="{{ url_for('pagamento.index') }}" class="flex items-center space-x-2 p-2 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-lg border-2 border-yellow-500/50 hover:border-yellow-500 transition-all duration-200 hover:from-yellow-600/30 hover:to-orange-600/30 cursor-pointer relative">
+            <a href="{{ url_for('pagamento.index') }}"
+                class="flex items-center space-x-2 p-2 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-lg border-2 border-yellow-500/50 hover:border-yellow-500 transition-all duration-200 hover:from-yellow-600/30 hover:to-orange-600/30 cursor-pointer relative">
                 <div class="p-1.5 bg-yellow-500/30 rounded-lg" style="filter: blur(1px);">
                     <i class="fas fa-users text-yellow-400 text-sm"></i>
                 </div>
@@ -245,11 +304,12 @@
                     <p class="text-white font-semibold text-xs">⚡ Escalar Todos os Times</p>
                     <p class="text-dark-blue-400 text-[10px]">Escalar todos de uma vez</p>
                 </div>
-                <span class="absolute bottom-1 right-1 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
+                <span
+                    class="absolute bottom-1 right-1 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
             </a>
             {% else %}
-            <button id="escalarTodosTimesBtn" 
-                    class="flex items-center space-x-2 p-2 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-lg border-2 border-yellow-500/50 hover:border-yellow-500 transition-all duration-200 hover:from-yellow-600/30 hover:to-orange-600/30 cursor-pointer">
+            <button id="escalarTodosTimesBtn"
+                class="flex items-center space-x-2 p-2 bg-gradient-to-r from-yellow-600/20 to-orange-600/20 rounded-lg border-2 border-yellow-500/50 hover:border-yellow-500 transition-all duration-200 hover:from-yellow-600/30 hover:to-orange-600/30 cursor-pointer">
                 <div class="p-1.5 bg-yellow-500/30 rounded-lg">
                     <i class="fas fa-users text-yellow-400 text-sm"></i>
                 </div>
@@ -261,7 +321,8 @@
             {% endif %}
             {% endif %}
 
-            <button onclick="window.location.reload()" class="flex items-center space-x-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-200 hover:bg-slate-800/70">
+            <button onclick="window.location.reload()"
+                class="flex items-center space-x-2 p-2 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-cyan-500/50 transition-all duration-200 hover:bg-slate-800/70">
                 <div class="p-1.5 bg-cyan-500/20 rounded-lg">
                     <i class="fas fa-sync-alt text-cyan-400 text-sm"></i>
                 </div>
@@ -275,7 +336,8 @@
 
     <!-- Próximos Passos -->
     {% if not status.tem_perfis or not status.tem_calculos or not status.tem_escalacao %}
-    <div class="mt-2 bg-gradient-to-r from-blue-900/30 to-blue-800/30 rounded-xl border-2 border-blue-500/30 p-2 dashboard-section">
+    <div
+        class="mt-2 bg-gradient-to-r from-blue-900/30 to-blue-800/30 rounded-xl border-2 border-blue-500/30 p-2 dashboard-section">
         <h2 class="text-sm font-bold text-white mb-2 flex items-center">
             <i class="fas fa-route text-blue-400 mr-2 text-xs"></i>
             Próximos Passos
@@ -283,41 +345,56 @@
         <div class="space-y-2">
             {% if not status.tem_perfis %}
             <div class="flex items-start space-x-2 p-2 bg-slate-900/50 rounded-lg">
-                <div class="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-xs">1</div>
+                <div
+                    class="flex-shrink-0 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                    1</div>
                 <div class="flex-1">
                     <p class="text-white font-semibold mb-0.5 text-xs">Configure os Perfis de Jogo</p>
-                    <p class="text-dark-blue-300 text-[10px]">Selecione os perfis de peso de jogo e saldo de gols que melhor se adequam à rodada atual.</p>
-                    <a href="{{ url_for('pagina_inicial') }}" class="inline-flex items-center mt-1 text-blue-400 hover:text-blue-300 text-[10px] font-medium">
+                    <p class="text-dark-blue-300 text-[10px]">Selecione os perfis de peso de jogo e saldo de gols que
+                        melhor se adequam à rodada atual.</p>
+                    <a href="{{ url_for('pagina_inicial') }}"
+                        class="inline-flex items-center mt-1 text-blue-400 hover:text-blue-300 text-[10px] font-medium">
                         Configurar agora <i class="fas fa-arrow-right ml-1 text-[8px]"></i>
                     </a>
                 </div>
             </div>
             {% elif not status.tem_calculos %}
             <div class="flex items-start space-x-2 p-2 bg-slate-900/50 rounded-lg">
-                <div class="flex-shrink-0 w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-xs">2</div>
+                <div
+                    class="flex-shrink-0 w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                    2</div>
                 <div class="flex-1">
                     <p class="text-white font-semibold mb-0.5 text-xs">Calcule as Posições</p>
-                    <p class="text-dark-blue-300 text-[10px]">Execute os cálculos para gerar rankings dos jogadores em cada posição.</p>
-                    <a href="{{ url_for('modulos') }}" class="inline-flex items-center mt-1 text-purple-400 hover:text-purple-300 text-[10px] font-medium">
+                    <p class="text-dark-blue-300 text-[10px]">Execute os cálculos para gerar rankings dos jogadores em
+                        cada posição.</p>
+                    <a href="{{ url_for('modulos') }}"
+                        class="inline-flex items-center mt-1 text-purple-400 hover:text-purple-300 text-[10px] font-medium">
                         Calcular agora <i class="fas fa-arrow-right ml-1 text-[8px]"></i>
                     </a>
                 </div>
             </div>
             {% elif not status.tem_escalacao %}
-            <div class="flex items-start space-x-2 p-2 bg-slate-900/50 rounded-lg {% if not permissions.podeEscalar %}opacity-50{% endif %}">
-                <div class="flex-shrink-0 w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-xs">3</div>
+            <div
+                class="flex items-start space-x-2 p-2 bg-slate-900/50 rounded-lg {% if not permissions.podeEscalar %}opacity-50{% endif %}">
+                <div
+                    class="flex-shrink-0 w-6 h-6 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-xs">
+                    3</div>
                 <div class="flex-1">
                     <p class="text-white font-semibold mb-0.5 text-xs">Monte sua Escalação</p>
-                    <p class="text-dark-blue-300 text-[10px]">Crie a escalação ideal do seu time baseada nos rankings calculados.</p>
+                    <p class="text-dark-blue-300 text-[10px]">Crie a escalação ideal do seu time baseada nos rankings
+                        calculados.</p>
                     {% if not permissions.podeEscalar %}
-                    <a href="{{ url_for('pagamento.index') }}" class="inline-flex items-center mt-1 text-emerald-400 hover:text-emerald-300 text-[10px] font-medium relative">
+                    <a href="{{ url_for('pagamento.index') }}"
+                        class="inline-flex items-center mt-1 text-emerald-400 hover:text-emerald-300 text-[10px] font-medium relative">
                         <span style="filter: blur(1px);">
                             Escalar agora <i class="fas fa-arrow-right ml-1 text-[8px]"></i>
                         </span>
-                        <span class="absolute -bottom-0.5 -right-6 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold z-10">Upgrade</span>
+                        <span
+                            class="absolute -bottom-0.5 -right-6 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold z-10">Upgrade</span>
                     </a>
                     {% else %}
-                    <a href="{{ url_for('modulo_escalacao_ideal') }}" class="inline-flex items-center mt-1 text-emerald-400 hover:text-emerald-300 text-[10px] font-medium">
+                    <a href="{{ url_for('modulo_escalacao_ideal') }}"
+                        class="inline-flex items-center mt-1 text-emerald-400 hover:text-emerald-300 text-[10px] font-medium">
                         Escalar agora <i class="fas fa-arrow-right ml-1 text-[8px]"></i>
                     </a>
                     {% endif %}
@@ -327,20 +404,24 @@
         </div>
     </div>
     {% else %}
-    <div class="mt-2 bg-gradient-to-r from-green-900/30 to-emerald-800/30 rounded-xl border-2 border-green-500/30 p-2 text-center dashboard-section">
+    <div
+        class="mt-2 bg-gradient-to-r from-green-900/30 to-emerald-800/30 rounded-xl border-2 border-green-500/30 p-2 text-center dashboard-section">
         <i class="fas fa-check-circle text-3xl text-green-400 mb-2"></i>
         <h2 class="text-sm font-bold text-white mb-1">Tudo Pronto!</h2>
         <p class="text-green-200 mb-2 text-xs">Seu time está totalmente configurado e pronto para jogar!</p>
         {% if not permissions.podeEscalar %}
-        <a href="{{ url_for('pagamento.index') }}" class="relative inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg text-xs font-semibold transition-all duration-200 transform hover:scale-105">
+        <a href="{{ url_for('pagamento.index') }}"
+            class="relative inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg text-xs font-semibold transition-all duration-200 transform hover:scale-105">
             <span style="filter: blur(1px);">
                 <i class="fas fa-eye mr-1 text-xs"></i>
                 Ver Escalação Completa
             </span>
-            <span class="absolute bottom-1 right-1 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
+            <span
+                class="absolute bottom-1 right-1 bg-emerald-600 text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
         </a>
         {% else %}
-        <a href="{{ url_for('modulo_escalacao_ideal') }}" class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg text-xs font-semibold transition-all duration-200 transform hover:scale-105">
+        <a href="{{ url_for('modulo_escalacao_ideal') }}"
+            class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-lg text-xs font-semibold transition-all duration-200 transform hover:scale-105">
             <i class="fas fa-eye mr-1 text-xs"></i>
             Ver Escalação Completa
         </a>
@@ -360,5 +441,6 @@
 
 <!-- Script de Escalação Rápida -->
 <script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
+<script src="{{ url_for('static', filename='js/market_timer.js') }}"></script>
 
 {% endblock %}

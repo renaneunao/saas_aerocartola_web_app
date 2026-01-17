@@ -20,9 +20,9 @@ API_URL_TEAM_DATA = "https://api.cartola.globo.com/auth/time"
 API_URL_TEAM_INFO = "https://api.cartola.globo.com/auth/time/info"
 API_URL_SALVAR_TIME = "https://api.cartola.globo.com/auth/time/salvar"
 
-# Cache para a temporada
-_TEMPORADA_CACHE = None
-_TEMPORADA_CACHE_TIMESTAMP = None
+# Cache para os dados de status (temporada e rodada)
+_STATUS_CACHE = None
+_STATUS_CACHE_TIMESTAMP = None
 _CACHE_DURATION = 3600 # 1 hora in seconds
 
 def update_env_with_new_key(new_key, env_key="ACCESS_TOKEN_TIME1"):
@@ -136,32 +136,62 @@ def get_temporada_atual() -> int:
     Usa cache de 1 hora para evitar múltiplas requisições.
     Fallback para ano atual caso a API falhe.
     """
-    import time
+    status = _get_cached_status()
+    if status and 'temporada' in status:
+        return int(status['temporada'])
+    
     from datetime import datetime
-    
-    global _TEMPORADA_CACHE, _TEMPORADA_CACHE_TIMESTAMP
-    
-    # Verificar cache
-    current_time = time.time()
-    if _TEMPORADA_CACHE is not None and _TEMPORADA_CACHE_TIMESTAMP is not None:
-        if current_time - _TEMPORADA_CACHE_TIMESTAMP < _CACHE_DURATION:
-            return _TEMPORADA_CACHE
-    
-    # Buscar da API
-    try:
-        status_data = fetch_status_data()
-        
-        if status_data and 'temporada' in status_data:
-            temporada = int(status_data['temporada'])
-            # Atualizar cache
-            _TEMPORADA_CACHE = temporada
-            _TEMPORADA_CACHE_TIMESTAMP = current_time
-            return temporada
-    except Exception as e:
-        printdbg(f"Erro ao buscar temporada da API: {e}. Usando fallback (ano atual)")
-    
-    # Fallback para o ano atual do sistema
     return datetime.now().year
+
+def get_rodada_atual() -> int:
+    """
+    Retorna a rodada atual buscando da API de status do Cartola.
+    Usa cache de 1 hora.
+    """
+    status = _get_cached_status()
+    if status and 'rodada_atual' in status:
+        return int(status['rodada_atual'])
+    return 1
+
+def get_fechamento_mercado() -> dict:
+    """
+    Retorna os dados de fechamento do mercado.
+    """
+    status = _get_cached_status()
+    if status and 'fechamento' in status:
+        return status['fechamento']
+    return None
+
+def get_status_mercado() -> int:
+    """
+    Retorna o status do mercado (1 = Aberto, 2 = Fechado).
+    """
+    status = _get_cached_status()
+    if status and 'status_mercado' in status:
+        return int(status['status_mercado'])
+    return 2 # Fechado por padrão se houver erro
+
+def _get_cached_status():
+    """Busca e faz cache dos dados de status da API"""
+    import time
+    global _STATUS_CACHE, _STATUS_CACHE_TIMESTAMP
+    
+    current_time = time.time()
+    if _STATUS_CACHE is not None and _STATUS_CACHE_TIMESTAMP is not None:
+        if current_time - _STATUS_CACHE_TIMESTAMP < _CACHE_DURATION:
+            return _STATUS_CACHE
+            
+    try:
+        # Aqui chamamos a função que faz o request real
+        status_data = fetch_status_data()
+        if status_data:
+            _STATUS_CACHE = status_data
+            _STATUS_CACHE_TIMESTAMP = current_time
+            return _STATUS_CACHE
+    except Exception as e:
+        print(f"Erro ao buscar status da API: {e}")
+        
+    return None
 
 def fetch_pontuados_data(rodada):
     """Obtém dados de atletas pontuados para a rodada especificada (não requer autenticação)."""
