@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone, timedelta
 import os
 from dotenv import load_dotenv
+from api_cartola import get_temporada_atual, get_rodada_atual, get_fechamento_mercado, get_status_mercado
 
 # Carregar variáveis de ambiente do .env
 load_dotenv()
@@ -876,7 +877,6 @@ def dashboard():
         create_user_rankings_table(conn)
         
         # Temporada e Rodada atuais dinâmicas da API
-        from api_cartola import get_temporada_atual, get_rodada_atual, get_fechamento_mercado, get_status_mercado
         temporada_atual = get_temporada_atual()
         rodada_atual = get_rodada_atual()
         fechamento_mercado = get_fechamento_mercado()
@@ -1029,7 +1029,6 @@ def pagina_inicial():
         cursor = conn.cursor()
         
         # Temporada atual dinâmica
-        from api_cartola import get_temporada_atual
         temporada_atual = get_temporada_atual()
         rodada_atual = get_rodada_atual()
         
@@ -3205,7 +3204,6 @@ def api_modulo_dados(modulo):
         cursor = conn.cursor()
         
         # Temporada atual dinâmica
-        from api_cartola import get_temporada_atual
         temporada_atual = get_temporada_atual()
         
         # Buscar rodada atual da temporada
