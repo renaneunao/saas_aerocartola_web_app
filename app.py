@@ -1012,6 +1012,11 @@ def pagina_inicial():
     finally:
         close_db_connection(conn)
     
+    # Buscar perfis disponíveis de peso de jogo com rankings (top 3 clubes)
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
         # Temporada atual dinâmica
         from api_cartola import get_temporada_atual
         temporada_atual = get_temporada_atual()
