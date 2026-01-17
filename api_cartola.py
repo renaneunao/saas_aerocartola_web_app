@@ -20,6 +20,11 @@ API_URL_TEAM_DATA = "https://api.cartola.globo.com/auth/time"
 API_URL_TEAM_INFO = "https://api.cartola.globo.com/auth/time/info"
 API_URL_SALVAR_TIME = "https://api.cartola.globo.com/auth/time/salvar"
 
+# Cache para a temporada
+_TEMPORADA_CACHE = None
+_TEMPORADA_CACHE_TIMESTAMP = None
+_CACHE_DURATION = 3600 # 1 hora in seconds
+
 def update_env_with_new_key(new_key, env_key="ACCESS_TOKEN_TIME1"):
     """[DEPRECATED] Mantido por compatibilidade; não grava mais em .env."""
     return new_key
@@ -124,6 +129,39 @@ def fetch_status_data():
     except requests.exceptions.RequestException as e:
         print(f"Erro ao consultar a API Cartola (status): {e}")
         return None
+
+def get_temporada_atual() -> int:
+    """
+    Retorna a temporada atual buscando da API de status do Cartola.
+    Usa cache de 1 hora para evitar múltiplas requisições.
+    Fallback para ano atual caso a API falhe.
+    """
+    import time
+    from datetime import datetime
+    
+    global _TEMPORADA_CACHE, _TEMPORADA_CACHE_TIMESTAMP
+    
+    # Verificar cache
+    current_time = time.time()
+    if _TEMPORADA_CACHE is not None and _TEMPORADA_CACHE_TIMESTAMP is not None:
+        if current_time - _TEMPORADA_CACHE_TIMESTAMP < _CACHE_DURATION:
+            return _TEMPORADA_CACHE
+    
+    # Buscar da API
+    try:
+        status_data = fetch_status_data()
+        
+        if status_data and 'temporada' in status_data:
+            temporada = int(status_data['temporada'])
+            # Atualizar cache
+            _TEMPORADA_CACHE = temporada
+            _TEMPORADA_CACHE_TIMESTAMP = current_time
+            return temporada
+    except Exception as e:
+        printdbg(f"Erro ao buscar temporada da API: {e}. Usando fallback (ano atual)")
+    
+    # Fallback para o ano atual do sistema
+    return datetime.now().year
 
 def fetch_pontuados_data(rodada):
     """Obtém dados de atletas pontuados para a rodada especificada (não requer autenticação)."""

@@ -14,7 +14,7 @@ def create_rankings_teams_table(conn: psycopg2.extensions.connection):
             id SERIAL PRIMARY KEY,
             user_id INTEGER NOT NULL,
             team_id INTEGER NOT NULL,
-            configuration_id INTEGER REFERENCES acw_weight_configurations(id),
+            configuration_id INTEGER REFERENCES acw_weight_configurations(id) ON DELETE CASCADE,
             posicao_id INTEGER NOT NULL,
             rodada_atual INTEGER NOT NULL,
             ranking_data JSONB NOT NULL,

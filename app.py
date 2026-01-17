@@ -1012,13 +1012,12 @@ def pagina_inicial():
     finally:
         close_db_connection(conn)
     
-    # Buscar perfis disponíveis de peso de jogo com rankings (top 3 clubes)
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
+        # Temporada atual dinâmica
+        from api_cartola import get_temporada_atual
+        temporada_atual = get_temporada_atual()
         
-        # Buscar rodada atual
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        # Buscar rodada atual da temporada
+        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis WHERE temporada = %s', (temporada_atual,))
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -1044,9 +1043,9 @@ def pagina_inicial():
         cursor.execute('''
             SELECT DISTINCT pj.perfil_id, pj.ultimas_partidas
             FROM acp_peso_jogo_perfis pj
-            WHERE pj.rodada_atual = %s
+            WHERE pj.rodada_atual = %s AND pj.temporada = %s
             ORDER BY pj.perfil_id
-        ''', (rodada_atual,))
+        ''', (rodada_atual, temporada_atual))
         perfis_raw = cursor.fetchall()
         
         perfis_peso_jogo = []
@@ -1055,9 +1054,9 @@ def pagina_inicial():
             cursor.execute('''
                 SELECT clube_id, peso_jogo
                 FROM acp_peso_jogo_perfis
-                WHERE perfil_id = %s AND rodada_atual = %s
+                WHERE perfil_id = %s AND rodada_atual = %s AND temporada = %s
                 ORDER BY peso_jogo DESC
-            ''', (perfil_id, rodada_atual))
+            ''', (perfil_id, rodada_atual, temporada_atual))
             todos_clubes = cursor.fetchall()
             
             descricoes = {
@@ -1118,9 +1117,9 @@ def pagina_inicial():
         cursor.execute('''
             SELECT DISTINCT ps.perfil_id, ps.ultimas_partidas
             FROM acp_peso_sg_perfis ps
-            WHERE ps.rodada_atual = %s
+            WHERE ps.rodada_atual = %s AND ps.temporada = %s
             ORDER BY ps.perfil_id
-        ''', (rodada_atual,))
+        ''', (rodada_atual, temporada_atual))
         perfis_raw = cursor.fetchall()
         
         perfis_peso_sg = []
@@ -1129,9 +1128,9 @@ def pagina_inicial():
             cursor.execute('''
                 SELECT clube_id, peso_sg
                 FROM acp_peso_sg_perfis
-                WHERE perfil_id = %s AND rodada_atual = %s
+                WHERE perfil_id = %s AND rodada_atual = %s AND temporada = %s
                 ORDER BY peso_sg DESC
-            ''', (perfil_id, rodada_atual))
+            ''', (perfil_id, rodada_atual, temporada_atual))
             todos_clubes = cursor.fetchall()
             
             top_clubes_list = []
@@ -1269,6 +1268,7 @@ def pagina_inicial():
         perfis_peso_sg=perfis_peso_sg_limitados,
         clubes_dict=clubes_dict,
         rodada_atual=rodada_atual,
+        temporada_atual=temporada_atual,
         config_default=config_default,
         max_perfis_jogo=max_perfis_jogo,
         max_perfis_sg=max_perfis_sg
@@ -3222,8 +3222,12 @@ def api_modulo_dados(modulo):
     try:
         cursor = conn.cursor()
         
-        # Buscar rodada atual
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        # Temporada atual dinâmica
+        from api_cartola import get_temporada_atual
+        temporada_atual = get_temporada_atual()
+        
+        # Buscar rodada atual da temporada
+        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis WHERE temporada = %s', (temporada_atual,))
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -3297,8 +3301,8 @@ def api_modulo_dados(modulo):
                 cursor.execute(f'''
                     SELECT clube_id, peso_jogo
                     FROM acp_peso_jogo_perfis
-                    WHERE perfil_id = %s AND rodada_atual = %s AND clube_id IN ({placeholders})
-                ''', [perfil_peso_jogo, rodada_atual] + clube_ids)
+                    WHERE perfil_id = %s AND rodada_atual = %s AND temporada = %s AND clube_id IN ({placeholders})
+                ''', [perfil_peso_jogo, rodada_atual, temporada_atual] + clube_ids)
                 
                 for row in cursor.fetchall():
                     if row and len(row) >= 2:
@@ -3322,8 +3326,8 @@ def api_modulo_dados(modulo):
                 cursor.execute(f'''
                     SELECT clube_id, peso_sg
                     FROM acp_peso_sg_perfis
-                    WHERE perfil_id = %s AND rodada_atual = %s AND clube_id IN ({placeholders})
-                ''', [perfil_peso_sg, rodada_atual] + clube_ids)
+                    WHERE perfil_id = %s AND rodada_atual = %s AND temporada = %s AND clube_id IN ({placeholders})
+                ''', [perfil_peso_sg, rodada_atual, temporada_atual] + clube_ids)
                 
                 for row in cursor.fetchall():
                     if row and len(row) >= 2:
