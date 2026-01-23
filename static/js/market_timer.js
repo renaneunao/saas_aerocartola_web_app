@@ -25,7 +25,7 @@ function initMarketTimer() {
         const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const secs = Math.floor((diff % (1000 * 60)) / 1000);
 
-        let timeStr = "Fecha em: ";
+        let timeStr = '<span class="hidden sm:inline">Fecha em: </span>';
         if (days > 0) timeStr += days + "d ";
 
         timeStr += hours.toString().padStart(2, '0') + ":" +

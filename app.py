@@ -4,10 +4,11 @@ import json
 from datetime import datetime, timezone, timedelta
 import os
 from dotenv import load_dotenv
-from api_cartola import get_temporada_atual, get_rodada_atual, get_fechamento_mercado, get_status_mercado
 
 # Carregar variáveis de ambiente do .env
 load_dotenv()
+
+from api_cartola import get_temporada_atual, get_rodada_atual, get_fechamento_mercado, get_status_mercado
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'change-me-to-a-secure-random-value')
@@ -1036,8 +1037,8 @@ def pagina_inicial():
         cursor.execute('''
             SELECT clube_casa_id, clube_visitante_id
             FROM acf_partidas
-            WHERE rodada_id = %s AND valida = TRUE
-        ''', (rodada_atual,))
+            WHERE rodada_id = %s AND valida = TRUE AND temporada = %s
+        ''', (rodada_atual, temporada_atual))
         partidas = cursor.fetchall()
         
         # Criar dicionário de adversários: {clube_id: adversario_id}
@@ -1625,15 +1626,15 @@ def api_perfis_verificar():
         # Verificar perfis de peso de jogo
         cursor.execute("""
             SELECT COUNT(*) FROM acp_peso_jogo_perfis 
-            WHERE rodada_atual = %s
-        """, (rodada_atual,))
+            WHERE rodada_atual = %s AND temporada = %s
+        """, (rodada_atual, temporada_atual))
         count_peso_jogo = cursor.fetchone()[0]
         
         # Verificar perfis de peso SG
         cursor.execute("""
             SELECT COUNT(*) FROM acp_peso_sg_perfis 
-            WHERE rodada_atual = %s
-        """, (rodada_atual,))
+            WHERE rodada_atual = %s AND temporada = %s
+        """, (rodada_atual, temporada_atual))
         count_peso_sg = cursor.fetchone()[0]
         
         tem_peso_jogo = count_peso_jogo > 0
@@ -2007,6 +2008,8 @@ def api_atacante_detalhes(atleta_id):
         # Buscar rodada atual
         rodada_atual = get_rodada_atual()
         
+        temporada_atual = get_temporada_atual()
+        
         # Buscar dados do atacante (mesma estrutura da query em api_modulo_dados)
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
@@ -2014,8 +2017,8 @@ def api_atacante_detalhes(atleta_id):
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 5 AND a.status_id = 7
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.posicao_id = 5 AND a.status_id = 7 AND a.temporada = %s
+        ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2054,7 +2057,8 @@ def api_atacante_detalhes(atleta_id):
                 FROM acf_partidas
                 WHERE rodada_id = %s AND valida = TRUE
                 AND (clube_casa_id = %s OR clube_visitante_id = %s)
-            ''', (rodada_atual, clube_id, clube_id))
+                AND temporada = %s
+            ''', (rodada_atual, clube_id, clube_id, temporada_atual))
             
             partida = cursor.fetchone()
             if partida and len(partida) >= 2:
@@ -2088,8 +2092,8 @@ def api_atacante_detalhes(atleta_id):
                 if config and config.get('perfil_peso_jogo'):
                     cursor.execute('''
                         SELECT peso_jogo FROM acp_peso_jogo_perfis
-                        WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                    ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
+                        WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s AND temporada = %s
+                    ''', (config['perfil_peso_jogo'], rodada_atual, clube_id, temporada_atual))
                     peso_row = cursor.fetchone()
                     if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
                         peso_jogo = float(peso_row[0])
@@ -2114,8 +2118,8 @@ def api_atacante_detalhes(atleta_id):
                     AVG(COALESCE(scout_g, 0)) as avg_g,
                     AVG(COALESCE(scout_a, 0)) as avg_a
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
+                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE AND temporada = %s
+            ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
             if stats_row and len(stats_row) >= 6:
@@ -2132,7 +2136,7 @@ def api_atacante_detalhes(atleta_id):
         escalacoes = 0
         try:
             cursor.execute('''
-                SELECT escalacoes FROM acf_destaques WHERE atleta_id = %s
+                SELECT escalacoes FROM acf_destaques WHERE atleta_id = %s 
             ''', (atleta_id,))
             escalacoes_row = cursor.fetchone()
             if escalacoes_row and escalacoes_row[0] is not None:
@@ -2153,9 +2157,9 @@ def api_atacante_detalhes(atleta_id):
                         SUM(placar_oficial_visitante) as gols_sofridos,
                         COUNT(*) as jogos
                     FROM acf_partidas
-                    WHERE clube_casa_id = %s AND rodada_id < %s AND valida = TRUE
+                    WHERE clube_casa_id = %s AND rodada_id < %s AND valida = TRUE AND temporada = %s
                       AND placar_oficial_visitante IS NOT NULL
-                ''', (adversario_id, rodada_atual))
+                ''', (adversario_id, rodada_atual, temporada_atual))
                 casa_row = cursor.fetchone()
                 if casa_row and casa_row[1] and casa_row[1] > 0:
                     adversario_gols_sofridos_casa = float(casa_row[0]) if casa_row[0] else 0
@@ -2167,9 +2171,9 @@ def api_atacante_detalhes(atleta_id):
                         SUM(placar_oficial_mandante) as gols_sofridos,
                         COUNT(*) as jogos
                     FROM acf_partidas
-                    WHERE clube_visitante_id = %s AND rodada_id < %s AND valida = TRUE
+                    WHERE clube_visitante_id = %s AND rodada_id < %s AND valida = TRUE AND temporada = %s
                       AND placar_oficial_mandante IS NOT NULL
-                ''', (adversario_id, rodada_atual))
+                ''', (adversario_id, rodada_atual, temporada_atual))
                 fora_row = cursor.fetchone()
                 if fora_row and fora_row[1] and fora_row[1] > 0:
                     adversario_gols_sofridos_fora = float(fora_row[0]) if fora_row[0] else 0
@@ -2183,9 +2187,9 @@ def api_atacante_detalhes(atleta_id):
             try:
                 cursor.execute('''
                     SELECT clube_casa_id, clube_visitante_id FROM acf_partidas
-                    WHERE rodada_id = %s AND valida = TRUE
+                    WHERE rodada_id = %s AND valida = TRUE AND temporada = %s
                     AND (clube_casa_id = %s OR clube_visitante_id = %s)
-                ''', (rodada_atual, clube_id, clube_id))
+                ''', (rodada_atual, temporada_atual, clube_id, clube_id))
                 partida_row = cursor.fetchone()
                 if partida_row and len(partida_row) >= 2:
                     joga_em_casa = (partida_row[0] == clube_id)
@@ -2200,8 +2204,8 @@ def api_atacante_detalhes(atleta_id):
                 SELECT SUM(scout_g) as total_gols
                 FROM acf_pontuados
                 WHERE atleta_id = %s AND rodada_id >= %s AND rodada_id < %s
-                  AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual - rodadas_analisadas, rodada_atual))
+                  AND entrou_em_campo = TRUE AND temporada = %s
+            ''', (atleta_id, rodada_atual - rodadas_analisadas, rodada_atual, temporada_atual))
             gols_row = cursor.fetchone()
             if gols_row and gols_row[0] is not None:
                 gols_ultimas_rodadas = int(gols_row[0]) if gols_row[0] > 0 else 0
@@ -2220,8 +2224,8 @@ def api_atacante_detalhes(atleta_id):
                     SUM(COALESCE(scout_cv, 0)) as total_cv
                 FROM acf_pontuados
                 WHERE atleta_id = %s AND rodada_id >= %s AND rodada_id < %s
-                  AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual - rodadas_analisadas, rodada_atual))
+                  AND entrou_em_campo = TRUE AND temporada = %s
+            ''', (atleta_id, rodada_atual - rodadas_analisadas, rodada_atual, temporada_atual))
             faltas_cartoes_row = cursor.fetchone()
             if faltas_cartoes_row:
                 faltas_cometidas_ultimas = int(faltas_cartoes_row[0]) if faltas_cartoes_row[0] else 0
@@ -2420,6 +2424,8 @@ def api_lateral_detalhes(atleta_id):
         # Buscar rodada atual
         rodada_atual = get_rodada_atual()
         
+        temporada_atual = get_temporada_atual()
+        
         # Buscar dados do lateral
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
@@ -2427,8 +2433,8 @@ def api_lateral_detalhes(atleta_id):
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 2 AND a.status_id = 7
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.posicao_id = 2 AND a.status_id = 7 AND a.temporada = %s
+        ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2460,8 +2466,8 @@ def api_lateral_detalhes(atleta_id):
                 SELECT clube_casa_id, clube_visitante_id
                 FROM acf_partidas
                 WHERE rodada_id = %s AND valida = TRUE
-                AND (clube_casa_id = %s OR clube_visitante_id = %s)
-            ''', (rodada_atual, clube_id, clube_id))
+                AND (clube_casa_id = %s OR clube_visitante_id = %s) AND temporada = %s
+            ''', (rodada_atual, clube_id, clube_id, temporada_atual))
             partida = cursor.fetchone()
             if partida and len(partida) >= 2:
                 adversario_id = partida[1] if partida[0] == clube_id else partida[0]
@@ -2493,8 +2499,8 @@ def api_lateral_detalhes(atleta_id):
                     if config.get('perfil_peso_jogo'):
                         cursor.execute('''
                             SELECT peso_jogo FROM acp_peso_jogo_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
+                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s AND temporada = %s
+                        ''', (config['perfil_peso_jogo'], rodada_atual, clube_id, temporada_atual))
                         peso_row = cursor.fetchone()
                         if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
                             peso_jogo = float(peso_row[0])
@@ -2502,8 +2508,8 @@ def api_lateral_detalhes(atleta_id):
                     if config.get('perfil_peso_sg'):
                         cursor.execute('''
                             SELECT peso_sg FROM acp_peso_sg_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_sg'], rodada_atual, clube_id))
+                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s AND temporada = %s
+                        ''', (config['perfil_peso_sg'], rodada_atual, clube_id, temporada_atual))
                         sg_row = cursor.fetchone()
                         if sg_row and len(sg_row) > 0 and sg_row[0] is not None:
                             peso_sg = float(sg_row[0])
@@ -2528,8 +2534,8 @@ def api_lateral_detalhes(atleta_id):
                     AVG(COALESCE(scout_fs, 0)) as avg_fs,
                     AVG(COALESCE(scout_fd, 0)) as avg_fd
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
+                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE AND temporada = %s
+            ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
             if stats_row and len(stats_row) >= 6:
@@ -2626,14 +2632,16 @@ def api_goleiro_detalhes(atleta_id):
         
         rodada_atual = get_rodada_atual()
         
+        temporada_atual = get_temporada_atual()
+        
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num,
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 1 AND a.status_id = 7
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.posicao_id = 1 AND a.status_id = 7 AND a.temporada = %s
+        ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2663,8 +2671,8 @@ def api_goleiro_detalhes(atleta_id):
                 SELECT clube_casa_id, clube_visitante_id
                 FROM acf_partidas
                 WHERE rodada_id = %s AND valida = TRUE
-                AND (clube_casa_id = %s OR clube_visitante_id = %s)
-            ''', (rodada_atual, clube_id, clube_id))
+                AND (clube_casa_id = %s OR clube_visitante_id = %s) AND temporada = %s
+            ''', (rodada_atual, clube_id, clube_id, temporada_atual))
             partida = cursor.fetchone()
             if partida and len(partida) >= 2:
                 adversario_id = partida[1] if partida[0] == clube_id else partida[0]
@@ -2675,7 +2683,9 @@ def api_goleiro_detalhes(atleta_id):
         adversario_escudo_url = ''
         if adversario_id:
             try:
-                cursor.execute('SELECT nome FROM acf_clubes WHERE id = %s', (adversario_id,))
+                cursor.execute('''
+                    SELECT nome FROM acf_clubes WHERE id = %s
+                ''', (adversario_id,))
                 adv_row = cursor.fetchone()
                 if adv_row and len(adv_row) >= 1:
                     adversario_nome = adv_row[0] if adv_row[0] else 'N/A'
@@ -2695,8 +2705,8 @@ def api_goleiro_detalhes(atleta_id):
                     if config.get('perfil_peso_jogo'):
                         cursor.execute('''
                             SELECT peso_jogo FROM acp_peso_jogo_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
+                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s AND temporada = %s
+                        ''', (config['perfil_peso_jogo'], rodada_atual, clube_id, temporada_atual))
                         peso_row = cursor.fetchone()
                         if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
                             peso_jogo = float(peso_row[0])
@@ -2704,8 +2714,8 @@ def api_goleiro_detalhes(atleta_id):
                     if config.get('perfil_peso_sg'):
                         cursor.execute('''
                             SELECT peso_sg FROM acp_peso_sg_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_sg'], rodada_atual, clube_id))
+                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s AND temporada = %s
+                        ''', (config['perfil_peso_sg'], rodada_atual, clube_id, temporada_atual))
                         sg_row = cursor.fetchone()
                         if sg_row and len(sg_row) > 0 and sg_row[0] is not None:
                             peso_sg = float(sg_row[0])
@@ -2721,8 +2731,8 @@ def api_goleiro_detalhes(atleta_id):
                 SELECT 
                     AVG(COALESCE(scout_de, 0)) as avg_de
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
+                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE AND temporada = %s
+            ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
             if stats_row and stats_row[0] is not None:
@@ -2732,8 +2742,8 @@ def api_goleiro_detalhes(atleta_id):
             cursor.execute('''
                 SELECT AVG(COALESCE(pontos_num, 0))
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
+                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE AND temporada = %s
+            ''', (atleta_id, rodada_atual, temporada_atual))
             gols_row = cursor.fetchone()
             # Gols sofridos são calculados negativamente na pontuação
             # Vamos buscar das partidas
@@ -2747,7 +2757,8 @@ def api_goleiro_detalhes(atleta_id):
                     WHERE (clube_casa_id = %s OR clube_visitante_id = %s)
                       AND rodada_id < %s AND valida = TRUE
                       AND (placar_oficial_mandante IS NOT NULL AND placar_oficial_visitante IS NOT NULL)
-                ''', (clube_id, clube_id, clube_id, clube_id, rodada_atual))
+                      AND temporada = %s
+                ''', (clube_id, clube_id, clube_id, clube_id, rodada_atual, temporada_atual))
                 gols_sofridos_row = cursor.fetchone()
                 if gols_sofridos_row and gols_sofridos_row[0] is not None:
                     media_gols_sofridos = float(gols_sofridos_row[0])
@@ -2834,14 +2845,16 @@ def api_zagueiro_detalhes(atleta_id):
         
         rodada_atual = get_rodada_atual()
         
+        temporada_atual = get_temporada_atual()
+        
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num,
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 3 AND a.status_id = 7
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.posicao_id = 3 AND a.status_id = 7 AND a.temporada = %s
+        ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2872,7 +2885,8 @@ def api_zagueiro_detalhes(atleta_id):
                 FROM acf_partidas
                 WHERE rodada_id = %s AND valida = TRUE
                 AND (clube_casa_id = %s OR clube_visitante_id = %s)
-            ''', (rodada_atual, clube_id, clube_id))
+                AND temporada = %s
+            ''', (rodada_atual, clube_id, clube_id, temporada_atual))
             partida = cursor.fetchone()
             if partida and len(partida) >= 2:
                 adversario_id = partida[1] if partida[0] == clube_id else partida[0]
@@ -2903,8 +2917,8 @@ def api_zagueiro_detalhes(atleta_id):
                     if config.get('perfil_peso_jogo'):
                         cursor.execute('''
                             SELECT peso_jogo FROM acp_peso_jogo_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
+                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s AND temporada = %s
+                        ''', (config['perfil_peso_jogo'], rodada_atual, clube_id, temporada_atual))
                         peso_row = cursor.fetchone()
                         if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
                             peso_jogo = float(peso_row[0])
@@ -2912,8 +2926,8 @@ def api_zagueiro_detalhes(atleta_id):
                     if config.get('perfil_peso_sg'):
                         cursor.execute('''
                             SELECT peso_sg FROM acp_peso_sg_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_sg'], rodada_atual, clube_id))
+                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s AND temporada = %s
+                        ''', (config['perfil_peso_sg'], rodada_atual, clube_id, temporada_atual))
                         sg_row = cursor.fetchone()
                         if sg_row and len(sg_row) > 0 and sg_row[0] is not None:
                             peso_sg = float(sg_row[0])
@@ -2927,8 +2941,8 @@ def api_zagueiro_detalhes(atleta_id):
             cursor.execute('''
                 SELECT AVG(COALESCE(scout_ds, 0)) as avg_ds
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
+                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE AND temporada = %s
+            ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
             if stats_row and stats_row[0] is not None:
@@ -2957,6 +2971,7 @@ def api_zagueiro_detalhes(atleta_id):
                     rankings = get_team_rankings(
                         conn, user['id'], team_id=team_id,
                         configuration_id=config.get('id'), posicao_id=3,
+                        temporada_atual=temporada_atual,
                         rodada_atual=rodada_atual
                     )
                     if rankings and len(rankings) > 0:
@@ -3015,14 +3030,16 @@ def api_meia_detalhes(atleta_id):
         
         rodada_atual = get_rodada_atual()
         
+        temporada_atual = get_temporada_atual()
+        
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num,
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 4 AND a.status_id = 7
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.posicao_id = 4 AND a.status_id = 7 AND a.temporada = %s
+        ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -3053,7 +3070,8 @@ def api_meia_detalhes(atleta_id):
                 FROM acf_partidas
                 WHERE rodada_id = %s AND valida = TRUE
                 AND (clube_casa_id = %s OR clube_visitante_id = %s)
-            ''', (rodada_atual, clube_id, clube_id))
+                AND temporada = %s
+            ''', (rodada_atual, clube_id, clube_id, temporada_atual))
             partida = cursor.fetchone()
             if partida and len(partida) >= 2:
                 adversario_id = partida[1] if partida[0] == clube_id else partida[0]
@@ -3082,8 +3100,8 @@ def api_meia_detalhes(atleta_id):
                 if config and config.get('perfil_peso_jogo'):
                     cursor.execute('''
                         SELECT peso_jogo FROM acp_peso_jogo_perfis
-                        WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                    ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
+                        WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s AND temporada = %s
+                    ''', (config['perfil_peso_jogo'], rodada_atual, clube_id, temporada_atual))
                     peso_row = cursor.fetchone()
                     if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
                         peso_jogo = float(peso_row[0])
@@ -3108,8 +3126,8 @@ def api_meia_detalhes(atleta_id):
                     AVG(COALESCE(scout_fs, 0)) as avg_fs,
                     AVG(COALESCE(scout_fd, 0)) as avg_fd
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
+                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE AND temporada = %s
+            ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
             if stats_row and len(stats_row) >= 6:
@@ -3143,6 +3161,7 @@ def api_meia_detalhes(atleta_id):
                     rankings = get_team_rankings(
                         conn, user['id'], team_id=team_id,
                         configuration_id=config.get('id'), posicao_id=4,
+                        temporada_atual=temporada_atual,
                         rodada_atual=rodada_atual
                     )
                     if rankings and len(rankings) > 0:
@@ -3225,8 +3244,8 @@ def api_modulo_dados(modulo):
         cursor.execute('''
             SELECT clube_casa_id, clube_visitante_id
             FROM acf_partidas
-            WHERE rodada_id = %s AND valida = TRUE
-        ''', (rodada_atual,))
+            WHERE rodada_id = %s AND valida = TRUE AND temporada = %s
+        ''', (rodada_atual, temporada_atual))
         partidas = cursor.fetchall()
         
         adversarios_dict = {}
@@ -3259,8 +3278,8 @@ def api_modulo_dados(modulo):
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             LEFT JOIN laterais_esquerdos le ON a.atleta_id = le.atleta_id
-            WHERE a.posicao_id = %s AND a.status_id = 7
-        ''', (posicao_id,))
+            WHERE a.posicao_id = %s AND a.status_id = 7 AND a.temporada = %s
+        ''', (posicao_id, temporada_atual))
         atletas_raw = cursor.fetchall()
         
         # Buscar peso_jogo e peso_sg das tabelas de perfis baseado na configuração do usuário
@@ -3279,8 +3298,8 @@ def api_modulo_dados(modulo):
                 cursor.execute(f'''
                     SELECT clube_id, peso_jogo
                     FROM acp_peso_jogo_perfis
-                    WHERE perfil_id = %s AND rodada_atual = %s AND temporada = %s AND clube_id IN ({placeholders})
-                ''', [perfil_peso_jogo, rodada_atual, temporada_atual] + clube_ids)
+                    WHERE perfil_id = %s AND rodada_atual = %s AND clube_id IN ({placeholders}) AND temporada = %s
+                ''', [perfil_peso_jogo, rodada_atual] + clube_ids + [temporada_atual])
                 
                 for row in cursor.fetchall():
                     if row and len(row) >= 2:
@@ -3304,8 +3323,8 @@ def api_modulo_dados(modulo):
                 cursor.execute(f'''
                     SELECT clube_id, peso_sg
                     FROM acp_peso_sg_perfis
-                    WHERE perfil_id = %s AND rodada_atual = %s AND temporada = %s AND clube_id IN ({placeholders})
-                ''', [perfil_peso_sg, rodada_atual, temporada_atual] + clube_ids)
+                    WHERE perfil_id = %s AND rodada_atual = %s AND clube_id IN ({placeholders}) AND temporada = %s
+                ''', [perfil_peso_sg, rodada_atual] + clube_ids + [temporada_atual])
                 
                 for row in cursor.fetchall():
                     if row and len(row) >= 2:
@@ -3370,9 +3389,9 @@ def api_modulo_dados(modulo):
                            AVG(scout_g) as avg_g,
                            AVG(scout_a) as avg_a
                     FROM acf_pontuados
-                    WHERE atleta_id IN ({placeholders}) AND rodada_id <= %s AND entrou_em_campo = TRUE
+                    WHERE atleta_id IN ({placeholders}) AND rodada_id <= %s AND entrou_em_campo = TRUE AND temporada = %s
                     GROUP BY atleta_id
-                ''', atleta_ids + [rodada_atual - 1])
+                ''', atleta_ids + [rodada_atual - 1, temporada_atual])
                 
                 for row in cursor.fetchall():
                     if row and len(row) >= 7:
@@ -3435,14 +3454,14 @@ def api_modulo_dados(modulo):
                                    AVG(CASE WHEN le.atleta_id IS NOT NULL THEN p.scout_a END) as avg_a_cedidos_esq,
                                    AVG(CASE WHEN le.atleta_id IS NULL THEN p.scout_a END) as avg_a_cedidos_dir
                             FROM acf_pontuados p
-                            JOIN acf_partidas pt ON p.rodada_id = pt.rodada_id
+                            JOIN acf_partidas pt ON p.rodada_id = pt.rodada_id AND p.temporada = pt.temporada
                             LEFT JOIN laterais_esquerdos le ON p.atleta_id = le.atleta_id
-                            WHERE p.posicao_id = %s 
+                            WHERE p.posicao_id = %s AND p.temporada = %s
                               AND ((pt.clube_casa_id IN ({placeholders}) AND p.clube_id = pt.clube_visitante_id)
                                    OR (pt.clube_visitante_id IN ({placeholders}) AND p.clube_id = pt.clube_casa_id))
                               AND p.rodada_id <= %s AND p.entrou_em_campo = TRUE
-                            GROUP BY adversario_id
-                        ''', [posicao_id] + adversario_ids + adversario_ids + [rodada_atual - 1])
+                            GROUP BY 1
+                        ''', [posicao_id, temporada_atual] + adversario_ids + adversario_ids + [rodada_atual - 1])
                         
                         for row in cursor.fetchall():
                             if row:
@@ -3497,13 +3516,13 @@ def api_modulo_dados(modulo):
                                    AVG(p.scout_g) as avg_g_cedidos,
                                    AVG(p.scout_a) as avg_a_cedidos
                             FROM acf_pontuados p
-                            JOIN acf_partidas pt ON p.rodada_id = pt.rodada_id
-                            WHERE p.posicao_id = %s 
+                            JOIN acf_partidas pt ON p.rodada_id = pt.rodada_id AND p.temporada = pt.temporada
+                            WHERE p.posicao_id = %s AND p.temporada = %s
                               AND ((pt.clube_casa_id IN ({placeholders}) AND p.clube_id = pt.clube_visitante_id)
                                    OR (pt.clube_visitante_id IN ({placeholders}) AND p.clube_id = pt.clube_casa_id))
                               AND p.rodada_id <= %s AND p.entrou_em_campo = TRUE
-                            GROUP BY adversario_id
-                        ''', [posicao_id] + adversario_ids + adversario_ids + [rodada_atual - 1])
+                            GROUP BY 1
+                        ''', [posicao_id, temporada_atual] + adversario_ids + adversario_ids + [rodada_atual - 1])
                         
                         for row in cursor.fetchall():
                             if row:
@@ -3566,9 +3585,9 @@ def api_modulo_dados(modulo):
                         FROM acf_partidas
                         WHERE clube_casa_id IN ({placeholders})
                           AND rodada_id < %s AND valida = TRUE 
-                          AND placar_oficial_mandante IS NOT NULL
+                          AND placar_oficial_mandante IS NOT NULL AND temporada = %s
                         GROUP BY clube_casa_id
-                    ''', adversario_ids + [rodada_atual])
+                    ''', adversario_ids + [rodada_atual, temporada_atual])
                     
                     for row in cursor.fetchall():
                         if row and len(row) >= 3:
@@ -3589,9 +3608,9 @@ def api_modulo_dados(modulo):
                         FROM acf_partidas
                         WHERE clube_visitante_id IN ({placeholders})
                           AND rodada_id < %s AND valida = TRUE 
-                          AND placar_oficial_visitante IS NOT NULL
+                          AND placar_oficial_visitante IS NOT NULL AND temporada = %s
                         GROUP BY clube_visitante_id
-                    ''', adversario_ids + [rodada_atual])
+                    ''', adversario_ids + [rodada_atual, temporada_atual])
                     
                     for row in cursor.fetchall():
                         if row and len(row) >= 3:
@@ -4211,6 +4230,7 @@ def api_escalacao_dados():
     """API para fornecer dados necessários para cálculo de escalação ideal"""
     user = get_current_user()
     conn = get_db_connection()
+    temporada_atual = get_temporada_atual()
     
     try:
         from models.user_escalacao_config import create_user_escalacao_config_table
@@ -4304,8 +4324,8 @@ def api_escalacao_dados():
                         cursor.execute(f'''
                             SELECT atleta_id, preco_num, status_id
                             FROM acf_atletas
-                            WHERE atleta_id IN ({placeholders})
-                        ''', atleta_ids_ranking)
+                            WHERE atleta_id IN ({placeholders}) AND temporada = %s
+                        ''', atleta_ids_ranking + [temporada_atual])
                         rows_atletas = cursor.fetchall()
                         
                         for row in rows_atletas:
@@ -4452,10 +4472,10 @@ def api_escalacao_dados():
         cursor.execute('''
             SELECT clube_id, peso_sg
             FROM acp_peso_sg_perfis
-            WHERE perfil_id = %s AND rodada_atual = %s
+            WHERE perfil_id = %s AND rodada_atual = %s AND temporada = %s
             ORDER BY peso_sg DESC
             LIMIT 10
-        ''', (perfil_peso_sg, rodada_atual))
+        ''', (perfil_peso_sg, rodada_atual, temporada_atual))
         clubes_sg = [{'clube_id': row[0], 'peso_sg': float(row[1])} for row in cursor.fetchall()]
         
         # Buscar TODOS os goleiros (para hack do goleiro) - incluindo não prováveis
@@ -4463,9 +4483,9 @@ def api_escalacao_dados():
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num, a.status_id
             FROM acf_atletas a
-            WHERE a.posicao_id = 1
+            WHERE a.posicao_id = 1 AND a.temporada = %s
             ORDER BY a.preco_num DESC
-        ''')
+        ''', (temporada_atual,))
         
         rows_goleiros = cursor.fetchall()
         print(f"[DEBUG] Query retornou {len(rows_goleiros)} goleiros da tabela acf_atletas")
@@ -4518,20 +4538,20 @@ def api_escalacao_dados():
         cursor.execute('''
             SELECT clube_id, peso_jogo
             FROM acp_peso_jogo_perfis
-            WHERE perfil_id = %s AND rodada_atual = %s
+            WHERE perfil_id = %s AND rodada_atual = %s AND temporada = %s
             ORDER BY peso_jogo DESC
             LIMIT 5
-        ''', (perfil_peso_jogo, rodada_atual))
+        ''', (perfil_peso_jogo, rodada_atual, temporada_atual))
         top5_peso_jogo = [{'clube_id': row[0], 'peso_jogo': float(row[1])} for row in cursor.fetchall()]
         
         # Buscar top 5 de peso SG
         cursor.execute('''
             SELECT clube_id, peso_sg
             FROM acp_peso_sg_perfis
-            WHERE perfil_id = %s AND rodada_atual = %s
+            WHERE perfil_id = %s AND rodada_atual = %s AND temporada = %s
             ORDER BY peso_sg DESC
             LIMIT 5
-        ''', (perfil_peso_sg, rodada_atual))
+        ''', (perfil_peso_sg, rodada_atual, temporada_atual))
         top5_peso_sg = [{'clube_id': row[0], 'peso_sg': float(row[1])} for row in cursor.fetchall()]
         
         # Buscar dados de clubes com escudos para os cards
@@ -4623,15 +4643,17 @@ def api_goleiros_nulos():
         
         cursor = conn.cursor()
         
+        temporada_atual = get_temporada_atual()
+        
         # Buscar TODOS os goleiros da tabela
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num, a.status_id,
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             LEFT JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.posicao_id = 1
+            WHERE a.posicao_id = 1 AND a.temporada = %s
             ORDER BY a.preco_num DESC
-        ''')
+        ''', (temporada_atual,))
         
         todos_goleiros = []
         goleiros_nulos = []
@@ -5005,6 +5027,8 @@ def api_admin_laterais():
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
+        temporada_atual = get_temporada_atual()
+        
         # Buscar todos os laterais (posicao_id = 2)
         # Join com laterais_esquerdos para saber se é esquerdo
         cursor.execute('''
@@ -5014,9 +5038,9 @@ def api_admin_laterais():
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             LEFT JOIN laterais_esquerdos le ON a.atleta_id = le.atleta_id
-            WHERE a.posicao_id = 2
+            WHERE a.posicao_id = 2 AND a.temporada = %s
             ORDER BY c.nome, a.apelido
-        ''')
+        ''', (temporada_atual,))
         laterais = cursor.fetchall()
         
         result = []
@@ -5099,13 +5123,16 @@ def api_admin_fotos_atletas():
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
+        temporada_atual = get_temporada_atual()
+        
         # Buscar todos os atletas
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, c.nome as clube_nome
             FROM acf_atletas a
             LEFT JOIN acf_clubes c ON a.clube_id = c.id
+            WHERE a.temporada = %s
             ORDER BY c.nome, a.apelido
-        ''')
+        ''', (temporada_atual,))
         atletas = cursor.fetchall()
         
         # Diretório de fotos
@@ -5488,12 +5515,15 @@ def api_admin_visualizar_atletas():
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
+        temporada_atual = get_temporada_atual()
+        
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, c.nome as clube_nome, c.id as clube_id
             FROM acf_atletas a
             LEFT JOIN acf_clubes c ON a.clube_id = c.id
+            WHERE a.temporada = %s
             ORDER BY c.nome, a.apelido, a.nome
-        ''')
+        ''', (temporada_atual,))
         atletas_raw = cursor.fetchall()
         
         foto_dir = Path('static/cartola_imgs/foto_atletas')
