@@ -1614,6 +1614,8 @@ def api_perfis_verificar():
     cursor = conn.cursor()
     try:
         rodada_atual = get_rodada_atual()
+        temporada_atual = get_temporada_atual()
+        
         if not rodada_atual:
             return jsonify({
                 'tem_perfis': False,
