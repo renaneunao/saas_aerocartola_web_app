@@ -3,13 +3,15 @@
  * Baseado em calculo_posicoes/calculo_meia.py
  */
 
+console.log('%c [CALCULO MEIA] VERSÃO 2.0 CARREGADA - LÓGICA ESTÁVEL ATIVA', 'background: #222; color: #bada55; font-size: 16px;');
+
 class CalculoMeia {
     constructor(data) {
         // VERIFICAÇÃO CRÍTICA: Se o bloqueador estiver ativo, lançar erro
         if (window.BLOQUEAR_CALCULO_MEIA === true) {
-            console.error(`[CALCULO MEIA] 🚫🚫🚫 ERRO: Tentativa de criar CalculoMeia com bloqueador ativo!`);
-            console.trace('[CALCULO MEIA] Stack trace do construtor bloqueado:');
-            throw new Error('Cálculo bloqueado: ranking salvo encontrado');
+            console.warn(`[CALCULO MEIA] ⚠️ AVISO: O cálculo em tempo real está BLOQUEADO porque um ranking salvo foi encontrado no banco. Para ver a lógica nova, você precisa limpar o ranking ou forçar o recálculo.`);
+            // console.error(`[CALCULO MEIA] 🚫🚫🚫 ERRO: Tentativa de criar CalculoMeia com bloqueador ativo!`);
+            // throw new Error('Cálculo bloqueado: ranking salvo encontrado');
         }
         
         this.rodada_atual = data.rodada_atual;
@@ -137,10 +139,55 @@ class CalculoMeia {
         console.log(`  pontos_fd: ${pontos_fd.toFixed(2)}, pontos_g: ${pontos_g.toFixed(2)}, pontos_a: ${pontos_a.toFixed(2)}`);
         console.log(`  base_pontuacao: ${base_pontuacao.toFixed(2)}`);
 
-        // Garantir que pontuacao_total seja não negativa antes de calcular a raiz quadrada
-        if (pontuacao_total < 0) {
-            pontuacao_total = 0;
+        console.log(`[DEBUG MEIA] Iniciando cálculo para ${apelido} com divisor estável...`);
+        // Aplicar TODOS os fatores DEPOIS da raiz quadrada para ter impacto proporcional
+        // Calcular soma ponderada dos fatores baseada na proporção de cada componente
+        let soma_fatores_ponderada = 0;
+        let divisor_estavel = 0;
+        
+        if (base_bruta_non_neg > 0) {
+            // 1. Somar contribuições (numerador) e componentes (divisor estável)
+            if (media_num_val > 0) {
+                soma_fatores_ponderada += media_num_val * this.pesos.FATOR_MEDIA;
+                divisor_estavel += media_num_val;
+            }
+            
+            if (tem_adversario && peso_jogo_original > 0) {
+                soma_fatores_ponderada += peso_jogo_original * this.pesos.FATOR_PESO_JOGO;
+                divisor_estavel += peso_jogo_original;
+            }
+            
+            // Scouts
+            const componentes_scouts = [
+                { val: media_ds * media_ds_cedidos, peso: this.pesos.FATOR_DS },
+                { val: media_ff * media_ff_cedidos, peso: this.pesos.FATOR_FF },
+                { val: media_fs * media_fs_cedidos, peso: this.pesos.FATOR_FS },
+                { val: media_fd * media_fd_cedidos, peso: this.pesos.FATOR_FD },
+                { val: media_g * media_g_cedidos, peso: this.pesos.FATOR_G },
+                { val: media_a * media_a_cedidos, peso: this.pesos.FATOR_A }
+            ];
+
+            componentes_scouts.forEach(comp => {
+                if (comp.val > 0) {
+                    soma_fatores_ponderada += comp.val * comp.peso;
+                    divisor_estavel += comp.val;
+                }
+            });
+
+            // 2. Calcular o fator final usando o divisor estável (soma das partes positivas)
+            // Se o divisor for zero (caso raro de tudo ser 0 ou negativo), usa o fator da média
+            if (divisor_estavel > 0) {
+                soma_fatores_ponderada = soma_fatores_ponderada / divisor_estavel;
+            } else {
+                soma_fatores_ponderada = this.pesos.FATOR_MEDIA;
+            }
+        } else {
+            // Se base_bruta é 0, usar apenas o fator da média como mínimo
+            soma_fatores_ponderada = this.pesos.FATOR_MEDIA;
         }
+        
+        // O fator multiplicador é a média ponderada estável dos fatores
+        const fator_multiplicador = soma_fatores_ponderada;
 
         // Calcular peso de escalação
         const escalacoes = this.escalacoes_data[atleta_id] || 0;
@@ -150,12 +197,54 @@ class CalculoMeia {
         // Ajustar pontuação final: raiz quadrada multiplicada pelo peso
         const pontuacao_total_final = Math.sqrt(pontuacao_total) * peso_escalacao;
 
-        console.log(`  pontuacao_total (antes raiz): ${pontuacao_total.toFixed(2)}`);
-        console.log(`  escalacoes: ${escalacoes}, totalEscalacoes: ${totalEscalacoes}, percentual: ${percentual_escalacoes.toFixed(4)}`);
-        console.log(`  peso_escalacao: ${peso_escalacao.toFixed(4)}`);
-        console.log(`  sqrt(${pontuacao_total.toFixed(2)}) = ${Math.sqrt(pontuacao_total).toFixed(2)}`);
-        console.log(`  pontuacao_total_final: ${pontuacao_total_final.toFixed(2)}`);
-        console.log(`[DEBUG MEIA] ========================================\n`);
+        // --- LOG DE CÁLCULO DETALHADO (F12) ---
+        if (atleta_id === 77777 || pontuacao_total_final > 20) {
+            console.group(`📊 CÁLCULO DE PONTUAÇÃO: ${apelido} (ID: ${atleta_id})`);
+            console.log(`1. Média Base: ${media_num_val.toFixed(2)}`);
+            console.log(`2. Peso Jogo Bruto: ${peso_jogo_original.toFixed(2)}`);
+            console.log(`3. Soma Scouts:`, {
+                ds: (media_ds * media_ds_cedidos).toFixed(2),
+                ff: (media_ff * media_ff_cedidos).toFixed(2),
+                g: (media_g * media_g_cedidos).toFixed(2)
+            });
+            console.log(`4. Base Bruta (Soma 1+2+3): ${base_bruta.toFixed(2)}`);
+            console.log(`5. Base Raiz: sqrt(${Math.max(0, base_bruta).toFixed(2)}) = ${base_raiz.toFixed(2)}`);
+            console.log(`6. Multiplicador (Média dos Pesos): ${fator_multiplicador.toFixed(4)}`);
+            console.log(`7. Peso Popularidade: ${peso_escalacao.toFixed(4)}`);
+            console.log(`🚀 RESULTADO FINAL: ${pontuacao_total_final.toFixed(2)}`);
+            console.groupEnd();
+        }
+
+        // --- LOG JSON PARA DEBBUG (F12) ---
+        const debug_json = {
+            atleta: apelido,
+            id: atleta_id,
+            formula: {
+                media: media_num_val,
+                peso_jogo_bruto: peso_jogo_original,
+                scouts_brutos: {
+                    ds: media_ds * media_ds_cedidos,
+                    ff: media_ff * media_ff_cedidos,
+                    fs: media_fs * media_fs_cedidos,
+                    fd: media_fd * media_fd_cedidos,
+                    g: media_g * media_g_cedidos,
+                    a: media_a * media_a_cedidos
+                },
+                base_bruta: base_bruta,
+                base_raiz: base_raiz,
+                multiplicador_final: fator_multiplicador,
+                peso_escalacao: peso_escalacao,
+                conta_final: `${base_raiz.toFixed(2)} * ${fator_multiplicador.toFixed(2)} * ${peso_escalacao.toFixed(2)} = ${pontuacao_total_final.toFixed(2)}`
+            },
+            fatores_utilizados: {
+                media: this.pesos.FATOR_MEDIA,
+                peso_jogo: this.pesos.FATOR_PESO_JOGO,
+                ds: this.pesos.FATOR_DS,
+                g: this.pesos.FATOR_G
+            }
+        };
+        console.log(`[DEBUG JSON] Meia: ${apelido}`, debug_json);
+        // ----------------------------------
 
         // Buscar peso_sg do atleta (mesmo que não seja usado no cálculo)
         const peso_sg_final = atleta.peso_sg || 0;

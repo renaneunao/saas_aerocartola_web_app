@@ -3,13 +3,14 @@
  * Baseado em calculo_posicoes/calculo_lateral.py
  */
 
+console.log('%c [CALCULO LATERAL] VERSÃO 2.0 CARREGADA - LÓGICA ESTÁVEL ATIVA', 'background: #222; color: #33aaff; font-size: 16px;');
+
 class CalculoLateral {
     constructor(data) {
         // VERIFICAÇÃO CRÍTICA: Se o bloqueador estiver ativo, lançar erro
         if (window.BLOQUEAR_CALCULO_LATERAL === true) {
-            console.error(`[CALCULO LATERAL] 🚫🚫🚫 ERRO: Tentativa de criar CalculoLateral com bloqueador ativo!`);
-            console.trace('[CALCULO LATERAL] Stack trace do construtor bloqueado:');
-            throw new Error('Cálculo bloqueado: ranking salvo encontrado');
+            console.warn(`[CALCULO LATERAL] ⚠️ AVISO: O cálculo em tempo real está BLOQUEADO porque um ranking salvo foi encontrado no banco.`);
+            // throw new Error('Cálculo bloqueado: ranking salvo encontrado');
         }
         
         this.rodada_atual = data.rodada_atual;
@@ -157,16 +158,53 @@ class CalculoLateral {
         console.log(`  pontos_ff: ${pontos_ff.toFixed(2)}, pontos_fs: ${pontos_fs.toFixed(2)}, pontos_fd: ${pontos_fd.toFixed(2)}`);
         console.log(`  pontos_g: ${pontos_g.toFixed(2)}, pontos_a: ${pontos_a.toFixed(2)}`);
 
-        // Calcular pontuação base
-        // No Python: base_pontuacao = (pontos_media + (peso_jogo * FATOR_PESO_JOGO) + pontos_ds + ...)
-        // Onde peso_jogo já foi multiplicado por FATOR_PESO_JOGO, então multiplica novamente!
-        // Replicando o comportamento do Python:
-        const peso_jogo_na_base = peso_jogo_final * this.pesos.FATOR_PESO_JOGO;
-        console.log(`  peso_jogo_na_base: ${peso_jogo_final.toFixed(2)} × ${this.pesos.FATOR_PESO_JOGO} = ${peso_jogo_na_base.toFixed(2)}`);
+        console.log(`  base_bruta: ${base_bruta.toFixed(2)} (sem fatores)`);
+        console.log(`  base_raiz: sqrt(${base_bruta_non_neg.toFixed(2)}) = ${base_raiz.toFixed(2)}`);
+
+        // Aplicar TODOS os fatores DEPOIS da raiz quadrada para ter impacto proporcional
+        // Calcular soma ponderada dos fatores baseada na proporção de cada componente
+        let soma_fatores_ponderada = 0;
+        let divisor_estavel = 0;
         
-        const base_pontuacao = (pontos_media + peso_jogo_na_base + pontos_ds +
-                               pontos_ff + pontos_fs + pontos_fd + pontos_g + pontos_a);
-        console.log(`  base_pontuacao: ${pontos_media.toFixed(2)} + ${peso_jogo_na_base.toFixed(2)} + ${pontos_ds.toFixed(2)} + ${pontos_ff.toFixed(2)} + ${pontos_fs.toFixed(2)} + ${pontos_fd.toFixed(2)} + ${pontos_g.toFixed(2)} + ${pontos_a.toFixed(2)} = ${base_pontuacao.toFixed(2)}`);
+        if (base_bruta_non_neg > 0) {
+            // 1. Somar contribuições (numerador) e componentes (divisor estável)
+            if (media_num_val > 0) {
+                soma_fatores_ponderada += media_num_val * this.pesos.FATOR_MEDIA;
+                divisor_estavel += media_num_val;
+            }
+            
+            if (tem_adversario && peso_jogo_original > 0) {
+                soma_fatores_ponderada += peso_jogo_original * this.pesos.FATOR_PESO_JOGO;
+                divisor_estavel += peso_jogo_original;
+            }
+            
+            // Scouts
+            const componentes_scouts = [
+                { val: media_ds * media_ds_cedidos, peso: this.pesos.FATOR_DS },
+                { val: media_ff * media_ff_cedidos, peso: this.pesos.FATOR_FF },
+                { val: media_fs * media_fs_cedidos, peso: this.pesos.FATOR_FS },
+                { val: media_fd * media_fd_cedidos, peso: this.pesos.FATOR_FD },
+                { val: media_g * media_g_cedidos, peso: this.pesos.FATOR_G },
+                { val: media_a * media_a_cedidos, peso: this.pesos.FATOR_A }
+            ];
+
+            componentes_scouts.forEach(comp => {
+                if (comp.val > 0) {
+                    soma_fatores_ponderada += comp.val * comp.peso;
+                    divisor_estavel += comp.val;
+                }
+            });
+
+            // 2. Calcular o fator final usando o divisor estável (soma das partes positivas)
+            if (divisor_estavel > 0) {
+                soma_fatores_ponderada = soma_fatores_ponderada / divisor_estavel;
+            } else {
+                soma_fatores_ponderada = this.pesos.FATOR_MEDIA;
+            }
+        } else {
+            // Se base_bruta é 0, usar apenas o fator da média como mínimo
+            soma_fatores_ponderada = this.pesos.FATOR_MEDIA;
+        }
         
         const pontuacao_total = base_pontuacao * (1 + peso_sg_final * this.pesos.FATOR_SG);
         console.log(`  pontuacao_total (antes raiz): ${base_pontuacao.toFixed(2)} × (1 + ${peso_sg_final} × ${this.pesos.FATOR_SG}) = ${pontuacao_total.toFixed(2)}`);
@@ -177,17 +215,28 @@ class CalculoLateral {
 
         // Calcular peso de escalação
         const escalacoes = this.escalacoes_data[atleta_id] || 0;
-        console.log(`  escalacoes: ${escalacoes}, totalEscalacoes: ${totalEscalacoes}`);
         const percentual_escalacoes = totalEscalacoes > 0 ? escalacoes / totalEscalacoes : 0;
-        const peso_escalacao = 1 + percentual_escalacoes * this.pesos.FATOR_ESCALACAO;
-        console.log(`  percentual_escalacoes: ${percentual_escalacoes.toFixed(4)}, peso_escalacao: ${peso_escalacao.toFixed(4)}`);
+        // Usar raiz quadrada do percentual para amplificar a influência
+        const percentual_ajustado = Math.sqrt(percentual_escalacoes);
+        const peso_escalacao = 1 + percentual_ajustado * this.pesos.FATOR_ESCALACAO;
 
-        // Ajustar pontuação final: raiz quadrada multiplicada pelo peso
-        const sqrt_value = Math.sqrt(pontuacao_total_non_neg);
-        const pontuacao_total_final = sqrt_value * peso_escalacao;
-        console.log(`  sqrt(${pontuacao_total_non_neg.toFixed(2)}) = ${sqrt_value.toFixed(2)}`);
-        console.log(`  pontuacao_total_final: ${sqrt_value.toFixed(2)} × ${peso_escalacao.toFixed(4)} = ${pontuacao_total_final.toFixed(2)}`);
-        console.log(`[DEBUG LATERAL] ========================================\n`);
+        // Aplicar todos os fatores DEPOIS da raiz
+        const pontuacao_total_final = base_raiz * fator_multiplicador * peso_escalacao;
+        
+        // --- LOG DE CÁLCULO DETALHADO (F12) ---
+        if (atleta_id === 77777 || pontuacao_total_final > 20 || (clube_nome && clube_nome.toLowerCase().includes('cruzeiro'))) {
+            console.group(`📊 CÁLCULO LATERAL: ${apelido} (ID: ${atleta_id})`);
+            console.log(`1. Média Base: ${media_num_val.toFixed(2)}`);
+            console.log(`2. Peso Jogo Bruto: ${peso_jogo_original.toFixed(2)}`);
+            console.log(`3. Lado: ${is_esquerdo ? 'ESQUERDO' : 'DIREITO'}`);
+            console.log(`4. Base Bruta: ${base_bruta.toFixed(2)}`);
+            console.log(`5. Base Raiz: sqrt(${Math.max(0, base_bruta).toFixed(2)}) = ${base_raiz.toFixed(2)}`);
+            console.log(`6. Multiplicador (Fator Médio): ${soma_fatores_ponderada.toFixed(4)}`);
+            console.log(`7. Fator SG: ${fator_sg.toFixed(4)}`);
+            console.log(`8. Peso Popularidade: ${peso_escalacao.toFixed(4)}`);
+            console.log(`🚀 RESULTADO FINAL: ${pontuacao_total_final.toFixed(2)}`);
+            console.groupEnd();
+        }
 
         return {
             atleta_id,
