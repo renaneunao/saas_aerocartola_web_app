@@ -285,11 +285,11 @@ def register():
         
         if not username or not email or not password:
             flash('Por favor, preencha todos os campos obrigatórios.', 'error')
-            return render_template('register.html')
+            return redirect(url_for('login', tab='register'))
         
         if len(password) < 6:
             flash('A senha deve ter pelo menos 6 caracteres.', 'error')
-            return render_template('register.html')
+            return redirect(url_for('login', tab='register'))
         
         # Tentar criar o usuário
         result = create_user(username, email, password, full_name)
@@ -299,8 +299,9 @@ def register():
             return redirect(url_for('login'))
         else:
             flash(result['error'], 'error')
+            return redirect(url_for('login', tab='register'))
             
-    return render_template('register.html')
+    return redirect(url_for('login', tab='register'))
 
 @app.route('/associar-credenciais', methods=['GET', 'POST'])
 @login_required
