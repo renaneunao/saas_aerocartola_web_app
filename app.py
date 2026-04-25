@@ -271,6 +271,37 @@ def logout():
     flash('Você foi desconectado com sucesso.', 'success')
     return redirect(url_for('login'))
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """Página e processamento de cadastro de novo usuário"""
+    if is_user_authenticated():
+        return redirect(url_for('index'))
+    
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+        full_name = request.form.get('full_name', '').strip()
+        
+        if not username or not email or not password:
+            flash('Por favor, preencha todos os campos obrigatórios.', 'error')
+            return render_template('register.html')
+        
+        if len(password) < 6:
+            flash('A senha deve ter pelo menos 6 caracteres.', 'error')
+            return render_template('register.html')
+        
+        # Tentar criar o usuário
+        result = create_user(username, email, password, full_name)
+        
+        if result['success']:
+            flash('Conta criada com sucesso! Faça login para começar.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash(result['error'], 'error')
+            
+    return render_template('register.html')
+
 @app.route('/associar-credenciais', methods=['GET', 'POST'])
 @login_required
 def associar_credenciais():
