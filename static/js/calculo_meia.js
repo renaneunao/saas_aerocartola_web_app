@@ -81,6 +81,22 @@ class CalculoMeia {
             media_ds_cedidos = adversarioStats.avg_ds_cedidos || 0;
         }
 
+        // Se não tem jogo na rodada, ignorar (retornar pontuação nula)
+        if (!tem_adversario) {
+            return {
+                atleta_id,
+                apelido,
+                clube_id,
+                clube_escudo_url,
+                clube_nome,
+                preco: parseFloat(preco_num.toFixed(2)),
+                jogos: jogos_num,
+                pontuacao_total: -999, // Força o jogador para o final da fila
+                ignorado: true,
+                motivo: 'Sem jogo na rodada'
+            };
+        }
+
         // LÓGICA ESTÁVEL 2.1
         const base_bruta = media_num_val + (tem_adversario ? peso_jogo_original : 0) + 
                           (media_ds * media_ds_cedidos) + media_ff + media_fs + media_fd + media_g + media_a;

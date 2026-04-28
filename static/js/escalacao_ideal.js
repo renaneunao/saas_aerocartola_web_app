@@ -106,8 +106,9 @@ class EscalacaoIdeal {
         const posicaoPlural = this.singularToPlural[posicaoSingular];
         const ranking = this.rankings[posicaoSingular] || [];
         
-        // Filtrar jogadores não escalados e dentro do orçamento
+        // Filtrar jogadores não escalados, dentro do orçamento e que têm jogo na rodada
         let candidatos = ranking.filter(j => {
+            if (j.ignorado === true) return false;
             if (excluirIds.includes(j.atleta_id)) return false;
             const preco = this.getPreco(j);
             if (maxPreco !== null && preco > maxPreco) return false;
@@ -144,7 +145,7 @@ class EscalacaoIdeal {
         const buscarPorClube = (posicao) => {
             const ranking = this.rankings[posicao] || [];
             return ranking
-                .filter(j => j.clube_id === clubeId && !escaladosIds.includes(j.atleta_id))
+                .filter(j => j.clube_id === clubeId && !j.ignorado && !escaladosIds.includes(j.atleta_id))
                 .sort((a, b) => this.getPontuacao(b) - this.getPontuacao(a));
         };
         
@@ -184,7 +185,7 @@ class EscalacaoIdeal {
             const faltam = quantidade - escalados.length;
             const rankingGeral = this.rankings[posicao] || [];
             const candidatos = rankingGeral
-                .filter(j => !escaladosIds.includes(j.atleta_id) && !escalados.includes(j))
+                .filter(j => !j.ignorado && !escaladosIds.includes(j.atleta_id) && !escalados.includes(j))
                 .sort((a, b) => this.getPontuacao(b) - this.getPontuacao(a));
             
             this.log(`   ⚠️  Faltam ${faltam} ${posicaoPlural}, completando com ranking geral...`);
@@ -507,10 +508,11 @@ class EscalacaoIdeal {
         this.log(`   ✅ Total de goleiros na base: ${todosGoleiros.length}`);
         this.log(`   🎯 Buscando goleiros nulos (status_id != 7 e != 2) mais caros que R$ ${precoTitular.toFixed(2)}`);
         
-        // Filtrar APENAS goleiros nulos (que não vão jogar) cujos times TÊM jogo na rodada
+        // Filtrar APENAS goleiros que não vão jogar (Suspenso=3 ou Contundido=5) cujos times TÊM jogo na rodada
+        // NOTA: O Cartola rejeita jogadores com status Nulo (6), dizendo "O time possui atletas que não estão na rodada"
         const goleirosNulos = todosGoleiros.filter(g => 
             !escaladosIds.includes(g.atleta_id) && 
-            g.status_id !== 7 && g.status_id !== 2 &&
+            (g.status_id === 3 || g.status_id === 5) &&
             this.adversarios_dict[g.clube_id] !== undefined
         );
         

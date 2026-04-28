@@ -71,6 +71,22 @@ class CalculoGoleiro {
             }
         }
 
+        // Se não tem jogo na rodada, ignorar (retornar pontuação nula)
+        if (!tem_adversario) {
+            return {
+                atleta_id,
+                apelido,
+                clube_id,
+                clube_escudo_url,
+                clube_nome,
+                preco: parseFloat(preco_num.toFixed(2)),
+                jogos: jogos_num,
+                pontuacao_total: -999, // Força o jogador para o final da fila
+                ignorado: true,
+                motivo: 'Sem jogo na rodada'
+            };
+        }
+
         // LÓGICA ESTÁVEL 2.1
         const base_bruta = media_num_val + (tem_adversario ? (peso_jogo_original + ff_avg_adversario + fd_avg_adversario) : 0);
         const base_bruta_non_neg = Math.max(0, base_bruta);

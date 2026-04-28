@@ -64,6 +64,27 @@ class CalculoTreinador {
 
         // Para treinadores, não há cálculo de adversário específico aqui
         // O peso_sg_adversario seria calculado no backend se necessário
+        
+        let tem_adversario = false;
+        if (adversario_id && this.adversarios_dict[clube_id] === adversario_id) {
+            tem_adversario = true;
+        }
+
+        // Se não tem jogo na rodada, ignorar (retornar pontuação nula)
+        if (!tem_adversario) {
+            return {
+                atleta_id,
+                apelido,
+                clube_id,
+                clube_escudo_url,
+                clube_nome,
+                preco: parseFloat(preco_num.toFixed(2)),
+                jogos: jogos_num,
+                pontuacao_total: -999, // Força o jogador para o final da fila
+                ignorado: true,
+                motivo: 'Sem jogo na rodada'
+            };
+        }
 
         return {
             atleta_id,

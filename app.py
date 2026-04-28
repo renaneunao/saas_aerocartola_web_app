@@ -502,7 +502,7 @@ def pagina_inicial():
         cursor = conn.cursor()
         
         # Buscar rodada atual
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -953,7 +953,7 @@ def api_debug_time(team_id):
         debug_info = {}
         
         # Buscar rodada
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result else 1
         debug_info['rodada_atual'] = rodada_atual
@@ -1086,7 +1086,7 @@ def api_perfis_verificar():
     cursor = conn.cursor()
     try:
         # Buscar rodada atual
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else None
         
@@ -1158,7 +1158,7 @@ def api_modulos_status():
     cursor = conn.cursor()
     try:
         # Buscar rodada atual
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -1224,7 +1224,7 @@ def modulo_individual(modulo):
     rodada_atual = 1
     try:
         cursor = conn.cursor()
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
     finally:
@@ -1328,7 +1328,7 @@ def api_verificar_ranking(modulo):
         cursor = conn.cursor()
         
         # Buscar rodada atual
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -1494,7 +1494,7 @@ def api_atacante_detalhes(atleta_id):
         cursor = conn.cursor()
         
         # Buscar rodada atual
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -1860,7 +1860,7 @@ def api_lateral_detalhes(atleta_id):
         cursor = conn.cursor()
         
         # Buscar rodada atual
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -2068,7 +2068,7 @@ def api_goleiro_detalhes(atleta_id):
     try:
         cursor = conn.cursor()
         
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -2278,7 +2278,7 @@ def api_zagueiro_detalhes(atleta_id):
     try:
         cursor = conn.cursor()
         
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -2461,7 +2461,7 @@ def api_meia_detalhes(atleta_id):
     try:
         cursor = conn.cursor()
         
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -2654,9 +2654,11 @@ def api_modulo_dados(modulo):
         cursor = conn.cursor()
         
         # Buscar rodada atual
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
+        
+        print(f"[DEBUG] rodada_atual resolvida a partir de acf_partidas: {rodada_atual}")
         
         # ⭐ OBTER TEAM_ID DA SESSÃO - ISSO É CRÍTICO!
         team_id = session.get('selected_team_id')
@@ -3501,7 +3503,7 @@ def api_escalacao_dados():
         
         # Buscar rodada atual
         cursor = conn.cursor()
-        cursor.execute('SELECT MAX(rodada_atual) FROM acp_peso_jogo_perfis')
+        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         

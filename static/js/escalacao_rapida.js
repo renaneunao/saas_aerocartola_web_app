@@ -375,13 +375,19 @@ class EscalacaoRapida {
         
         this.updateProgress(95, 'Enviando escalação para o Cartola...');
         
+        const payload = {
+            escalacao: escalacao,
+            formacao: formacao
+        };
+        
+        this.log(`\n📤 PAYLOAD ENVIADO PARA O BACKEND:`);
+        this.log(`   Formação: ${payload.formacao}`);
+        this.log(`   Atletas no payload: ${Object.values(escalacao.titulares).flat().map(j => j.atleta_id).join(', ')}`);
+        
         const response = await fetch('/api/escalacao-ideal/escalar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                escalacao: escalacao,
-                formacao: formacao
-            })
+            body: JSON.stringify(payload)
         });
         
         const data = await response.json();
