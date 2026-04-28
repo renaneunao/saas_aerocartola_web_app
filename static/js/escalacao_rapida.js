@@ -323,6 +323,7 @@ class EscalacaoRapida {
             rankings_por_posicao: dados.rankings_por_posicao,
             todos_goleiros: dados.todos_goleiros || [],
             clubes_sg: dados.clubes_sg || [],
+            adversarios_dict: dados.adversarios_dict || {},
             formacao: config.formacao,
             posicao_capitao: config.posicao_capitao,
             posicao_reserva_luxo: config.posicao_reserva_luxo,

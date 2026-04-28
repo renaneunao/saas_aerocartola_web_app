@@ -3841,6 +3841,19 @@ def api_escalacao_dados():
                     'escudo_url': escudo_url
                 }
         
+        # Buscar adversários (partidas válidas da rodada)
+        cursor.execute('''
+            SELECT clube_casa_id, clube_visitante_id
+            FROM acf_partidas
+            WHERE rodada_id = %s AND valida = TRUE
+        ''', (rodada_atual,))
+        partidas = cursor.fetchall()
+        
+        adversarios_dict = {}
+        for casa_id, visitante_id in partidas:
+            adversarios_dict[casa_id] = visitante_id
+            adversarios_dict[visitante_id] = casa_id
+
         response_data = {
             'team_id': team_id,
             'team_name': team_name,
@@ -3848,6 +3861,7 @@ def api_escalacao_dados():
             'rodada_atual': rodada_atual,
             'rankings_por_posicao': rankings_por_posicao,
             'todos_goleiros': todos_goleiros,  # Lista completa de goleiros para hack
+            'adversarios_dict': adversarios_dict,
             'config': {
                 'formation': escalacao_config['formation'] if escalacao_config else '4-3-3',
                 'hack_goleiro': escalacao_config['hack_goleiro'] if escalacao_config else False,

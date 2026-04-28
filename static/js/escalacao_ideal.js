@@ -12,6 +12,7 @@ class EscalacaoIdeal {
         this.rankings = dados.rankings_por_posicao || {};
         this.clubes_sg = dados.clubes_sg || [];
         this.todosGoleiros = dados.todos_goleiros || [];  // Lista completa de goleiros para hack
+        this.adversarios_dict = dados.adversarios_dict || {};
         
         // Log de debug para verificar goleiros recebidos
         console.log('[DEBUG] Goleiros recebidos no construtor:', this.todosGoleiros.length);
