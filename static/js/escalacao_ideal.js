@@ -506,10 +506,11 @@ class EscalacaoIdeal {
         this.log(`   ✅ Total de goleiros na base: ${todosGoleiros.length}`);
         this.log(`   🎯 Buscando goleiros nulos (status_id != 7 e != 2) mais caros que R$ ${precoTitular.toFixed(2)}`);
         
-        // Filtrar APENAS goleiros nulos (que não vão jogar)
+        // Filtrar APENAS goleiros nulos (que não vão jogar) cujos times TÊM jogo na rodada
         const goleirosNulos = todosGoleiros.filter(g => 
             !escaladosIds.includes(g.atleta_id) && 
-            g.status_id !== 7 && g.status_id !== 2  // Nulos: qualquer status exceto provável=7 e dúvida=2
+            g.status_id !== 7 && g.status_id !== 2 &&
+            this.adversarios_dict[g.clube_id] !== undefined
         );
         
         this.log(`   📋 Total de goleiros NULOS encontrados: ${goleirosNulos.length}`);
