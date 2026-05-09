@@ -4043,16 +4043,25 @@ def api_escalar_time():
         titulares = escalacao.get('titulares', {})
         reservas = escalacao.get('reservas', {})
         
+        # Mapa de atleta_id -> info para debug
+        atletas_info_map = {}
+
         # Array de IDs dos titulares (12 atletas)
         atletas_ids = []
+        atletas_debug = []  # Lista legível para retornar na resposta
         for posicao in ['goleiros', 'zagueiros', 'laterais', 'meias', 'atacantes', 'treinadores']:
             jogadores = titulares.get(posicao, [])
             print(f"[DEBUG] Posição {posicao}: {len(jogadores)} jogadores")
             for jogador in jogadores:
                 atleta_id = jogador.get('atleta_id')
-                print(f"[DEBUG]   - Jogador: {jogador.get('apelido', 'N/A')} (ID: {atleta_id})")
+                apelido = jogador.get('apelido', 'N/A')
+                preco = jogador.get('preco_num') or jogador.get('preco') or 0
+                print(f"[DEBUG]   - Jogador: {apelido} (ID: {atleta_id})")
                 atletas_ids.append(atleta_id)
-        
+                atletas_info_map[atleta_id] = {'apelido': apelido, 'posicao': posicao, 'preco': preco, 'tipo': 'titular'}
+                eh_capitao = jogador.get('eh_capitao', False)
+                atletas_debug.append({'atleta_id': atleta_id, 'apelido': apelido, 'posicao': posicao, 'preco': preco, 'tipo': 'titular', 'capitao': eh_capitao})
+
         print(f"[DEBUG] Total de atletas: {len(atletas_ids)}")
         
         # Validar 12 atletas
@@ -4086,8 +4095,15 @@ def api_escalar_time():
                 posicao_id = posicao_id_map.get(posicao)
                 if posicao_id:
                     atleta_id = jogador.get('atleta_id')
+                    apelido = jogador.get('apelido', 'N/A')
+                    preco = jogador.get('preco_num') or jogador.get('preco') or 0
                     reservas_map[str(posicao_id)] = atleta_id  # String!
-                    print(f"[DEBUG] Reserva posição {posicao_id} ({posicao}): {jogador.get('apelido')} (ID: {atleta_id}) - Luxo: {jogador.get('eh_reserva_luxo', False)}")
+                    atletas_ids.append(atleta_id)  # Adiciona reserva aos atletas gerais
+                    eh_luxo = jogador.get('eh_reserva_luxo', False)
+                    tipo_reserva = 'reserva_luxo' if eh_luxo else 'reserva'
+                    atletas_info_map[atleta_id] = {'apelido': apelido, 'posicao': posicao, 'preco': preco, 'tipo': tipo_reserva}
+                    atletas_debug.append({'atleta_id': atleta_id, 'apelido': apelido, 'posicao': posicao, 'preco': preco, 'tipo': tipo_reserva, 'capitao': False})
+                    print(f"[DEBUG] Reserva posição {posicao_id} ({posicao}): {apelido} (ID: {atleta_id}) - Luxo: {eh_luxo}")
         
         # Identificar reserva de luxo
         reserva_luxo_id = None
@@ -4099,6 +4115,8 @@ def api_escalar_time():
                     break
             if reserva_luxo_id:
                 break
+        
+        print(f"[DEBUG] Total de atletas (incluindo reservas): {len(atletas_ids)}")
         
         print(f"[DEBUG] Reservas completas: {reservas_map}")
         print(f"[DEBUG] Capitão: {capitao_id}")
@@ -4166,29 +4184,39 @@ def api_escalar_time():
                         return jsonify({
                             'success': True,
                             'mensagem': 'Time escalado com sucesso!',
-                            'detalhes': response_data
+                            'detalhes': response_data,
+                            'atletas_debug': atletas_debug,
+                            'payload_enviado': time_para_escalacao
                         })
                     else:
                         return jsonify({
                             'error': response_data.get('mensagem', 'Erro desconhecido'),
-                            'detalhes': response_data
+                            'detalhes': response_data,
+                            'atletas_debug': atletas_debug,
+                            'payload_enviado': time_para_escalacao
                         }), 400
                 except Exception:
                     return jsonify({
                         'error': 'Resposta inesperada da API',
-                        'status': response.status_code
+                        'status': response.status_code,
+                        'atletas_debug': atletas_debug,
+                        'payload_enviado': time_para_escalacao
                     }), 400
             else:
                 try:
                     error_data = response.json()
                     return jsonify({
                         'error': error_data.get('mensagem', f'Erro HTTP {response.status_code}'),
-                        'detalhes': error_data
+                        'detalhes': error_data,
+                        'atletas_debug': atletas_debug,
+                        'payload_enviado': time_para_escalacao
                     }), response.status_code
                 except Exception:
                     return jsonify({
                         'error': f'Erro HTTP {response.status_code}',
-                        'mensagem': response.text[:200]
+                        'mensagem': response.text[:200],
+                        'atletas_debug': atletas_debug,
+                        'payload_enviado': time_para_escalacao
                     }), response.status_code
                     
         except requests.exceptions.Timeout:
