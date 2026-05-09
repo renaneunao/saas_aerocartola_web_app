@@ -23,8 +23,6 @@
                 </div>
                 {% endif %}
             </div>
-
-            <!-- Info da Rodada -->
             {% if rodada and rodada.rodada %}
             <div class="flex items-center space-x-3 text-sm">
                 <div class="glass-light rounded-xl px-3 py-1.5 border border-[rgba(0,229,255,0.1)] text-center min-w-[60px]">
@@ -33,9 +31,7 @@
                 </div>
                 <div class="glass-light rounded-xl px-3 py-1.5 border {% if rodada.status == 'aberto' %}border-[rgba(0,255,136,0.2)]{% else %}border-[rgba(239,68,68,0.2)]{% endif %} text-center min-w-[80px]">
                     <p class="text-[10px] text-text-muted uppercase tracking-wider">Mercado</p>
-                    <p class="font-bold text-sm leading-none {% if rodada.status == 'aberto' %}text-neon-green{% else %}text-neon-red{% endif %}">
-                        {{ 'ABERTO' if rodada.status == 'aberto' else 'FECHADO' }}
-                    </p>
+                    <p class="font-bold text-sm leading-none {% if rodada.status == 'aberto' %}text-neon-green{% else %}text-neon-red{% endif %}">{{ 'ABERTO' if rodada.status == 'aberto' else 'FECHADO' }}</p>
                 </div>
                 {% if rodada.prazo and rodada.prazo != 'fechado' %}
                 <div class="glass-light rounded-xl px-3 py-1.5 border border-[rgba(0,229,255,0.15)] text-center min-w-[80px]">
@@ -57,11 +53,7 @@
             <div class="relative p-3.5 bg-gradient-to-t from-[rgba(6,11,20,0.95)] via-[rgba(6,11,20,0.7)] to-[rgba(6,11,20,0.3)]">
                 <div class="flex items-center justify-between mb-2">
                     <h3 class="text-sm font-semibold text-white">Perfis de Jogo</h3>
-                    <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full
-                                 {% if status.tem_perfis %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]
-                                 {% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">
-                        {{ 'OK' if status.tem_perfis else 'PENDENTE' }}
-                    </span>
+                    <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full {% if status.tem_perfis %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]{% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">{{ 'OK' if status.tem_perfis else 'PENDENTE' }}</span>
                 </div>
                 {% if status.tem_perfis %}
                 <div class="text-center mb-2">
@@ -72,12 +64,7 @@
                 {% else %}
                 <p class="text-text-muted text-[11px] mb-2 text-center">Configure peso de jogo e saldo de gols</p>
                 {% endif %}
-                <a href="{{ url_for('pagina_inicial') }}" 
-                   class="block text-center py-1.5 rounded-lg text-xs font-medium transition-all duration-200
-                          {% if status.tem_perfis %}bg-[rgba(0,229,255,0.08)] text-neon-cyan hover:bg-[rgba(0,229,255,0.16)]
-                          {% else %}bg-[rgba(0,255,136,0.08)] text-neon-green hover:bg-[rgba(0,255,136,0.16)]{% endif %}">
-                    {{ 'Editar' if status.tem_perfis else 'Configurar' }}
-                </a>
+                <a href="{{ url_for('pagina_inicial') }}" class="block text-center py-1.5 rounded-lg text-xs font-medium transition-all duration-200 {% if status.tem_perfis %}bg-[rgba(0,229,255,0.08)] text-neon-cyan hover:bg-[rgba(0,229,255,0.16)]{% else %}bg-[rgba(0,255,136,0.08)] text-neon-green hover:bg-[rgba(0,255,136,0.16)]{% endif %}">{{ 'Editar' if status.tem_perfis else 'Configurar' }}</a>
             </div>
         </div>
 
@@ -87,23 +74,10 @@
             <div class="relative p-3.5 bg-gradient-to-t from-[rgba(6,11,20,0.95)] via-[rgba(6,11,20,0.7)] to-[rgba(6,11,20,0.3)]">
                 <div class="flex items-center justify-between mb-2">
                     <h3 class="text-sm font-semibold text-white">Rankings</h3>
-                    <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full
-                                 {% if status.tem_calculos %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]
-                                 {% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">
-                        {{ 'OK' if status.tem_calculos else 'PENDENTE' }}
-                    </span>
+                    <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full {% if status.tem_calculos %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]{% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">{{ 'OK' if status.tem_calculos else 'PENDENTE' }}</span>
                 </div>
-                <p class="text-text-muted text-[11px] mb-2 text-center leading-tight">
-                    {% if status.tem_calculos %}Rankings calculados por posição.{% elif status.tem_perfis %}Execute os cálculos de posições.{% else %}<span class="text-neon-amber">Configure perfis primeiro.</span>{% endif %}
-                </p>
-                <a href="{{ url_for('modulos') }}" 
-                   class="block text-center py-1.5 rounded-lg text-xs font-medium transition-all duration-200
-                          {% if not status.tem_perfis %}opacity-50 bg-[rgba(255,255,255,0.02)] text-text-muted cursor-not-allowed
-                          {% elif status.tem_calculos %}bg-[rgba(0,229,255,0.08)] text-neon-cyan hover:bg-[rgba(0,229,255,0.16)]
-                          {% else %}bg-[rgba(168,85,247,0.08)] text-neon-purple hover:bg-[rgba(168,85,247,0.16)]{% endif %}"
-                   {% if not status.tem_perfis %}onclick="return false"{% endif %}>
-                    {{ 'Ver Rankings' if status.tem_calculos else 'Calcular' }}
-                </a>
+                <p class="text-text-muted text-[11px] mb-2 text-center leading-tight">{% if status.tem_calculos %}Rankings calculados por posição.{% elif status.tem_perfis %}Execute os cálculos de posições.{% else %}<span class="text-neon-amber">Configure perfis primeiro.</span>{% endif %}</p>
+                <a href="{{ url_for('modulos') }}" class="block text-center py-1.5 rounded-lg text-xs font-medium transition-all duration-200 {% if not status.tem_perfis %}opacity-50 bg-[rgba(255,255,255,0.02)] text-text-muted cursor-not-allowed{% elif status.tem_calculos %}bg-[rgba(0,229,255,0.08)] text-neon-cyan hover:bg-[rgba(0,229,255,0.16)]{% else %}bg-[rgba(168,85,247,0.08)] text-neon-purple hover:bg-[rgba(168,85,247,0.16)]{% endif %}" {% if not status.tem_perfis %}onclick="return false"{% endif %}>{{ 'Ver Rankings' if status.tem_calculos else 'Calcular' }}</a>
             </div>
         </div>
 
@@ -113,127 +87,69 @@
             <div class="relative p-3.5 bg-gradient-to-t from-[rgba(6,11,20,0.95)] via-[rgba(6,11,20,0.7)] to-[rgba(6,11,20,0.3)]">
                 <div class="flex items-center justify-between mb-2">
                     <h3 class="text-sm font-semibold text-white">Escalação</h3>
-                    <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full
-                                 {% if status.tem_escalacao %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]
-                                 {% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">
-                        {{ 'OK' if status.tem_escalacao else 'PENDENTE' }}
-                    </span>
-                          {% elif status.tem_calculos %}bg-[rgba(0,229,255,0.06)] text-neon-cyan hover:bg-[rgba(0,229,255,0.12)]
-                          {% else %}bg-[rgba(168,85,247,0.06)] text-neon-purple hover:bg-[rgba(168,85,247,0.12)]{% endif %}"
-                   {% if not status.tem_perfis %}onclick="return false"{% endif %}>
-                    {{ 'Ver Rankings' if status.tem_calculos else 'Calcular' }}
-                </a>
-            </div>
-        </div>
-
-        <!-- Escalação -->
-        <div class="group glass rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5
-                    {% if status.tem_escalacao %}border border-[rgba(0,255,136,0.15)]{% else %}border border-[rgba(255,255,255,0.04)]{% endif %}">
-            <div class="p-3.5">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-chess-board text-sm {% if status.tem_escalacao %}text-neon-green{% else %}text-text-muted{% endif %}"></i>
-                        <h3 class="text-sm font-semibold text-white">Escalação</h3>
-                    </div>
-                    <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full
-                                 {% if status.tem_escalacao %}bg-[rgba(0,255,136,0.08)] text-neon-green border border-[rgba(0,255,136,0.15)]
-                                 {% else %}bg-[rgba(245,158,11,0.08)] text-neon-amber border border-[rgba(245,158,11,0.15)]{% endif %}">
-                        {{ 'OK' if status.tem_escalacao else 'PENDENTE' }}
-                    </span>
+                    <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full {% if status.tem_escalacao %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]{% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">{{ 'OK' if status.tem_escalacao else 'PENDENTE' }}</span>
                 </div>
-                <p class="text-text-muted text-[11px] mb-2 text-center leading-tight">
-                    {% if status.tem_escalacao %}Time escalado e pronto.{% elif status.tem_calculos %}Monte sua escalação ideal.{% else %}<span class="text-neon-amber">Calcule rankings primeiro.</span>{% endif %}
-                </p>
+                <p class="text-text-muted text-[11px] mb-2 text-center leading-tight">{% if status.tem_escalacao %}Time escalado e pronto.{% elif status.tem_calculos %}Monte sua escalação ideal.{% else %}<span class="text-neon-amber">Calcule rankings primeiro.</span>{% endif %}</p>
                 {% if not permissions.podeEscalar %}
                 <div class="relative">
                     <div class="block text-center py-1.5 rounded-lg text-xs font-medium bg-[rgba(0,255,136,0.04)] text-neon-green border border-[rgba(0,255,136,0.1)]" style="filter: blur(1.2px);">Escalar Time</div>
                     <span class="absolute -top-1.5 -right-1 bg-neon-purple text-white text-[8px] px-1 py-0.5 rounded-full font-bold">Upgrade</span>
                 </div>
                 {% else %}
-                <a href="{{ url_for('modulo_escalacao_ideal') }}" 
-                   class="block text-center py-1.5 rounded-lg text-xs font-medium transition-all duration-200
-                          {% if not status.tem_calculos %}opacity-50 bg-[rgba(255,255,255,0.02)] text-text-muted cursor-not-allowed
-                          {% elif status.tem_escalacao %}bg-[rgba(0,229,255,0.08)] text-neon-cyan hover:bg-[rgba(0,229,255,0.16)]
-                          {% else %}bg-[rgba(0,255,136,0.08)] text-neon-green hover:bg-[rgba(0,255,136,0.16)]{% endif %}"
-                   {% if not status.tem_calculos %}onclick="return false"{% endif %}>
-                    {{ 'Ver Escalação' if status.tem_escalacao else 'Escalar' }}
-                </a>
+                <a href="{{ url_for('modulo_escalacao_ideal') }}" class="block text-center py-1.5 rounded-lg text-xs font-medium transition-all duration-200 {% if not status.tem_calculos %}opacity-50 bg-[rgba(255,255,255,0.02)] text-text-muted cursor-not-allowed{% elif status.tem_escalacao %}bg-[rgba(0,229,255,0.08)] text-neon-cyan hover:bg-[rgba(0,229,255,0.16)]{% else %}bg-[rgba(0,255,136,0.08)] text-neon-green hover:bg-[rgba(0,255,136,0.16)]{% endif %}" {% if not status.tem_calculos %}onclick="return false"{% endif %}>{{ 'Ver Escalação' if status.tem_escalacao else 'Escalar' }}</a>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Ações Rápidas (compacto, 3 colunas no desktop) -->
+    <!-- Ações Rápidas -->
     <div class="glass rounded-2xl neon-border p-4 mb-4">
-        <h2 class="text-sm font-semibold text-white mb-3 flex items-center">
-            <i class="fas fa-bolt text-neon-amber mr-2 text-xs"></i>Ações Rápidas
-        </h2>
+        <h2 class="text-sm font-semibold text-white mb-3 flex items-center"><i class="fas fa-bolt text-neon-amber mr-2 text-xs"></i>Ações Rápidas</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-            
-            <a href="{{ url_for('credenciais') }}" 
-               class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,229,255,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,229,255,0.04)] transition-all duration-200 group text-center">
+            <a href="{{ url_for('credenciais') }}" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,229,255,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,229,255,0.04)] transition-all duration-200 group text-center">
                 <i class="fas fa-people-group text-neon-cyan text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Times</span>
-                <span class="text-text-muted text-[10px] leading-tight">Gerenciar</span>
+                <span class="text-white text-xs font-medium leading-tight">Times</span><span class="text-text-muted text-[10px] leading-tight">Gerenciar</span>
             </a>
-
-            <a href="{{ url_for('modulos') }}" 
-               class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(168,85,247,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(168,85,247,0.04)] transition-all duration-200 group text-center">
+            <a href="{{ url_for('modulos') }}" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(168,85,247,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(168,85,247,0.04)] transition-all duration-200 group text-center">
                 <i class="fas fa-microchip text-neon-purple text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Rankings</span>
-                <span class="text-text-muted text-[10px] leading-tight">Calcular</span>
+                <span class="text-white text-xs font-medium leading-tight">Rankings</span><span class="text-text-muted text-[10px] leading-tight">Calcular</span>
             </a>
-
             {% if not permissions.podeEscalar %}
             <div class="relative flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(0,255,136,0.06)] bg-[rgba(0,255,136,0.01)] text-center" style="filter: blur(1px);">
                 <i class="fas fa-chess-board text-neon-green text-xl mb-1.5"></i>
-                <span class="text-white text-xs font-medium leading-tight">Escalação</span>
-                <span class="text-text-muted text-[10px] leading-tight">Ideal</span>
+                <span class="text-white text-xs font-medium leading-tight">Escalação</span><span class="text-text-muted text-[10px] leading-tight">Ideal</span>
             </div>
             {% else %}
-            <a href="{{ url_for('modulo_escalacao_ideal') }}" 
-               class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,255,136,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,255,136,0.04)] transition-all duration-200 group text-center">
+            <a href="{{ url_for('modulo_escalacao_ideal') }}" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,255,136,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,255,136,0.04)] transition-all duration-200 group text-center">
                 <i class="fas fa-chess-board text-neon-green text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Escalação</span>
-                <span class="text-text-muted text-[10px] leading-tight">Ideal</span>
+                <span class="text-white text-xs font-medium leading-tight">Escalação</span><span class="text-text-muted text-[10px] leading-tight">Ideal</span>
             </a>
             {% endif %}
-
             {% if status.tem_perfis and permissions.podeEscalar %}
-            <button id="escalacaoRapidaBtn" 
-                    class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(0,255,136,0.08)] hover:border-[rgba(0,255,136,0.25)] bg-[rgba(0,255,136,0.02)] hover:bg-[rgba(0,255,136,0.06)] transition-all duration-200 group text-center w-full">
+            <button id="escalacaoRapidaBtn" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(0,255,136,0.08)] hover:border-[rgba(0,255,136,0.25)] bg-[rgba(0,255,136,0.02)] hover:bg-[rgba(0,255,136,0.06)] transition-all duration-200 group text-center w-full">
                 <i class="fas fa-bolt text-neon-green text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Rápida</span>
-                <span class="text-text-muted text-[10px] leading-tight">1 clique</span>
+                <span class="text-white text-xs font-medium leading-tight">Rápida</span><span class="text-text-muted text-[10px] leading-tight">1 clique</span>
             </button>
             {% elif status.tem_perfis and not permissions.podeEscalar %}
             <div class="relative flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(0,255,136,0.04)] bg-[rgba(0,255,136,0.01)] text-center" style="filter: blur(1px);">
                 <i class="fas fa-bolt text-neon-green text-xl mb-1.5"></i>
-                <span class="text-white text-xs font-medium leading-tight">Rápida</span>
-                <span class="text-text-muted text-[10px] leading-tight">1 clique</span>
+                <span class="text-white text-xs font-medium leading-tight">Rápida</span><span class="text-text-muted text-[10px] leading-tight">1 clique</span>
             </div>
             {% endif %}
-
             {% if status.tem_perfis and permissions.multiEscalacao %}
-            <button id="escalarTodosTimesBtn" 
-                    class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(245,158,11,0.08)] hover:border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.02)] hover:bg-[rgba(245,158,11,0.06)] transition-all duration-200 group text-center w-full">
+            <button id="escalarTodosTimesBtn" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(245,158,11,0.08)] hover:border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.02)] hover:bg-[rgba(245,158,11,0.06)] transition-all duration-200 group text-center w-full">
                 <i class="fas fa-layer-group text-neon-amber text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Todos</span>
-                <span class="text-text-muted text-[10px] leading-tight">em lote</span>
+                <span class="text-white text-xs font-medium leading-tight">Todos</span><span class="text-text-muted text-[10px] leading-tight">em lote</span>
             </button>
             {% elif status.tem_perfis and not permissions.multiEscalacao %}
             <div class="relative flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(245,158,11,0.04)] bg-[rgba(245,158,11,0.01)] text-center" style="filter: blur(1px);">
                 <i class="fas fa-layer-group text-neon-amber text-xl mb-1.5"></i>
-                <span class="text-white text-xs font-medium leading-tight">Todos</span>
-                <span class="text-text-muted text-[10px] leading-tight">em lote</span>
+                <span class="text-white text-xs font-medium leading-tight">Todos</span><span class="text-text-muted text-[10px] leading-tight">em lote</span>
             </div>
             {% endif %}
-
-            <button onclick="window.location.reload()" 
-                    class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,229,255,0.15)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,229,255,0.03)] transition-all duration-200 group text-center w-full">
+            <button onclick="window.location.reload()" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,229,255,0.15)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,229,255,0.03)] transition-all duration-200 group text-center w-full">
                 <i class="fas fa-rotate text-neon-cyan text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Atualizar</span>
-                <span class="text-text-muted text-[10px] leading-tight">Refresh</span>
+                <span class="text-white text-xs font-medium leading-tight">Atualizar</span><span class="text-text-muted text-[10px] leading-tight">Refresh</span>
             </button>
         </div>
     </div>
@@ -241,53 +157,32 @@
     <!-- Próximos Passos / Tudo Pronto -->
     {% if not status.tem_perfis or not status.tem_calculos or not status.tem_escalacao %}
     <div class="glass rounded-2xl neon-border p-4">
-        <h2 class="text-sm font-semibold text-white mb-3 flex items-center">
-            <i class="fas fa-route text-neon-cyan mr-2 text-xs"></i>Próximos Passos
-        </h2>
+        <h2 class="text-sm font-semibold text-white mb-3 flex items-center"><i class="fas fa-route text-neon-cyan mr-2 text-xs"></i>Próximos Passos</h2>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {% if not status.tem_perfis %}
             <div class="flex items-start space-x-2 p-3 rounded-xl bg-[rgba(0,229,255,0.02)] border border-[rgba(0,229,255,0.06)]">
                 <span class="flex-shrink-0 w-6 h-6 bg-[rgba(0,229,255,0.1)] text-neon-cyan rounded-lg flex items-center justify-center font-bold text-[11px] border border-[rgba(0,229,255,0.15)]">1</span>
-                <div class="min-w-0">
-                    <p class="text-white text-xs font-medium mb-0.5">Perfis de Jogo</p>
-                    <a href="{{ url_for('pagina_inicial') }}" class="text-neon-cyan text-[11px] hover:underline">Configurar →</a>
-                </div>
+                <div class="min-w-0"><p class="text-white text-xs font-medium mb-0.5">Perfis de Jogo</p><a href="{{ url_for('pagina_inicial') }}" class="text-neon-cyan text-[11px] hover:underline">Configurar →</a></div>
             </div>
             {% elif not status.tem_calculos %}
             <div class="flex items-start space-x-2 p-3 rounded-xl bg-[rgba(168,85,247,0.02)] border border-[rgba(168,85,247,0.06)]">
                 <span class="flex-shrink-0 w-6 h-6 bg-[rgba(168,85,247,0.1)] text-neon-purple rounded-lg flex items-center justify-center font-bold text-[11px] border border-[rgba(168,85,247,0.15)]">2</span>
-                <div class="min-w-0">
-                    <p class="text-white text-xs font-medium mb-0.5">Calcular Rankings</p>
-                    <a href="{{ url_for('modulos') }}" class="text-neon-purple text-[11px] hover:underline">Calcular →</a>
-                </div>
+                <div class="min-w-0"><p class="text-white text-xs font-medium mb-0.5">Calcular Rankings</p><a href="{{ url_for('modulos') }}" class="text-neon-purple text-[11px] hover:underline">Calcular →</a></div>
             </div>
             {% elif not status.tem_escalacao %}
             <div class="flex items-start space-x-2 p-3 rounded-xl bg-[rgba(0,255,136,0.02)] border border-[rgba(0,255,136,0.06)] {% if not permissions.podeEscalar %}opacity-40{% endif %}">
                 <span class="flex-shrink-0 w-6 h-6 bg-[rgba(0,255,136,0.1)] text-neon-green rounded-lg flex items-center justify-center font-bold text-[11px] border border-[rgba(0,255,136,0.15)]">3</span>
-                <div class="min-w-0">
-                    <p class="text-white text-xs font-medium mb-0.5">Escalar Time</p>
-                    {% if permissions.podeEscalar %}
-                    <a href="{{ url_for('modulo_escalacao_ideal') }}" class="text-neon-green text-[11px] hover:underline">Escalar →</a>
-                    {% else %}
-                    <span class="text-neon-purple text-[11px] font-medium">Upgrade necessário</span>
-                    {% endif %}
-                </div>
+                <div class="min-w-0"><p class="text-white text-xs font-medium mb-0.5">Escalar Time</p>{% if permissions.podeEscalar %}<a href="{{ url_for('modulo_escalacao_ideal') }}" class="text-neon-green text-[11px] hover:underline">Escalar →</a>{% else %}<span class="text-neon-purple text-[11px] font-medium">Upgrade necessário</span>{% endif %}</div>
             </div>
             {% endif %}
         </div>
     </div>
     {% else %}
     <div class="glass rounded-2xl neon-border-strong p-5 text-center">
-        <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-[rgba(0,255,136,0.08)] border border-[rgba(0,255,136,0.15)] flex items-center justify-center">
-            <i class="fas fa-check text-xl text-neon-green"></i>
-        </div>
+        <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-[rgba(0,255,136,0.08)] border border-[rgba(0,255,136,0.15)] flex items-center justify-center"><i class="fas fa-check text-xl text-neon-green"></i></div>
         <h2 class="text-base font-bold text-white mb-1">Tudo Pronto!</h2>
         <p class="text-text-secondary text-sm mb-3">Time configurado e pronto para jogar.</p>
-        {% if permissions.podeEscalar %}
-        <a href="{{ url_for('modulo_escalacao_ideal') }}" class="inline-flex items-center px-4 py-2 bg-[rgba(0,255,136,0.06)] text-neon-green border border-[rgba(0,255,136,0.15)] rounded-xl text-sm font-medium hover:bg-[rgba(0,255,136,0.12)] transition-all">
-            <i class="fas fa-eye mr-2 text-xs"></i>Ver Escalação
-        </a>
-        {% endif %}
+        {% if permissions.podeEscalar %}<a href="{{ url_for('modulo_escalacao_ideal') }}" class="inline-flex items-center px-4 py-2 bg-[rgba(0,255,136,0.06)] text-neon-green border border-[rgba(0,255,136,0.15)] rounded-xl text-sm font-medium hover:bg-[rgba(0,255,136,0.12)] transition-all"><i class="fas fa-eye mr-2 text-xs"></i>Ver Escalação</a>{% endif %}
     </div>
     {% endif %}
 </div>
