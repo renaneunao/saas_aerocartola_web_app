@@ -4098,7 +4098,6 @@ def api_escalar_time():
                     apelido = jogador.get('apelido', 'N/A')
                     preco = jogador.get('preco_num') or jogador.get('preco') or 0
                     reservas_map[str(posicao_id)] = atleta_id  # String!
-                    atletas_ids.append(atleta_id)  # Adiciona reserva aos atletas gerais
                     eh_luxo = jogador.get('eh_reserva_luxo', False)
                     tipo_reserva = 'reserva_luxo' if eh_luxo else 'reserva'
                     atletas_info_map[atleta_id] = {'apelido': apelido, 'posicao': posicao, 'preco': preco, 'tipo': tipo_reserva}
