@@ -1,321 +1,134 @@
 {% extends "base.html" %}
-{% block title %}Módulos - Cartola FC Manager{% endblock %}
+{% block title %}Módulos — Aero Cartola{% endblock %}
 
 {% block content %}
 <!-- Page Header -->
-<div class="text-center mb-8">
-    <div class="flex items-center justify-center space-x-3 mb-4">
-        <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg animate-pulse-glow">
-            <i class="fas fa-cogs text-2xl text-white"></i>
-        </div>
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-purple-200 bg-clip-text text-transparent">
-            Módulos Individuais
-        </h1>
-    </div>
-    <p class="text-dark-blue-200 text-lg">Análise detalhada de cada posição e cálculo</p>
-    <p class="text-dark-blue-300 text-sm mt-2">
-        <i class="fas fa-info-circle text-blue-400 mr-2"></i>
+<div class="text-center mb-6">
+    <h1 class="text-3xl font-bold text-white mb-2">Módulos de Análise</h1>
+    <p class="text-text-secondary text-sm">Análise detalhada de cada posição e cálculo de rankings</p>
+    <p class="text-text-muted text-xs mt-1.5">
+        <i class="fas fa-info-circle text-neon-cyan mr-1.5"></i>
         <span id="statusGeral">Carregando status dos módulos...</span>
     </p>
 </div>
 
 <!-- Módulos Grid -->
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-    <!-- Goleiros -->
-    <a href="{{ url_for('modulo_individual', modulo='goleiro') }}" 
-       id="modulo-goleiro"
-       data-modulo="goleiro"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
-        <!-- Badge de status (será atualizado via JS) -->
-        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
-            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
-            PENDENTE
-        </div>
-        <div class="p-6 flex-1">
-            <div class="flex items-center space-x-4 mb-4">
-                <div class="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                    <i class="fas fa-hand-paper text-white text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-green-300 transition-colors duration-300">Goleiros</h3>
-                    <p class="text-dark-blue-300 text-sm">Análise de goleiros</p>
-                </div>
-            </div>
-            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de goleiros com pesos personalizados</p>
-        </div>
-        <div class="px-6 py-3 bg-gradient-to-r from-green-500/10 to-green-600/10 border-t border-green-500/20 mt-auto">
-            <div class="flex items-center justify-between">
-                <span class="text-green-300 text-sm font-medium">Ver Análise</span>
-                <i class="fas fa-arrow-right text-green-400 group-hover:translate-x-1 transition-transform duration-300"></i>
-            </div>
-        </div>
-    </a>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
 
-    <!-- Laterais -->
-    <a href="{{ url_for('modulo_individual', modulo='lateral') }}" 
-       id="modulo-lateral"
-       data-modulo="lateral"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
-        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
-            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
-            PENDENTE
-        </div>
-        <div class="p-6">
-            <div class="flex items-center space-x-4 mb-4">
-                <div class="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                    <i class="fas fa-running text-white text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-blue-300 transition-colors duration-300">Laterais</h3>
-                    <p class="text-dark-blue-300 text-sm">Análise de laterais</p>
-                </div>
-            </div>
-            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de laterais com pesos personalizados</p>
-        </div>
-        <div class="px-6 py-3 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border-t border-blue-500/20">
-            <div class="flex items-center justify-between">
-                <span class="text-blue-300 text-sm font-medium">Ver Análise</span>
-                <i class="fas fa-arrow-right text-blue-400 group-hover:translate-x-1 transition-transform duration-300"></i>
-            </div>
-        </div>
-    </a>
+    {% set modulos = [
+        {'id': 'goleiro', 'nome': 'Goleiros', 'desc': 'Análise de goleiros com pesos de defesa, SG e scouts específicos', 'img': 'goleiro.jpg', 'color': 'neon-green', 'colorHex': 'rgba(0,255,136,0.08)', 'borderHex': 'rgba(0,255,136,0.15)'},
+        {'id': 'lateral', 'nome': 'Laterais', 'desc': 'Análise de laterais com ênfase em desarmes e assistências', 'img': 'lateral.webp', 'color': 'neon-cyan', 'colorHex': 'rgba(0,229,255,0.08)', 'borderHex': 'rgba(0,229,255,0.15)'},
+        {'id': 'zagueiro', 'nome': 'Zagueiros', 'desc': 'Análise de zagueiros com foco em desarmes e saldo de gols', 'img': 'zagueiro.jpg', 'color': 'neon-red', 'colorHex': 'rgba(239,68,68,0.08)', 'borderHex': 'rgba(239,68,68,0.15)'},
+        {'id': 'meia', 'nome': 'Meias', 'desc': 'Análise de meias priorizando assistências, gols e finalizações', 'img': 'meia.jpg', 'color': 'neon-purple', 'colorHex': 'rgba(168,85,247,0.08)', 'borderHex': 'rgba(168,85,247,0.15)'},
+        {'id': 'atacante', 'nome': 'Atacantes', 'desc': 'Análise de atacantes com ênfase em gols e finalizações', 'img': 'atacante.webp', 'color': 'neon-amber', 'colorHex': 'rgba(245,158,11,0.08)', 'borderHex': 'rgba(245,158,11,0.15)'},
+        {'id': 'treinador', 'nome': 'Técnicos', 'desc': 'Análise de técnicos baseada no desempenho do time', 'img': 'treinador.avif', 'color': 'neon-blue', 'colorHex': 'rgba(68,148,255,0.08)', 'borderHex': 'rgba(68,148,255,0.15)'}
+    ] %}
 
-    <!-- Zagueiros -->
-    <a href="{{ url_for('modulo_individual', modulo='zagueiro') }}" 
-       id="modulo-zagueiro"
-       data-modulo="zagueiro"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
-        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
-            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
+    {% for m in modulos %}
+    <a href="{{ url_for('modulo_individual', modulo=m.id) }}" 
+       id="modulo-{{ m.id }}"
+       data-modulo="{{ m.id }}"
+       class="modulo-card group glass rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_{{ m.borderHex.replace('0.15', '0.08') }}] flex flex-col relative"
+       style="border:1px solid {{ m.borderHex }}">
+        
+        <!-- Badge de status -->
+        <div class="status-badge absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]">
+            <i class="fas fa-hourglass-half mr-1 animate-neon-pulse"></i>
             PENDENTE
         </div>
-        <div class="p-6">
-            <div class="flex items-center space-x-4 mb-4">
-                <div class="p-3 bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                    <i class="fas fa-shield-alt text-white text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-red-300 transition-colors duration-300">Zagueiros</h3>
-                    <p class="text-dark-blue-300 text-sm">Análise de zagueiros</p>
-                </div>
-            </div>
-            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de zagueiros com pesos personalizados</p>
+        
+        <!-- Conteúdo superior (flexível) -->
+        <div class="p-4 flex-1 flex flex-col items-center text-center">
+            <!-- Imagem da posição -->
+            <img src="{{ url_for('static', filename='img/posicoes/' + m.img) }}" 
+                 alt="{{ m.nome }}"
+                 class="w-14 h-14 object-contain rounded-xl mb-3 transition-transform duration-300 group-hover:scale-110"
+                 style="background:{{ m.colorHex }};border:1px solid {{ m.borderHex }};padding:6px">
+            
+            <!-- Nome -->
+            <h3 class="text-base font-bold text-white mb-1">{{ m.nome }}</h3>
+            
+            <!-- Descrição (máximo 3 linhas) -->
+            <p class="text-text-muted text-xs leading-relaxed line-clamp-3">{{ m.desc }}</p>
         </div>
-        <div class="px-6 py-3 bg-gradient-to-r from-red-500/10 to-red-600/10 border-t border-red-500/20">
-            <div class="flex items-center justify-between">
-                <span class="text-red-300 text-sm font-medium">Ver Análise</span>
-                <i class="fas fa-arrow-right text-red-400 group-hover:translate-x-1 transition-transform duration-300"></i>
-            </div>
-        </div>
-    </a>
-
-    <!-- Meias -->
-    <a href="{{ url_for('modulo_individual', modulo='meia') }}" 
-       id="modulo-meia"
-       data-modulo="meia"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
-        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
-            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
-            PENDENTE
-        </div>
-        <div class="p-6">
-            <div class="flex items-center space-x-4 mb-4">
-                <div class="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                    <i class="fas fa-futbol text-white text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-purple-300 transition-colors duration-300">Meias</h3>
-                    <p class="text-dark-blue-300 text-sm">Análise de meias</p>
-                </div>
-            </div>
-            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de meias com pesos personalizados</p>
-        </div>
-        <div class="px-6 py-3 bg-gradient-to-r from-purple-500/10 to-purple-600/10 border-t border-purple-500/20">
-            <div class="flex items-center justify-between">
-                <span class="text-purple-300 text-sm font-medium">Ver Análise</span>
-                <i class="fas fa-arrow-right text-purple-400 group-hover:translate-x-1 transition-transform duration-300"></i>
-            </div>
+        
+        <!-- Botão fixo no bottom -->
+        <div class="px-4 py-2.5 border-t border-[rgba(255,255,255,0.04)] mt-auto flex items-center justify-center gap-1.5 text-xs font-medium transition-colors duration-200" style="background:{{ m.colorHex }};color:var(--{{ m.color.split('-')[1] }})">
+            <span>Ver Análise</span>
+            <i class="fas fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform duration-200"></i>
         </div>
     </a>
-
-    <!-- Atacantes -->
-    <a href="{{ url_for('modulo_individual', modulo='atacante') }}" 
-       id="modulo-atacante"
-       data-modulo="atacante"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
-        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
-            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
-            PENDENTE
-        </div>
-        <div class="p-6">
-            <div class="flex items-center space-x-4 mb-4">
-                <div class="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                    <i class="fas fa-bullseye text-white text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-orange-300 transition-colors duration-300">Atacantes</h3>
-                    <p class="text-dark-blue-300 text-sm">Análise de atacantes</p>
-                </div>
-            </div>
-            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de atacantes com pesos personalizados</p>
-        </div>
-        <div class="px-6 py-3 bg-gradient-to-r from-orange-500/10 to-orange-600/10 border-t border-orange-500/20">
-            <div class="flex items-center justify-between">
-                <span class="text-orange-300 text-sm font-medium">Ver Análise</span>
-                <i class="fas fa-arrow-right text-orange-400 group-hover:translate-x-1 transition-transform duration-300"></i>
-            </div>
-        </div>
-    </a>
-
-    <!-- Treinadores -->
-    <a href="{{ url_for('modulo_individual', modulo='treinador') }}" 
-       id="modulo-treinador"
-       data-modulo="treinador"
-       class="modulo-card group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative h-52 flex flex-col">
-        <div class="status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10">
-            <i class="fas fa-hourglass-half mr-1 animate-pulse"></i>
-            PENDENTE
-        </div>
-        <div class="p-6">
-            <div class="flex items-center space-x-4 mb-4">
-                <div class="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                    <i class="fas fa-user-tie text-white text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-xl font-bold text-white group-hover:text-indigo-300 transition-colors duration-300">Técnicos</h3>
-                    <p class="text-dark-blue-300 text-sm">Análise de treinadores</p>
-                </div>
-            </div>
-            <p class="text-dark-blue-400 text-sm">Módulo específico para análise de treinadores com pesos personalizados</p>
-        </div>
-        <div class="px-6 py-3 bg-gradient-to-r from-indigo-500/10 to-indigo-600/10 border-t border-indigo-500/20">
-            <div class="flex items-center justify-between">
-                <span class="text-indigo-300 text-sm font-medium">Ver Análise</span>
-                <i class="fas fa-arrow-right text-indigo-400 group-hover:translate-x-1 transition-transform duration-300"></i>
-            </div>
-        </div>
-    </a>
+    {% endfor %}
 
     <!-- Escalação Ideal -->
-    <div class="relative overflow-hidden rounded-2xl h-52">
+    <div class="relative rounded-2xl overflow-hidden">
         {% if not permissions.verEscalacaoIdealCompleta %}
         <a href="{{ url_for('pagamento.index') }}" 
            id="modulo-escalacao-ideal"
-           class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative block bloqueado-plano h-full flex flex-col">
-            <!-- Badge de status DESMARCADO/LIBERADO -->
-            <div id="escalacao-status-badge" class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10 bg-gray-500/80 text-white" style="filter: blur(1px);">
-                <i class="fas fa-minus-circle mr-1"></i>
-                <span id="escalacao-status-text">DESMARCADO</span>
-            </div>
-            <!-- Overlay de bloqueio por módulos pendentes -->
-            <div id="escalacao-overlay" class="hidden absolute inset-0 bg-dark-blue-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 rounded-2xl">
-                <i class="fas fa-exclamation-triangle text-yellow-400 text-4xl mb-4"></i>
-                <p class="text-white text-lg font-bold mb-2 text-center">Calcule todos os módulos primeiro</p>
-                <p class="text-dark-blue-300 text-sm text-center" id="modulos-pendentes-text">Faltam módulos a calcular</p>
-            </div>
-            <div class="p-6 flex-1" style="filter: blur(1px);">
-                <div class="flex items-center space-x-4 mb-4">
-                    <div class="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                        <i class="fas fa-trophy text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold text-white group-hover:text-yellow-300 transition-colors duration-300">Escalação Ideal</h3>
-                        <p class="text-dark-blue-300 text-sm">Calcule seu time ideal</p>
-                    </div>
-                </div>
-                <p class="text-dark-blue-400 text-sm">Calcule a escalação ideal baseada nos rankings de cada posição</p>
-            </div>
-            <div class="px-6 py-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border-t border-yellow-500/20 mt-auto" style="filter: blur(1px);">
-                <div class="flex items-center justify-between">
-                    <span class="text-yellow-300 text-sm font-medium">Calcular Escalação</span>
-                    <i class="fas fa-arrow-right text-yellow-400 group-hover:translate-x-1 transition-transform duration-300"></i>
-                </div>
-            </div>
-            <span class="absolute bottom-2 right-2 bg-emerald-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
-        </a>
+           class="group glass rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col relative bloqueado-plano h-full"
+           style="border:1px solid rgba(245,158,11,0.15);filter:blur(1px)">
         {% else %}
         <a href="{{ url_for('modulo_escalacao_ideal') }}" 
            id="modulo-escalacao-ideal"
-           class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative block h-full flex flex-col">
-            <!-- Badge de status DESMARCADO/LIBERADO -->
-            <div id="escalacao-status-badge" class="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10 bg-gray-500/80 text-white">
+           class="group glass rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col relative h-full"
+           style="border:1px solid rgba(245,158,11,0.15)">
+        {% endif %}
+            <div id="escalacao-status-badge" class="absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(148,163,184,0.12)] text-text-muted border border-[rgba(148,163,184,0.2)]">
                 <i class="fas fa-minus-circle mr-1"></i>
                 <span id="escalacao-status-text">DESMARCADO</span>
             </div>
-            <!-- Overlay de bloqueio por módulos pendentes -->
-            <div id="escalacao-overlay" class="hidden absolute inset-0 bg-dark-blue-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 rounded-2xl">
-                <i class="fas fa-exclamation-triangle text-yellow-400 text-4xl mb-4"></i>
-                <p class="text-white text-lg font-bold mb-2 text-center">Calcule todos os módulos primeiro</p>
-                <p class="text-dark-blue-300 text-sm text-center" id="modulos-pendentes-text">Faltam módulos a calcular</p>
+            <div id="escalacao-overlay" class="hidden absolute inset-0 bg-[rgba(6,11,20,0.88)] backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 rounded-2xl">
+                <i class="fas fa-exclamation-triangle text-neon-amber text-3xl mb-3"></i>
+                <p class="text-white text-base font-bold mb-1 text-center">Calcule todos os módulos primeiro</p>
+                <p class="text-text-secondary text-xs text-center" id="modulos-pendentes-text">Faltam módulos a calcular</p>
             </div>
-            <div class="p-6 flex-1">
-                <div class="flex items-center space-x-4 mb-4">
-                    <div class="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                        <i class="fas fa-trophy text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold text-white group-hover:text-yellow-300 transition-colors duration-300">Escalação Ideal</h3>
-                        <p class="text-dark-blue-300 text-sm">Calcule seu time ideal</p>
-                    </div>
-                </div>
-                <p class="text-dark-blue-400 text-sm">Calcule a escalação ideal baseada nos rankings de cada posição</p>
+            <div class="p-4 flex-1 flex flex-col items-center text-center">
+                <img src="{{ url_for('static', filename='img/posicoes/treinador.avif') }}" 
+                     alt="Escalação Ideal"
+                     class="w-14 h-14 object-contain rounded-xl mb-3 transition-transform duration-300 group-hover:scale-110"
+                     style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);padding:6px">
+                <h3 class="text-base font-bold text-white mb-1">Escalação Ideal</h3>
+                <p class="text-text-muted text-xs leading-relaxed line-clamp-3">Calcule a escalação ideal baseada nos rankings de cada posição</p>
             </div>
-            <div class="px-6 py-3 bg-gradient-to-r from-yellow-500/10 to-yellow-600/10 border-t border-yellow-500/20 mt-auto">
-                <div class="flex items-center justify-between">
-                    <span class="text-yellow-300 text-sm font-medium">Calcular Escalação</span>
-                    <i class="fas fa-arrow-right text-yellow-400 group-hover:translate-x-1 transition-transform duration-300"></i>
-                </div>
+            <div class="px-4 py-2.5 border-t border-[rgba(255,255,255,0.04)] mt-auto flex items-center justify-center gap-1.5 text-xs font-medium" style="background:rgba(245,158,11,0.06);color:#F59E0B">
+                <span>Calcular Escalação</span>
+                <i class="fas fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform duration-200"></i>
             </div>
+        {% if not permissions.verEscalacaoIdealCompleta %}
+            <span class="absolute bottom-1.5 right-1.5 bg-neon-purple text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
+        </a>
+        {% else %}
         </a>
         {% endif %}
     </div>
 
     <!-- Escalação Rápida -->
-    <div class="relative overflow-hidden rounded-2xl h-52">
+    <div class="relative rounded-2xl overflow-hidden">
         {% if not permissions.podeEscalar %}
         <a href="{{ url_for('pagamento.index') }}" 
-           class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative block w-full text-left h-full flex flex-col">
-            <div class="p-6 flex-1" style="filter: blur(1px);">
-                <div class="flex items-center space-x-4 mb-4">
-                    <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                        <i class="fas fa-bolt text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold text-white group-hover:text-green-300 transition-colors duration-300">⚡ Escalação Rápida</h3>
-                        <p class="text-dark-blue-300 text-sm">Calcule e escale automaticamente</p>
-                    </div>
-                </div>
-                <p class="text-dark-blue-400 text-sm">Calcule todos os rankings e escale o time no Cartola automaticamente</p>
-            </div>
-            <div class="px-6 py-3 bg-gradient-to-r from-green-500/10 to-emerald-600/10 border-t border-green-500/20 mt-auto" style="filter: blur(1px);">
-                <div class="flex items-center justify-between">
-                    <span class="text-green-300 text-sm font-medium">Executar Escalação</span>
-                    <i class="fas fa-arrow-right text-green-400 group-hover:translate-x-1 transition-transform duration-300"></i>
-                </div>
-            </div>
-            <span class="absolute bottom-2 right-2 bg-emerald-600 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
-        </a>
+           class="group glass rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col relative h-full w-full text-left"
+           style="border:1px solid rgba(0,255,136,0.15);filter:blur(1px)">
         {% else %}
         <button id="escalacaoRapidaBtn" 
-                class="group bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:transform hover:scale-105 overflow-hidden relative block w-full text-left h-full flex flex-col">
-            <div class="p-6 flex-1">
-                <div class="flex items-center space-x-4 mb-4">
-                    <div class="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-300">
-                        <i class="fas fa-bolt text-white text-xl"></i>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold text-white group-hover:text-green-300 transition-colors duration-300">⚡ Escalação Rápida</h3>
-                        <p class="text-dark-blue-300 text-sm">Calcule e escale automaticamente</p>
-                    </div>
-                </div>
-                <p class="text-dark-blue-400 text-sm">Calcule todos os rankings e escale o time no Cartola automaticamente</p>
+                class="group glass rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col relative h-full w-full text-left"
+                style="border:1px solid rgba(0,255,136,0.15);background:rgba(11,17,32,0.45);backdrop-filter:blur(20px)">
+        {% endif %}
+            <div class="p-4 flex-1 flex flex-col items-center text-center">
+                <img src="{{ url_for('static', filename='img/posicoes/atacante.webp') }}" 
+                     alt="Escalação Rápida"
+                     class="w-14 h-14 object-contain rounded-xl mb-3 transition-transform duration-300 group-hover:scale-110"
+                     style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.15);padding:6px">
+                <h3 class="text-base font-bold text-white mb-1">Escalação Rápida</h3>
+                <p class="text-text-muted text-xs leading-relaxed line-clamp-3">Calcule todos os rankings e escale o time no Cartola automaticamente</p>
             </div>
-            <div class="px-6 py-3 bg-gradient-to-r from-green-500/10 to-emerald-600/10 border-t border-green-500/20 mt-auto">
-                <div class="flex items-center justify-between">
-                    <span class="text-green-300 text-sm font-medium">Executar Escalação</span>
-                    <i class="fas fa-arrow-right text-green-400 group-hover:translate-x-1 transition-transform duration-300"></i>
-                </div>
+            <div class="px-4 py-2.5 border-t border-[rgba(255,255,255,0.04)] mt-auto flex items-center justify-center gap-1.5 text-xs font-medium" style="background:rgba(0,255,136,0.06);color:#00FF88">
+                <span>Executar Escalação</span>
+                <i class="fas fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform duration-200"></i>
             </div>
+        {% if not permissions.podeEscalar %}
+            <span class="absolute bottom-1.5 right-1.5 bg-neon-purple text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
+        </a>
+        {% else %}
         </button>
         {% endif %}
     </div>
@@ -323,46 +136,27 @@
 </div>
 
 <!-- Info Section -->
-<div class="mt-12">
-    <div class="bg-gradient-to-br from-purple-900/50 to-indigo-900/50 backdrop-blur-sm rounded-2xl p-6 border border-purple-500/50">
-        <div class="flex items-start space-x-4">
-            <div class="p-2 bg-purple-500/20 rounded-lg">
-                <i class="fas fa-info-circle text-purple-400 text-xl"></i>
-            </div>
-            <div>
-                <h3 class="text-xl font-semibold text-white mb-4">Como funcionam os módulos</h3>
-                <div class="grid md:grid-cols-2 gap-4 text-purple-200">
-                    <div>
-                        <h4 class="font-medium text-purple-100 mb-2">
-                            <i class="fas fa-cogs text-purple-400 mr-2"></i>
-                            Módulos de Posição
-                        </h4>
-                        <p class="text-sm">Cada posição (goleiro, lateral, zagueiro, meia, atacante, treinador) tem seu próprio módulo com pesos específicos configurados na página de configuração.</p>
-                    </div>
-                    
-                    <div>
-                        <h4 class="font-medium text-purple-100 mb-2">
-                            <i class="fas fa-check-circle text-green-400 mr-2"></i>
-                            Sistema de Validação
-                        </h4>
-                        <p class="text-sm">Cada módulo calculado recebe um visto verde. A escalação ideal só fica disponível após calcular TODOS os módulos de posição.</p>
-                    </div>
-                    
-                    <div>
-                        <h4 class="font-medium text-purple-100 mb-2">
-                            <i class="fas fa-chart-bar text-purple-400 mr-2"></i>
-                            Análise Detalhada
-                        </h4>
-                        <p class="text-sm">Visualize todos os dados utilizados no cálculo, incluindo médias, pesos de jogo, pesos SG e estatísticas específicas.</p>
-                    </div>
-                    
-                    <div>
-                        <h4 class="font-medium text-purple-100 mb-2">
-                            <i class="fas fa-sync text-purple-400 mr-2"></i>
-                            Atualização por Rodada
-                        </h4>
-                        <p class="text-sm">Os cálculos são específicos para cada rodada e time. Ao trocar de rodada, os módulos precisam ser recalculados.</p>
-                    </div>
+<div class="mt-10 glass rounded-2xl neon-border p-5">
+    <div class="flex items-start space-x-3">
+        <i class="fas fa-info-circle text-neon-purple text-xl mt-0.5"></i>
+        <div>
+            <h3 class="text-base font-semibold text-white mb-3">Como funcionam os módulos</h3>
+            <div class="grid sm:grid-cols-2 gap-3 text-text-secondary text-sm">
+                <div>
+                    <p class="font-medium text-white text-xs mb-1"><i class="fas fa-cogs text-neon-purple mr-1.5"></i>Módulos de Posição</p>
+                    <p class="text-xs">Cada posição tem seu próprio módulo com pesos específicos configurados nos Perfis de Jogo.</p>
+                </div>
+                <div>
+                    <p class="font-medium text-white text-xs mb-1"><i class="fas fa-check-circle text-neon-green mr-1.5"></i>Sistema de Validação</p>
+                    <p class="text-xs">Cada módulo calculado recebe um visto verde. A escalação ideal é liberada após calcular TODOS.</p>
+                </div>
+                <div>
+                    <p class="font-medium text-white text-xs mb-1"><i class="fas fa-chart-bar text-neon-cyan mr-1.5"></i>Análise Detalhada</p>
+                    <p class="text-xs">Visualize médias, pesos de jogo, pesos SG e estatísticas específicas de cada jogador.</p>
+                </div>
+                <div>
+                    <p class="font-medium text-white text-xs mb-1"><i class="fas fa-sync text-neon-amber mr-1.5"></i>Atualização por Rodada</p>
+                    <p class="text-xs">Os cálculos são específicos para cada rodada. Ao virar a rodada, recalcule os módulos.</p>
                 </div>
             </div>
         </div>
@@ -370,85 +164,52 @@
 </div>
 
 <script>
-    // Carregar status dos módulos ao carregar a página
     document.addEventListener('DOMContentLoaded', async function() {
         try {
             showLoader('Verificando status dos módulos...');
             
-            // PRIMEIRO: Verificar se há perfis disponíveis
             const perfisResponse = await fetch('/api/perfis/verificar');
             const perfisData = await perfisResponse.json();
             
             if (!perfisData.tem_perfis) {
-                // NÃO HÁ PERFIS - BLOQUEAR TUDO
                 hideLoader();
-                
-                // Bloquear todos os módulos de posição
                 const modulos = ['goleiro', 'lateral', 'zagueiro', 'meia', 'atacante', 'treinador'];
                 modulos.forEach(modulo => {
                     const card = document.getElementById(`modulo-${modulo}`);
                     if (card) {
-                        // Adicionar overlay de bloqueio
                         const overlay = document.createElement('div');
-                        overlay.className = 'absolute inset-0 bg-dark-blue-900/90 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-4';
+                        overlay.className = 'absolute inset-0 bg-[rgba(6,11,20,0.9)] backdrop-blur-sm z-20 flex flex-col items-center justify-center p-4 rounded-2xl';
                         overlay.innerHTML = `
-                            <i class="fas fa-exclamation-triangle text-red-400 text-3xl mb-3"></i>
-                            <p class="text-white text-sm font-bold text-center">Sem perfis disponíveis</p>
+                            <i class="fas fa-exclamation-triangle text-neon-red text-2xl mb-2"></i>
+                            <p class="text-white text-xs font-bold text-center">Sem perfis disponíveis</p>
                         `;
                         card.appendChild(overlay);
                         card.style.cursor = 'not-allowed';
-                        
-                        // Badge vermelho
                         const badge = card.querySelector('.status-badge');
                         if (badge) {
-                            badge.className = 'status-badge absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
+                            badge.className = 'status-badge absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(239,68,68,0.12)] text-neon-red border border-[rgba(239,68,68,0.2)]';
                             badge.innerHTML = '<i class="fas fa-ban mr-1"></i>BLOQUEADO';
                         }
-                        
-                        // Impedir clique
-                        card.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            showAlert('Perfis Não Calculados', perfisData.mensagem);
-                        });
+                        card.addEventListener('click', function(e) { e.preventDefault(); showAlert('Perfis Não Calculados', perfisData.mensagem); });
                     }
                 });
-                
-                // Bloquear escalação ideal também
                 const escalacaoCard = document.getElementById('modulo-escalacao-ideal');
                 const escalacaoOverlay = document.getElementById('escalacao-overlay');
                 const escalacaoBadge = document.getElementById('escalacao-status-badge');
-                
                 escalacaoOverlay.classList.remove('hidden');
-                escalacaoOverlay.innerHTML = `
-                    <i class="fas fa-exclamation-triangle text-red-400 text-4xl mb-4"></i>
-                    <p class="text-white text-lg font-bold mb-2 text-center">Perfis não disponíveis</p>
-                    <p class="text-dark-blue-300 text-sm text-center">${perfisData.mensagem}</p>
-                `;
-                escalacaoBadge.className = 'absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
+                escalacaoOverlay.innerHTML = `<i class="fas fa-exclamation-triangle text-neon-red text-3xl mb-3"></i><p class="text-white text-base font-bold mb-1 text-center">Perfis não disponíveis</p><p class="text-text-secondary text-xs text-center">${perfisData.mensagem}</p>`;
+                escalacaoBadge.className = 'absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(239,68,68,0.12)] text-neon-red border border-[rgba(239,68,68,0.2)]';
                 escalacaoBadge.innerHTML = '<i class="fas fa-ban mr-1"></i>BLOQUEADO';
                 escalacaoCard.style.cursor = 'not-allowed';
-                escalacaoCard.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    showAlert('Perfis Não Calculados', perfisData.mensagem);
-                });
-                
-                // Atualizar status geral
-                const statusGeral = document.getElementById('statusGeral');
-                statusGeral.innerHTML = `<span class="text-red-400 font-bold"><i class="fas fa-ban mr-1"></i>${perfisData.mensagem}</span>`;
-                
-                return; // Não continuar verificação de status
+                escalacaoCard.addEventListener('click', function(e) { e.preventDefault(); showAlert('Perfis Não Calculados', perfisData.mensagem); });
+                document.getElementById('statusGeral').innerHTML = `<span class="text-neon-red font-bold"><i class="fas fa-ban mr-1"></i>${perfisData.mensagem}</span>`;
+                return;
             }
             
-            // SE HOUVER PERFIS, continuar verificação normal
             const response = await fetch('/api/modulos/status');
-            if (!response.ok) {
-                throw new Error('Erro ao buscar status dos módulos');
-            }
-            
+            if (!response.ok) throw new Error('Erro ao buscar status dos módulos');
             const data = await response.json();
-            console.log('Status dos módulos:', data);
             
-            // Atualizar badges de cada módulo
             const modulos = ['goleiro', 'lateral', 'zagueiro', 'meia', 'atacante', 'treinador'];
             const modulosCalculados = [];
             const modulosPendentes = [];
@@ -456,85 +217,53 @@
             modulos.forEach(modulo => {
                 const card = document.getElementById(`modulo-${modulo}`);
                 const badge = card.querySelector('.status-badge');
-                
                 if (data.status[modulo]) {
-                    // Módulo CALCULADO - badge verde com visto
-                    badge.className = 'status-badge absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
+                    badge.className = 'status-badge absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(0,255,136,0.1)] text-neon-green border border-[rgba(0,255,136,0.2)]';
                     badge.innerHTML = '<i class="fas fa-check-circle mr-1"></i>CALCULADO';
                     modulosCalculados.push(modulo);
                 } else {
-                    // Módulo PENDENTE - badge laranja com ampulheta
-                    badge.className = 'status-badge absolute top-3 right-3 bg-orange-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
-                    badge.innerHTML = '<i class="fas fa-hourglass-half mr-1 animate-pulse"></i>PENDENTE';
+                    badge.className = 'status-badge absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]';
+                    badge.innerHTML = '<i class="fas fa-hourglass-half mr-1 animate-neon-pulse"></i>PENDENTE';
                     modulosPendentes.push(modulo);
                 }
             });
             
-            // Atualizar status geral no header
             const statusGeral = document.getElementById('statusGeral');
             if (data.todos_calculados) {
-                statusGeral.innerHTML = `<span class="text-green-400 font-bold"><i class="fas fa-check-circle mr-1"></i>Todos os módulos calculados! Pronto para escalar.</span>`;
+                statusGeral.innerHTML = `<span class="text-neon-green font-bold"><i class="fas fa-check-circle mr-1"></i>Todos os módulos calculados! Pronto para escalar.</span>`;
             } else {
-                const nomes = {
-                    'goleiro': 'Goleiros',
-                    'lateral': 'Laterais',
-                    'zagueiro': 'Zagueiros',
-                    'meia': 'Meias',
-                    'atacante': 'Atacantes',
-                    'treinador': 'Técnicos'
-                };
+                const nomes = {'goleiro':'Goleiros','lateral':'Laterais','zagueiro':'Zagueiros','meia':'Meias','atacante':'Atacantes','treinador':'Técnicos'};
                 const faltam = modulosPendentes.map(m => nomes[m]).join(', ');
-                statusGeral.innerHTML = `<span class="text-yellow-400 font-bold"><i class="fas fa-exclamation-triangle mr-1"></i>Calculados: ${modulosCalculados.length}/6 • Faltam: ${faltam}</span>`;
+                statusGeral.innerHTML = `<span class="text-neon-amber font-bold"><i class="fas fa-exclamation-triangle mr-1"></i>Calculados: ${modulosCalculados.length}/6 • Faltam: ${faltam}</span>`;
             }
             
-            // Controlar acesso ao módulo de escalação ideal
             const escalacaoCard = document.getElementById('modulo-escalacao-ideal');
             const escalacaoOverlay = document.getElementById('escalacao-overlay');
             const escalacaoBadge = document.getElementById('escalacao-status-badge');
             const escalacaoStatusText = document.getElementById('escalacao-status-text');
             const modulosPendentesText = document.getElementById('modulos-pendentes-text');
-            
-            // Verificar se há bloqueio por plano - se tem a classe bloqueado-plano, está bloqueado
             const temPermissaoPlano = escalacaoCard && !escalacaoCard.classList.contains('bloqueado-plano');
             
-            if (!temPermissaoPlano) {
-                // Bloqueado por plano - não fazer nada, o HTML já está configurado corretamente
-                return; // Não verificar status de módulos se estiver bloqueado por plano
-            } else if (data.todos_calculados) {
-                // LIBERADO - badge verde com visto
+            if (!temPermissaoPlano) return;
+            
+            if (data.todos_calculados) {
                 escalacaoOverlay.classList.add('hidden');
-                escalacaoBadge.className = 'absolute top-3 right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
+                escalacaoBadge.className = 'absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(0,255,136,0.1)] text-neon-green border border-[rgba(0,255,136,0.2)]';
                 escalacaoStatusText.innerHTML = '<i class="fas fa-check-circle mr-1"></i>LIBERADO';
                 escalacaoCard.style.cursor = 'pointer';
             } else {
-                // DESMARCADO - badge cinza (módulos pendentes)
                 escalacaoOverlay.classList.remove('hidden');
-                escalacaoBadge.className = 'absolute top-3 right-3 bg-gray-500/80 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg z-10';
+                escalacaoBadge.className = 'absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(148,163,184,0.12)] text-text-muted border border-[rgba(148,163,184,0.2)]';
                 escalacaoStatusText.innerHTML = '<i class="fas fa-minus-circle mr-1"></i>DESMARCADO';
                 escalacaoCard.style.cursor = 'not-allowed';
-                
-                // Mensagem do que falta
-                const nomes = {
-                    'goleiro': 'Goleiros',
-                    'lateral': 'Laterais',
-                    'zagueiro': 'Zagueiros',
-                    'meia': 'Meias',
-                    'atacante': 'Atacantes',
-                    'treinador': 'Técnicos'
-                };
+                const nomes = {'goleiro':'Goleiros','lateral':'Laterais','zagueiro':'Zagueiros','meia':'Meias','atacante':'Atacantes','treinador':'Técnicos'};
                 const faltam = modulosPendentes.map(m => nomes[m]).join(', ');
-                modulosPendentesText.innerHTML = `Pendentes (${modulosPendentes.length}): <span class="text-yellow-300 font-bold">${faltam}</span>`;
-                
-                // Impedir navegação
+                modulosPendentesText.innerHTML = `Pendentes (${modulosPendentes.length}): <span class="text-neon-amber font-bold">${faltam}</span>`;
                 escalacaoCard.addEventListener('click', function(e) {
                     e.preventDefault();
-                    showAlert(
-                        'Módulos Pendentes', 
-                        `Por favor, calcule todos os módulos de posição antes de acessar a escalação ideal.\n\nAinda faltam: ${faltam}`
-                    );
+                    showAlert('Módulos Pendentes', `Por favor, calcule todos os módulos de posição antes de acessar a escalação ideal.\n\nAinda faltam: ${faltam}`);
                 });
             }
-            
         } catch (error) {
             console.error('Erro ao carregar status:', error);
             showToast('Erro ao verificar status dos módulos', 'error');
@@ -544,7 +273,6 @@
     });
 </script>
 
-<!-- Scripts de Cálculo (necessários para escalação rápida) -->
 <script src="{{ url_for('static', filename='js/calculo_goleiro.js') }}"></script>
 <script src="{{ url_for('static', filename='js/calculo_lateral.js') }}"></script>
 <script src="{{ url_for('static', filename='js/calculo_zagueiro.js') }}"></script>
@@ -552,7 +280,5 @@
 <script src="{{ url_for('static', filename='js/calculo_atacante.js') }}"></script>
 <script src="{{ url_for('static', filename='js/calculo_treinador.js') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js') }}"></script>
-
-<!-- Script de Escalação Rápida -->
 <script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
 {% endblock %}

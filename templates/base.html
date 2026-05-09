@@ -103,22 +103,22 @@
     <div class="fixed inset-y-0 left-0 z-50 w-64 glass-heavy transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out border-r border-[rgba(0,229,255,0.07)] shadow-[4px_0_30px_rgba(0,0,0,0.4)]" id="sidebar">
 
         <!-- Sidebar Header / Logo -->
-        <div class="px-3 pt-4 pb-3 border-b border-[rgba(0,229,255,0.06)]">
+        <div class="px-3 pt-3 pb-2 border-b border-[rgba(0,229,255,0.06)]">
             <a href="{{ url_for('index') }}" class="flex flex-col items-center group">
                 <img src="{{ url_for('static', filename='img/aero-cartola-logo.png') }}" 
                      alt="Aero Cartola" 
-                     class="w-full aspect-square object-contain rounded-xl transition-all duration-300 group-hover:drop-shadow-[0_0_18px_rgba(0,229,255,0.5)] mb-2.5">
-                <span class="text-sm font-bold text-neon-cyan-gradient tracking-wide">
+                     class="w-full aspect-square object-contain rounded-xl transition-all duration-300 group-hover:drop-shadow-[0_0_18px_rgba(0,229,255,0.5)] mb-1.5">
+                <span class="text-xs font-bold text-neon-cyan-gradient tracking-wide">
                     Aero Cartola
                 </span>
             </a>
-            <button type="button" id="sidebar-close" class="lg:hidden absolute top-4 right-4 text-text-muted hover:text-white transition-colors duration-200">
+            <button type="button" id="sidebar-close" class="lg:hidden absolute top-3 right-3 text-text-muted hover:text-white transition-colors duration-200">
                 <i class="fas fa-times text-lg"></i>
             </button>
         </div>
 
         <!-- User Section -->
-        <a href="{{ url_for('perfil') }}" class="block px-4 py-3.5 border-b border-[rgba(0,229,255,0.06)] hover:bg-[rgba(0,229,255,0.04)] transition-all duration-200 group cursor-pointer">
+        <a href="{{ url_for('perfil') }}" class="block px-4 py-2.5 border-b border-[rgba(0,229,255,0.06)] hover:bg-[rgba(0,229,255,0.04)] transition-all duration-200 group cursor-pointer">
             <div class="flex items-center space-x-3">
                 <div class="relative flex-shrink-0">
                     <div class="w-9 h-9 rounded-full bg-[rgba(11,17,32,0.6)] border border-[rgba(0,229,255,0.15)] flex items-center justify-center shadow-[0_0_12px_rgba(0,229,255,0.06)] group-hover:border-[rgba(0,229,255,0.35)] group-hover:shadow-[0_0_18px_rgba(0,229,255,0.12)] transition-all duration-300">
@@ -160,20 +160,20 @@
         </a>
 
         <!-- Navigation Links -->
-        <nav class="flex-1 px-3 py-4 space-y-4 overflow-y-auto neon-scroll sidebar-scroll">
+        <nav class="flex-1 px-3 py-3 space-y-3 overflow-y-auto neon-scroll sidebar-scroll">
 
             <!-- Principal -->
             <div class="space-y-0.5">
                 <p class="px-3 mb-1.5 text-[10px] font-semibold text-text-muted uppercase tracking-[0.15em]">Principal</p>
 
                 <a href="{{ url_for('index') }}" title="Visão geral do seu time, status e próximos passos"
-                   class="sidebar-link {% if request.path == url_for('index') %}active{% endif %} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
+                   class="sidebar-link {% if request.path == url_for('index') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
                     <i class="fas fa-chart-simple w-5 text-center mr-3 text-neon-cyan"></i>
                     Dashboard
                 </a>
 
                 <a href="{{ url_for('pagina_inicial') }}" title="Configure os perfis de peso de jogo e saldo de gols"
-                   class="sidebar-link {% if request.path.startswith('/pagina-inicial') %}active{% endif %} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
+                   class="sidebar-link {% if request.path.startswith('/pagina-inicial') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
                     <i class="fas fa-sliders w-5 text-center mr-3 text-neon-green"></i>
                     Perfis de Jogo
                 </a>
@@ -184,13 +184,13 @@
                 <p class="px-3 mb-1.5 text-[10px] font-semibold text-text-muted uppercase tracking-[0.15em]">Análises</p>
 
                 <a href="{{ url_for('modulos') }}" title="Calcule e visualize os rankings de jogadores por posição"
-                   class="sidebar-link {% if request.path.startswith('/modulos') and not request.path.endswith('/escalacao-ideal') %}active{% endif %} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
+                   class="sidebar-link {% if request.path.startswith('/modulos') and not request.path.endswith('/escalacao-ideal') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
                     <i class="fas fa-microchip w-5 text-center mr-3 text-neon-purple"></i>
                     Rankings
                 </a>
 
                 <a href="{{ url_for('modulo_escalacao_ideal') }}" title="Monte a escalação ideal do seu time automaticamente"
-                   class="sidebar-link {% if request.path == url_for('modulo_escalacao_ideal') %}active{% endif %} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
+                   class="sidebar-link {% if request.path == url_for('modulo_escalacao_ideal') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
                     <i class="fas fa-wand-magic-sparkles w-5 text-center mr-3 text-neon-amber"></i>
                     Escalação Ideal
                 </a>
@@ -201,13 +201,13 @@
                 <p class="px-3 mb-1.5 text-[10px] font-semibold text-text-muted uppercase tracking-[0.15em]">Times</p>
 
                 <a href="{{ url_for('credenciais') }}" title="Adicione, remova e gerencie seus times do Cartola"
-                   class="sidebar-link {% if request.path.startswith('/credenciais') or request.path.startswith('/associar-credenciais') %}active{% endif %} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
+                   class="sidebar-link {% if request.path.startswith('/credenciais') or request.path.startswith('/associar-credenciais') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
                     <i class="fas fa-people-group w-5 text-center mr-3 text-neon-blue"></i>
                     Gerenciar Times
                 </a>
 
                 <!-- Seleção dinâmica de time -->
-                <div id="timesListContainer" class="max-h-48 overflow-y-auto neon-scroll ml-0">
+                <div id="timesListContainer" class="max-h-32 overflow-y-auto neon-scroll ml-0">
                     <div id="timesList" class="space-y-0.5 pl-3 border-l border-[rgba(0,229,255,0.06)] ml-2.5">
                         <div class="px-2 py-1.5 text-[11px] text-text-muted">Carregando times...</div>
                     </div>
@@ -219,14 +219,14 @@
                 <p class="px-3 mb-1.5 text-[10px] font-semibold text-text-muted uppercase tracking-[0.15em]">Conta</p>
 
                 <a href="{{ url_for('pagamento.index') }}" title="Gerencie seu plano e assinatura"
-                   class="sidebar-link {% if request.path.startswith('/pagamento') %}active{% endif %} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
+                   class="sidebar-link {% if request.path.startswith('/pagamento') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
                     <i class="fas fa-gem w-5 text-center mr-3 text-neon-cyan"></i>
                     Assinatura
                 </a>
 
                 {% if current_user and current_user.is_admin %}
                 <a href="{{ url_for('admin_planos') }}" title="Teste e gerencie planos de assinatura"
-                   class="sidebar-link {% if request.path.startswith('/admin/planos') %}active{% endif %} flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
+                   class="sidebar-link {% if request.path.startswith('/admin/planos') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
                     <i class="fas fa-crown w-5 text-center mr-3 text-neon-amber"></i>
                     Admin Planos
                 </a>
@@ -235,9 +235,9 @@
         </nav>
 
         <!-- Sidebar Footer / Logout -->
-        <div class="px-4 py-3 border-t border-[rgba(0,229,255,0.06)]">
+        <div class="px-4 py-2 border-t border-[rgba(0,229,255,0.06)]">
             <a href="{{ url_for('logout') }}"
-               class="flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-[#F87171] hover:text-white hover:bg-[rgba(239,68,68,0.08)] group">
+               class="flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-[#F87171] hover:text-white hover:bg-[rgba(239,68,68,0.08)] group">
                 <i class="fas fa-right-from-bracket w-5 text-center mr-3 text-[#F87171]"></i>
                 Sair
             </a>
