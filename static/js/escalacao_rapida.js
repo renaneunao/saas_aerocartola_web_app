@@ -382,8 +382,30 @@ class EscalacaoRapida {
         
         this.log(`\n📤 PAYLOAD ENVIADO PARA O BACKEND:`);
         this.log(`   Formação: ${payload.formacao}`);
-        this.log(`   Atletas no payload: ${Object.values(escalacao.titulares).flat().map(j => j.atleta_id).join(', ')}`);
-        
+
+        // Logar titulares por posição com nomes
+        this.log(`\n👕 TITULARES SELECIONADOS:`);
+        const posicaoEmoji = { goleiros: '🧤', zagueiros: '🛡️', laterais: '↔️', meias: '🎯', atacantes: '⚽', treinadores: '📋' };
+        for (const [pos, jogadores] of Object.entries(escalacao.titulares)) {
+            if (jogadores && jogadores.length > 0) {
+                jogadores.forEach(j => {
+                    const cap = j.eh_capitao ? ' 👑 CAPITÃO' : '';
+                    this.log(`   ${posicaoEmoji[pos] || '•'} [${pos.toUpperCase()}] ${j.apelido} (R$ ${parseFloat(j.preco_num || j.preco || 0).toFixed(2)})${cap}`);
+                });
+            }
+        }
+
+        // Logar reservas com nomes
+        this.log(`\n🪑 RESERVAS:`);
+        for (const [pos, jogadores] of Object.entries(escalacao.reservas || {})) {
+            if (jogadores && jogadores.length > 0) {
+                jogadores.forEach(j => {
+                    const luxo = j.eh_reserva_luxo ? ' 💎 LUXO' : '';
+                    this.log(`   ${posicaoEmoji[pos] || '•'} [${pos.toUpperCase()}] ${j.apelido} (R$ ${parseFloat(j.preco_num || j.preco || 0).toFixed(2)})${luxo}`);
+                });
+            }
+        }
+
         const response = await fetch('/api/escalacao-ideal/escalar', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -391,6 +413,27 @@ class EscalacaoRapida {
         });
         
         const data = await response.json();
+
+        // Sempre exibir atletas_debug do backend (disponível em sucesso e erro)
+        if (data.atletas_debug && data.atletas_debug.length > 0) {
+            this.log(`\n📋 ATLETAS CONFIRMADOS PELO BACKEND (${data.atletas_debug.length} total):`);
+            const titulares = data.atletas_debug.filter(a => a.tipo === 'titular');
+            const reservaLuxo = data.atletas_debug.filter(a => a.tipo === 'reserva_luxo');
+            const reservas = data.atletas_debug.filter(a => a.tipo === 'reserva');
+            titulares.forEach(a => {
+                const cap = a.capitao ? ' 👑' : '';
+                this.log(`   ✅ [TITULAR] ${a.apelido} | ${a.posicao} | R$ ${parseFloat(a.preco || 0).toFixed(2)}${cap}`);
+            });
+            reservaLuxo.forEach(a => {
+                this.log(`   💎 [RES.LUXO] ${a.apelido} | ${a.posicao} | R$ ${parseFloat(a.preco || 0).toFixed(2)}`);
+            });
+            reservas.forEach(a => {
+                this.log(`   🪑 [RESERVA] ${a.apelido} | ${a.posicao} | R$ ${parseFloat(a.preco || 0).toFixed(2)}`);
+            });
+            if (data.payload_enviado) {
+                this.log(`\n📦 PAYLOAD CARTOLA: atletas=[${(data.payload_enviado.atletas || []).join(', ')}] | capitao=${data.payload_enviado.capitao} | reserva_luxo=${data.payload_enviado.reserva_luxo_id}`);
+            }
+        }
         
         if (!response.ok || !data.success) {
             const errorMsg = data.error || 'Erro desconhecido';
