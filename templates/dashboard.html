@@ -48,71 +48,76 @@
         </div>
     </div>
 
-    <!-- Cards de Status (compactos) -->
+    <!-- Cards de Status com bg images -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
         
-        <!-- Perfis de Jogo -->
-        <div class="group glass rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5
-                    {% if status.tem_perfis %}border border-[rgba(0,255,136,0.15)]{% else %}border border-[rgba(255,255,255,0.04)]{% endif %}">
-            <div class="p-3.5">
+        <!-- Perfis de Jogo (bg: pesos.avif) -->
+        <div class="group relative rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 border {% if status.tem_perfis %}border-[rgba(0,255,136,0.2)]{% else %}border-[rgba(255,255,255,0.06)]{% endif %}">
+            <img src="{{ url_for('static', filename='img/pesos.avif') }}" class="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500">
+            <div class="relative p-3.5 bg-gradient-to-t from-[rgba(6,11,20,0.95)] via-[rgba(6,11,20,0.7)] to-[rgba(6,11,20,0.3)]">
                 <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-sliders text-sm {% if status.tem_perfis %}text-neon-green{% else %}text-text-muted{% endif %}"></i>
-                        <h3 class="text-sm font-semibold text-white">Perfis</h3>
-                    </div>
+                    <h3 class="text-sm font-semibold text-white">Perfis de Jogo</h3>
                     <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full
-                                 {% if status.tem_perfis %}bg-[rgba(0,255,136,0.08)] text-neon-green border border-[rgba(0,255,136,0.15)]
-                                 {% else %}bg-[rgba(245,158,11,0.08)] text-neon-amber border border-[rgba(245,158,11,0.15)]{% endif %}">
+                                 {% if status.tem_perfis %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]
+                                 {% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">
                         {{ 'OK' if status.tem_perfis else 'PENDENTE' }}
                     </span>
                 </div>
                 {% if status.tem_perfis %}
-                <p class="text-text-muted text-[11px] mb-2 leading-tight">
-                    <span class="text-neon-cyan">{{ status.perfis_info.perfil_peso_jogo }}</span> · 
-                    <span class="text-neon-blue">{{ status.perfis_info.perfil_peso_sg }}</span>
-                </p>
+                <div class="text-center mb-2">
+                    <span class="text-neon-cyan font-bold text-lg font-mono">{{ status.perfis_info.perfil_peso_jogo }}</span>
+                    <span class="text-text-muted text-xs mx-1">·</span>
+                    <span class="text-neon-blue font-bold text-lg font-mono">{{ status.perfis_info.perfil_peso_sg }}</span>
+                </div>
                 {% else %}
-                <p class="text-text-muted text-[11px] mb-2 leading-tight">Configure peso de jogo e SG</p>
+                <p class="text-text-muted text-[11px] mb-2 text-center">Configure peso de jogo e saldo de gols</p>
                 {% endif %}
                 <a href="{{ url_for('pagina_inicial') }}" 
                    class="block text-center py-1.5 rounded-lg text-xs font-medium transition-all duration-200
-                          {% if status.tem_perfis %}
-                          bg-[rgba(0,229,255,0.06)] text-neon-cyan hover:bg-[rgba(0,229,255,0.12)]
-                          {% else %}
-                          bg-[rgba(0,255,136,0.06)] text-neon-green hover:bg-[rgba(0,255,136,0.12)]
-                          {% endif %}">
+                          {% if status.tem_perfis %}bg-[rgba(0,229,255,0.08)] text-neon-cyan hover:bg-[rgba(0,229,255,0.16)]
+                          {% else %}bg-[rgba(0,255,136,0.08)] text-neon-green hover:bg-[rgba(0,255,136,0.16)]{% endif %}">
                     {{ 'Editar' if status.tem_perfis else 'Configurar' }}
                 </a>
             </div>
         </div>
 
-        <!-- Rankings -->
-        <div class="group glass rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5
-                    {% if status.tem_calculos %}border border-[rgba(0,255,136,0.15)]{% else %}border border-[rgba(255,255,255,0.04)]{% endif %}">
-            <div class="p-3.5">
+        <!-- Rankings (bg: ranking.webp) -->
+        <div class="group relative rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 border {% if status.tem_calculos %}border-[rgba(0,255,136,0.2)]{% else %}border-[rgba(255,255,255,0.06)]{% endif %}">
+            <img src="{{ url_for('static', filename='img/ranking.webp') }}" class="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500">
+            <div class="relative p-3.5 bg-gradient-to-t from-[rgba(6,11,20,0.95)] via-[rgba(6,11,20,0.7)] to-[rgba(6,11,20,0.3)]">
                 <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center space-x-2">
-                        <i class="fas fa-microchip text-sm {% if status.tem_calculos %}text-neon-green{% else %}text-text-muted{% endif %}"></i>
-                        <h3 class="text-sm font-semibold text-white">Rankings</h3>
-                    </div>
+                    <h3 class="text-sm font-semibold text-white">Rankings</h3>
                     <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full
-                                 {% if status.tem_calculos %}bg-[rgba(0,255,136,0.08)] text-neon-green border border-[rgba(0,255,136,0.15)]
-                                 {% else %}bg-[rgba(245,158,11,0.08)] text-neon-amber border border-[rgba(245,158,11,0.15)]{% endif %}">
+                                 {% if status.tem_calculos %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]
+                                 {% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">
                         {{ 'OK' if status.tem_calculos else 'PENDENTE' }}
                     </span>
                 </div>
-                <p class="text-text-muted text-[11px] mb-2 leading-tight">
-                    {% if status.tem_calculos %}
-                    Rankings calculados por posição.
-                    {% elif status.tem_perfis %}
-                    Execute os cálculos de posições.
-                    {% else %}
-                    <span class="text-neon-amber">Configure perfis primeiro.</span>
-                    {% endif %}
+                <p class="text-text-muted text-[11px] mb-2 text-center leading-tight">
+                    {% if status.tem_calculos %}Rankings calculados por posição.{% elif status.tem_perfis %}Execute os cálculos de posições.{% else %}<span class="text-neon-amber">Configure perfis primeiro.</span>{% endif %}
                 </p>
                 <a href="{{ url_for('modulos') }}" 
                    class="block text-center py-1.5 rounded-lg text-xs font-medium transition-all duration-200
                           {% if not status.tem_perfis %}opacity-50 bg-[rgba(255,255,255,0.02)] text-text-muted cursor-not-allowed
+                          {% elif status.tem_calculos %}bg-[rgba(0,229,255,0.08)] text-neon-cyan hover:bg-[rgba(0,229,255,0.16)]
+                          {% else %}bg-[rgba(168,85,247,0.08)] text-neon-purple hover:bg-[rgba(168,85,247,0.16)]{% endif %}"
+                   {% if not status.tem_perfis %}onclick="return false"{% endif %}>
+                    {{ 'Ver Rankings' if status.tem_calculos else 'Calcular' }}
+                </a>
+            </div>
+        </div>
+
+        <!-- Escalação (bg: escalacao-dashboard.jpg) -->
+        <div class="group relative rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 border {% if status.tem_escalacao %}border-[rgba(0,255,136,0.2)]{% else %}border-[rgba(255,255,255,0.06)]{% endif %}">
+            <img src="{{ url_for('static', filename='img/escalacao-dashboard.jpg') }}" class="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500">
+            <div class="relative p-3.5 bg-gradient-to-t from-[rgba(6,11,20,0.95)] via-[rgba(6,11,20,0.7)] to-[rgba(6,11,20,0.3)]">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-white">Escalação</h3>
+                    <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full
+                                 {% if status.tem_escalacao %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]
+                                 {% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">
+                        {{ 'OK' if status.tem_escalacao else 'PENDENTE' }}
+                    </span>
                           {% elif status.tem_calculos %}bg-[rgba(0,229,255,0.06)] text-neon-cyan hover:bg-[rgba(0,229,255,0.12)]
                           {% else %}bg-[rgba(168,85,247,0.06)] text-neon-purple hover:bg-[rgba(168,85,247,0.12)]{% endif %}"
                    {% if not status.tem_perfis %}onclick="return false"{% endif %}>
@@ -136,14 +141,8 @@
                         {{ 'OK' if status.tem_escalacao else 'PENDENTE' }}
                     </span>
                 </div>
-                <p class="text-text-muted text-[11px] mb-2 leading-tight">
-                    {% if status.tem_escalacao %}
-                    Time escalado e pronto.
-                    {% elif status.tem_calculos %}
-                    Monte sua escalação ideal.
-                    {% else %}
-                    <span class="text-neon-amber">Calcule rankings primeiro.</span>
-                    {% endif %}
+                <p class="text-text-muted text-[11px] mb-2 text-center leading-tight">
+                    {% if status.tem_escalacao %}Time escalado e pronto.{% elif status.tem_calculos %}Monte sua escalação ideal.{% else %}<span class="text-neon-amber">Calcule rankings primeiro.</span>{% endif %}
                 </p>
                 {% if not permissions.podeEscalar %}
                 <div class="relative">
@@ -154,8 +153,8 @@
                 <a href="{{ url_for('modulo_escalacao_ideal') }}" 
                    class="block text-center py-1.5 rounded-lg text-xs font-medium transition-all duration-200
                           {% if not status.tem_calculos %}opacity-50 bg-[rgba(255,255,255,0.02)] text-text-muted cursor-not-allowed
-                          {% elif status.tem_escalacao %}bg-[rgba(0,229,255,0.06)] text-neon-cyan hover:bg-[rgba(0,229,255,0.12)]
-                          {% else %}bg-[rgba(0,255,136,0.06)] text-neon-green hover:bg-[rgba(0,255,136,0.12)]{% endif %}"
+                          {% elif status.tem_escalacao %}bg-[rgba(0,229,255,0.08)] text-neon-cyan hover:bg-[rgba(0,229,255,0.16)]
+                          {% else %}bg-[rgba(0,255,136,0.08)] text-neon-green hover:bg-[rgba(0,255,136,0.16)]{% endif %}"
                    {% if not status.tem_calculos %}onclick="return false"{% endif %}>
                     {{ 'Ver Escalação' if status.tem_escalacao else 'Escalar' }}
                 </a>

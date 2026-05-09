@@ -404,6 +404,33 @@ def perfil():
     
     return render_template('perfil.html', current_user=user)
 
+@app.route('/api/user/photo', methods=['POST'])
+@login_required
+def upload_user_photo():
+    """Endpoint para upload de foto do usuário"""
+    user = get_current_user()
+    if 'photo' not in request.files:
+        return jsonify({'success': False, 'error': 'Nenhuma foto enviada'}), 400
+    
+    file = request.files['photo']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'Arquivo vazio'}), 400
+    
+    import os, imghdr
+    allowed = {'jpeg', 'png', 'gif', 'webp', 'avif'}
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+    if ext not in allowed and imghdr.what(file) not in allowed:
+        return jsonify({'success': False, 'error': 'Formato não permitido'}), 400
+    
+    avatar_dir = os.path.join(app.static_folder, 'img', 'avatars')
+    os.makedirs(avatar_dir, exist_ok=True)
+    
+    filename = f'{user["id"]}.jpg'
+    filepath = os.path.join(avatar_dir, filename)
+    file.save(filepath)
+    
+    return jsonify({'success': True, 'url': url_for('static', filename=f'img/avatars/{filename}')})
+
 @app.route('/dashboard')
 @login_required
 def dashboard():

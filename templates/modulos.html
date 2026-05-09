@@ -28,34 +28,30 @@
     <a href="{{ url_for('modulo_individual', modulo=m.id) }}" 
        id="modulo-{{ m.id }}"
        data-modulo="{{ m.id }}"
-       class="modulo-card group glass rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_0_25px_{{ m.borderHex.replace('0.15', '0.08') }}] flex flex-col relative"
+       class="modulo-card group glass rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col relative"
        style="border:1px solid {{ m.borderHex }}">
         
         <!-- Badge de status -->
-        <div class="status-badge absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]">
+        <div class="status-badge absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(0,0,0,0.5)] backdrop-blur text-white border border-[rgba(255,255,255,0.1)]">
             <i class="fas fa-hourglass-half mr-1 animate-neon-pulse"></i>
             PENDENTE
         </div>
         
-        <!-- Conteúdo superior (flexível) -->
-        <div class="p-4 flex-1 flex flex-col items-center text-center">
-            <!-- Imagem da posição -->
+        <!-- Imagem da posição (ocupa a área superior do card) -->
+        <div class="w-full aspect-[4/3] overflow-hidden">
             <img src="{{ url_for('static', filename='img/posicoes/' + m.img) }}" 
                  alt="{{ m.nome }}"
-                 class="w-14 h-14 object-contain rounded-xl mb-3 transition-transform duration-300 group-hover:scale-110"
-                 style="background:{{ m.colorHex }};border:1px solid {{ m.borderHex }};padding:6px">
-            
-            <!-- Nome -->
-            <h3 class="text-base font-bold text-white mb-1">{{ m.nome }}</h3>
-            
-            <!-- Descrição (máximo 3 linhas) -->
-            <p class="text-text-muted text-xs leading-relaxed line-clamp-3">{{ m.desc }}</p>
+                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
         </div>
         
-        <!-- Botão fixo no bottom -->
-        <div class="px-4 py-2.5 border-t border-[rgba(255,255,255,0.04)] mt-auto flex items-center justify-center gap-1.5 text-xs font-medium transition-colors duration-200" style="background:{{ m.colorHex }};color:var(--{{ m.color.split('-')[1] }})">
-            <span>Ver Análise</span>
-            <i class="fas fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform duration-200"></i>
+        <!-- Conteúdo + botão -->
+        <div class="p-3 flex-1 flex flex-col">
+            <h3 class="text-sm font-bold text-white mb-1">{{ m.nome }}</h3>
+            <p class="text-text-muted text-[11px] leading-relaxed line-clamp-2 flex-1">{{ m.desc }}</p>
+            <div class="mt-2 flex items-center gap-1 text-[11px] font-medium text-text-muted group-hover:text-neon-cyan transition-colors">
+                <span>Ver Análise</span>
+                <i class="fas fa-arrow-right text-[9px] group-hover:translate-x-0.5 transition-transform"></i>
+            </div>
         </div>
     </a>
     {% endfor %}
@@ -73,7 +69,7 @@
            class="group glass rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col relative h-full"
            style="border:1px solid rgba(245,158,11,0.15)">
         {% endif %}
-            <div id="escalacao-status-badge" class="absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(148,163,184,0.12)] text-text-muted border border-[rgba(148,163,184,0.2)]">
+            <div id="escalacao-status-badge" class="absolute top-2.5 right-2.5 z-10 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-[rgba(0,0,0,0.5)] backdrop-blur text-white border border-[rgba(255,255,255,0.1)]">
                 <i class="fas fa-minus-circle mr-1"></i>
                 <span id="escalacao-status-text">DESMARCADO</span>
             </div>
@@ -82,17 +78,18 @@
                 <p class="text-white text-base font-bold mb-1 text-center">Calcule todos os módulos primeiro</p>
                 <p class="text-text-secondary text-xs text-center" id="modulos-pendentes-text">Faltam módulos a calcular</p>
             </div>
-            <div class="p-4 flex-1 flex flex-col items-center text-center">
-                <img src="{{ url_for('static', filename='img/posicoes/treinador.avif') }}" 
+            <div class="w-full aspect-[4/3] overflow-hidden">
+                <img src="{{ url_for('static', filename='img/posicoes/escalacao.png') }}" 
                      alt="Escalação Ideal"
-                     class="w-14 h-14 object-contain rounded-xl mb-3 transition-transform duration-300 group-hover:scale-110"
-                     style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);padding:6px">
-                <h3 class="text-base font-bold text-white mb-1">Escalação Ideal</h3>
-                <p class="text-text-muted text-xs leading-relaxed line-clamp-3">Calcule a escalação ideal baseada nos rankings de cada posição</p>
+                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
             </div>
-            <div class="px-4 py-2.5 border-t border-[rgba(255,255,255,0.04)] mt-auto flex items-center justify-center gap-1.5 text-xs font-medium" style="background:rgba(245,158,11,0.06);color:#F59E0B">
-                <span>Calcular Escalação</span>
-                <i class="fas fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform duration-200"></i>
+            <div class="p-3 flex-1 flex flex-col">
+                <h3 class="text-sm font-bold text-white mb-1">Escalação Ideal</h3>
+                <p class="text-text-muted text-[11px] leading-relaxed line-clamp-2 flex-1">Calcule a escalação ideal baseada nos rankings de cada posição</p>
+                <div class="mt-2 flex items-center gap-1 text-[11px] font-medium text-neon-amber">
+                    <span>Calcular Escalação</span>
+                    <i class="fas fa-arrow-right text-[9px]"></i>
+                </div>
             </div>
         {% if not permissions.verEscalacaoIdealCompleta %}
             <span class="absolute bottom-1.5 right-1.5 bg-neon-purple text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>
@@ -113,17 +110,18 @@
                 class="group glass rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col relative h-full w-full text-left"
                 style="border:1px solid rgba(0,255,136,0.15);background:rgba(11,17,32,0.45);backdrop-filter:blur(20px)">
         {% endif %}
-            <div class="p-4 flex-1 flex flex-col items-center text-center">
-                <img src="{{ url_for('static', filename='img/posicoes/atacante.webp') }}" 
+            <div class="w-full aspect-[4/3] overflow-hidden">
+                <img src="{{ url_for('static', filename='img/posicoes/escalacao-rapida.avif') }}" 
                      alt="Escalação Rápida"
-                     class="w-14 h-14 object-contain rounded-xl mb-3 transition-transform duration-300 group-hover:scale-110"
-                     style="background:rgba(0,255,136,0.08);border:1px solid rgba(0,255,136,0.15);padding:6px">
-                <h3 class="text-base font-bold text-white mb-1">Escalação Rápida</h3>
-                <p class="text-text-muted text-xs leading-relaxed line-clamp-3">Calcule todos os rankings e escale o time no Cartola automaticamente</p>
+                     class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105">
             </div>
-            <div class="px-4 py-2.5 border-t border-[rgba(255,255,255,0.04)] mt-auto flex items-center justify-center gap-1.5 text-xs font-medium" style="background:rgba(0,255,136,0.06);color:#00FF88">
-                <span>Executar Escalação</span>
-                <i class="fas fa-arrow-right text-[10px] group-hover:translate-x-0.5 transition-transform duration-200"></i>
+            <div class="p-3 flex-1 flex flex-col">
+                <h3 class="text-sm font-bold text-white mb-1">Escalação Rápida</h3>
+                <p class="text-text-muted text-[11px] leading-relaxed line-clamp-2 flex-1">Calcule todos os rankings e escale o time automaticamente</p>
+                <div class="mt-2 flex items-center gap-1 text-[11px] font-medium text-neon-green">
+                    <span>Executar Escalação</span>
+                    <i class="fas fa-arrow-right text-[9px]"></i>
+                </div>
             </div>
         {% if not permissions.podeEscalar %}
             <span class="absolute bottom-1.5 right-1.5 bg-neon-purple text-white text-[8px] px-1 py-0.5 rounded-full font-bold shadow-lg z-10">Upgrade</span>

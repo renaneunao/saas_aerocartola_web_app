@@ -118,27 +118,28 @@
         </div>
 
         <!-- User Section -->
-        <a href="{{ url_for('perfil') }}" class="block px-4 py-2.5 border-b border-[rgba(0,229,255,0.06)] hover:bg-[rgba(0,229,255,0.04)] transition-all duration-200 group cursor-pointer">
+        <div class="px-4 py-2.5 border-b border-[rgba(0,229,255,0.06)]">
             <div class="flex items-center space-x-3">
-                <div class="relative flex-shrink-0">
-                    <div class="w-9 h-9 rounded-full bg-[rgba(11,17,32,0.6)] border border-[rgba(0,229,255,0.15)] flex items-center justify-center shadow-[0_0_12px_rgba(0,229,255,0.06)] group-hover:border-[rgba(0,229,255,0.35)] group-hover:shadow-[0_0_18px_rgba(0,229,255,0.12)] transition-all duration-300">
-                        <span class="text-xs font-semibold text-neon-cyan">
+                <!-- Avatar clicável para upload -->
+                <div class="relative flex-shrink-0 cursor-pointer group/avatar" onclick="document.getElementById('avatarUpload').click()" title="Clique para trocar a foto">
+                    <div id="sidebarAvatar" class="w-9 h-9 rounded-full bg-[rgba(11,17,32,0.6)] border border-[rgba(0,229,255,0.12)] flex items-center justify-center overflow-hidden group-hover/avatar:border-[rgba(0,229,255,0.4)] transition-all duration-300">
+                        <span id="avatarInitial" class="text-xs font-semibold text-neon-cyan">
                             {% if session.get('username') %}{{ session.get('username')[:1].upper() }}{% else %}U{% endif %}
                         </span>
                     </div>
+                    <div class="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover/avatar:opacity-100 transition-opacity duration-200">
+                        <i class="fas fa-camera text-white text-[10px]"></i>
+                    </div>
+                    <input type="file" id="avatarUpload" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
                     {% if current_user and current_user.plano %}
                     {% set plano = current_user.plano %}
-                    {% set plano_nomes = {
-                        'free': 'FREE',
-                        'avancado': 'AVANÇADO',
-                        'pro': 'PRO'
-                    } %}
+                    {% set plano_nomes = {'free': 'FREE', 'avancado': 'AVANÇADO', 'pro': 'PRO'} %}
                     <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border border-[rgba(0,229,255,0.2)]
                         {% if plano == 'avancado' %}bg-neon-cyan{% elif plano == 'pro' %}bg-neon-purple{% else %}bg-text-muted{% endif %}">
                     </span>
                     {% endif %}
                 </div>
-                <div class="flex-1 min-w-0">
+                <a href="{{ url_for('perfil') }}" class="flex-1 min-w-0 hover:opacity-80 transition-opacity" title="Ver perfil">
                     <p class="text-sm font-medium text-text-primary truncate leading-tight">
                         {% if session.get('username') %}{{ session.get('username') }}{% else %}Usuário{% endif %}
                     </p>
@@ -154,10 +155,9 @@
                         <span class="text-[10px] text-neon-amber">· Admin</span>
                         {% endif %}
                     </div>
-                </div>
-                <i class="fas fa-chevron-right text-text-muted opacity-0 group-hover:opacity-100 transition-all duration-200 text-[10px]"></i>
+                </a>
             </div>
-        </a>
+        </div>
 
         <!-- Navigation Links -->
         <nav class="flex-1 px-3 py-3 space-y-3 overflow-y-auto neon-scroll sidebar-scroll">
@@ -168,13 +168,13 @@
 
                 <a href="{{ url_for('index') }}" title="Visão geral do seu time, status e próximos passos"
                    class="sidebar-link {% if request.path == url_for('index') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-chart-simple w-5 text-center mr-3 text-neon-cyan"></i>
+                    <i class="fas fa-chart-simple w-5 text-center mr-3 text-text-muted group-hover:text-text-secondary"></i>
                     Dashboard
                 </a>
 
                 <a href="{{ url_for('pagina_inicial') }}" title="Configure os perfis de peso de jogo e saldo de gols"
                    class="sidebar-link {% if request.path.startswith('/pagina-inicial') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-sliders w-5 text-center mr-3 text-neon-green"></i>
+                    <i class="fas fa-sliders w-5 text-center mr-3 text-text-muted"></i>
                     Perfis de Jogo
                 </a>
             </div>
@@ -185,13 +185,13 @@
 
                 <a href="{{ url_for('modulos') }}" title="Calcule e visualize os rankings de jogadores por posição"
                    class="sidebar-link {% if request.path.startswith('/modulos') and not request.path.endswith('/escalacao-ideal') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-microchip w-5 text-center mr-3 text-neon-purple"></i>
+                    <i class="fas fa-microchip w-5 text-center mr-3 text-text-muted"></i>
                     Rankings
                 </a>
 
                 <a href="{{ url_for('modulo_escalacao_ideal') }}" title="Monte a escalação ideal do seu time automaticamente"
                    class="sidebar-link {% if request.path == url_for('modulo_escalacao_ideal') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-wand-magic-sparkles w-5 text-center mr-3 text-neon-amber"></i>
+                    <i class="fas fa-wand-magic-sparkles w-5 text-center mr-3 text-text-muted"></i>
                     Escalação Ideal
                 </a>
             </div>
@@ -202,14 +202,14 @@
 
                 <a href="{{ url_for('credenciais') }}" title="Adicione, remova e gerencie seus times do Cartola"
                    class="sidebar-link {% if request.path.startswith('/credenciais') or request.path.startswith('/associar-credenciais') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-people-group w-5 text-center mr-3 text-neon-blue"></i>
+                    <i class="fas fa-people-group w-5 text-center mr-3 text-text-muted"></i>
                     Gerenciar Times
                 </a>
 
                 <!-- Seleção dinâmica de time -->
-                <div id="timesListContainer" class="max-h-32 overflow-y-auto neon-scroll ml-0">
-                    <div id="timesList" class="space-y-0.5 pl-3 border-l border-[rgba(0,229,255,0.06)] ml-2.5">
-                        <div class="px-2 py-1.5 text-[11px] text-text-muted">Carregando times...</div>
+                <div id="timesListContainer" class="max-h-28 overflow-y-auto neon-scroll">
+                    <div id="timesList" class="space-y-0.5">
+                        <div class="px-2 py-1 text-[10px] text-text-muted">Carregando times...</div>
                     </div>
                 </div>
             </div>
@@ -220,14 +220,14 @@
 
                 <a href="{{ url_for('pagamento.index') }}" title="Gerencie seu plano e assinatura"
                    class="sidebar-link {% if request.path.startswith('/pagamento') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-gem w-5 text-center mr-3 text-neon-cyan"></i>
+                    <i class="fas fa-gem w-5 text-center mr-3 text-text-muted"></i>
                     Assinatura
                 </a>
 
                 {% if current_user and current_user.is_admin %}
                 <a href="{{ url_for('admin_planos') }}" title="Teste e gerencie planos de assinatura"
                    class="sidebar-link {% if request.path.startswith('/admin/planos') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-crown w-5 text-center mr-3 text-neon-amber"></i>
+                    <i class="fas fa-crown w-5 text-center mr-3 text-text-muted"></i>
                     Admin Planos
                 </a>
                 {% endif %}
@@ -760,6 +760,29 @@
         {% else %}
         console.warn('⚠️ [Cartola Manager] User ID não disponível');
         {% endif %}
+
+        // Avatar upload
+        async function uploadAvatar(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            if (file.size > 2 * 1024 * 1024) { showToast('Imagem muito grande. Máximo 2MB.', 'warning'); return; }
+            const formData = new FormData();
+            formData.append('photo', file);
+            try {
+                showLoader('Enviando foto...');
+                const res = await fetch('/api/user/photo', { method: 'POST', body: formData });
+                const data = await res.json();
+                if (data.success) {
+                    const avatar = document.getElementById('sidebarAvatar');
+                    avatar.innerHTML = `<img src="${data.url}?t=${Date.now()}" class="w-full h-full object-cover">`;
+                    document.getElementById('avatarInitial').style.display = 'none';
+                    showToast('Foto atualizada!', 'success');
+                } else {
+                    showToast(data.error || 'Erro ao enviar foto', 'error');
+                }
+            } catch(e) { showToast('Erro ao enviar foto', 'error'); }
+            finally { hideLoader(); input.value = ''; }
+        }
     </script>
 
     {% block scripts %}{% endblock %}
