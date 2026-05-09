@@ -89,16 +89,16 @@
     <div class="fixed inset-y-0 left-0 z-50 w-64 glass-heavy transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out border-r border-[rgba(0,229,255,0.07)] shadow-[4px_0_30px_rgba(0,0,0,0.4)]" id="sidebar">
 
         <!-- Sidebar Header / Logo -->
-        <div class="flex items-center justify-between h-16 px-5 border-b border-[rgba(0,229,255,0.06)]">
-            <a href="{{ url_for('index') }}" class="flex items-center space-x-2.5 group">
+        <div class="px-4 pt-5 pb-3 border-b border-[rgba(0,229,255,0.06)]">
+            <a href="{{ url_for('index') }}" class="flex flex-col items-center group">
                 <img src="{{ url_for('static', filename='img/aero-cartola-logo.png') }}" 
                      alt="Aero Cartola" 
-                     class="w-10 h-10 object-contain transition-all duration-300 group-hover:drop-shadow-[0_0_12px_rgba(0,229,255,0.5)]">
-                <span class="text-lg font-bold text-neon-cyan-gradient">
+                     class="w-[85%] max-w-[160px] aspect-square object-contain rounded-2xl transition-all duration-300 group-hover:drop-shadow-[0_0_18px_rgba(0,229,255,0.5)] mb-3">
+                <span class="text-base font-bold text-neon-cyan-gradient tracking-wide">
                     Aero Cartola
                 </span>
             </a>
-            <button type="button" id="sidebar-close" class="lg:hidden text-text-muted hover:text-white transition-colors duration-200">
+            <button type="button" id="sidebar-close" class="lg:hidden absolute top-5 right-5 text-text-muted hover:text-white transition-colors duration-200">
                 <i class="fas fa-times text-lg"></i>
             </button>
         </div>
