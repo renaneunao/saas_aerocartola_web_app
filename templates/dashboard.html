@@ -172,60 +172,69 @@
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
             
             <a href="{{ url_for('credenciais') }}" 
-               class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,229,255,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,229,255,0.04)] transition-all duration-200 group text-center">
-                <i class="fas fa-people-group text-neon-cyan text-lg mb-1 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-[11px] font-medium leading-tight">Times</span>
+               class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,229,255,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,229,255,0.04)] transition-all duration-200 group text-center">
+                <i class="fas fa-people-group text-neon-cyan text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
+                <span class="text-white text-xs font-medium leading-tight">Times</span>
+                <span class="text-text-muted text-[10px] leading-tight">Gerenciar</span>
             </a>
 
             <a href="{{ url_for('modulos') }}" 
-               class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(168,85,247,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(168,85,247,0.04)] transition-all duration-200 group text-center">
-                <i class="fas fa-microchip text-neon-purple text-lg mb-1 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-[11px] font-medium leading-tight">Rankings</span>
+               class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(168,85,247,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(168,85,247,0.04)] transition-all duration-200 group text-center">
+                <i class="fas fa-microchip text-neon-purple text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
+                <span class="text-white text-xs font-medium leading-tight">Rankings</span>
+                <span class="text-text-muted text-[10px] leading-tight">Calcular</span>
             </a>
 
             {% if not permissions.podeEscalar %}
-            <div class="relative flex flex-col items-center justify-center p-2.5 rounded-xl border border-[rgba(0,255,136,0.06)] bg-[rgba(0,255,136,0.01)] text-center" style="filter: blur(1px);">
-                <i class="fas fa-chess-board text-neon-green text-lg mb-1"></i>
-                <span class="text-white text-[11px] font-medium leading-tight">Escalação</span>
+            <div class="relative flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(0,255,136,0.06)] bg-[rgba(0,255,136,0.01)] text-center" style="filter: blur(1px);">
+                <i class="fas fa-chess-board text-neon-green text-xl mb-1.5"></i>
+                <span class="text-white text-xs font-medium leading-tight">Escalação</span>
+                <span class="text-text-muted text-[10px] leading-tight">Ideal</span>
             </div>
             {% else %}
             <a href="{{ url_for('modulo_escalacao_ideal') }}" 
-               class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,255,136,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,255,136,0.04)] transition-all duration-200 group text-center">
-                <i class="fas fa-chess-board text-neon-green text-lg mb-1 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-[11px] font-medium leading-tight">Escalação</span>
+               class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,255,136,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,255,136,0.04)] transition-all duration-200 group text-center">
+                <i class="fas fa-chess-board text-neon-green text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
+                <span class="text-white text-xs font-medium leading-tight">Escalação</span>
+                <span class="text-text-muted text-[10px] leading-tight">Ideal</span>
             </a>
             {% endif %}
 
             {% if status.tem_perfis and permissions.podeEscalar %}
             <button id="escalacaoRapidaBtn" 
-                    class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[rgba(0,255,136,0.08)] hover:border-[rgba(0,255,136,0.25)] bg-[rgba(0,255,136,0.02)] hover:bg-[rgba(0,255,136,0.06)] transition-all duration-200 group text-center w-full">
-                <i class="fas fa-bolt text-neon-green text-lg mb-1 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-[11px] font-medium leading-tight">Rápida</span>
+                    class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(0,255,136,0.08)] hover:border-[rgba(0,255,136,0.25)] bg-[rgba(0,255,136,0.02)] hover:bg-[rgba(0,255,136,0.06)] transition-all duration-200 group text-center w-full">
+                <i class="fas fa-bolt text-neon-green text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
+                <span class="text-white text-xs font-medium leading-tight">Rápida</span>
+                <span class="text-text-muted text-[10px] leading-tight">1 clique</span>
             </button>
             {% elif status.tem_perfis and not permissions.podeEscalar %}
-            <div class="relative flex flex-col items-center justify-center p-2.5 rounded-xl border border-[rgba(0,255,136,0.04)] bg-[rgba(0,255,136,0.01)] text-center" style="filter: blur(1px);">
-                <i class="fas fa-bolt text-neon-green text-lg mb-1"></i>
-                <span class="text-white text-[11px] font-medium leading-tight">Rápida</span>
+            <div class="relative flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(0,255,136,0.04)] bg-[rgba(0,255,136,0.01)] text-center" style="filter: blur(1px);">
+                <i class="fas fa-bolt text-neon-green text-xl mb-1.5"></i>
+                <span class="text-white text-xs font-medium leading-tight">Rápida</span>
+                <span class="text-text-muted text-[10px] leading-tight">1 clique</span>
             </div>
             {% endif %}
 
             {% if status.tem_perfis and permissions.multiEscalacao %}
             <button id="escalarTodosTimesBtn" 
-                    class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[rgba(245,158,11,0.08)] hover:border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.02)] hover:bg-[rgba(245,158,11,0.06)] transition-all duration-200 group text-center w-full">
-                <i class="fas fa-layer-group text-neon-amber text-lg mb-1 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-[11px] font-medium leading-tight">Todos</span>
+                    class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(245,158,11,0.08)] hover:border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.02)] hover:bg-[rgba(245,158,11,0.06)] transition-all duration-200 group text-center w-full">
+                <i class="fas fa-layer-group text-neon-amber text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
+                <span class="text-white text-xs font-medium leading-tight">Todos</span>
+                <span class="text-text-muted text-[10px] leading-tight">em lote</span>
             </button>
             {% elif status.tem_perfis and not permissions.multiEscalacao %}
-            <div class="relative flex flex-col items-center justify-center p-2.5 rounded-xl border border-[rgba(245,158,11,0.04)] bg-[rgba(245,158,11,0.01)] text-center" style="filter: blur(1px);">
-                <i class="fas fa-layer-group text-neon-amber text-lg mb-1"></i>
-                <span class="text-white text-[11px] font-medium leading-tight">Todos</span>
+            <div class="relative flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(245,158,11,0.04)] bg-[rgba(245,158,11,0.01)] text-center" style="filter: blur(1px);">
+                <i class="fas fa-layer-group text-neon-amber text-xl mb-1.5"></i>
+                <span class="text-white text-xs font-medium leading-tight">Todos</span>
+                <span class="text-text-muted text-[10px] leading-tight">em lote</span>
             </div>
             {% endif %}
 
             <button onclick="window.location.reload()" 
-                    class="flex flex-col items-center justify-center p-2.5 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,229,255,0.15)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,229,255,0.03)] transition-all duration-200 group text-center w-full">
-                <i class="fas fa-rotate text-neon-cyan text-lg mb-1 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-[11px] font-medium leading-tight">Atualizar</span>
+                    class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,229,255,0.15)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,229,255,0.03)] transition-all duration-200 group text-center w-full">
+                <i class="fas fa-rotate text-neon-cyan text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
+                <span class="text-white text-xs font-medium leading-tight">Atualizar</span>
+                <span class="text-text-muted text-[10px] leading-tight">Refresh</span>
             </button>
         </div>
     </div>

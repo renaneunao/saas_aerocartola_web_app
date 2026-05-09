@@ -3,31 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acesso - Aero Cartola</title>
+    <title>Acesso — Aero Cartola</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/aero-theme.css') }}">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        'brand': {
-                            50: '#f0f7ff',
-                            100: '#e0effe',
-                            200: '#bae0fd',
-                            300: '#7cc7fb',
-                            400: '#38a9f8',
-                            500: '#0e8ce9',
-                            600: '#026fc7',
-                            700: '#0358a1',
-                            800: '#074b85',
-                            900: '#0c3f6e',
-                            950: '#082749'
-                        }
+                        'neon': { cyan: '#00E5FF', blue: '#4494FF', purple: '#A855F7', green: '#00FF88', amber: '#F59E0B', red: '#EF4444' },
+                        'text': { primary: '#EDF2FA', secondary: '#94A3B8', muted: '#64748B' }
                     },
                     animation: {
                         'fade-in': 'fadeIn 0.5s ease-out forwards',
@@ -36,86 +24,53 @@
                         'pulse-glow': 'pulseGlow 2s ease-in-out infinite alternate'
                     },
                     keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' }
-                        },
-                        slideUp: {
-                            '0%': { opacity: '0', transform: 'translateY(20px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' }
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-20px)' }
-                        },
-                        pulseGlow: {
-                            '0%': { boxShadow: '0 0 5px rgba(14, 140, 233, 0.4)' },
-                            '100%': { boxShadow: '0 0 25px rgba(14, 140, 233, 0.7)' }
-                        }
+                        fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+                        slideUp: { '0%': { opacity: '0', transform: 'translateY(20px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+                        float: { '0%, 100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-20px)' } },
+                        pulseGlow: { '0%': { boxShadow: '0 0 5px rgba(0, 229, 255, 0.4)' }, '100%': { boxShadow: '0 0 25px rgba(0, 229, 255, 0.7)' } }
                     }
                 }
             }
         }
     </script>
     <style>
-        .glass {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .tab-active {
-            color: #fff;
-            border-bottom: 3px solid #38a9f8;
-        }
-        .tab-inactive {
-            color: #94a3b8;
-            border-bottom: 3px solid transparent;
-        }
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus {
+        .glass { background: rgba(11, 17, 32, 0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(0, 229, 255, 0.08); }
+        .tab-active { color: #fff; border-bottom: 2px solid #00E5FF; }
+        .tab-inactive { color: #64748B; border-bottom: 2px solid transparent; }
+        input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus {
             -webkit-text-fill-color: white;
-            -webkit-box-shadow: 0 0 0px 1000px rgba(15, 23, 42, 0.5) inset;
+            -webkit-box-shadow: 0 0 0px 1000px rgba(11, 17, 32, 0.5) inset;
             transition: background-color 5000s ease-in-out 0s;
         }
     </style>
 </head>
-<body class="min-h-full bg-[#020617] text-slate-200 selection:bg-brand-500 selection:text-white">
+<body class="min-h-full bg-grid text-text-primary font-sans">
     <!-- Animated Background -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div class="absolute -top-24 -left-24 w-96 h-96 bg-brand-600/20 rounded-full blur-[120px] animate-pulse"></div>
-        <div class="absolute top-1/2 -right-24 w-80 h-80 bg-purple-600/10 rounded-full blur-[100px] animate-pulse" style="animation-delay: -3s;"></div>
-        <div class="absolute -bottom-24 left-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] animate-pulse" style="animation-delay: -1s;"></div>
-        
-        <!-- Floating Elements -->
-        <div class="absolute top-20 right-[10%] text-brand-500/20 text-6xl animate-float">
-            <i class="fas fa-futbol"></i>
-        </div>
-        <div class="absolute bottom-40 left-[5%] text-brand-500/10 text-8xl animate-float" style="animation-delay: -2s;">
-            <i class="fas fa-chart-line"></i>
-        </div>
+        <div class="absolute -top-24 -left-24 w-96 h-96 bg-neon-cyan/10 rounded-full blur-[120px] animate-pulse"></div>
+        <div class="absolute top-1/2 -right-24 w-80 h-80 bg-neon-purple/8 rounded-full blur-[100px] animate-pulse" style="animation-delay: -3s;"></div>
+        <div class="absolute -bottom-24 left-1/2 w-96 h-96 bg-neon-blue/8 rounded-full blur-[120px] animate-pulse" style="animation-delay: -1s;"></div>
+        <div class="absolute top-20 right-[10%] text-neon-cyan/10 text-6xl animate-float"><i class="fas fa-futbol"></i></div>
+        <div class="absolute bottom-40 left-[5%] text-neon-cyan/5 text-8xl animate-float" style="animation-delay: -2s;"><i class="fas fa-chart-line"></i></div>
     </div>
 
     <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="max-w-md w-full space-y-8 animate-slide-up">
-             <!-- Logo & Brand -->
+            <!-- Logo -->
             <div class="text-center">
                 <div class="inline-flex items-center justify-center mb-6">
-                    <img src="{{ url_for('static', filename='img/aero-cartola-logo.png') }}" 
-                         alt="Aero Cartola" 
+                    <img src="{{ url_for('static', filename='img/aero-cartola-logo.png') }}" alt="Aero Cartola" 
                          class="w-20 h-20 object-contain drop-shadow-[0_0_20px_rgba(0,229,255,0.3)] animate-pulse-glow">
                 </div>
                 <h1 class="text-4xl font-bold tracking-tight text-white mb-2">
-                    Aero <span class="text-brand-400">Cartola</span>
+                    Aero <span class="text-neon-cyan">Cartola</span>
                 </h1>
-                <p class="text-slate-400 font-light">Estratégia avançada para mitar no Cartola</p>
+                <p class="text-text-secondary font-light">Estratégia avançada para mitar no Cartola</p>
             </div>
 
             <!-- Auth Card -->
             <div class="glass rounded-3xl shadow-2xl overflow-hidden">
-                <!-- Tabs Header -->
-                <div class="flex border-b border-slate-800">
+                <div class="flex border-b border-[rgba(0,229,255,0.06)]">
                     <button id="loginTab" onclick="switchTab('login')" class="flex-1 py-4 text-center font-semibold transition-all duration-300 tab-active">
                         <i class="fas fa-sign-in-alt mr-2"></i>Entrar
                     </button>
@@ -125,13 +80,12 @@
                 </div>
 
                 <div class="p-8">
-                    <!-- Flash Messages Container -->
                     <div id="flashMessages">
                         {% with messages = get_flashed_messages(with_categories=true) %}
                             {% if messages %}
                                 <div class="space-y-3 mb-6">
                                     {% for category, message in messages %}
-                                    <div class="p-4 rounded-xl border-l-4 {% if category == 'error' or category == 'danger' %}bg-red-500/10 border-red-500 text-red-200{% elif category == 'success' %}bg-green-500/10 border-green-500 text-green-200{% else %}bg-brand-500/10 border-brand-500 text-brand-200{% endif %} animate-fade-in">
+                                    <div class="p-4 rounded-xl border-l-4 {% if category == 'error' or category == 'danger' %}bg-[rgba(239,68,68,0.08)] border-neon-red text-red-200{% elif category == 'success' %}bg-[rgba(0,255,136,0.08)] border-neon-green text-green-200{% else %}bg-[rgba(0,229,255,0.08)] border-neon-cyan text-cyan-200{% endif %} animate-fade-in">
                                         <div class="flex items-center space-x-3">
                                             <i class="fas {% if category == 'error' or category == 'danger' %}fa-exclamation-circle{% elif category == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %}"></i>
                                             <span class="text-sm font-medium">{{ message }}</span>
@@ -144,102 +98,83 @@
                     </div>
 
                     <!-- Login Form -->
-                    <form id="loginForm" method="POST" action="/login" class="space-y-6">
+                    <form id="loginForm" method="POST" action="/login" class="space-y-5">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 ml-1">Usuário ou Email</label>
+                            <label class="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 ml-1">Usuário ou Email</label>
                             <div class="relative group">
-                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500 group-focus-within:text-brand-400 transition-colors">
-                                    <i class="fas fa-user"></i>
-                                </span>
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-text-muted group-focus-within:text-neon-cyan transition-colors"><i class="fas fa-user"></i></span>
                                 <input type="text" name="username" required
-                                       class="block w-full bg-slate-900/50 border border-slate-700 text-white rounded-xl py-3 pl-11 pr-4 focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all placeholder:text-slate-600"
+                                       class="block w-full bg-[rgba(17,27,46,0.5)] border border-[rgba(255,255,255,0.06)] text-white rounded-xl py-3 pl-11 pr-4 focus:border-[rgba(0,229,255,0.3)] focus:shadow-[0_0_15px_rgba(0,229,255,0.08)] transition-all outline-none placeholder:text-text-muted"
                                        placeholder="Seu usuário ou e-mail">
                             </div>
                         </div>
-
                         <div>
                             <div class="flex items-center justify-between mb-2 ml-1">
-                                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Senha</label>
-                                <a href="#" class="text-xs text-brand-400 hover:text-brand-300 transition-colors">Esqueceu?</a>
+                                <label class="block text-xs font-semibold text-text-muted uppercase tracking-wider">Senha</label>
+                                <a href="#" class="text-xs text-neon-cyan hover:text-neon-blue transition-colors">Esqueceu?</a>
                             </div>
                             <div class="relative group">
-                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500 group-focus-within:text-brand-400 transition-colors">
-                                    <i class="fas fa-lock"></i>
-                                </span>
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-text-muted group-focus-within:text-neon-cyan transition-colors"><i class="fas fa-lock"></i></span>
                                 <input type="password" id="loginPassword" name="password" required
-                                       class="block w-full bg-slate-900/50 border border-slate-700 text-white rounded-xl py-3 pl-11 pr-12 focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all placeholder:text-slate-600"
+                                       class="block w-full bg-[rgba(17,27,46,0.5)] border border-[rgba(255,255,255,0.06)] text-white rounded-xl py-3 pl-11 pr-12 focus:border-[rgba(0,229,255,0.3)] focus:shadow-[0_0_15px_rgba(0,229,255,0.08)] transition-all outline-none placeholder:text-text-muted"
                                        placeholder="Sua senha secreta">
-                                <button type="button" onclick="togglePassword('loginPassword')" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-600 hover:text-slate-400 transition-colors">
+                                <button type="button" onclick="togglePassword('loginPassword')" class="absolute inset-y-0 right-0 pr-4 flex items-center text-text-muted hover:text-text-secondary transition-colors">
                                     <i class="fas fa-eye" id="loginPasswordIcon"></i>
                                 </button>
                             </div>
                         </div>
-
                         <div class="flex items-center">
-                            <input type="checkbox" id="remember" name="remember" class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-brand-500 focus:ring-brand-500 focus:ring-offset-slate-900">
-                            <label for="remember" class="ml-2 text-sm text-slate-400 cursor-pointer">Lembrar de mim</label>
+                            <input type="checkbox" id="remember" name="remember" class="w-4 h-4 rounded border-[rgba(255,255,255,0.1)] bg-[rgba(17,27,46,0.5)] text-neon-cyan focus:ring-neon-cyan/30">
+                            <label for="remember" class="ml-2 text-sm text-text-secondary cursor-pointer">Lembrar de mim</label>
                         </div>
-
-                        <button type="submit" class="w-full bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white font-bold py-3.5 rounded-xl transition-all transform hover:scale-[1.02] shadow-xl hover:shadow-brand-500/25 flex items-center justify-center space-x-2">
+                        <button type="submit" class="w-full bg-[rgba(0,229,255,0.1)] border border-[rgba(0,229,255,0.2)] text-neon-cyan font-bold py-3.5 rounded-xl transition-all hover:bg-[rgba(0,229,255,0.18)] hover:shadow-[0_0_20px_rgba(0,229,255,0.15)] flex items-center justify-center space-x-2">
                             <span>Entrar na Conta</span>
                             <i class="fas fa-arrow-right text-sm"></i>
                         </button>
                     </form>
 
-                    <!-- Register Form (Hidden by default) -->
+                    <!-- Register Form -->
                     <form id="registerForm" method="POST" action="/register" class="space-y-5 hidden">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 ml-1">Nome Completo</label>
+                            <label class="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 ml-1">Nome Completo</label>
                             <div class="relative group">
-                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500 group-focus-within:text-brand-400 transition-colors">
-                                    <i class="fas fa-id-card"></i>
-                                </span>
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-text-muted group-focus-within:text-neon-cyan transition-colors"><i class="fas fa-id-card"></i></span>
                                 <input type="text" name="full_name" required
-                                       class="block w-full bg-slate-900/50 border border-slate-700 text-white rounded-xl py-3 pl-11 pr-4 focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all placeholder:text-slate-600"
+                                       class="block w-full bg-[rgba(17,27,46,0.5)] border border-[rgba(255,255,255,0.06)] text-white rounded-xl py-3 pl-11 pr-4 focus:border-[rgba(0,229,255,0.3)] focus:shadow-[0_0_15px_rgba(0,229,255,0.08)] transition-all outline-none placeholder:text-text-muted"
                                        placeholder="Como quer ser chamado?">
                             </div>
                         </div>
-
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 ml-1">Usuário</label>
+                            <label class="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 ml-1">Usuário</label>
                             <div class="relative group">
-                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500 group-focus-within:text-brand-400 transition-colors">
-                                    <i class="fas fa-at"></i>
-                                </span>
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-text-muted group-focus-within:text-neon-cyan transition-colors"><i class="fas fa-at"></i></span>
                                 <input type="text" name="username" required
-                                       class="block w-full bg-slate-900/50 border border-slate-700 text-white rounded-xl py-3 pl-11 pr-4 focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all placeholder:text-slate-600"
+                                       class="block w-full bg-[rgba(17,27,46,0.5)] border border-[rgba(255,255,255,0.06)] text-white rounded-xl py-3 pl-11 pr-4 focus:border-[rgba(0,229,255,0.3)] focus:shadow-[0_0_15px_rgba(0,229,255,0.08)] transition-all outline-none placeholder:text-text-muted"
                                        placeholder="Seu @único">
                             </div>
                         </div>
-
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 ml-1">E-mail</label>
+                            <label class="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 ml-1">E-mail</label>
                             <div class="relative group">
-                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500 group-focus-within:text-brand-400 transition-colors">
-                                    <i class="fas fa-envelope"></i>
-                                </span>
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-text-muted group-focus-within:text-neon-cyan transition-colors"><i class="fas fa-envelope"></i></span>
                                 <input type="email" name="email" required
-                                       class="block w-full bg-slate-900/50 border border-slate-700 text-white rounded-xl py-3 pl-11 pr-4 focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all placeholder:text-slate-600"
+                                       class="block w-full bg-[rgba(17,27,46,0.5)] border border-[rgba(255,255,255,0.06)] text-white rounded-xl py-3 pl-11 pr-4 focus:border-[rgba(0,229,255,0.3)] focus:shadow-[0_0_15px_rgba(0,229,255,0.08)] transition-all outline-none placeholder:text-text-muted"
                                        placeholder="exemplo@email.com">
                             </div>
                         </div>
-
                         <div>
-                            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 ml-1">Senha</label>
+                            <label class="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2 ml-1">Senha</label>
                             <div class="relative group">
-                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-500 group-focus-within:text-brand-400 transition-colors">
-                                    <i class="fas fa-key"></i>
-                                </span>
+                                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-text-muted group-focus-within:text-neon-cyan transition-colors"><i class="fas fa-key"></i></span>
                                 <input type="password" id="regPassword" name="password" required
-                                       class="block w-full bg-slate-900/50 border border-slate-700 text-white rounded-xl py-3 pl-11 pr-12 focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all placeholder:text-slate-600"
+                                       class="block w-full bg-[rgba(17,27,46,0.5)] border border-[rgba(255,255,255,0.06)] text-white rounded-xl py-3 pl-11 pr-12 focus:border-[rgba(0,229,255,0.3)] focus:shadow-[0_0_15px_rgba(0,229,255,0.08)] transition-all outline-none placeholder:text-text-muted"
                                        placeholder="Mínimo 6 caracteres">
-                                <button type="button" onclick="togglePassword('regPassword')" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-600 hover:text-slate-400 transition-colors">
+                                <button type="button" onclick="togglePassword('regPassword')" class="absolute inset-y-0 right-0 pr-4 flex items-center text-text-muted hover:text-text-secondary transition-colors">
                                     <i class="fas fa-eye" id="regPasswordIcon"></i>
                                 </button>
                             </div>
                         </div>
-
-                        <button type="submit" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3.5 rounded-xl transition-all transform hover:scale-[1.02] shadow-xl hover:shadow-emerald-500/25 flex items-center justify-center space-x-2">
+                        <button type="submit" class="w-full bg-[rgba(0,255,136,0.1)] border border-[rgba(0,255,136,0.2)] text-neon-green font-bold py-3.5 rounded-xl transition-all hover:bg-[rgba(0,255,136,0.18)] hover:shadow-[0_0_20px_rgba(0,255,136,0.15)] flex items-center justify-center space-x-2">
                             <i class="fas fa-user-check"></i>
                             <span>Criar Minha Conta</span>
                         </button>
@@ -249,19 +184,13 @@
 
             <!-- Footer -->
             <div class="text-center space-y-4">
-                <div class="flex justify-center space-x-6">
-                    <button class="bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-xl transition-all hover:scale-110">
-                        <i class="fab fa-google text-red-400"></i>
-                    </button>
-                    <button class="bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-xl transition-all hover:scale-110">
-                        <i class="fab fa-github text-white"></i>
-                    </button>
-                    <button class="bg-slate-800 hover:bg-slate-700 text-white p-3 rounded-xl transition-all hover:scale-110">
-                        <i class="fab fa-apple text-slate-200"></i>
-                    </button>
+                <div class="flex justify-center space-x-4">
+                    <button class="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.06)] text-text-secondary p-3 rounded-xl transition-all"><i class="fab fa-google text-red-400"></i></button>
+                    <button class="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.06)] text-text-secondary p-3 rounded-xl transition-all"><i class="fab fa-github text-white"></i></button>
+                    <button class="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.05)] hover:bg-[rgba(255,255,255,0.06)] text-text-secondary p-3 rounded-xl transition-all"><i class="fab fa-apple text-text-secondary"></i></button>
                 </div>
-                <p class="text-slate-500 text-xs">
-                    Ao entrar, você concorda com nossos <a href="#" class="text-slate-400 hover:underline">Termos</a> e <a href="#" class="text-slate-400 hover:underline">Privacidade</a>.
+                <p class="text-text-muted text-xs">
+                    Ao entrar, você concorda com nossos <a href="#" class="text-text-secondary hover:underline">Termos</a> e <a href="#" class="text-text-secondary hover:underline">Privacidade</a>.
                 </p>
             </div>
         </div>
@@ -274,55 +203,33 @@
             const loginTab = document.getElementById('loginTab');
             const registerTab = document.getElementById('registerTab');
             const flashContainer = document.getElementById('flashMessages');
-
-            // Clear flash messages when switching to avoid confusion
             if (flashContainer) flashContainer.innerHTML = '';
-
             if (tab === 'login') {
-                loginForm.classList.remove('hidden');
-                registerForm.classList.add('hidden');
-                loginTab.classList.add('tab-active');
-                loginTab.classList.remove('tab-inactive');
-                registerTab.classList.add('tab-inactive');
-                registerTab.classList.remove('tab-active');
+                loginForm.classList.remove('hidden'); registerForm.classList.add('hidden');
+                loginTab.classList.add('tab-active'); loginTab.classList.remove('tab-inactive');
+                registerTab.classList.add('tab-inactive'); registerTab.classList.remove('tab-active');
             } else {
-                loginForm.classList.add('hidden');
-                registerForm.classList.remove('hidden');
-                loginTab.classList.add('tab-inactive');
-                loginTab.classList.remove('tab-active');
-                registerTab.classList.add('tab-active');
-                registerTab.classList.remove('tab-inactive');
+                loginForm.classList.add('hidden'); registerForm.classList.remove('hidden');
+                loginTab.classList.add('tab-inactive'); loginTab.classList.remove('tab-active');
+                registerTab.classList.add('tab-active'); registerTab.classList.remove('tab-inactive');
             }
         }
-
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const icon = document.getElementById(inputId + 'Icon');
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.replace('fa-eye', 'fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.replace('fa-eye-slash', 'fa-eye');
-            }
+            if (input.type === 'password') { input.type = 'text'; icon.classList.replace('fa-eye', 'fa-eye-slash'); }
+            else { input.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
         }
-
-        // Handle form submissions with loading state
         document.querySelectorAll('form').forEach(form => {
             form.addEventListener('submit', function() {
                 const btn = this.querySelector('button[type="submit"]');
-                const originalContent = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-circle-notch animate-spin mr-2"></i>Processando...';
                 btn.disabled = true;
             });
         });
-
-        // Check URL for ?tab=register to auto-switch
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('tab') === 'register') {
-                switchTab('register');
-            }
+            if (urlParams.get('tab') === 'register') switchTab('register');
         });
     </script>
 </body>
