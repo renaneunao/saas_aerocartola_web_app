@@ -1,6 +1,6 @@
 /**
  * UI Components - Sistema centralizado de feedback visual
- * Spinner, Toasts, Confirmações e Alerts personalizados
+ * Glass Neon Dark Theme
  */
 
 // =============================================================================
@@ -8,131 +8,75 @@
 // =============================================================================
 
 let loaderElement = null;
-let loaderCount = 0; // Para gerenciar múltiplas chamadas simultâneas
+let loaderCount = 0;
 
-/**
- * Mostra um spinner de carregamento global
- * @param {string} message - Mensagem a ser exibida (opcional)
- */
 function showLoader(message = 'Carregando...') {
     loaderCount++;
     
     if (!loaderElement) {
-        // Criar elemento do loader
         loaderElement = document.createElement('div');
         loaderElement.id = 'globalLoader';
         loaderElement.className = 'fixed inset-0 flex items-center justify-center z-[9999] transition-opacity duration-300';
         loaderElement.style.opacity = '0';
-        loaderElement.style.backdropFilter = 'blur(8px)';
-        loaderElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        loaderElement.style.backgroundColor = 'rgba(6, 11, 20, 0.75)';
+        loaderElement.style.backdropFilter = 'blur(12px)';
+        loaderElement.style.webkitBackdropFilter = 'blur(12px)';
         
         loaderElement.innerHTML = `
             <style>
-                @keyframes neonPulse {
-                    0%, 100% {
-                        box-shadow: 0 0 20px rgba(59, 130, 246, 0.8),
-                                    0 0 40px rgba(59, 130, 246, 0.6),
-                                    0 0 60px rgba(59, 130, 246, 0.4),
-                                    inset 0 0 20px rgba(59, 130, 246, 0.3);
-                    }
-                    50% {
-                        box-shadow: 0 0 30px rgba(59, 130, 246, 1),
-                                    0 0 60px rgba(59, 130, 246, 0.8),
-                                    0 0 90px rgba(59, 130, 246, 0.6),
-                                    inset 0 0 30px rgba(59, 130, 246, 0.5);
-                    }
+                @keyframes loaderNeonPulse {
+                    0%, 100% { box-shadow: 0 0 12px rgba(0,229,255,0.4), 0 0 24px rgba(0,229,255,0.2); }
+                    50%      { box-shadow: 0 0 20px rgba(0,229,255,0.7), 0 0 40px rgba(0,229,255,0.4); }
                 }
-                
-                @keyframes spinNeon {
-                    0% {
-                        transform: rotate(0deg);
-                    }
-                    100% {
-                        transform: rotate(360deg);
-                    }
+                @keyframes loaderSpin {
+                    0%   { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
                 }
-                
-                .neon-spinner {
-                    animation: spinNeon 1s linear infinite;
-                }
-                
-                .neon-ring {
-                    animation: neonPulse 2s ease-in-out infinite;
-                }
+                .loader-spin { animation: loaderSpin 0.8s linear infinite; }
+                .loader-glow { animation: loaderNeonPulse 2s ease-in-out infinite; }
             </style>
             
-            <div class="bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-sm rounded-2xl shadow-2xl p-10 max-w-md w-full mx-4 transform transition-all duration-300 scale-95 border border-blue-500/30" id="loaderContent">
+            <div style="background:rgba(11,17,32,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(0,229,255,0.12);border-radius:20px;padding:32px 40px;max-width:340px;width:90%;transform:scale(0.95);transition:transform 0.3s ease;box-shadow:0 0 40px rgba(0,229,255,0.06),0 20px 60px rgba(0,0,0,0.5)" id="loaderContent">
                 <div class="flex flex-col items-center">
-                    <!-- Spinner Neon -->
-                    <div class="relative w-24 h-24 mb-6">
-                        <!-- Anel externo com glow -->
-                        <div class="absolute inset-0 rounded-full border-4 border-blue-500/20"></div>
-                        
-                        <!-- Anel animado com efeito neon -->
-                        <div class="neon-spinner absolute inset-0">
-                            <div class="w-full h-full rounded-full border-4 border-transparent border-t-blue-500 border-r-blue-400 neon-ring"></div>
-                        </div>
-                        
-                        <!-- Centro com glow -->
-                        <div class="absolute inset-0 flex items-center justify-center">
-                            <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg" style="box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.3);"></div>
+                    <div style="position:relative;width:56px;height:56px;margin-bottom:16px">
+                        <div style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(0,229,255,0.08)"></div>
+                        <div class="loader-spin" style="position:absolute;inset:0">
+                            <div class="loader-glow" style="width:100%;height:100%;border-radius:50%;border:2px solid transparent;border-top-color:#00E5FF;border-right-color:#4494FF"></div>
                         </div>
                     </div>
-                    
-                    <!-- Mensagem -->
-                    <p class="text-white text-lg font-semibold text-center mb-2" id="loaderMessage">${message}</p>
-                    <p class="text-blue-300 text-sm text-center opacity-75">Aguarde...</p>
+                    <p style="color:#EDF2FA;font-size:15px;font-weight:500;text-align:center;margin-bottom:4px" id="loaderMessage">${message}</p>
+                    <p style="color:#64748B;font-size:12px;text-align:center">Aguarde...</p>
                 </div>
             </div>
         `;
         
         document.body.appendChild(loaderElement);
-        
-        // Animação de entrada
         setTimeout(() => {
             loaderElement.style.opacity = '1';
             document.getElementById('loaderContent').style.transform = 'scale(1)';
         }, 10);
     } else {
-        // Atualizar mensagem se já existir
         const messageEl = document.getElementById('loaderMessage');
-        if (messageEl) {
-            messageEl.textContent = message;
-        }
+        if (messageEl) messageEl.textContent = message;
     }
 }
 
-/**
- * Esconde o spinner de carregamento
- */
 function hideLoader() {
     loaderCount = Math.max(0, loaderCount - 1);
-    
     if (loaderCount === 0 && loaderElement) {
         loaderElement.style.opacity = '0';
         const content = document.getElementById('loaderContent');
-        if (content) {
-            content.style.transform = 'scale(0.95)';
-        }
-        
+        if (content) content.style.transform = 'scale(0.95)';
         setTimeout(() => {
-            if (loaderElement && loaderElement.parentNode) {
-                loaderElement.parentNode.removeChild(loaderElement);
-            }
+            if (loaderElement && loaderElement.parentNode) loaderElement.parentNode.removeChild(loaderElement);
             loaderElement = null;
         }, 300);
     }
 }
 
-/**
- * Atualiza a mensagem do loader sem escondê-lo
- * @param {string} message - Nova mensagem
- */
 function updateLoaderMessage(message) {
     const messageEl = document.getElementById('loaderMessage');
-    if (messageEl) {
-        messageEl.textContent = message;
-    }
+    if (messageEl) messageEl.textContent = message;
 }
 
 // =============================================================================
@@ -149,58 +93,62 @@ function createToastContainer() {
     return container;
 }
 
-/**
- * Mostra uma notificação toast
- * @param {string} message - Mensagem a ser exibida
- * @param {string} type - Tipo: 'success', 'error', 'warning', 'info'
- * @param {number} duration - Duração em ms (0 = infinito)
- */
 function showToast(message, type = 'info', duration = 4000) {
     const toast = document.createElement('div');
     
-    const colors = {
-        success: 'bg-green-600',
-        error: 'bg-red-600',
-        warning: 'bg-yellow-600',
-        info: 'bg-blue-600'
+    const config = {
+        success: { bg: 'rgba(0,255,136,0.1)', border: 'rgba(0,255,136,0.3)', text: '#00FF88', icon: 'fa-check-circle' },
+        error:   { bg: 'rgba(239,68,68,0.1)', border: 'rgba(239,68,68,0.3)', text: '#EF4444', icon: 'fa-exclamation-circle' },
+        warning: { bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.3)', text: '#F59E0B', icon: 'fa-exclamation-triangle' },
+        info:    { bg: 'rgba(0,229,255,0.1)', border: 'rgba(0,229,255,0.3)', text: '#00E5FF', icon: 'fa-info-circle' }
     };
     
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle',
-        info: 'fa-info-circle'
-    };
+    const c = config[type] || config.info;
     
-    toast.className = `${colors[type] || colors.info} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px] max-w-md transform transition-all duration-300 cursor-pointer hover:shadow-xl`;
-    toast.style.transform = 'translateX(400px)';
-    toast.style.opacity = '0';
+    Object.assign(toast.style, {
+        background: c.bg,
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        border: `1px solid ${c.border}`,
+        color: c.text,
+        padding: '10px 16px',
+        borderRadius: '12px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        minWidth: '280px',
+        maxWidth: '400px',
+        transform: 'translateX(400px)',
+        opacity: '0',
+        transition: 'all 0.3s ease',
+        cursor: 'pointer',
+        boxShadow: `0 0 20px ${c.border.replace('0.3)', '0.08)')}`,
+        fontSize: '13px',
+        fontWeight: '500'
+    });
     
     toast.innerHTML = `
-        <i class="fas ${icons[type] || icons.info} text-xl flex-shrink-0"></i>
-        <span class="flex-1 font-medium">${message}</span>
-        <button class="ml-2 text-white hover:text-gray-200 transition-colors" onclick="this.parentElement.remove()">
+        <i class="fas ${c.icon}" style="font-size:16px;flex-shrink:0"></i>
+        <span style="flex:1">${message}</span>
+        <button style="color:${c.text};opacity:0.6;background:none;border:none;cursor:pointer;padding:2px;font-size:12px" onclick="this.closest('[style*=translateX]').remove()">
             <i class="fas fa-times"></i>
         </button>
     `;
     
     toastContainer.appendChild(toast);
     
-    // Animação de entrada
     setTimeout(() => {
         toast.style.transform = 'translateX(0)';
         toast.style.opacity = '1';
     }, 10);
     
-    // Auto remover
     if (duration > 0) {
-        setTimeout(() => {
-            removeToast(toast);
-        }, duration);
+        setTimeout(() => removeToast(toast), duration);
     }
     
-    // Remover ao clicar
-    toast.addEventListener('click', () => removeToast(toast));
+    toast.addEventListener('click', (e) => {
+        if (!e.target.closest('button')) removeToast(toast);
+    });
     
     return toast;
 }
@@ -209,53 +157,43 @@ function removeToast(toast) {
     toast.style.transform = 'translateX(400px)';
     toast.style.opacity = '0';
     setTimeout(() => {
-        if (toast.parentNode) {
-            toast.parentNode.removeChild(toast);
-        }
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
     }, 300);
 }
 
 // =============================================================================
-// ALERT PERSONALIZADO
+// ALERT DIALOG
 // =============================================================================
 
-/**
- * Mostra um alert customizado
- * @param {string} message - Mensagem
- * @param {string} title - Título (opcional)
- * @param {string} type - Tipo: 'success', 'error', 'warning', 'info'
- */
 function showAlert(message, title = '', type = 'info') {
     return new Promise((resolve) => {
         const overlay = document.createElement('div');
-        overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] transition-opacity duration-300';
+        overlay.className = 'fixed inset-0 flex items-center justify-center z-[9999] transition-opacity duration-300';
         overlay.style.opacity = '0';
+        overlay.style.backgroundColor = 'rgba(6,11,20,0.7)';
+        overlay.style.backdropFilter = 'blur(8px)';
+        overlay.style.webkitBackdropFilter = 'blur(8px)';
         
-        const colors = {
-            success: 'text-green-600',
-            error: 'text-red-600',
-            warning: 'text-yellow-600',
-            info: 'text-blue-600'
+        const config = {
+            success: { color: '#00FF88', bg: 'rgba(0,255,136,0.08)', border: 'rgba(0,255,136,0.2)', icon: 'fa-check-circle' },
+            error:   { color: '#EF4444', bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.2)', icon: 'fa-exclamation-circle' },
+            warning: { color: '#F59E0B', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)', icon: 'fa-exclamation-triangle' },
+            info:    { color: '#00E5FF', bg: 'rgba(0,229,255,0.08)', border: 'rgba(0,229,255,0.2)', icon: 'fa-info-circle' }
         };
         
-        const icons = {
-            success: 'fa-check-circle',
-            error: 'fa-exclamation-circle',
-            warning: 'fa-exclamation-triangle',
-            info: 'fa-info-circle'
-        };
+        const c = config[type] || config.info;
         
         overlay.innerHTML = `
-            <div class="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-sm border-2 border-blue-500/30 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95" id="alertContent">
-                <div class="flex items-start gap-4 mb-4">
-                    <i class="fas ${icons[type] || icons.info} text-3xl ${colors[type] || colors.info} flex-shrink-0 mt-1"></i>
-                    <div class="flex-1">
-                        ${title ? `<h3 class="text-xl font-bold text-white mb-2">${title}</h3>` : ''}
-                        <p class="text-gray-300">${message}</p>
+            <div id="alertContent" style="background:rgba(11,17,32,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid ${c.border};border-radius:20px;padding:24px;max-width:420px;width:90%;transform:scale(0.95);transition:transform 0.3s ease;box-shadow:0 0 40px ${c.border.replace('0.2)', '0.08)')},0 20px 60px rgba(0,0,0,0.5)">
+                <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:20px">
+                    <i class="fas ${c.icon}" style="font-size:28px;color:${c.color};flex-shrink:0;margin-top:2px"></i>
+                    <div style="flex:1">
+                        ${title ? `<h3 style="color:#EDF2FA;font-size:17px;font-weight:600;margin-bottom:6px">${title}</h3>` : ''}
+                        <p style="color:#94A3B8;font-size:14px;line-height:1.5">${message}</p>
                     </div>
                 </div>
-                <div class="flex justify-end">
-                    <button class="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 font-medium shadow-lg" id="alertOkBtn" style="box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);">
+                <div style="display:flex;justify-content:flex-end">
+                    <button id="alertOkBtn" style="background:${c.bg};color:${c.color};border:1px solid ${c.border};padding:8px 24px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s">
                         OK
                     </button>
                 </div>
@@ -264,66 +202,54 @@ function showAlert(message, title = '', type = 'info') {
         
         document.body.appendChild(overlay);
         
-        // Animação de entrada
         setTimeout(() => {
             overlay.style.opacity = '1';
             document.getElementById('alertContent').style.transform = 'scale(1)';
         }, 10);
         
-        // Função para fechar
         const closeAlert = () => {
             overlay.style.opacity = '0';
             document.getElementById('alertContent').style.transform = 'scale(0.95)';
             setTimeout(() => {
-                if (overlay.parentNode) {
-                    overlay.parentNode.removeChild(overlay);
-                }
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
                 resolve(true);
             }, 300);
         };
         
-        // Event listeners
-        document.getElementById('alertOkBtn').addEventListener('click', closeAlert);
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) closeAlert();
-        });
+        const okBtn = document.getElementById('alertOkBtn');
+        okBtn.addEventListener('mouseenter', () => { okBtn.style.background = c.bg.replace('0.08)', '0.16)'); });
+        okBtn.addEventListener('mouseleave', () => { okBtn.style.background = c.bg; });
+        okBtn.addEventListener('click', closeAlert);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeAlert(); });
     });
 }
 
 // =============================================================================
-// CONFIRM PERSONALIZADO
+// CONFIRM DIALOG
 // =============================================================================
 
-/**
- * Mostra um dialog de confirmação customizado
- * @param {string} message - Mensagem
- * @param {string} title - Título (opcional)
- * @param {object} options - Opções (confirmText, cancelText)
- */
 function showConfirm(message, title = 'Confirmar', options = {}) {
-    const {
-        confirmText = 'Confirmar',
-        cancelText = 'Cancelar',
-        confirmClass = 'bg-blue-600 hover:bg-blue-700',
-        cancelClass = 'bg-gray-300 hover:bg-gray-400 text-gray-800'
-    } = options;
+    const { confirmText = 'Confirmar', cancelText = 'Cancelar' } = options;
     
     return new Promise((resolve) => {
         const overlay = document.createElement('div');
-        overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] transition-opacity duration-300';
+        overlay.className = 'fixed inset-0 flex items-center justify-center z-[9999] transition-opacity duration-300';
         overlay.style.opacity = '0';
+        overlay.style.backgroundColor = 'rgba(6,11,20,0.7)';
+        overlay.style.backdropFilter = 'blur(8px)';
+        overlay.style.webkitBackdropFilter = 'blur(8px)';
         
         overlay.innerHTML = `
-            <div class="bg-gradient-to-br from-gray-900/95 to-gray-800/95 backdrop-blur-sm border-2 border-blue-500/30 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4 transform transition-all duration-300 scale-95" id="confirmContent">
-                <div class="mb-6">
-                    <h3 class="text-xl font-bold text-white mb-3">${title}</h3>
-                    <p class="text-gray-300">${message}</p>
+            <div id="confirmContent" style="background:rgba(11,17,32,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(0,229,255,0.15);border-radius:20px;padding:24px;max-width:420px;width:90%;transform:scale(0.95);transition:transform 0.3s ease;box-shadow:0 0 40px rgba(0,229,255,0.06),0 20px 60px rgba(0,0,0,0.5)">
+                <div style="margin-bottom:20px">
+                    <h3 style="color:#EDF2FA;font-size:17px;font-weight:600;margin-bottom:8px">${title}</h3>
+                    <p style="color:#94A3B8;font-size:14px;line-height:1.5">${message}</p>
                 </div>
-                <div class="flex justify-end gap-3">
-                    <button class="px-6 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-all duration-200 font-medium" id="confirmCancelBtn">
+                <div style="display:flex;justify-content:flex-end;gap:10px">
+                    <button id="confirmCancelBtn" style="background:rgba(255,255,255,0.04);color:#94A3B8;border:1px solid rgba(255,255,255,0.08);padding:8px 20px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s">
                         ${cancelText}
                     </button>
-                    <button class="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition-all duration-200 font-medium shadow-lg" id="confirmOkBtn" style="box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);">
+                    <button id="confirmOkBtn" style="background:rgba(0,229,255,0.08);color:#00E5FF;border:1px solid rgba(0,229,255,0.2);padding:8px 20px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s">
                         ${confirmText}
                     </button>
                 </div>
@@ -332,42 +258,39 @@ function showConfirm(message, title = 'Confirmar', options = {}) {
         
         document.body.appendChild(overlay);
         
-        // Animação de entrada
         setTimeout(() => {
             overlay.style.opacity = '1';
             document.getElementById('confirmContent').style.transform = 'scale(1)';
         }, 10);
         
-        // Função para fechar
         const closeConfirm = (result) => {
             overlay.style.opacity = '0';
             document.getElementById('confirmContent').style.transform = 'scale(0.95)';
             setTimeout(() => {
-                if (overlay.parentNode) {
-                    overlay.parentNode.removeChild(overlay);
-                }
+                if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
                 resolve(result);
             }, 300);
         };
         
-        // Event listeners
-        document.getElementById('confirmOkBtn').addEventListener('click', () => closeConfirm(true));
-        document.getElementById('confirmCancelBtn').addEventListener('click', () => closeConfirm(false));
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) closeConfirm(false);
-        });
+        const okBtn = document.getElementById('confirmOkBtn');
+        const cancelBtn = document.getElementById('confirmCancelBtn');
+        okBtn.addEventListener('mouseenter', () => { okBtn.style.background = 'rgba(0,229,255,0.16)'; });
+        okBtn.addEventListener('mouseleave', () => { okBtn.style.background = 'rgba(0,229,255,0.08)'; });
+        cancelBtn.addEventListener('mouseenter', () => { cancelBtn.style.background = 'rgba(255,255,255,0.08)'; });
+        cancelBtn.addEventListener('mouseleave', () => { cancelBtn.style.background = 'rgba(255,255,255,0.04)'; });
+        okBtn.addEventListener('click', () => closeConfirm(true));
+        cancelBtn.addEventListener('click', () => closeConfirm(false));
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) closeConfirm(false); });
     });
 }
 
 // =============================================================================
-// EXPORTAR (se usar módulos)
+// EXPORT
 // =============================================================================
 
-// Para uso global
 window.showLoader = showLoader;
 window.hideLoader = hideLoader;
 window.updateLoaderMessage = updateLoaderMessage;
 window.showToast = showToast;
 window.showAlert = showAlert;
 window.showConfirm = showConfirm;
-

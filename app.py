@@ -365,6 +365,45 @@ def associar_credenciais():
     
     return render_template('associar_credenciais.html', current_user=user)
 
+@app.route('/perfil', methods=['GET', 'POST'])
+@login_required
+def perfil():
+    """Página de perfil do usuário - exibir dados e alterar senha"""
+    user = get_current_user()
+    
+    if request.method == 'POST':
+        current_password = request.form.get('current_password', '')
+        new_password = request.form.get('new_password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        if not current_password or not new_password or not confirm_password:
+            flash('Preencha todos os campos.', 'error')
+            return render_template('perfil.html', current_user=user)
+        
+        if new_password != confirm_password:
+            flash('As senhas não conferem.', 'error')
+            return render_template('perfil.html', current_user=user)
+        
+        if len(new_password) < 6:
+            flash('A nova senha deve ter pelo menos 6 caracteres.', 'error')
+            return render_template('perfil.html', current_user=user)
+        
+        from models.users import authenticate_user
+        auth = authenticate_user(user['username'], current_password)
+        if not auth['success']:
+            flash('Senha atual incorreta.', 'error')
+            return render_template('perfil.html', current_user=user)
+        
+        success = update_user_password(user['id'], new_password)
+        if success:
+            flash('Senha alterada com sucesso!', 'success')
+        else:
+            flash('Erro ao alterar senha.', 'error')
+        
+        return render_template('perfil.html', current_user=user)
+    
+    return render_template('perfil.html', current_user=user)
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
@@ -458,12 +497,37 @@ def dashboard():
             'perfis_info': config if (tem_perfis and config) else {}
         }
         
+        # Dados da rodada atual (status do mercado)
+        rodada_info = {'rodada': None, 'status': 'indisponivel', 'fechamento': None}
+        try:
+            from api_cartola import fetch_status_data
+            mercado_status = fetch_status_data()
+            if mercado_status:
+                rodada_info['rodada'] = mercado_status.get('rodada_atual')
+                rodada_info['status'] = 'aberto' if mercado_status.get('status_mercado') == 1 else 'fechado'
+                fechamento_ts = mercado_status.get('fechamento')
+                if fechamento_ts:
+                    from datetime import datetime, timezone
+                    dt_fechamento = datetime.fromtimestamp(fechamento_ts, tz=timezone(timedelta(hours=-3)))
+                    rodada_info['fechamento_str'] = dt_fechamento.strftime('%d/%m %H:%M')
+                    agora = datetime.now(timezone(timedelta(hours=-3)))
+                    diff = dt_fechamento - agora
+                    if diff.total_seconds() > 0:
+                        horas = int(diff.total_seconds() // 3600)
+                        mins = int((diff.total_seconds() % 3600) // 60)
+                        rodada_info['prazo'] = f'{horas}h {mins}min' if horas > 0 else f'{mins}min'
+                    else:
+                        rodada_info['prazo'] = 'fechado'
+        except Exception as e:
+            print(f"[DASHBOARD] Erro ao buscar status do mercado: {e}")
+        
         print("[DEBUG DASHBOARD] Dashboard processado com sucesso, renderizando template")
         
         return render_template('dashboard.html', 
                              current_user=user, 
                              team=team_info,
-                             status=status)
+                             status=status,
+                             rodada=rodada_info)
     
     except Exception as e:
         print(f"[ERRO DASHBOARD] Erro ao carregar dashboard: {e}")

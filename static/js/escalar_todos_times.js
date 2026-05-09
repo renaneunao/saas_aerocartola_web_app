@@ -566,37 +566,39 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Criar modal de progresso
         const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4';
+        Object.assign(modal.style, {
+            position: 'fixed', inset: '0', zIndex: '50',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '16px', backgroundColor: 'rgba(6,11,20,0.75)',
+            backdropFilter: 'blur(10px)', webkitBackdropFilter: 'blur(10px)'
+        });
         modal.innerHTML = `
-            <div class="bg-dark-blue-900 rounded-2xl border border-dark-blue-700 shadow-2xl max-w-2xl w-full p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-bold text-white flex items-center gap-2">
-                        <i class="fas fa-bolt text-yellow-400"></i>
+            <div style="background:rgba(11,17,32,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(0,229,255,0.12);border-radius:20px;box-shadow:0 0 40px rgba(0,229,255,0.06),0 20px 60px rgba(0,0,0,0.5);max-width:640px;width:100%;padding:24px;max-height:90vh;overflow-y:auto">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                    <h3 style="color:#EDF2FA;font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px">
+                        <i class="fas fa-layer-group" style="color:#F59E0B"></i>
                         Escalar Todos os Times
                     </h3>
-                    <button id="fecharModalEscalarTodos" class="text-dark-blue-300 hover:text-white">
-                        <i class="fas fa-times text-xl"></i>
+                    <button id="fecharModalEscalarTodos" style="background:none;border:none;color:#64748B;cursor:pointer;font-size:18px;padding:4px">
+                        <i class="fas fa-times"></i>
                     </button>
                 </div>
                 
-                <!-- Barra de progresso -->
-                <div class="mb-4">
-                    <div class="flex justify-between text-sm text-dark-blue-300 mb-2">
+                <div style="margin-bottom:16px">
+                    <div style="display:flex;justify-content:space-between;font-size:13px;color:#94A3B8;margin-bottom:6px">
                         <span id="progressTextTodos">Iniciando...</span>
-                        <span id="progressPercentTodos">0%</span>
+                        <span id="progressPercentTodos" style="font-family:'JetBrains Mono',monospace">0%</span>
                     </div>
-                    <div class="w-full bg-dark-blue-800 rounded-full h-3 overflow-hidden">
-                        <div id="progressBarTodos" class="bg-gradient-to-r from-green-500 to-emerald-500 h-full transition-all duration-300" style="width: 0%"></div>
+                    <div style="width:100%;background:rgba(17,27,46,0.6);border-radius:999px;height:8px;overflow:hidden">
+                        <div id="progressBarTodos" style="background:linear-gradient(90deg,#F59E0B,#00FF88);height:100%;width:0%;transition:width 0.3s ease;border-radius:999px;box-shadow:0 0 8px rgba(245,158,11,0.3)"></div>
                     </div>
                 </div>
                 
-                <!-- Logs -->
-                <div id="logsContainerTodos" class="bg-dark-blue-950 rounded-lg p-4 max-h-96 overflow-y-auto font-mono text-sm">
+                <div id="logsContainerTodos" style="background:rgba(6,11,20,0.4);border:1px solid rgba(255,255,255,0.04);border-radius:12px;padding:12px;max-height:320px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6">
                 </div>
                 
-                <!-- Botão de fechar (só aparece quando concluído) -->
-                <div id="btnFecharContainerTodos" class="mt-4 hidden">
-                    <button id="btnFecharEscalarTodos" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                <div id="btnFecharContainerTodos" style="margin-top:16px;display:none">
+                    <button id="btnFecharEscalarTodos" style="width:100%;background:rgba(0,255,136,0.08);color:#00FF88;border:1px solid rgba(0,255,136,0.2);padding:10px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s">
                         Fechar
                     </button>
                 </div>
@@ -624,7 +626,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tipo === 'success' ? 'text-green-400' :
                 tipo === 'error' ? 'text-red-400' :
                 tipo === 'warning' ? 'text-yellow-400' :
-                'text-dark-blue-300'
+                'text-slate-300'
             }`;
             logEntry.textContent = mensagem;
             logsContainer.appendChild(logEntry);
@@ -645,7 +647,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Event listeners
         document.getElementById('fecharModalEscalarTodos').addEventListener('click', fecharModal);
-        document.getElementById('btnFecharEscalarTodos').addEventListener('click', fecharModal);
+        const btnFecharTodos = document.getElementById('btnFecharEscalarTodos');
+        btnFecharTodos.addEventListener('click', fecharModal);
+        btnFecharTodos.addEventListener('mouseenter', () => { btnFecharTodos.style.background = 'rgba(0,255,136,0.16)'; });
+        btnFecharTodos.addEventListener('mouseleave', () => { btnFecharTodos.style.background = 'rgba(0,255,136,0.08)'; });
         
         // Executar escalação de todos os times
         const escalarTodos = new EscalarTodosTimes();
@@ -656,7 +661,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const resultado = await escalarTodos.executar();
             
             // Mostrar botão de fechar
-            document.getElementById('btnFecharContainerTodos').classList.remove('hidden');
+            document.getElementById('btnFecharContainerTodos').style.display = 'block';
             
             // Mostrar toast de sucesso
             const mensagem = resultado.falhas === 0 
@@ -669,7 +674,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateProgress(0, 'Erro ao executar escalação de todos os times');
             
             // Mostrar botão de fechar mesmo em caso de erro
-            document.getElementById('btnFecharContainerTodos').classList.remove('hidden');
+            document.getElementById('btnFecharContainerTodos').style.display = 'block';
             
             // Mostrar alerta
             showAlert('Erro ao Escalar Todos os Times', error.message, 'error');

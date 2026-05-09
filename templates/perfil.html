@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}Meu Perfil — Aero Cartola{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-8 animate-fade-in-up">
+
+    <!-- Cabeçalho -->
+    <div class="glass rounded-2xl neon-border p-6 mb-6">
+        <div class="flex items-center space-x-4">
+            <div class="w-14 h-14 rounded-full bg-[rgba(11,17,32,0.6)] border border-[rgba(0,229,255,0.2)] flex items-center justify-center shadow-[0_0_18px_rgba(0,229,255,0.08)]">
+                <span class="text-xl font-bold text-neon-cyan">
+                    {% if session.get('username') %}{{ session.get('username')[:1].upper() }}{% else %}U{% endif %}
+                </span>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-white">
+                    {% if session.get('username') %}{{ session.get('username') }}{% else %}Usuário{% endif %}
+                </h1>
+                <p class="text-text-muted text-sm">
+                    {% if current_user and current_user.is_admin %}Administrador{% else %}Usuário{% endif %}
+                    {% if current_user and current_user.plano %}
+                    · <span class="uppercase {% if current_user.plano == 'avancado' %}text-neon-cyan{% elif current_user.plano == 'pro' %}text-neon-purple{% else %}text-text-muted{% endif %}">{{ current_user.plano }}</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações da Conta -->
+    <div class="glass rounded-2xl neon-border p-6 mb-6">
+        <h2 class="text-base font-semibold text-white mb-4 flex items-center">
+            <i class="fas fa-id-card text-neon-cyan mr-2.5 text-sm"></i>Informações da Conta
+        </h2>
+        <div class="space-y-3">
+            <div class="flex items-center justify-between py-2.5 border-b border-[rgba(255,255,255,0.04)]">
+                <span class="text-text-muted text-sm">Nome de usuário</span>
+                <span class="text-white text-sm font-medium">{{ current_user.username if current_user else '-' }}</span>
+            </div>
+            <div class="flex items-center justify-between py-2.5 border-b border-[rgba(255,255,255,0.04)]">
+                <span class="text-text-muted text-sm">Email</span>
+                <span class="text-white text-sm font-medium">{{ current_user.email if current_user else '-' }}</span>
+            </div>
+            <div class="flex items-center justify-between py-2.5 border-b border-[rgba(255,255,255,0.04)]">
+                <span class="text-text-muted text-sm">Nome completo</span>
+                <span class="text-white text-sm font-medium">{{ current_user.full_name if current_user and current_user.full_name else '-' }}</span>
+            </div>
+            <div class="flex items-center justify-between py-2.5">
+                <span class="text-text-muted text-sm">Plano</span>
+                <span class="text-sm font-semibold uppercase tracking-wider
+                    {% if current_user and current_user.plano == 'avancado' %}text-neon-cyan
+                    {% elif current_user and current_user.plano == 'pro' %}text-neon-purple
+                    {% else %}text-text-muted{% endif %}">
+                    {{ current_user.plano if current_user else '-' }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alterar Senha -->
+    <div class="glass rounded-2xl neon-border p-6">
+        <h2 class="text-base font-semibold text-white mb-4 flex items-center">
+            <i class="fas fa-lock text-neon-amber mr-2.5 text-sm"></i>Alterar Senha
+        </h2>
+        <form method="POST" class="space-y-4">
+            <div>
+                <label class="block text-text-secondary text-sm mb-1.5">Senha atual</label>
+                <input type="password" name="current_password" required
+                       class="w-full bg-[rgba(17,27,46,0.5)] backdrop-blur border border-[rgba(255,255,255,0.06)] focus:border-[rgba(0,229,255,0.3)] focus:shadow-[0_0_15px_rgba(0,229,255,0.08)] text-white placeholder:text-text-muted rounded-xl px-4 py-2.5 text-sm transition-all duration-200 outline-none"
+                       placeholder="Digite sua senha atual">
+            </div>
+            <div>
+                <label class="block text-text-secondary text-sm mb-1.5">Nova senha</label>
+                <input type="password" name="new_password" required minlength="6"
+                       class="w-full bg-[rgba(17,27,46,0.5)] backdrop-blur border border-[rgba(255,255,255,0.06)] focus:border-[rgba(0,229,255,0.3)] focus:shadow-[0_0_15px_rgba(0,229,255,0.08)] text-white placeholder:text-text-muted rounded-xl px-4 py-2.5 text-sm transition-all duration-200 outline-none"
+                       placeholder="Mínimo 6 caracteres">
+            </div>
+            <div>
+                <label class="block text-text-secondary text-sm mb-1.5">Confirmar nova senha</label>
+                <input type="password" name="confirm_password" required minlength="6"
+                       class="w-full bg-[rgba(17,27,46,0.5)] backdrop-blur border border-[rgba(255,255,255,0.06)] focus:border-[rgba(0,229,255,0.3)] focus:shadow-[0_0_15px_rgba(0,229,255,0.08)] text-white placeholder:text-text-muted rounded-xl px-4 py-2.5 text-sm transition-all duration-200 outline-none"
+                       placeholder="Repita a nova senha">
+            </div>
+            <button type="submit"
+                    class="w-full py-2.5 bg-[rgba(0,229,255,0.08)] text-neon-cyan border border-[rgba(0,229,255,0.2)] rounded-xl text-sm font-medium transition-all duration-200 hover:bg-[rgba(0,229,255,0.14)] hover:border-[rgba(0,229,255,0.35)] hover:shadow-[0_0_15px_rgba(0,229,255,0.1)]">
+                <i class="fas fa-key mr-2 text-xs"></i>Alterar Senha
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
