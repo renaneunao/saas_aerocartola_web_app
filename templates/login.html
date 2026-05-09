@@ -99,10 +99,12 @@
 
     <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
         <div class="max-w-md w-full space-y-8 animate-slide-up">
-            <!-- Logo & Brand -->
+             <!-- Logo & Brand -->
             <div class="text-center">
-                <div class="inline-flex items-center justify-center p-4 bg-gradient-to-br from-brand-500 to-brand-700 rounded-2xl shadow-2xl mb-6 animate-pulse-glow">
-                    <i class="fas fa-futbol text-4xl text-white"></i>
+                <div class="inline-flex items-center justify-center mb-6">
+                    <img src="{{ url_for('static', filename='img/aero-cartola-logo.png') }}" 
+                         alt="Aero Cartola" 
+                         class="w-20 h-20 object-contain drop-shadow-[0_0_20px_rgba(0,229,255,0.3)] animate-pulse-glow">
                 </div>
                 <h1 class="text-4xl font-bold tracking-tight text-white mb-2">
                     Aero <span class="text-brand-400">Cartola</span>

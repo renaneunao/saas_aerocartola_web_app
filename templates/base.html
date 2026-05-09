@@ -91,9 +91,9 @@
         <!-- Sidebar Header / Logo -->
         <div class="flex items-center justify-between h-16 px-5 border-b border-[rgba(0,229,255,0.06)]">
             <a href="{{ url_for('index') }}" class="flex items-center space-x-2.5 group">
-                <div class="w-9 h-9 bg-gradient-to-br from-neon-cyan to-neon-blue rounded-lg flex items-center justify-center logo-icon transition-shadow duration-300 group-hover:shadow-[0_0_20px_rgba(0,229,255,0.4)]">
-                    <i class="fas fa-futbol text-sm text-white"></i>
-                </div>
+                <img src="{{ url_for('static', filename='img/aero-cartola-logo.png') }}" 
+                     alt="Aero Cartola" 
+                     class="w-10 h-10 object-contain transition-all duration-300 group-hover:drop-shadow-[0_0_12px_rgba(0,229,255,0.5)]">
                 <span class="text-lg font-bold text-neon-cyan-gradient">
                     Aero Cartola
                 </span>
@@ -238,7 +238,10 @@
         <button type="button" id="sidebar-toggle" class="text-text-secondary hover:text-white transition-colors duration-200">
             <i class="fas fa-bars text-lg"></i>
         </button>
-        <span class="text-lg font-bold text-neon-cyan-gradient">Aero Cartola</span>
+        <div class="flex items-center space-x-2">
+            <img src="{{ url_for('static', filename='img/aero-cartola-logo.png') }}" alt="Aero Cartola" class="w-7 h-7 object-contain">
+            <span class="text-lg font-bold text-neon-cyan-gradient">Aero Cartola</span>
+        </div>
         <div class="w-6"></div>
     </div>
 
@@ -290,9 +293,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="text-center">
                 <div class="flex items-center justify-center space-x-2 mb-3">
-                    <div class="w-7 h-7 bg-gradient-to-br from-neon-cyan to-neon-blue rounded flex items-center justify-center logo-icon">
-                        <i class="fas fa-futbol text-xs text-white"></i>
-                    </div>
+                    <img src="{{ url_for('static', filename='img/aero-cartola-logo.png') }}" alt="Aero Cartola" class="w-6 h-6 object-contain">
                     <span class="text-sm font-bold text-neon-cyan-gradient">Aero Cartola</span>
                 </div>
                 <p class="text-text-muted text-xs">Sistema de gerenciamento de times do Cartola FC</p>
