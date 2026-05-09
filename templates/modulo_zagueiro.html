@@ -20,7 +20,7 @@
 <!-- Page Header -->
 <div class="text-center mb-8">
     <div class="flex items-center justify-center space-x-3 mb-4">
-        <img src="{{ url_for('static', filename='img/posicoes/zagueiro.jpg') }}" alt="Zagueiros" class="w-12 h-12 object-contain rounded-xl animate-pulse-glow" style="background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.25);padding:6px">
+        <img src="{{ url_for('static', filename='img/posicoes/zagueiro.jpg') }}" alt="Zagueiros" class="w-14 h-14 object-contain rounded-xl">
         <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-green-200 bg-clip-text text-transparent">
             Zagueiros
         </h1>
@@ -166,7 +166,7 @@
     <div class="bg-gradient-to-r from-dark-blue-700/80 to-dark-blue-800/80 p-6 border-b border-dark-blue-700/50">
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <img src="{{ url_for('static', filename='img/posicoes/zagueiro.jpg') }}" alt="Zagueiros" class="w-8 h-8 object-contain rounded-lg" style="background:rgba(0,255,136,0.12);border:1px solid rgba(0,255,136,0.25);padding:4px">
+                <img src="{{ url_for('static', filename='img/posicoes/zagueiro.jpg') }}" alt="Zagueiros" class="w-10 h-10 object-contain rounded-lg">
                 <div>
                     <h2 class="text-2xl font-bold text-white">Zagueiros - Rodada {{ rodada_atual }}</h2>
                     <p class="text-dark-blue-200 text-sm">Análise detalhada com pesos personalizados</p>
@@ -1020,4 +1020,5 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Modal de Detalhes do Zagueiro -->
 {% include 'modals/modal_detalhes_zagueiro.html' %}
 {% endblock %}
+
 

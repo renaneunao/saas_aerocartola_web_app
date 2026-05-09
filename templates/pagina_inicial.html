@@ -86,24 +86,23 @@
     }
     
     .profile-scroll-container::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.5); /* slate-900 com transparência */
+        background: rgba(11, 17, 32, 0.4);
         border-radius: 10px;
     }
     
     .profile-scroll-container::-webkit-scrollbar-thumb {
-        background: linear-gradient(90deg, #0369a1, #0284c7); /* dark-blue-700 a dark-blue-600 */
+        background: linear-gradient(90deg, #00E5FF, #4494FF);
         border-radius: 10px;
-        transition: background 0.3s ease;
     }
     
     .profile-scroll-container::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(90deg, #0284c7, #0ea5e9); /* dark-blue-600 a dark-blue-500 */
+        background: linear-gradient(90deg, #4494FF, #00E5FF);
     }
     
     /* Para Firefox */
     .profile-scroll-container {
         scrollbar-width: thin;
-        scrollbar-color: #0284c7 rgba(15, 23, 42, 0.5);
+        scrollbar-color: #00E5FF rgba(11, 17, 32, 0.4);
     }
     
     /* Grid de cards - reverter direção para ordem correta */
@@ -118,8 +117,8 @@
     }
     
     .profile-card {
-        flex: 0 0 220px;
-        min-width: 220px;
+        flex: 0 0 180px;
+        min-width: 180px;
         display: flex;
         flex-direction: column;
         height: 100%;
@@ -151,14 +150,14 @@
         min-height: 0;
         max-height: 100%;
         scrollbar-width: thin;
-        scrollbar-color: #0284c7 rgba(15, 23, 42, 0.3);
+        scrollbar-color: #00E5FF rgba(11, 17, 32, 0.3);
         position: relative;
     }
     
     .profile-card [class*="overflow-y-auto"] {
         overflow-y: auto !important;
         scrollbar-width: thin;
-        scrollbar-color: #0284c7 rgba(15, 23, 42, 0.3);
+        scrollbar-color: #00E5FF rgba(11, 17, 32, 0.3);
     }
     
     .profile-card .ranking-list::-webkit-scrollbar,
@@ -174,20 +173,19 @@
     
     .profile-card .ranking-list::-webkit-scrollbar-thumb,
     .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #0369a1, #0284c7);
+        background: linear-gradient(180deg, #00E5FF, #4494FF);
         border-radius: 10px;
-        transition: background 0.3s ease;
     }
     
     .profile-card .ranking-list::-webkit-scrollbar-thumb:hover,
     .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #0284c7, #0ea5e9);
+        background: linear-gradient(180deg, #4494FF, #00E5FF);
     }
     
     @media (max-width: 640px) {
         .profile-card {
-            flex: 0 0 200px;
-            min-width: 200px;
+        flex: 0 0 160px;
+        min-width: 160px;
         }
     }
 </style>
@@ -217,20 +215,16 @@
                 <div class="profile-slide">
                     <div class="bg-gradient-to-br from-slate-900/95 to-slate-950/95 backdrop-blur-sm rounded-2xl border-2 border-slate-700/50 shadow-2xl overflow-hidden flex flex-col h-full">
                         <!-- Header -->
-                        <div class="bg-gradient-to-r from-dark-blue-700/90 to-dark-blue-800/90 p-4 border-b border-slate-700/50">
+                        <div class="bg-gradient-to-r from-dark-blue-700/90 to-dark-blue-800/90 p-3 border-b border-slate-700/50">
                             <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="p-2 bg-gradient-to-br from-dark-blue-500 to-dark-blue-600 rounded-lg shadow-lg">
-                                        <i class="fas fa-trophy text-white text-xl"></i>
-                                    </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-trophy text-neon-cyan text-lg"></i>
                                     <div>
-                                        <h2 class="text-2xl font-bold text-white font-serif">Passo 1: Escolha o Perfil de Peso de Jogo</h2>
-                                        <p class="text-dark-blue-200 text-sm mt-1">Selecione qual perfil melhor identifica os times favoritos para esta rodada</p>
+                                        <h2 class="text-lg font-bold text-white">Passo 1: Perfil de Peso de Jogo</h2>
+                                        <p class="text-dark-blue-200 text-xs mt-0.5">Selecione o perfil que melhor identifica os favoritos da rodada</p>
                                     </div>
                                 </div>
-                                <div class="text-white/60 text-sm font-medium">
-                                    1 de 2
-                                </div>
+                                <div class="text-white/50 text-xs font-medium">1 de 2</div>
                             </div>
                         </div>
 
@@ -245,7 +239,7 @@
                                            class="peer sr-only"
                                            {% if config_default and config_default.perfil_peso_jogo == perfil.perfil_id %}checked{% endif %}
                                            {% if perfil.get('bloqueado') %}disabled data-bloqueado="true"{% else %}required data-bloqueado="false"{% endif %}>
-                                    <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-3 hover:border-dark-blue-500/70 transition-all duration-200 peer-checked:border-dark-blue-500 peer-checked:bg-dark-blue-900/20 peer-checked:shadow-2xl h-full flex flex-col relative">
+                                    <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-2.5 hover:border-dark-blue-500/70 transition-all duration-200 peer-checked:border-dark-blue-500 peer-checked:bg-dark-blue-900/20 peer-checked:shadow-2xl h-full flex flex-col relative">
                                         {% if perfil.get('bloqueado') %}
                                         <div class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
                                             <a href="{{ url_for('pagamento.index') }}" class="pointer-events-auto inline-flex items-center justify-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-xl">
@@ -255,16 +249,16 @@
                                         </div>
                                         {% endif %}
                                         <div {% if perfil.get('bloqueado') %}style="filter: blur(1px);"{% endif %} class="flex flex-col flex-1 min-h-0">
-                                            <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-700/50 flex-shrink-0">
-                                                <span class="text-white font-bold text-base font-serif">Perfil {{ perfil.perfil_id }}</span>
-                                                <i class="fas fa-check-circle text-dark-blue-400 opacity-0 peer-checked:opacity-100 transition-opacity duration-200 text-lg"></i>
+                                            <div class="flex items-center justify-between mb-1.5 pb-1.5 border-b border-slate-700/50 flex-shrink-0">
+                                                <span class="text-white font-bold text-sm">Perfil {{ perfil.perfil_id }}</span>
+                                                <i class="fas fa-check-circle text-dark-blue-400 opacity-0 peer-checked:opacity-100 transition-opacity duration-200 text-base"></i>
                                             </div>
-                                            <p class="text-dark-blue-300 text-xs font-medium mb-1 leading-tight flex-shrink-0">{{ perfil.descricao }}</p>
-                                            <p class="text-slate-400 text-xs mb-2 font-sans flex-shrink-0">Últimas {{ perfil.ultimas_partidas }} partidas</p>
+                                            <p class="text-dark-blue-300 text-[11px] font-medium mb-0.5 leading-tight flex-shrink-0">{{ perfil.descricao }}</p>
+                                            <p class="text-slate-400 text-[10px] mb-1.5 flex-shrink-0">Últimas {{ perfil.ultimas_partidas }} partidas</p>
                                             
                                             <!-- Ranking de Times Favoritos -->
                                             <div class="ranking-container flex-1 min-h-0">
-                                                <p class="text-xs text-slate-400 font-medium mb-1 uppercase tracking-wide flex-shrink-0">Times Favoritos ({{ perfil.top_clubes|length }}):</p>
+                                                <p class="text-[10px] text-slate-400 font-medium mb-1 uppercase tracking-wide flex-shrink-0">Favoritos ({{ perfil.top_clubes|length }}):</p>
                                                 <div class="ranking-list space-y-0.5">
                                                     {% for clube in perfil.top_clubes %}
                                                     <div class="bg-slate-900/70 rounded-lg px-2 py-1.5 hover:bg-slate-800/90 transition-colors border border-slate-700/30">
@@ -345,20 +339,16 @@
                 <div class="profile-slide">
                     <div class="bg-gradient-to-br from-slate-900/95 to-slate-950/95 backdrop-blur-sm rounded-2xl border-2 border-slate-700/50 shadow-2xl overflow-hidden flex flex-col h-full">
                         <!-- Header -->
-                        <div class="bg-gradient-to-r from-cyan-600/90 to-teal-600/90 p-4 border-b border-slate-700/50">
+                        <div class="bg-gradient-to-r from-cyan-600/90 to-teal-600/90 p-3 border-b border-slate-700/50">
                             <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                                    <div class="p-2 bg-gradient-to-br from-cyan-500 to-teal-500 rounded-lg shadow-lg">
-                                        <i class="fas fa-shield-alt text-white text-xl"></i>
-                                    </div>
+                                <div class="flex items-center space-x-2">
+                                    <i class="fas fa-shield-alt text-neon-cyan text-lg"></i>
                                     <div>
-                                        <h2 class="text-2xl font-bold text-white font-serif">Passo 2: Escolha o Perfil de Peso de Saldo de Gols</h2>
-                                        <p class="text-cyan-100 text-sm mt-1">Selecione qual perfil melhor avalia a chance dos times de não tomarem gols nesta rodada</p>
+                                        <h2 class="text-lg font-bold text-white">Passo 2: Perfil de Saldo de Gols</h2>
+                                        <p class="text-cyan-100 text-xs mt-0.5">Selecione o perfil que melhor avalia a chance de não tomar gols</p>
                                     </div>
                                 </div>
-                                <div class="text-white/60 text-sm font-medium">
-                                    2 de 2
-                                </div>
+                                <div class="text-white/50 text-xs font-medium">2 de 2</div>
                             </div>
                         </div>
 

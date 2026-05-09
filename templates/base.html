@@ -168,13 +168,13 @@
 
                 <a href="{{ url_for('index') }}" title="Visão geral do seu time, status e próximos passos"
                    class="sidebar-link {% if request.path == url_for('index') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-chart-simple w-5 text-center mr-3 text-text-muted group-hover:text-text-secondary"></i>
+                    <i class="fas fa-chart-pie w-5 text-center mr-3 text-text-secondary"></i>
                     Dashboard
                 </a>
 
                 <a href="{{ url_for('pagina_inicial') }}" title="Configure os perfis de peso de jogo e saldo de gols"
                    class="sidebar-link {% if request.path.startswith('/pagina-inicial') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-sliders w-5 text-center mr-3 text-text-muted"></i>
+                    <i class="fas fa-sliders w-5 text-center mr-3 text-text-secondary"></i>
                     Perfis de Jogo
                 </a>
             </div>
@@ -185,13 +185,13 @@
 
                 <a href="{{ url_for('modulos') }}" title="Calcule e visualize os rankings de jogadores por posição"
                    class="sidebar-link {% if request.path.startswith('/modulos') and not request.path.endswith('/escalacao-ideal') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-microchip w-5 text-center mr-3 text-text-muted"></i>
+                    <i class="fas fa-microchip w-5 text-center mr-3 text-text-secondary"></i>
                     Rankings
                 </a>
 
                 <a href="{{ url_for('modulo_escalacao_ideal') }}" title="Monte a escalação ideal do seu time automaticamente"
                    class="sidebar-link {% if request.path == url_for('modulo_escalacao_ideal') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-wand-magic-sparkles w-5 text-center mr-3 text-text-muted"></i>
+                    <i class="fas fa-wand-magic-sparkles w-5 text-center mr-3 text-text-secondary"></i>
                     Escalação Ideal
                 </a>
             </div>
@@ -202,7 +202,7 @@
 
                 <a href="{{ url_for('credenciais') }}" title="Adicione, remova e gerencie seus times do Cartola"
                    class="sidebar-link {% if request.path.startswith('/credenciais') or request.path.startswith('/associar-credenciais') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-people-group w-5 text-center mr-3 text-text-muted"></i>
+                    <i class="fas fa-people-group w-5 text-center mr-3 text-text-secondary"></i>
                     Gerenciar Times
                 </a>
 
@@ -220,14 +220,14 @@
 
                 <a href="{{ url_for('pagamento.index') }}" title="Gerencie seu plano e assinatura"
                    class="sidebar-link {% if request.path.startswith('/pagamento') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-gem w-5 text-center mr-3 text-text-muted"></i>
+                    <i class="fas fa-gem w-5 text-center mr-3 text-text-secondary"></i>
                     Assinatura
                 </a>
 
                 {% if current_user and current_user.is_admin %}
                 <a href="{{ url_for('admin_planos') }}" title="Teste e gerencie planos de assinatura"
                    class="sidebar-link {% if request.path.startswith('/admin/planos') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
-                    <i class="fas fa-crown w-5 text-center mr-3 text-text-muted"></i>
+                    <i class="fas fa-crown w-5 text-center mr-3 text-text-secondary"></i>
                     Admin Planos
                 </a>
                 {% endif %}
