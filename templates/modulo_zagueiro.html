@@ -816,7 +816,7 @@ async function renderizarTabelaZagueiros(resultados) {
             <td class="py-2 px-1.5 ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="flex items-center space-x-1.5">
                     <div class="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                        <img id="player-img-${jogador.atleta_id}" src="${jogador.foto || \x27\x27}" alt="${jogador.apelido}" onerror="this.style.display=\x27none\x27;this.nextElementSibling.style.display=\x27flex\x27" class="w-full h-full object-cover">
+                        <img id="player-img-${jogador.atleta_id}" src="${jogador.foto || ''}" alt="${jogador.apelido}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" class="w-full h-full object-cover">
                         <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display:none">
                             <span class="text-white font-bold text-xs">${jogador.apelido.substring(0, 2)}</span>
                         </div>
@@ -1016,6 +1016,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Modal de Detalhes do Zagueiro -->
 {% include 'modals/modal_detalhes_zagueiro.html' %}
 {% endblock %}
+
+
+
 
 
 
