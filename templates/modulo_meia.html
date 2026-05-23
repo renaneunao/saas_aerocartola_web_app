@@ -50,16 +50,14 @@
 </div>
 
 <!-- Painel de Configuração de Pesos -->
-<div class="mb-8">
+<div class="mb-4">
     <div class="bg-gradient-to-br from-yellow-900/50 to-amber-900/50 backdrop-blur-sm rounded-2xl border border-yellow-500/50 shadow-xl overflow-hidden relative">
-        <div class="bg-gradient-to-r from-yellow-700/80 to-amber-800/80 p-4 border-b border-yellow-500/50">
-            <div class="flex items-center space-x-3">
-                <div class="p-2 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg">
-                    <i class="fas fa-cogs text-white text-lg"></i>
-                </div>
+        <div class="bg-gradient-to-r from-yellow-700/80 to-amber-800/80 p-2.5 border-b border-yellow-500/50">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-cogs text-white text-lg"></i>
                 <div>
-                    <h3 class="text-lg font-bold text-white">Configuração de Pesos</h3>
-                    <p class="text-yellow-200 text-sm">Ajuste os pesos específicos para meias</p>
+                    <h3 class="text-sm font-bold text-white">Configuração de Pesos</h3>
+                    <p class="text-yellow-200 text-[11px]">Ajuste os pesos específicos para meias</p>
                 </div>
             </div>
         </div>
@@ -76,10 +74,10 @@
             </a>
         </div>
         {% endif %}
-        <form id="pesosForm" class="p-6 relative">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 {% if not permissions.editarPesosModulos %}opacity-50{% endif %}" {% if not permissions.editarPesosModulos %}style="filter: blur(0.3px); pointer-events: none;"{% endif %}>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
+        <form id="pesosForm" class="p-3 relative">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 {% if not permissions.editarPesosModulos %}opacity-50{% endif %}" {% if not permissions.editarPesosModulos %}style="filter: blur(0.3px); pointer-events: none;"{% endif %}>
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-yellow-200">
                         FATOR_MEDIA
                     </label>
                     <input type="number" 
@@ -88,10 +86,10 @@
                            value="{{ pesos_atuais.get('FATOR_MEDIA', 1.0) }}" 
                            step="0.1"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                           class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-yellow-200">
                         FATOR_DS
                     </label>
                     <input type="number" 
@@ -100,10 +98,10 @@
                            value="{{ pesos_atuais.get('FATOR_DS', 3.6) }}" 
                            step="0.1"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                           class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-yellow-200">
                         FATOR_FF
                     </label>
                     <input type="number" 
@@ -112,10 +110,10 @@
                            value="{{ pesos_atuais.get('FATOR_FF', 0.7) }}" 
                            step="0.1"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                           class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-yellow-200">
                         FATOR_FS
                     </label>
                     <input type="number" 
@@ -124,10 +122,10 @@
                            value="{{ pesos_atuais.get('FATOR_FS', 0.8) }}" 
                            step="0.1"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                           class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-yellow-200">
                         FATOR_FD
                     </label>
                     <input type="number" 
@@ -136,10 +134,10 @@
                            value="{{ pesos_atuais.get('FATOR_FD', 0.9) }}" 
                            step="0.1"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                           class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-yellow-200">
                         FATOR_G
                     </label>
                     <input type="number" 
@@ -148,10 +146,10 @@
                            value="{{ pesos_atuais.get('FATOR_G', 2.5) }}" 
                            step="0.1"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                           class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-yellow-200">
                         FATOR_A
                     </label>
                     <input type="number" 
@@ -160,10 +158,10 @@
                            value="{{ pesos_atuais.get('FATOR_A', 2.0) }}" 
                            step="0.1"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                           class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-yellow-200">
                         FATOR_ESCALACAO
                     </label>
                     <input type="number" 
@@ -172,10 +170,10 @@
                            value="{{ pesos_atuais.get('FATOR_ESCALACAO', 10.0) }}" 
                            step="0.1"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                           class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200">
                 </div>
-                <div class="space-y-2">
-                    <label class="block text-sm font-medium text-yellow-200">
+                <div class="space-y-1">
+                    <label class="block text-xs font-medium text-yellow-200">
                         FATOR_PESO_JOGO
                     </label>
                     <input type="number" 
@@ -184,7 +182,7 @@
                            value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 9.5) }}" 
                            step="0.1"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
-                           class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white placeholder-dark-blue-400 focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all duration-200">
+                           class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all duration-200">
                 </div>
             </div>
             
@@ -213,15 +211,12 @@
 <!-- Module Content -->
 <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-2xl overflow-hidden">
     <!-- Section Header -->
-    <div class="bg-gradient-to-r from-dark-blue-700/80 to-dark-blue-800/80 p-6 border-b border-dark-blue-700/50">
+    <div class="bg-gradient-to-r from-dark-blue-700/80 to-dark-blue-800/80 p-3 border-b border-dark-blue-700/50">
         <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="p-2 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg">
-                    <i class="fas fa-users text-white text-xl"></i>
-                </div>
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-users text-white text-lg"></i>
                 <div>
-                    <h2 class="text-2xl font-bold text-white">Meias - Rodada {{ rodada_atual }}</h2>
-                    <p class="text-dark-blue-200 text-sm">Análise detalhada com pesos personalizados</p>
+                    <h2 class="text-lg font-bold text-white">Meias - Rodada {{ rodada_atual }}</h2>
                 </div>
             </div>
             <div class="text-right">
@@ -865,91 +860,90 @@ async function renderizarTabelaMeias(resultados) {
         const blurStyle = isBloqueado ? 'style="filter: blur(8px);"' : '';
         
         tr.innerHTML = `
-            <td class="py-4 px-2 ${isBloqueado ? 'relative z-50' : ''}">
+            <td class="py-2 px-1.5 ${isBloqueado ? 'relative z-50' : ''}">
                 ${jogador.rank <= 3 ? `
-                <div class="flex items-center justify-center w-8 h-8 rounded-full ${jogador.rank == 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' : jogador.rank == 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' : 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'} shadow-lg">
+                <div class="flex items-center justify-center w-6 h-6 rounded-full ${jogador.rank == 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' : jogador.rank == 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' : 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'}">
                     ${jogador.rank == 1 ? '<i class="fas fa-crown text-sm"></i>' : jogador.rank == 2 ? '<i class="fas fa-medal text-sm"></i>' : '<i class="fas fa-award text-sm"></i>'}
                 </div>
                 ` : `
-                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-dark-blue-700/50 text-dark-blue-200 font-bold text-sm">
+                <div class="flex items-center justify-center w-6 h-6 rounded-full bg-dark-blue-700/50 text-dark-blue-200 font-bold text-sm">
                     ${jogador.rank}
                 </div>
                 `}
             </td>
-            <td class="py-4 px-2 ${blurClass}" ${blurStyle}>
-                <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+            <td class="py-2 px-1.5 ${blurClass}" ${blurStyle}>
+                <div class="flex items-center space-x-1.5">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                         <img id="player-img-${jogador.atleta_id}" src="" alt="${jogador.apelido}" class="w-full h-full object-cover">
                         <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
                             <span class="text-white font-bold text-xs">${jogador.apelido.substring(0, 2)}</span>
                         </div>
                     </div>
-                    <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
+                    <div class="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                         <img src="${jogador.clube_escudo_url || ''}" alt="${jogador.clube_nome}" class="w-full h-full object-cover">
                         <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
                             <span class="text-white font-bold text-xs">${jogador.clube_abrev}</span>
                         </div>
                     </div>
-                    <div>
-                        <div class="font-bold text-white">${jogador.apelido}</div>
-                        <div class="text-xs text-dark-blue-400">ID: ${jogador.atleta_id}</div>
+                    <div class="min-w-0">
+                        <div class="font-semibold text-white text-xs truncate">${jogador.apelido}</div>
                     </div>
                 </div>
             </td>
-            <td class="py-4 px-2 ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-white">${jogador.clube_nome}</div>
+            <td class="py-2 px-1.5 ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-white text-xs">${jogador.clube_nome}</div>
             </td>
-            <td class="py-4 px-2 ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-orange-300">${jogador.adversario_nome || 'N/A'}</div>
+            <td class="py-2 px-1.5 ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-orange-300 text-xs">${jogador.adversario_nome || 'N/A'}</div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="text-lg font-bold ${(jogador.pontuacao_total || 0) >= 10 ? 'text-green-400' : (jogador.pontuacao_total || 0) >= 5 ? 'text-yellow-400' : 'text-red-400'}">
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="text-sm font-bold ${(jogador.pontuacao_total || 0) >= 10 ? 'text-green-400' : (jogador.pontuacao_total || 0) >= 5 ? 'text-yellow-400' : 'text-red-400'}">
                     ${formatNumber(jogador.pontuacao_total)}
                 </div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-white">${formatNumber(jogador.media)}</div>
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-white text-xs">${formatNumber(jogador.media)}</div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-white">${jogador.jogos || 0}</div>
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-white text-xs">${jogador.jogos || 0}</div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium ${(jogador.peso_jogo || 0) > 0 ? 'text-green-400' : (jogador.peso_jogo || 0) < 0 ? 'text-red-400' : 'text-gray-400'}">
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-xs ${(jogador.peso_jogo || 0) > 0 ? 'text-green-400' : (jogador.peso_jogo || 0) < 0 ? 'text-red-400' : 'text-gray-400'}">
                     ${formatNumber(jogador.peso_jogo)}
                 </div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium ${(jogador.peso_sg || 0) > 0 ? 'text-green-400' : (jogador.peso_sg || 0) < 0 ? 'text-red-400' : 'text-gray-400'}">
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-xs ${(jogador.peso_sg || 0) > 0 ? 'text-green-400' : (jogador.peso_sg || 0) < 0 ? 'text-red-400' : 'text-gray-400'}">
                     ${formatNumber(jogador.peso_sg)}
                 </div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-white">${(jogador.media_ds || 0).toFixed(2)}</div>
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-white text-xs">${(jogador.media_ds || 0).toFixed(2)}</div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-white">${(jogador.media_ds_cedidos || 0).toFixed(2)}</div>
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-white text-xs">${(jogador.media_ds_cedidos || 0).toFixed(2)}</div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-white">${(jogador.media_ff || 0).toFixed(2)}</div>
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-white text-xs">${(jogador.media_ff || 0).toFixed(2)}</div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-white">${(jogador.media_fs || 0).toFixed(2)}</div>
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-white text-xs">${(jogador.media_fs || 0).toFixed(2)}</div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-white">${(jogador.media_fd || 0).toFixed(2)}</div>
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-white text-xs">${(jogador.media_fd || 0).toFixed(2)}</div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-white">${(jogador.media_g || 0).toFixed(2)}</div>
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-white text-xs">${(jogador.media_g || 0).toFixed(2)}</div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-white">${(jogador.media_a || 0).toFixed(2)}</div>
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-white text-xs">${(jogador.media_a || 0).toFixed(2)}</div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-green-400">R$ ${formatNumber(jogador.preco)}</div>
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
+                <div class="font-medium text-green-400 text-xs">R$ ${formatNumber(jogador.preco)}</div>
             </td>
-            <td class="py-4 px-2 text-center ${blurClass}" ${blurStyle}>
+            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
                 <button onclick="openMeiaModal(${jogador.atleta_id})" 
-                        class="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
+                        class="inline-flex items-center px-2 py-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-[11px] font-medium rounded-lg transition-all duration-200 shadow">
                     <i class="fas fa-eye mr-1"></i>
                     Detalhes
                 </button>
