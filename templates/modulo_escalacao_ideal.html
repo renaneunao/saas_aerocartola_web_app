@@ -639,17 +639,26 @@ function exibirResultado(resultado, clubesDict = {}) {
     const renderJogador = (j, showCusto = true, isLuxo = false) => {
         const capitao = j.eh_capitao ? '<span class="ml-1 px-1.5 py-0.5 bg-yellow-500 text-yellow-900 text-[10px] font-bold rounded">C</span>' : '';
         const luxoBadge = isLuxo ? '<span class="ml-1 px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">💎 LUXO</span>' : '';
-        const custoText = showCusto ? `R$ ${j.preco_num?.toFixed(2)}` : '<span class="text-gray-400 text-xs">sem custo</span>';
+        const custoText = showCusto ? `C$ ${j.preco_num?.toFixed(2)}` : '<span class="text-gray-400 text-xs">sem custo</span>';
         
-        // Buscar escudo do clube no dicionário
+        // Foto do jogador
+        const fotoUrl = j.foto || '';
+        const fotoEl = fotoUrl 
+            ? `<img src="${fotoUrl}" alt="${j.apelido}" class="w-8 h-8 rounded-full object-cover border border-[rgba(0,229,255,0.15)]" onerror="this.style.display='none'">`
+            : `<div class="w-8 h-8 rounded-full bg-[rgba(0,229,255,0.08)] border border-[rgba(0,229,255,0.1)] flex items-center justify-center flex-shrink-0"><span class="text-neon-cyan font-bold text-[10px]">${(j.apelido || '?').substring(0, 2).toUpperCase()}</span></div>`;
+        
+        // Escudo do clube
         const clube = clubesDict[j.clube_id] || {};
-        const escudoUrl = clube.escudo_url || 'https://s.glbimg.com/es/sde/f/organizacoes/2018/03/10/flamengo_60x60.png';
-        const escudo = `<img src="${escudoUrl}" alt="${clube.nome || ''}" class="w-5 h-5 rounded inline-block" onerror="this.style.display='none'">`;
+        const escudoUrl = clube.escudo_url || '';
+        const escudo = escudoUrl
+            ? `<img src="${escudoUrl}" alt="${clube.nome || ''}" class="w-5 h-5 rounded inline-block" onerror="this.style.display='none'">`
+            : '';
         
         const bgColor = isLuxo ? 'bg-purple-900/40 border border-purple-500/30' : 'bg-dark-blue-900/40';
         
         return `
             <div class="flex items-start gap-2 ${bgColor} rounded px-3 py-2">
+                <div class="flex-shrink-0 mt-0.5">${fotoEl}</div>
                 <div class="flex-shrink-0 mt-0.5">${escudo}</div>
                 <div class="flex-1 min-w-0">
                     <div class="text-white font-semibold text-sm">${j.apelido}${capitao}${luxoBadge}</div>
