@@ -4400,7 +4400,7 @@ def admin_fotos():
         posicoes = {1: 'Goleiros', 2: 'Laterais', 3: 'Zagueiros', 4: 'Meias', 5: 'Atacantes', 6: 'Técnicos'}
         atletas_por_posicao = {}
         for a in atletas:
-            p = a[2]  # posicao_id
+            p = a[3]  # posicao_id
             nome_pos = posicoes.get(p, f'Posição {p}')
             if nome_pos not in atletas_por_posicao:
                 atletas_por_posicao[nome_pos] = []

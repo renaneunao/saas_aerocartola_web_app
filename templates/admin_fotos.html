@@ -17,7 +17,7 @@
             <span class="text-text-muted text-[10px]">Clique na foto para expandir</span>
         </div>
         <div class="p-2">
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-10 gap-1.5">
             {% for a in atletas %}
             {% set atleta_id = a[0] %}
             {% set apelido = a[1] %}
@@ -25,9 +25,9 @@
             {% set foto = a[4] or '' %}
             {% set clube_nome = a[6] or '' %}
             {% set clube_id = a[8] or 0 %}
-            <div class="bg-[rgba(17,27,46,0.4)] rounded-xl border border-[rgba(255,255,255,0.04)] p-2 flex flex-col items-center group hover:border-[rgba(0,229,255,0.2)] transition-all duration-200">
+            <div class="bg-[rgba(17,27,46,0.4)] rounded-xl border border-[rgba(255,255,255,0.04)] p-1.5 flex flex-col items-center group hover:border-[rgba(0,229,255,0.2)] transition-all duration-200">
                 <!-- Preview da foto -->
-                <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-[rgba(0,229,255,0.15)] mb-1.5 cursor-pointer flex-shrink-0" 
+                <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-[rgba(0,229,255,0.15)] mb-1 cursor-pointer flex-shrink-0" 
                      title="ID: {{ atleta_id }} — {{ nome }}"
                      onclick="document.getElementById('input-{{ atleta_id }}').focus()">
                     {% if foto and foto != '' %}
