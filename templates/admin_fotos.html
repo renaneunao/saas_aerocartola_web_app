@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Gerenciar Fotos — Aero Cartola{% endblock %}
+
+{% block content %}
+<div class="max-w-full mx-auto px-2 py-4 animate-fade-in-up">
+
+    <div class="glass rounded-2xl neon-border p-4 mb-4">
+        <h1 class="text-lg font-bold text-white mb-1">Gerenciar Fotos dos Jogadores</h1>
+        <p class="text-text-muted text-xs">Cole a URL da foto de cada jogador e salve. Use sites como imgur.com para hospedar as imagens.</p>
+    </div>
+
+    <div class="space-y-4">
+    {% for posicao, atletas in atletas_por_posicao.items() %}
+    <div class="glass rounded-2xl neon-border overflow-hidden">
+        <div class="bg-[rgba(0,229,255,0.06)] px-3 py-2 border-b border-[rgba(0,229,255,0.06)] flex items-center justify-between">
+            <h2 class="text-sm font-bold text-white">{{ posicao }} <span class="text-text-muted text-xs">({{ atletas|length }})</span></h2>
+            <span class="text-text-muted text-[10px]">Clique na foto para expandir</span>
+        </div>
+        <div class="p-2">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2">
+            {% for a in atletas %}
+            {% set atleta_id = a[0] %}
+            {% set apelido = a[1] %}
+            {% set nome = a[2] or apelido %}
+            {% set foto = a[4] or '' %}
+            {% set clube_nome = a[6] or '' %}
+            {% set clube_id = a[8] or 0 %}
+            <div class="bg-[rgba(17,27,46,0.4)] rounded-xl border border-[rgba(255,255,255,0.04)] p-2 flex flex-col items-center group hover:border-[rgba(0,229,255,0.2)] transition-all duration-200">
+                <!-- Preview da foto -->
+                <div class="w-16 h-16 rounded-full overflow-hidden border-2 border-[rgba(0,229,255,0.15)] mb-1.5 cursor-pointer flex-shrink-0" 
+                     title="ID: {{ atleta_id }} — {{ nome }}"
+                     onclick="document.getElementById('input-{{ atleta_id }}').focus()">
+                    {% if foto and foto != '' %}
+                    <img src="{{ foto }}" alt="{{ apelido }}" class="w-full h-full object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="w-full h-full bg-[rgba(0,229,255,0.08)] flex items-center justify-center" style="display:none">
+                        <span class="text-neon-cyan font-bold text-lg">{{ apelido[:2].upper() }}</span>
+                    </div>
+                    {% else %}
+                    <div class="w-full h-full bg-[rgba(0,229,255,0.08)] flex items-center justify-center">
+                        <span class="text-neon-cyan font-bold text-lg">{{ apelido[:2].upper() }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- Nome + clube -->
+                <p class="text-white text-[11px] font-semibold text-center leading-tight truncate w-full" title="{{ nome }}">{{ apelido }}</p>
+                <p class="text-text-muted text-[9px] text-center leading-tight mb-1.5">{{ clube_nome }}</p>
+                <!-- Input URL -->
+                <form method="POST" class="w-full flex gap-1">
+                    <input type="hidden" name="atleta_id" value="{{ atleta_id }}">
+                    <input type="text" id="input-{{ atleta_id }}" name="foto_url" 
+                           value="{{ foto }}"
+                           placeholder="URL da foto..."
+                           class="flex-1 bg-[rgba(6,11,20,0.6)] border border-[rgba(255,255,255,0.06)] focus:border-[rgba(0,229,255,0.3)] text-white text-[10px] rounded-lg px-2 py-1 outline-none transition-all placeholder:text-text-muted">
+                    <button type="submit" class="bg-[rgba(0,229,255,0.08)] hover:bg-[rgba(0,229,255,0.16)] text-neon-cyan border border-[rgba(0,229,255,0.15)] rounded-lg px-2 py-1 text-[10px] font-medium transition-all flex-shrink-0">
+                        <i class="fas fa-save"></i>
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+
+</div>
+{% endblock %}

@@ -2796,7 +2796,7 @@ def api_modulo_dados(modulo):
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num, c.nome as clube_nome,
-                   c.abreviacao as clube_abrev
+                   c.abreviacao as clube_abrev, a.foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             WHERE a.posicao_id = %s AND a.status_id = 7 AND a.temporada = %s
@@ -2852,10 +2852,10 @@ def api_modulo_dados(modulo):
         
         atletas = []
         for row in atletas_raw:
-            if not row or len(row) < 9:
+            if not row or len(row) < 10:
                 continue
             try:
-                atleta_id, apelido, clube_id, pontos, media, preco, jogos, clube_nome, clube_abrev = row
+                atleta_id, apelido, clube_id, pontos, media, preco, jogos, clube_nome, clube_abrev, foto = row
                 escudo_url = get_team_shield(clube_id, size='45x45')
                 adversario_id = adversarios_dict.get(clube_id)
                 
@@ -2865,6 +2865,7 @@ def api_modulo_dados(modulo):
                     'clube_id': clube_id,
                     'clube_nome': clube_nome,
                     'clube_abrev': clube_abrev,
+                    'foto': foto or '',
                     'clube_escudo_url': escudo_url,
                     'pontos_num': float(pontos) if pontos else 0,
                     'media_num': float(media) if media else 0,
@@ -4359,6 +4360,55 @@ def admin_classes():
     
     from models.plans import PLANS_CONFIG
     return render_template('admin_classes.html', plans_config=PLANS_CONFIG)
+
+@app.route('/admin/fotos', methods=['GET', 'POST'])
+@login_required
+def admin_fotos():
+    """Página para gerenciar fotos dos jogadores"""
+    user = get_current_user()
+    if not user or not user.get('is_admin', False):
+        flash('Acesso restrito.', 'error')
+        return redirect(url_for('index'))
+    
+    conn = get_db_connection()
+    try:
+        from utils.utilidades import get_temporada_atual
+        temporada = get_temporada_atual()
+        
+        if request.method == 'POST':
+            atleta_id = request.form.get('atleta_id')
+            foto_url = request.form.get('foto_url', '').strip()
+            if atleta_id and foto_url:
+                cursor = conn.cursor()
+                cursor.execute("UPDATE acf_atletas SET foto = %s WHERE atleta_id = %s", (foto_url, int(atleta_id)))
+                conn.commit()
+                flash('Foto atualizada!', 'success')
+        
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT a.atleta_id, a.apelido, a.nome, a.posicao_id, a.foto,
+                   p.nome as posicao_nome, c.nome as clube_nome, c.abreviacao as clube_abrev,
+                   c.id as clube_id
+            FROM acf_atletas a
+            JOIN acf_posicoes p ON a.posicao_id = p.id
+            JOIN acf_clubes c ON a.clube_id = c.id
+            WHERE a.temporada = %s AND a.status_id = 7
+            ORDER BY a.posicao_id, a.apelido
+        """, (temporada,))
+        atletas = cursor.fetchall()
+        
+        posicoes = {1: 'Goleiros', 2: 'Laterais', 3: 'Zagueiros', 4: 'Meias', 5: 'Atacantes', 6: 'Técnicos'}
+        atletas_por_posicao = {}
+        for a in atletas:
+            p = a[2]  # posicao_id
+            nome_pos = posicoes.get(p, f'Posição {p}')
+            if nome_pos not in atletas_por_posicao:
+                atletas_por_posicao[nome_pos] = []
+            atletas_por_posicao[nome_pos].append(a)
+        
+        return render_template('admin_fotos.html', atletas_por_posicao=atletas_por_posicao)
+    finally:
+        close_db_connection(conn)
 
 @app.route('/api/admin/alterar-plano', methods=['POST'])
 @login_required

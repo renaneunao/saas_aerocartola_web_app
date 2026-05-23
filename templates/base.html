@@ -230,6 +230,11 @@
                     <i class="fas fa-crown w-5 text-center mr-3 text-text-secondary"></i>
                     Admin Planos
                 </a>
+                <a href="{{ url_for('admin_fotos') }}" title="Gerenciar fotos dos jogadores"
+                   class="sidebar-link {% if request.path.startswith('/admin/fotos') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
+                    <i class="fas fa-camera w-5 text-center mr-3 text-text-secondary"></i>
+                    Fotos Jogadores
+                </a>
                 {% endif %}
             </div>
         </nav>
