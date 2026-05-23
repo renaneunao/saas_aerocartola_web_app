@@ -3,7 +3,6 @@
  * Baseado em calculo_posicoes/calculo_zagueiro.py
  */
 
-console.log('%c [CALCULO ZAGUEIRO] VERSÃO 2.1 CARREGADA - LÓGICA ESTÁVEL ATIVA', 'background: #222; color: #55ff33; font-size: 16px;');
 
 class CalculoZagueiro {
     constructor(data) {
@@ -214,3 +213,4 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
     window.CalculoZagueiro = CalculoZagueiro;
 }
+

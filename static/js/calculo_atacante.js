@@ -3,7 +3,6 @@
  * Baseado em calculo_posicoes/calculo_atacante.py
  */
 
-console.log('%c [CALCULO ATACANTE] VERSÃO 2.1 CARREGADA - LÓGICA ESTÁVEL ATIVA', 'background: #222; color: #ff5533; font-size: 16px;');
 
 class CalculoAtacante {
     constructor(data) {
@@ -167,3 +166,4 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
     window.CalculoAtacante = CalculoAtacante;
 }
+

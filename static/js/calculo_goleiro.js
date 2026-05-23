@@ -3,7 +3,6 @@
  * Baseado em calculo_posicoes/calculo_goleiro.py
  */
 
-console.log('%c [CALCULO GOLEIRO] VERSÃO 2.1 CARREGADA - LÓGICA ESTÁVEL ATIVA', 'background: #222; color: #ff33ff; font-size: 16px;');
 
 class CalculoGoleiro {
     constructor(data) {
@@ -146,3 +145,4 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
     window.CalculoGoleiro = CalculoGoleiro;
 }
+

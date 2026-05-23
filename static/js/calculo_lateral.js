@@ -3,7 +3,6 @@
  * Baseado em calculo_posicoes/calculo_lateral.py
  */
 
-console.log('%c [CALCULO LATERAL] VERSÃO 2.1 CARREGADA - LÓGICA ESTÁVEL ATIVA', 'background: #222; color: #33aaff; font-size: 16px;');
 
 class CalculoLateral {
     constructor(data) {
@@ -167,3 +166,4 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
     window.CalculoLateral = CalculoLateral;
 }
+

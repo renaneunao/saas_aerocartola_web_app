@@ -3,7 +3,6 @@
  * Baseado em calculo_posicoes/calculo_meia.py
  */
 
-console.log('%c [CALCULO MEIA] VERSÃO 2.1 CARREGADA - LÓGICA ESTÁVEL ATIVA', 'background: #222; color: #bada55; font-size: 16px;');
 
 class CalculoMeia {
     constructor(data) {
@@ -167,3 +166,4 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
     window.CalculoMeia = CalculoMeia;
 }
+
