@@ -2796,7 +2796,7 @@ def api_modulo_dados(modulo):
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num, c.nome as clube_nome,
-                   c.abreviacao as clube_abrev, a.foto
+                   c.abreviacao as clube_abrev, COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             WHERE a.posicao_id = %s AND a.status_id = 7 AND a.temporada = %s
@@ -4380,13 +4380,13 @@ def admin_fotos():
             foto_url = request.form.get('foto_url', '').strip()
             if atleta_id and foto_url:
                 cursor = conn.cursor()
-                cursor.execute("UPDATE acf_atletas SET foto = %s WHERE atleta_id = %s", (foto_url, int(atleta_id)))
+                cursor.execute("UPDATE acf_atletas SET foto_custom = %s WHERE atleta_id = %s", (foto_url, int(atleta_id)))
                 conn.commit()
                 flash('Foto atualizada!', 'success')
         
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT a.atleta_id, a.apelido, a.nome, a.posicao_id, a.foto,
+            SELECT a.atleta_id, a.apelido, a.nome, a.posicao_id, COALESCE(a.foto_custom, a.foto) as foto,
                    p.nome as posicao_nome, c.nome as clube_nome, c.abreviacao as clube_abrev,
                    c.id as clube_id
             FROM acf_atletas a
