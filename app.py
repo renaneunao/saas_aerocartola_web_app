@@ -4392,7 +4392,7 @@ def admin_fotos():
             FROM acf_atletas a
             JOIN acf_posicoes p ON a.posicao_id = p.id
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.temporada = %s AND a.status_id = 7
+            WHERE a.temporada = %s
             ORDER BY a.posicao_id, a.apelido
         """, (temporada,))
         atletas = cursor.fetchall()
