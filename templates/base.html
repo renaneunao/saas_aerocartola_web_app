@@ -97,6 +97,21 @@
   </head>
 <body data-user-id="{{ current_user.id if current_user and current_user.id else '' }}" class="h-full bg-grid text-text-primary overflow-x-hidden font-sans">
 
+    <!-- Loader global (aparece imediatamente, antes de qualquer JS) -->
+    <div id="globalLoader" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(6,11,20,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity 0.3s">
+        <div style="background:rgba(11,17,32,0.8);backdrop-filter:blur(20px);border:1px solid rgba(0,229,255,0.12);border-radius:20px;padding:32px 40px;max-width:340px;width:90%;text-align:center;box-shadow:0 0 40px rgba(0,229,255,0.06)">
+            <div style="width:48px;height:48px;margin:0 auto 12px;position:relative">
+                <div style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(0,229,255,0.1)"></div>
+                <div style="position:absolute;inset:0;animation:spin 0.8s linear infinite">
+                    <div style="width:100%;height:100%;border-radius:50%;border:2px solid transparent;border-top-color:#00E5FF;border-right-color:#4494FF;animation:pulse-glow 2s ease-in-out infinite alternate"></div>
+                </div>
+            </div>
+            <p id="loaderMessage" style="color:#EDF2FA;font-size:14px;font-weight:500">Carregando...</p>
+            <p style="color:#64748B;font-size:11px;margin-top:4px">Aguarde...</p>
+        </div>
+    </div>
+    <style>@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}</style>
+
     <!-- ================================================================
          SIDEBAR — Glass Neon Dark
          ================================================================ -->

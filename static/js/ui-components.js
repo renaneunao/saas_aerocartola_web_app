@@ -14,63 +14,23 @@ function showLoader(message = 'Carregando...') {
     loaderCount++;
     
     if (!loaderElement) {
-        loaderElement = document.createElement('div');
-        loaderElement.id = 'globalLoader';
-        loaderElement.className = 'fixed inset-0 flex items-center justify-center z-[9999] transition-opacity duration-300';
-        loaderElement.style.opacity = '0';
-        loaderElement.style.backgroundColor = 'rgba(6, 11, 20, 0.75)';
-        loaderElement.style.backdropFilter = 'blur(12px)';
-        loaderElement.style.webkitBackdropFilter = 'blur(12px)';
-        
-        loaderElement.innerHTML = `
-            <style>
-                @keyframes loaderNeonPulse {
-                    0%, 100% { box-shadow: 0 0 12px rgba(0,229,255,0.4), 0 0 24px rgba(0,229,255,0.2); }
-                    50%      { box-shadow: 0 0 20px rgba(0,229,255,0.7), 0 0 40px rgba(0,229,255,0.4); }
-                }
-                @keyframes loaderSpin {
-                    0%   { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-                .loader-spin { animation: loaderSpin 0.8s linear infinite; }
-                .loader-glow { animation: loaderNeonPulse 2s ease-in-out infinite; }
-            </style>
-            
-            <div style="background:rgba(11,17,32,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(0,229,255,0.12);border-radius:20px;padding:32px 40px;max-width:340px;width:90%;transform:scale(0.95);transition:transform 0.3s ease;box-shadow:0 0 40px rgba(0,229,255,0.06),0 20px 60px rgba(0,0,0,0.5)" id="loaderContent">
-                <div class="flex flex-col items-center">
-                    <div style="position:relative;width:56px;height:56px;margin-bottom:16px">
-                        <div style="position:absolute;inset:0;border-radius:50%;border:2px solid rgba(0,229,255,0.08)"></div>
-                        <div class="loader-spin" style="position:absolute;inset:0">
-                            <div class="loader-glow" style="width:100%;height:100%;border-radius:50%;border:2px solid transparent;border-top-color:#00E5FF;border-right-color:#4494FF"></div>
-                        </div>
-                    </div>
-                    <p style="color:#EDF2FA;font-size:15px;font-weight:500;text-align:center;margin-bottom:4px" id="loaderMessage">${message}</p>
-                    <p style="color:#64748B;font-size:12px;text-align:center">Aguarde...</p>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(loaderElement);
-        setTimeout(() => {
-            loaderElement.style.opacity = '1';
-            document.getElementById('loaderContent').style.transform = 'scale(1)';
-        }, 10);
-    } else {
-        const messageEl = document.getElementById('loaderMessage');
-        if (messageEl) messageEl.textContent = message;
+        loaderElement = document.getElementById('globalLoader');
     }
+    
+    if (!loaderElement) return;
+    
+    loaderElement.style.opacity = '1';
+    loaderElement.style.pointerEvents = 'auto';
+    
+    const msg = document.getElementById('loaderMessage');
+    if (msg) msg.textContent = message;
 }
 
 function hideLoader() {
     loaderCount = Math.max(0, loaderCount - 1);
     if (loaderCount === 0 && loaderElement) {
         loaderElement.style.opacity = '0';
-        const content = document.getElementById('loaderContent');
-        if (content) content.style.transform = 'scale(0.95)';
-        setTimeout(() => {
-            if (loaderElement && loaderElement.parentNode) loaderElement.parentNode.removeChild(loaderElement);
-            loaderElement = null;
-        }, 300);
+        loaderElement.style.pointerEvents = 'none';
     }
 }
 
