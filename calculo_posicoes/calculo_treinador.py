@@ -2,6 +2,7 @@ from database import get_db_connection, close_db_connection
 from utils.utilidades import printdbg
 import math
 from api_cartola import fetch_status_data
+from utils.utilidades import get_temporada_atual
 from utils.weights import get_weight
 
 # Função para carregar pesos dinamicamente
@@ -30,8 +31,8 @@ def calcular_melhores_treinadores(rodada_atual, top_n=100, usar_provaveis_cartol
                a.clube_id
         FROM acf_atletas a
         JOIN acf_clubes c ON a.clube_id = c.id
-        WHERE a.posicao_id = 6 AND a.jogos_num > 0 AND a.status_id = 7
-    ''')
+        WHERE a.posicao_id = 6 AND a.jogos_num > 0 AND a.status_id = 7 AND a.temporada = %s
+    ''', (get_temporada_atual(),))
     treinadores = cursor.fetchall()
 
     printdbg(f"Total de treinadores encontrados: {len(treinadores)}")

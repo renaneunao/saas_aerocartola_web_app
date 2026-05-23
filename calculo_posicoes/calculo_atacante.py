@@ -9,6 +9,7 @@ if str(_PROJECT_ROOT) not in sys.path:
 from database import get_db_connection, close_db_connection
 from utils.utilidades import printdbg
 from api_cartola import fetch_status_data
+from utils.utilidades import get_temporada_atual
 import math
 from utils.weights import get_weight
 
@@ -80,8 +81,8 @@ def calcular_melhores_atacantes(top_n=20, rodada_atual=None, min_jogos_pref=3, r
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             JOIN provaveis_cartola p ON a.atleta_id = p.atleta_id
-            WHERE a.posicao_id = 5 AND a.jogos_num >= %s AND p.status = 'provavel'
-        ''', (min_jogos,))
+            WHERE a.posicao_id = 5 AND a.jogos_num >= %s AND p.status = 'provavel' AND a.temporada = %s
+        ''', (min_jogos, get_temporada_atual()))
     else:
         # Usando dados do Cartola para jogadores prováveis (status_id = 7)
         printdbg("Usando dados do Cartola para jogadores prováveis")
@@ -90,8 +91,8 @@ def calcular_melhores_atacantes(top_n=20, rodada_atual=None, min_jogos_pref=3, r
                    a.preco_num, a.jogos_num, a.peso_jogo, c.nome
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.posicao_id = 5 AND a.jogos_num >= %s AND a.status_id = 7
-        ''', (min_jogos,))
+            WHERE a.posicao_id = 5 AND a.jogos_num >= %s AND a.status_id = 7 AND a.temporada = %s
+        ''', (min_jogos, get_temporada_atual()))
     atacantes = cursor.fetchall()
 
     printdbg(f"Total de atacantes encontrados: {len(atacantes)}")

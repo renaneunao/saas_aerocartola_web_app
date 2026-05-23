@@ -4,6 +4,7 @@ import json
 from datetime import datetime, timezone, timedelta
 import os
 from dotenv import load_dotenv
+from utils.utilidades import get_temporada_atual
 
 # Carregar variáveis de ambiente do .env
 load_dotenv()
@@ -1596,8 +1597,8 @@ def api_atacante_detalhes(atleta_id):
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 5 AND a.status_id = 7
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.posicao_id = 5 AND a.status_id = 7 AND a.temporada = %s
+        ''', (atleta_id, get_temporada_atual()))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -1962,8 +1963,8 @@ def api_lateral_detalhes(atleta_id):
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 2 AND a.status_id = 7
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.posicao_id = 2 AND a.status_id = 7 AND a.temporada = %s
+        ''', (atleta_id, get_temporada_atual()))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2169,8 +2170,8 @@ def api_goleiro_detalhes(atleta_id):
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 1 AND a.status_id = 7
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.posicao_id = 1 AND a.status_id = 7 AND a.temporada = %s
+        ''', (atleta_id, get_temporada_atual()))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2379,8 +2380,8 @@ def api_zagueiro_detalhes(atleta_id):
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 3 AND a.status_id = 7
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.posicao_id = 3 AND a.status_id = 7 AND a.temporada = %s
+        ''', (atleta_id, get_temporada_atual()))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2562,8 +2563,8 @@ def api_meia_detalhes(atleta_id):
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 4 AND a.status_id = 7
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.posicao_id = 4 AND a.status_id = 7 AND a.temporada = %s
+        ''', (atleta_id, get_temporada_atual()))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2798,8 +2799,8 @@ def api_modulo_dados(modulo):
                    c.abreviacao as clube_abrev
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.posicao_id = %s AND a.status_id = 7
-        ''', (posicao_id,))
+            WHERE a.posicao_id = %s AND a.status_id = 7 AND a.temporada = %s
+        ''', (posicao_id, get_temporada_atual()))
         atletas_raw = cursor.fetchall()
         
         # Buscar peso_jogo e peso_sg das tabelas de perfis baseado na configuração do usuário
@@ -3669,8 +3670,8 @@ def api_escalacao_dados():
                         cursor.execute(f'''
                             SELECT atleta_id, preco_num, status_id
                             FROM acf_atletas
-                            WHERE atleta_id IN ({placeholders})
-                        ''', atleta_ids_ranking)
+                            WHERE atleta_id IN ({placeholders}) AND temporada = %s
+                        ''', atleta_ids_ranking + [get_temporada_atual()])
                         rows_atletas = cursor.fetchall()
                         
                         for row in rows_atletas:
@@ -3828,9 +3829,9 @@ def api_escalacao_dados():
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num, a.status_id
             FROM acf_atletas a
-            WHERE a.posicao_id = 1
+            WHERE a.posicao_id = 1 AND a.temporada = %s
             ORDER BY a.preco_num DESC
-        ''')
+        ''', (get_temporada_atual(),))
         
         rows_goleiros = cursor.fetchall()
         print(f"[DEBUG] Query retornou {len(rows_goleiros)} goleiros da tabela acf_atletas")
@@ -4008,9 +4009,9 @@ def api_goleiros_nulos():
                    c.nome as clube_nome, c.abreviacao as clube_abrev
             FROM acf_atletas a
             LEFT JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.posicao_id = 1
+            WHERE a.posicao_id = 1 AND a.temporada = %s
             ORDER BY a.preco_num DESC
-        ''')
+        ''', (get_temporada_atual(),))
         
         todos_goleiros = []
         goleiros_nulos = []

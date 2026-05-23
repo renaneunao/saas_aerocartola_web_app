@@ -10,6 +10,7 @@ Este arquivo foi mantido apenas como referência de lógica, mas não deve ser e
 from database import get_db_connection, close_db_connection
 from utils.utilidades import printdbg, is_debug
 from api_cartola import fetch_status_data, fetch_team_data, salvar_time_no_cartola
+from utils.utilidades import get_temporada_atual
 from itertools import combinations, product
 from threading import Thread
 from models.credenciais import get_all_credenciais
@@ -234,7 +235,7 @@ def calcular_escalacao_ideal(rodada_atual, posicao_capitao='atacantes', access_t
                             SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num
                             FROM acf_atletas a
                             JOIN provaveis_cartola pc ON a.atleta_id = pc.atleta_id
-                            WHERE a.posicao_id = %s AND a.clube_id = %s AND pc.status = 'provavel' AND a.atleta_id NOT IN ({','.join(['%s'] * len(excl))})
+                            WHERE a.posicao_id = %s AND a.clube_id = %s AND pc.status = 'provavel' AND a.atleta_id NOT IN ({','.join(['%s'] * len(excl))}) AND a.temporada = %s
                             ORDER BY a.preco_num ASC
                             LIMIT %s
                         '''
@@ -242,11 +243,11 @@ def calcular_escalacao_ideal(rodada_atual, posicao_capitao='atacantes', access_t
                         q2 = f'''
                             SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num
                             FROM acf_atletas a
-                            WHERE a.posicao_id = %s AND a.clube_id = %s AND a.status_id = 7 AND a.atleta_id NOT IN ({','.join(['%s'] * len(excl))})
+                            WHERE a.posicao_id = %s AND a.clube_id = %s AND a.status_id = 7 AND a.atleta_id NOT IN ({','.join(['%s'] * len(excl))}) AND a.temporada = %s
                             ORDER BY a.preco_num ASC
                             LIMIT %s
                         '''
-                    params = [pos_id, clube_id, *excl, faltam]
+                    params = [pos_id, clube_id, *excl, faltam, get_temporada_atual()]
                     cursor.execute(q2, params)
                     for aid, apelido, cid, preco in cursor.fetchall():
                         lista.append({'atleta_id': aid, 'apelido': apelido, 'clube_id': cid, 'pontuacao_total': 0.0, 'preco_num': preco})
@@ -606,17 +607,17 @@ def calcular_escalacao_ideal(rodada_atual, posicao_capitao='atacantes', access_t
                        (SELECT pontuacao_total FROM ranking_por_posicao WHERE atleta_id = a.atleta_id AND rodada_atual = %s) as pontuacao_total 
                 FROM acf_atletas a 
                 JOIN provaveis_cartola pc ON a.atleta_id = pc.atleta_id
-                WHERE a.posicao_id = %s AND pc.status = 'provavel' 
+                WHERE a.posicao_id = %s AND pc.status = 'provavel' AND a.temporada = %s
                 ORDER BY a.preco_num DESC
-            ''', (rodada_atual, posicao_ids['goleiros']))
+            ''', (rodada_atual, posicao_ids['goleiros'], get_temporada_atual()))
         else:
             cursor.execute('''
                 SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num, a.status_id, 
                        (SELECT pontuacao_total FROM ranking_por_posicao WHERE atleta_id = a.atleta_id AND rodada_atual = %s) as pontuacao_total 
                 FROM acf_atletas a 
-                WHERE a.posicao_id = %s AND a.status_id = 7 
+                WHERE a.posicao_id = %s AND a.status_id = 7 AND a.temporada = %s
                 ORDER BY a.preco_num DESC
-            ''', (rodada_atual, posicao_ids['goleiros']))
+            ''', (rodada_atual, posicao_ids['goleiros'], get_temporada_atual()))
         
         goleiros_provaveis = [
             {
@@ -633,9 +634,9 @@ def calcular_escalacao_ideal(rodada_atual, posicao_capitao='atacantes', access_t
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num, a.status_id, 0 as pontuacao_total
             FROM acf_atletas a
-            WHERE a.posicao_id = %s AND a.status_id NOT IN (2, 7)  -- Goleiros nulos (qualquer status exceto provável=7 e dúvida=2)
-            ORDER BY a.preco_num ASC  -- Ordena do mais barato para o mais caro
-        ''', (posicao_ids['goleiros'],))
+            WHERE a.posicao_id = %s AND a.status_id NOT IN (2, 7) AND a.temporada = %s
+            ORDER BY a.preco_num ASC
+        ''', (posicao_ids['goleiros'], get_temporada_atual()))
         
         goleiros_nao_relacionados = [
             {
@@ -922,8 +923,8 @@ def calcular_escalacao_ideal(rodada_atual, posicao_capitao='atacantes', access_t
         cursor.execute('''
             SELECT a.apelido, a.posicao_id
             FROM acf_atletas a
-            WHERE a.atleta_id = %s
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.temporada = %s
+        ''', (atleta_id, get_temporada_atual()))
         jogador = cursor.fetchone()
         if jogador:
             escalacao_info['atletas'].append({
@@ -937,8 +938,8 @@ def calcular_escalacao_ideal(rodada_atual, posicao_capitao='atacantes', access_t
         cursor.execute('''
             SELECT a.apelido
             FROM acf_atletas a
-            WHERE a.atleta_id = %s
-        ''', (atleta_id,))
+            WHERE a.atleta_id = %s AND a.temporada = %s
+        ''', (atleta_id, get_temporada_atual()))
         jogador = cursor.fetchone()
         if jogador:
             escalacao_info['reservas'].append({

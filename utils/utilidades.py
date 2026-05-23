@@ -82,3 +82,35 @@ def print_table(title: str, headers: list[str], rows: list[list], max_rows: int 
     print("-" * (sum(widths) + len(widths) - 1))
     for r in rows:
         print(fmt_row(r))
+
+# Cache para get_temporada_atual
+_TEMPORADA_CACHE = None
+_TEMPORADA_CACHE_TIMESTAMP = None
+_CACHE_DURATION = 3600  # 1 hora
+
+def get_temporada_atual() -> int:
+    """Retorna a temporada atual buscando da API de status do Cartola.
+    Usa cache de 1 hora. Fallback para ano atual se a API falhar."""
+    import time
+    from datetime import datetime
+    
+    global _TEMPORADA_CACHE, _TEMPORADA_CACHE_TIMESTAMP
+    
+    current_time = time.time()
+    if _TEMPORADA_CACHE is not None and _TEMPORADA_CACHE_TIMESTAMP is not None:
+        if current_time - _TEMPORADA_CACHE_TIMESTAMP < _CACHE_DURATION:
+            return _TEMPORADA_CACHE
+    
+    try:
+        import requests
+        response = requests.get('https://api.cartola.globo.com/mercado/status', timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if 'temporada' in data:
+            _TEMPORADA_CACHE = int(data['temporada'])
+            _TEMPORADA_CACHE_TIMESTAMP = current_time
+            return _TEMPORADA_CACHE
+    except Exception:
+        pass
+    
+    return datetime.now().year
