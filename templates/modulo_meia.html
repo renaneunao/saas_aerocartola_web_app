@@ -280,7 +280,6 @@
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média</th>
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Jogos</th>
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
-                            <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso SG</th>
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média DS</th>
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">DS Cedidos</th>
                             <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">FF</th>
@@ -430,7 +429,6 @@ async function carregarDados(forcarRecalculo = false) {
                                 <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média</th>
                                 <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Jogos</th>
                                 <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
-                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso SG</th>
                                 <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Preço</th>
                                 <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Ações</th>
                             </tr>
@@ -442,7 +440,7 @@ async function carregarDados(forcarRecalculo = false) {
                 </div>
             </div>
         `;
-        
+
         // Recuperar elementos após recriar HTML
         loadingState = document.getElementById('loadingState');
         errorState = document.getElementById('errorState');
@@ -913,11 +911,6 @@ async function renderizarTabelaMeias(resultados) {
                 </div>
             </td>
             <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-xs ${(jogador.peso_sg || 0) > 0 ? 'text-green-400' : (jogador.peso_sg || 0) < 0 ? 'text-red-400' : 'text-gray-400'}">
-                    ${formatNumber(jogador.peso_sg)}
-                </div>
-            </td>
-            <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
                 <div class="font-medium text-white text-xs">${(jogador.media_ds || 0).toFixed(2)}</div>
             </td>
             <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
@@ -1061,7 +1054,6 @@ function recalcularMeias() {
                                 <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média</th>
                                 <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Jogos</th>
                                 <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso Jogo</th>
-                                <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Peso SG</th>
                                 <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">Média DS</th>
                                 <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">DS Cedidos</th>
                                 <th class="text-center py-3 px-2 text-dark-blue-200 font-medium">FF</th>

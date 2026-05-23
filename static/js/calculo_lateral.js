@@ -151,6 +151,11 @@ class CalculoLateral {
             peso_sg: parseFloat(peso_sg_final.toFixed(2)),
             media_ds: parseFloat(media_ds.toFixed(2)),
             media_ds_cedidos: parseFloat(media_ds_cedidos.toFixed(2)),
+            media_ff: parseFloat(media_ff.toFixed(2)),
+            media_fs: parseFloat(media_fs.toFixed(2)),
+            media_fd: parseFloat(media_fd.toFixed(2)),
+            media_g: parseFloat(media_g.toFixed(2)),
+            media_a: parseFloat(media_a.toFixed(2)),
             adversario_id, adversario_nome,
             peso_escalacao: parseFloat(peso_escalacao.toFixed(4))
         };
