@@ -866,7 +866,7 @@ async function renderizarTabelaZagueiros(resultados) {
                 <div class="font-medium text-white text-xs">${(jogador.media_ds_cedidos || 0).toFixed(2)}</div>
             </td>
             <td class="py-2 px-1.5 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
-                <div class="font-medium text-green-400 text-xs">R$ ${formatNumber(jogador.preco)}</div>
+                <div class="font-medium text-green-400 text-xs whitespace-nowrap">C$ ${formatNumber(jogador.preco)}</div>
             </td>
             <td class="py-2 px-1.5 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <button onclick="openZagueiroModal(${jogador.atleta_id})" 
@@ -1016,6 +1016,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Modal de Detalhes do Zagueiro -->
 {% include 'modals/modal_detalhes_zagueiro.html' %}
 {% endblock %}
+
+
 
 
 

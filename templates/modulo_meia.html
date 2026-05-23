@@ -932,7 +932,7 @@ async function renderizarTabelaMeias(resultados) {
                 <div class="font-medium text-white text-xs">${(jogador.media_a || 0).toFixed(2)}</div>
             </td>
             <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-green-400 text-xs">R$ ${formatNumber(jogador.preco)}</div>
+                <div class="font-medium text-green-400 text-xs whitespace-nowrap">C$ ${formatNumber(jogador.preco)}</div>
             </td>
             <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
                 <button onclick="openMeiaModal(${jogador.atleta_id})" 
@@ -1086,6 +1086,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Modal de Detalhes do Meia -->
 {% include 'modals/modal_detalhes_meia.html' %}
 {% endblock %}
+
+
 
 
 

@@ -896,7 +896,7 @@ async function renderizarTabelaGoleiros(resultados) {
                 <div class="font-medium text-xs ${jogador.peso_sg > 0 ? 'text-green-400' : jogador.peso_sg < 0 ? 'text-red-400' : 'text-gray-400'}">${jogador.peso_sg.toFixed(2)}</div>
             </td>
             <td class="py-2 px-1.5 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
-                <div class="font-medium text-green-400 text-xs">R$ ${jogador.preco.toFixed(2)}</div>
+                <div class="font-medium text-green-400 text-xs whitespace-nowrap">C$ ${jogador.preco.toFixed(2)}</div>
             </td>
             <td class="py-2 px-1.5 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <button onclick="openGoleiroModal(${jogador.atleta_id})" 
@@ -1044,6 +1044,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- Modal de Detalhes do Goleiro -->
 {% include 'modals/modal_detalhes_goleiro.html' %}
 {% endblock %}
+
+
 
 
 

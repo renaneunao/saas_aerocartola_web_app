@@ -780,7 +780,7 @@ async function renderizarTabelaTreinadores(resultados) {
                 </div>
             </td>
             <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
-                <div class="font-medium text-green-400 text-xs">R$ ${jogador.preco.toFixed(2)}</div>
+                <div class="font-medium text-green-400 text-xs whitespace-nowrap">C$ ${jogador.preco.toFixed(2)}</div>
             </td>
             <td class="py-2 px-1.5 text-center ${blurClass}" ${blurStyle}>
                 <button onclick="openTreinadorModal('${jogador.atleta_id}')" 
@@ -926,6 +926,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- Modal placeholder - será implementado conforme necessário -->
 {% endblock %}
+
+
 
 
 
