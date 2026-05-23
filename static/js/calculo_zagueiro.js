@@ -202,7 +202,8 @@ class CalculoZagueiro {
             media_ds_cedidos: parseFloat(media_ds_cedidos.toFixed(2)),
             adversario_id,
             adversario_nome,
-            peso_escalacao: parseFloat(peso_escalacao.toFixed(4))
+            peso_escalacao: parseFloat(peso_escalacao.toFixed(4)),
+            foto: atleta.foto || ''
         };
     }
 }
