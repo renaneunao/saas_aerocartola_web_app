@@ -100,7 +100,8 @@ class CalculoTreinador {
             peso_jogo: parseFloat(peso_jogo_original.toFixed(2)),
             peso_sg: parseFloat(peso_sg_final.toFixed(2)),
             adversario_id: adversario_id || null,
-            adversario_nome: adversario_nome || 'N/A'
+            adversario_nome: adversario_nome || 'N/A',
+            foto: atleta.foto || ''
         };
     }
 }
@@ -111,4 +112,5 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
     window.CalculoTreinador = CalculoTreinador;
 }
+
 

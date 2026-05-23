@@ -135,7 +135,8 @@ class CalculoGoleiro {
             peso_jogo: parseFloat(peso_jogo_final.toFixed(2)),
             peso_sg: parseFloat(peso_sg_final.toFixed(2)),
             media_gols_adversario: parseFloat(media_gols_adversario.toFixed(2)),
-            adversario_id, adversario_nome: adversario_nome || 'N/A'
+            adversario_id, adversario_nome: adversario_nome || 'N/A',
+            foto: atleta.foto || ''
         };
     }
 }
@@ -145,4 +146,5 @@ if (typeof module !== 'undefined' && module.exports) {
 } else {
     window.CalculoGoleiro = CalculoGoleiro;
 }
+
 
