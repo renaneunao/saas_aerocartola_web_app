@@ -918,14 +918,13 @@ function recalcularTreinadores() {
 }
 
 // Carregar automaticamente ao abrir a página (primeiro tenta carregar salvo, se não tiver, permite calcular)
-document.addEventListener('DOMContentLoaded', function() {
-        // Tentar carregar ranking salvo automaticamente (não forçar recálculo)
-    carregarDados(false);
-});
+carregarDados(false);
 </script>
 
 <!-- Modal placeholder - será implementado conforme necessário -->
 {% endblock %}
+
+
 
 
 
