@@ -721,7 +721,6 @@
                 }
             }
 
-            showLoader('Carregando seus times...');
             try {
                 const response = await fetch('/api/credenciais/lista');
                 const data = await response.json();
@@ -737,8 +736,13 @@
                 if (timesList) {
                     timesList.innerHTML = '<div class="px-3 py-2 text-xs text-neon-red">Erro ao carregar times</div>';
                 }
-            } finally {
-                hideLoader();
+            } catch (error) {
+                console.error('Erro ao carregar times:', error);
+                showToast('Erro ao carregar times', 'error');
+                const timesList = document.getElementById('timesList');
+                if (timesList) {
+                    timesList.innerHTML = '<div class="px-3 py-2 text-xs text-neon-red">Erro ao carregar times</div>';
+                }
             }
         }
 
