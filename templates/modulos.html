@@ -162,7 +162,7 @@
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', async function() {
+    (async function() {
         try {
             showLoader('Verificando status dos módulos...');
             
@@ -268,7 +268,7 @@
         } finally {
             hideLoader();
         }
-    });
+    })();
 </script>
 
 <script src="{{ url_for('static', filename='js/calculo_goleiro.js') }}"></script>
