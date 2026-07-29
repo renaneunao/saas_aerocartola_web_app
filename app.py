@@ -1871,7 +1871,7 @@ def api_atacante_detalhes(atleta_id):
         argumentos_favor = []
         argumentos_contra = []
 
-        total_finalizacoes = media_ff + media_fd + media_ft
+        total_finalizacoes = media_ff + media_fd
         gols_sofridos_mando = (adversario_gols_sofridos_casa / max(1, adversario_jogos_casa)) if not joga_em_casa else (adversario_gols_sofridos_fora / max(1, adversario_jogos_fora))
 
         if media_g >= 0.25:
@@ -1915,7 +1915,6 @@ def api_atacante_detalhes(atleta_id):
             'media_ff': media_ff,
             'media_fs': media_fs,
             'media_fd': media_fd,
-            'media_ft': media_ft,
             'media_g': media_g,
             'media_a': media_a,
             'total_finalizacoes': total_finalizacoes,
@@ -2899,7 +2898,7 @@ def api_meia_detalhes(atleta_id):
         argumentos_favor = []
         argumentos_contra = []
 
-        total_chutes = media_ff + media_fd + media_ft
+        total_chutes = media_ff + media_fd
         participacao_gols = media_g + media_a
 
         if participacao_gols >= 0.2:
@@ -2945,7 +2944,6 @@ def api_meia_detalhes(atleta_id):
             'media_ff': media_ff,
             'media_fs': media_fs,
             'media_fd': media_fd,
-            'media_ft': media_ft,
             'total_chutes': total_chutes,
             'adv_gols_sofridos_media': adv_gols_sofridos_media,
             'argumentos_favor': argumentos_favor,
