@@ -1614,31 +1614,32 @@ def api_atacante_detalhes(atleta_id):
     """API para buscar detalhes completos de um atacante"""
     from flask import jsonify
     user = get_current_user()
+    temporada_atual = get_temporada_atual()
     
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         
-        # Buscar rodada atual
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        # Buscar rodada atual da temporada corrente
+        cursor.execute('SELECT rodada_id FROM acf_partidas WHERE temporada = %s ORDER BY partida_data DESC LIMIT 1', (temporada_atual,))
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
-        # Buscar dados do atacante (mesma estrutura da query em api_modulo_dados)
+        # Buscar dados do atacante
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num,
-                   c.nome as clube_nome, c.abreviacao as clube_abrev
+                   c.nome as clube_nome, c.abreviacao as clube_abrev,
+                   COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             WHERE a.atleta_id = %s AND a.posicao_id = 5 AND a.status_id = 7 AND a.temporada = %s
-        ''', (atleta_id, get_temporada_atual()))
+        ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
             return jsonify({'error': 'Atacante não encontrado'}), 404
         
-        # Extrair dados do atleta de forma segura
         try:
             atleta_id_val = atleta_row[0]
             apelido = atleta_row[1]
@@ -1650,47 +1651,41 @@ def api_atacante_detalhes(atleta_id):
             jogos_num = atleta_row[7]
             clube_nome = atleta_row[8]
             clube_abrev = atleta_row[9]
+            foto_url = atleta_row[10] if len(atleta_row) > 10 and atleta_row[10] else ''
             
-            # Buscar escudo do clube usando a função utilitária
             from utils.team_shields import get_team_shield
             clube_escudo_url = get_team_shield(clube_id, size='45x45')
         except (IndexError, TypeError) as e:
-            print(f"Erro ao extrair dados do atleta: {e}")
-            print(f"Row length: {len(atleta_row) if atleta_row else 0}")
-            print(f"Row content: {atleta_row}")
             return jsonify({'error': f'Erro ao processar dados do atacante: {str(e)}'}), 500
         
         if not clube_id:
-            return jsonify({'error': 'Dados do atacante incompletos (clube_id ausente)'}), 500
+            return jsonify({'error': 'Dados do atacante incompletos'}), 500
         
-        # Buscar adversário
+        # Buscar adversário na temporada corrente
         adversario_id = None
         try:
             cursor.execute('''
                 SELECT clube_casa_id, clube_visitante_id
                 FROM acf_partidas
-                WHERE rodada_id = %s AND valida = TRUE
+                WHERE rodada_id = %s AND temporada = %s AND valida = TRUE
                 AND (clube_casa_id = %s OR clube_visitante_id = %s)
-            ''', (rodada_atual, clube_id, clube_id))
+            ''', (rodada_atual, temporada_atual, clube_id, clube_id))
             
             partida = cursor.fetchone()
             if partida and len(partida) >= 2:
                 adversario_id = partida[1] if partida[0] == clube_id else partida[0]
         except Exception as e:
-            print(f"Erro ao buscar adversário: {e}")
+            print(f"Erro ao buscar adversário do atacante: {e}")
         
         # Buscar dados do adversário
         adversario_nome = 'N/A'
         adversario_escudo_url = ''
         if adversario_id:
             try:
-                cursor.execute('''
-                    SELECT nome FROM acf_clubes WHERE id = %s
-                ''', (adversario_id,))
+                cursor.execute('SELECT nome FROM acf_clubes WHERE id = %s', (adversario_id,))
                 adv_row = cursor.fetchone()
                 if adv_row and len(adv_row) >= 1:
                     adversario_nome = adv_row[0] if adv_row[0] else 'N/A'
-                    # Buscar escudo do adversário usando a função utilitária
                     adversario_escudo_url = get_team_shield(adversario_id, size='45x45')
             except Exception as e:
                 print(f"Erro ao buscar dados do adversário: {e}")
@@ -1713,15 +1708,13 @@ def api_atacante_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar peso do jogo: {e}")
         
-        # Buscar médias de scouts (DS, FF, FS, FD, G, A, FT)
+        # Buscar médias de scouts na temporada corrente
         media_ds = 0
         media_ff = 0
         media_fs = 0
         media_fd = 0
         media_g = 0
         media_a = 0
-        media_ft = 0
-        temporada_atual = get_temporada_atual()
 
         try:
             cursor.execute('''
@@ -1731,21 +1724,19 @@ def api_atacante_detalhes(atleta_id):
                     AVG(COALESCE(scout_fs, 0)) as avg_fs,
                     AVG(COALESCE(scout_fd, 0)) as avg_fd,
                     AVG(COALESCE(scout_g, 0)) as avg_g,
-                    AVG(COALESCE(scout_a, 0)) as avg_a,
-                    AVG(COALESCE(scout_ft, 0)) as avg_ft
+                    AVG(COALESCE(scout_a, 0)) as avg_a
                 FROM acf_pontuados
                 WHERE atleta_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
             ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
-            if stats_row and len(stats_row) >= 7:
+            if stats_row and len(stats_row) >= 6:
                 media_ds = float(stats_row[0]) if stats_row[0] is not None else 0
                 media_ff = float(stats_row[1]) if stats_row[1] is not None else 0
                 media_fs = float(stats_row[2]) if stats_row[2] is not None else 0
                 media_fd = float(stats_row[3]) if stats_row[3] is not None else 0
                 media_g = float(stats_row[4]) if stats_row[4] is not None else 0
                 media_a = float(stats_row[5]) if stats_row[5] is not None else 0
-                media_ft = float(stats_row[6]) if stats_row[6] is not None else 0
         except Exception as e:
             print(f"Erro ao buscar médias de scouts do atacante: {e}")
         
@@ -1911,7 +1902,7 @@ def api_atacante_detalhes(atleta_id):
             'clube_nome': clube_nome or 'N/A',
             'clube_abrev': clube_abrev or 'N/A',
             'clube_escudo_url': clube_escudo_url or '',
-            'foto_url': '',  # Fotos são carregadas via JavaScript usando getPlayerImage
+            'foto_url': foto_url or '',
             'pontos_num': float(pontos_num) if pontos_num is not None else 0,
             'media': float(media_num) if media_num is not None else 0,
             'preco': float(preco_num) if preco_num is not None else 0,
@@ -2015,13 +2006,14 @@ def api_lateral_detalhes(atleta_id):
     """API para buscar detalhes completos de um lateral"""
     from flask import jsonify
     user = get_current_user()
+    temporada_atual = get_temporada_atual()
     
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         
         # Buscar rodada atual
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        cursor.execute('SELECT rodada_id FROM acf_partidas WHERE temporada = %s ORDER BY partida_data DESC LIMIT 1', (temporada_atual,))
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -2029,11 +2021,12 @@ def api_lateral_detalhes(atleta_id):
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num,
-                   c.nome as clube_nome, c.abreviacao as clube_abrev
+                   c.nome as clube_nome, c.abreviacao as clube_abrev,
+                   COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             WHERE a.atleta_id = %s AND a.posicao_id = 2 AND a.status_id = 7 AND a.temporada = %s
-        ''', (atleta_id, get_temporada_atual()))
+        ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2051,6 +2044,7 @@ def api_lateral_detalhes(atleta_id):
             jogos_num = atleta_row[7]
             clube_nome = atleta_row[8]
             clube_abrev = atleta_row[9]
+            foto_url = atleta_row[10] if len(atleta_row) > 10 and atleta_row[10] else ''
             
             from utils.team_shields import get_team_shield
             clube_escudo_url = get_team_shield(clube_id, size='45x45')
@@ -2058,15 +2052,15 @@ def api_lateral_detalhes(atleta_id):
             print(f"Erro ao extrair dados do lateral: {e}")
             return jsonify({'error': f'Erro ao processar dados: {str(e)}'}), 500
         
-        # Buscar adversário
+        # Buscar adversário na temporada corrente
         adversario_id = None
         try:
             cursor.execute('''
                 SELECT clube_casa_id, clube_visitante_id
                 FROM acf_partidas
-                WHERE rodada_id = %s AND valida = TRUE
+                WHERE rodada_id = %s AND temporada = %s AND valida = TRUE
                 AND (clube_casa_id = %s OR clube_visitante_id = %s)
-            ''', (rodada_atual, clube_id, clube_id))
+            ''', (rodada_atual, temporada_atual, clube_id, clube_id))
             partida = cursor.fetchone()
             if partida and len(partida) >= 2:
                 adversario_id = partida[1] if partida[0] == clube_id else partida[0]
@@ -2228,7 +2222,7 @@ def api_lateral_detalhes(atleta_id):
             'clube_nome': clube_nome or 'N/A',
             'clube_abrev': clube_abrev or 'N/A',
             'clube_escudo_url': clube_escudo_url or '',
-            'foto_url': '',
+            'foto_url': foto_url or '',
             'pontos_num': float(pontos_num) if pontos_num is not None else 0,
             'media': float(media_num) if media_num is not None else 0,
             'preco': float(preco_num) if preco_num is not None else 0,
@@ -2265,23 +2259,25 @@ def api_goleiro_detalhes(atleta_id):
     """API para buscar detalhes completos de um goleiro"""
     from flask import jsonify
     user = get_current_user()
+    temporada_atual = get_temporada_atual()
     
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        cursor.execute('SELECT rodada_id FROM acf_partidas WHERE temporada = %s ORDER BY partida_data DESC LIMIT 1', (temporada_atual,))
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num,
-                   c.nome as clube_nome, c.abreviacao as clube_abrev
+                   c.nome as clube_nome, c.abreviacao as clube_abrev,
+                   COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             WHERE a.atleta_id = %s AND a.posicao_id = 1 AND a.status_id = 7 AND a.temporada = %s
-        ''', (atleta_id, get_temporada_atual()))
+        ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2298,26 +2294,27 @@ def api_goleiro_detalhes(atleta_id):
             jogos_num = atleta_row[7]
             clube_nome = atleta_row[8]
             clube_abrev = atleta_row[9]
+            foto_url = atleta_row[10] if len(atleta_row) > 10 and atleta_row[10] else ''
             
             from utils.team_shields import get_team_shield
             clube_escudo_url = get_team_shield(clube_id, size='45x45')
         except (IndexError, TypeError) as e:
             return jsonify({'error': f'Erro ao processar dados: {str(e)}'}), 500
         
-        # Buscar adversário
+        # Buscar adversário na temporada corrente
         adversario_id = None
         try:
             cursor.execute('''
                 SELECT clube_casa_id, clube_visitante_id
                 FROM acf_partidas
-                WHERE rodada_id = %s AND valida = TRUE
+                WHERE rodada_id = %s AND temporada = %s AND valida = TRUE
                 AND (clube_casa_id = %s OR clube_visitante_id = %s)
-            ''', (rodada_atual, clube_id, clube_id))
+            ''', (rodada_atual, temporada_atual, clube_id, clube_id))
             partida = cursor.fetchone()
             if partida and len(partida) >= 2:
                 adversario_id = partida[1] if partida[0] == clube_id else partida[0]
         except Exception as e:
-            print(f"Erro ao buscar adversário: {e}")
+            print(f"Erro ao buscar adversário do goleiro: {e}")
         
         adversario_nome = 'N/A'
         adversario_escudo_url = ''
@@ -2360,15 +2357,14 @@ def api_goleiro_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pesos: {e}")
         
-        # Buscar médias de scouts (foco em DE + DP - defesas totais)
+        # Buscar médias de scouts (foco em DE - defesas)
         media_de = 0
         media_gols_sofridos = 0
-        temporada_atual = get_temporada_atual()
 
         try:
             cursor.execute('''
                 SELECT 
-                    AVG(COALESCE(scout_de, 0) + COALESCE(scout_dp, 0)) as avg_de
+                    AVG(COALESCE(scout_de, 0)) as avg_de
                 FROM acf_pontuados
                 WHERE atleta_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
             ''', (atleta_id, rodada_atual, temporada_atual))
@@ -2400,7 +2396,7 @@ def api_goleiro_detalhes(atleta_id):
         if adversario_id:
             try:
                 cursor.execute('''
-                    SELECT AVG(COALESCE(scout_ff, 0) + COALESCE(scout_fd, 0) + COALESCE(scout_ft, 0))
+                    SELECT AVG(COALESCE(scout_ff, 0) + COALESCE(scout_fd, 0))
                     FROM acf_pontuados
                     WHERE clube_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
                 ''', (adversario_id, rodada_atual, temporada_atual))
@@ -2475,7 +2471,7 @@ def api_goleiro_detalhes(atleta_id):
             'clube_nome': clube_nome or 'N/A',
             'clube_abrev': clube_abrev or 'N/A',
             'clube_escudo_url': clube_escudo_url or '',
-            'foto_url': '',
+            'foto_url': foto_url or '',
             'pontos_num': float(pontos_num) if pontos_num is not None else 0,
             'media': float(media_num) if media_num is not None else 0,
             'preco': float(preco_num) if preco_num is not None else 0,
@@ -2508,23 +2504,25 @@ def api_zagueiro_detalhes(atleta_id):
     """API para buscar detalhes completos de um zagueiro"""
     from flask import jsonify
     user = get_current_user()
+    temporada_atual = get_temporada_atual()
     
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        cursor.execute('SELECT rodada_id FROM acf_partidas WHERE temporada = %s ORDER BY partida_data DESC LIMIT 1', (temporada_atual,))
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num,
-                   c.nome as clube_nome, c.abreviacao as clube_abrev
+                   c.nome as clube_nome, c.abreviacao as clube_abrev,
+                   COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             WHERE a.atleta_id = %s AND a.posicao_id = 3 AND a.status_id = 7 AND a.temporada = %s
-        ''', (atleta_id, get_temporada_atual()))
+        ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2541,26 +2539,27 @@ def api_zagueiro_detalhes(atleta_id):
             jogos_num = atleta_row[7]
             clube_nome = atleta_row[8]
             clube_abrev = atleta_row[9]
+            foto_url = atleta_row[10] if len(atleta_row) > 10 and atleta_row[10] else ''
             
             from utils.team_shields import get_team_shield
             clube_escudo_url = get_team_shield(clube_id, size='45x45')
         except (IndexError, TypeError) as e:
             return jsonify({'error': f'Erro ao processar dados: {str(e)}'}), 500
         
-        # Buscar adversário
+        # Buscar adversário na temporada corrente
         adversario_id = None
         try:
             cursor.execute('''
                 SELECT clube_casa_id, clube_visitante_id
                 FROM acf_partidas
-                WHERE rodada_id = %s AND valida = TRUE
+                WHERE rodada_id = %s AND temporada = %s AND valida = TRUE
                 AND (clube_casa_id = %s OR clube_visitante_id = %s)
-            ''', (rodada_atual, clube_id, clube_id))
+            ''', (rodada_atual, temporada_atual, clube_id, clube_id))
             partida = cursor.fetchone()
             if partida and len(partida) >= 2:
                 adversario_id = partida[1] if partida[0] == clube_id else partida[0]
         except Exception as e:
-            print(f"Erro ao buscar adversário: {e}")
+            print(f"Erro ao buscar adversário do zagueiro: {e}")
         
         adversario_nome = 'N/A'
         adversario_escudo_url = ''
@@ -2692,7 +2691,7 @@ def api_zagueiro_detalhes(atleta_id):
             'clube_nome': clube_nome or 'N/A',
             'clube_abrev': clube_abrev or 'N/A',
             'clube_escudo_url': clube_escudo_url or '',
-            'foto_url': '',
+            'foto_url': foto_url or '',
             'pontos_num': float(pontos_num) if pontos_num is not None else 0,
             'media': float(media_num) if media_num is not None else 0,
             'preco': float(preco_num) if preco_num is not None else 0,
@@ -2725,23 +2724,25 @@ def api_meia_detalhes(atleta_id):
     """API para buscar detalhes completos de um meia"""
     from flask import jsonify
     user = get_current_user()
+    temporada_atual = get_temporada_atual()
     
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
         
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        cursor.execute('SELECT rodada_id FROM acf_partidas WHERE temporada = %s ORDER BY partida_data DESC LIMIT 1', (temporada_atual,))
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num,
-                   c.nome as clube_nome, c.abreviacao as clube_abrev
+                   c.nome as clube_nome, c.abreviacao as clube_abrev,
+                   COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
             WHERE a.atleta_id = %s AND a.posicao_id = 4 AND a.status_id = 7 AND a.temporada = %s
-        ''', (atleta_id, get_temporada_atual()))
+        ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
         if not atleta_row:
@@ -2758,26 +2759,27 @@ def api_meia_detalhes(atleta_id):
             jogos_num = atleta_row[7]
             clube_nome = atleta_row[8]
             clube_abrev = atleta_row[9]
+            foto_url = atleta_row[10] if len(atleta_row) > 10 and atleta_row[10] else ''
             
             from utils.team_shields import get_team_shield
             clube_escudo_url = get_team_shield(clube_id, size='45x45')
         except (IndexError, TypeError) as e:
             return jsonify({'error': f'Erro ao processar dados: {str(e)}'}), 500
         
-        # Buscar adversário
+        # Buscar adversário na temporada corrente
         adversario_id = None
         try:
             cursor.execute('''
                 SELECT clube_casa_id, clube_visitante_id
                 FROM acf_partidas
-                WHERE rodada_id = %s AND valida = TRUE
+                WHERE rodada_id = %s AND temporada = %s AND valida = TRUE
                 AND (clube_casa_id = %s OR clube_visitante_id = %s)
-            ''', (rodada_atual, clube_id, clube_id))
+            ''', (rodada_atual, temporada_atual, clube_id, clube_id))
             partida = cursor.fetchone()
             if partida and len(partida) >= 2:
                 adversario_id = partida[1] if partida[0] == clube_id else partida[0]
         except Exception as e:
-            print(f"Erro ao buscar adversário: {e}")
+            print(f"Erro ao buscar adversário do meia: {e}")
         
         adversario_nome = 'N/A'
         adversario_escudo_url = ''
@@ -2809,15 +2811,13 @@ def api_meia_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar peso do jogo: {e}")
         
-        # Buscar médias de scouts (A, G, DS, FF, FS, FD, FT)
+        # Buscar médias de scouts (A, G, DS, FF, FS, FD)
         media_a = 0
         media_g = 0
         media_ds = 0
         media_ff = 0
         media_fs = 0
         media_fd = 0
-        media_ft = 0
-        temporada_atual = get_temporada_atual()
 
         try:
             cursor.execute('''
@@ -2827,21 +2827,19 @@ def api_meia_detalhes(atleta_id):
                     AVG(COALESCE(scout_ds, 0)) as avg_ds,
                     AVG(COALESCE(scout_ff, 0)) as avg_ff,
                     AVG(COALESCE(scout_fs, 0)) as avg_fs,
-                    AVG(COALESCE(scout_fd, 0)) as avg_fd,
-                    AVG(COALESCE(scout_ft, 0)) as avg_ft
+                    AVG(COALESCE(scout_fd, 0)) as avg_fd
                 FROM acf_pontuados
                 WHERE atleta_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
             ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
-            if stats_row and len(stats_row) >= 7:
+            if stats_row and len(stats_row) >= 6:
                 media_a = float(stats_row[0]) if stats_row[0] is not None else 0
                 media_g = float(stats_row[1]) if stats_row[1] is not None else 0
                 media_ds = float(stats_row[2]) if stats_row[2] is not None else 0
                 media_ff = float(stats_row[3]) if stats_row[3] is not None else 0
                 media_fs = float(stats_row[4]) if stats_row[4] is not None else 0
                 media_fd = float(stats_row[5]) if stats_row[5] is not None else 0
-                media_ft = float(stats_row[6]) if stats_row[6] is not None else 0
         except Exception as e:
             print(f"Erro ao buscar médias de scouts do meia: {e}")
 
@@ -2932,7 +2930,7 @@ def api_meia_detalhes(atleta_id):
             'clube_nome': clube_nome or 'N/A',
             'clube_abrev': clube_abrev or 'N/A',
             'clube_escudo_url': clube_escudo_url or '',
-            'foto_url': '',
+            'foto_url': foto_url or '',
             'pontos_num': float(pontos_num) if pontos_num is not None else 0,
             'media': float(media_num) if media_num is not None else 0,
             'preco': float(preco_num) if preco_num is not None else 0,
