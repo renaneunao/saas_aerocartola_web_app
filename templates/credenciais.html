@@ -82,12 +82,21 @@
                 <!-- Ações -->
                 <div class="flex flex-col space-y-2 pt-2 border-t border-dark-blue-700/50">
                     {% if not time.get('bloqueado') %}
-                    <button onclick="atualizarTokens({{ time.id }})" 
-                            id="btn-atualizar-{{ time.id }}"
-                            class="w-full bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1">
-                        <i class="fas fa-sync-alt"></i>
-                        <span>Atualizar Token</span>
-                    </button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="atualizarTokens({{ time.id }})" 
+                                id="btn-atualizar-{{ time.id }}"
+                                class="bg-green-600 hover:bg-green-700 text-white px-2 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1"
+                                title="Auto-renovar token via API do Cartola">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Renovar Token</span>
+                        </button>
+                        <a href="{{ url_for('editar_credenciais', time_id=time.id) }}" 
+                           class="bg-blue-600 hover:bg-blue-700 text-white px-2 py-2 rounded-lg text-xs md:text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-1 text-center"
+                           title="Editar manualmente Access Token, Refresh Token e Nome do Time">
+                            <i class="fas fa-edit"></i>
+                            <span>Editar Tokens</span>
+                        </a>
+                    </div>
                     {% else %}
                     <div class="flex space-x-2">
                         <button disabled class="flex-1 bg-gray-600 text-gray-400 px-3 py-2 rounded-lg text-sm font-medium cursor-not-allowed flex items-center justify-center space-x-1">

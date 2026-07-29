@@ -963,6 +963,15 @@ def editar_credenciais(time_id):
             return redirect(url_for('credenciais'))
         
         if request.method == 'POST':
+            access_token = request.form.get('access_token', '').strip()
+            refresh_token = request.form.get('refresh_token', '').strip()
+            id_token = request.form.get('id_token', '').strip() or None
+            team_name = request.form.get('team_name', '').strip() or None
+
+            if not access_token or not refresh_token:
+                flash('Access Token e Refresh Token são obrigatórios.', 'error')
+                return render_template('editar_credenciais.html', current_user=user, credenciais=time_to_edit)
+
             # Atualizar credenciais
             cursor = conn.cursor()
             cursor.execute('''
@@ -973,16 +982,22 @@ def editar_credenciais(time_id):
                     team_name = %s,
                     updated_at = CURRENT_TIMESTAMP
                 WHERE id = %s AND user_id = %s
-            ''', (
-                request.form.get('access_token', '').strip(),
-                request.form.get('refresh_token', '').strip(),
-                request.form.get('id_token', '').strip() or None,
-                request.form.get('team_name', '').strip() or None,
-                time_id,
-                user['id']
-            ))
+            ''', (access_token, refresh_token, id_token, team_name, time_id, user['id']))
             conn.commit()
-            flash('Credenciais atualizadas com sucesso!', 'success')
+
+            # Tentar buscar nome do time da API se não fornecido
+            if not team_name:
+                try:
+                    from api_cartola import fetch_team_info_by_team_id
+                    team_info = fetch_team_info_by_team_id(conn, time_id)
+                    if team_info and 'time' in team_info and isinstance(team_info['time'], dict):
+                        if 'nome' in team_info['time']:
+                            cursor.execute('UPDATE acw_teams SET team_name = %s WHERE id = %s', (team_info['time']['nome'], time_id))
+                            conn.commit()
+                except Exception as e:
+                    print(f"Erro ao buscar informações do time após editar: {e}")
+
+            flash('Credenciais e tokens atualizados com sucesso!', 'success')
             return redirect(url_for('credenciais'))
         
         # GET - mostrar formulário
