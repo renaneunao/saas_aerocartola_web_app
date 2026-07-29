@@ -1606,6 +1606,8 @@ def api_salvar_ranking(modulo):
         print(f"Erro ao salvar ranking: {e}")
         import traceback
         traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 def get_atleta_medias_mando(cursor, atleta_id, rodada_atual, temporada_atual):
     """Calcula estatísticas de média básica (sem G/A/SG), casa e fora de um atleta."""
     stats = {
