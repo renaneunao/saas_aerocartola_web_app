@@ -11,6 +11,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'change-me-to-a-secure-random-value')
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
 from database import get_db_connection, close_db_connection
 from models.users import (
@@ -242,7 +243,11 @@ def login():
         
         if auth_result['success']:
             user = auth_result['user']
-            # Usar sessão do Flask diretamente (sem sessões customizadas)
+            # Se 'remember_me' for verdadeiro, tornar a sessão permanente (30 dias no navegador)
+            if remember_me:
+                session.permanent = True
+            else:
+                session.permanent = False
             session['user_id'] = user['id']
             session['username'] = user['username']
             # Inicializar time selecionado com o primeiro time do usuário (se houver)
