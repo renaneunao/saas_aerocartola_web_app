@@ -963,10 +963,24 @@ def editar_credenciais(time_id):
             return redirect(url_for('credenciais'))
         
         if request.method == 'POST':
+            json_payload = request.form.get('json_payload', '').strip()
             access_token = request.form.get('access_token', '').strip()
             refresh_token = request.form.get('refresh_token', '').strip()
             id_token = request.form.get('id_token', '').strip() or None
             team_name = request.form.get('team_name', '').strip() or None
+
+            # Tentar extrair do JSON se o usuário colou o payload em json_payload ou no campo access_token
+            import json
+            for candidate in [json_payload, access_token]:
+                if candidate and candidate.startswith('{') and candidate.endswith('}'):
+                    try:
+                        parsed = json.loads(candidate)
+                        if isinstance(parsed, dict):
+                            if parsed.get('access_token'): access_token = str(parsed['access_token']).strip()
+                            if parsed.get('refresh_token'): refresh_token = str(parsed['refresh_token']).strip()
+                            if parsed.get('id_token'): id_token = str(parsed['id_token']).strip()
+                    except Exception as e:
+                        print(f"[DEBUG EDITAR] Erro ao parsear JSON de credenciais: {e}")
 
             if not access_token or not refresh_token:
                 flash('Access Token e Refresh Token são obrigatórios.', 'error')

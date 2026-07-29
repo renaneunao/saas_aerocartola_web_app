@@ -12,15 +12,42 @@
             Editar Credenciais
         </h1>
     </div>
-    <p class="text-xl text-dark-blue-200">Atualize suas credenciais do Cartola FC</p>
+    <p class="text-xl text-dark-blue-200">Atualize suas credenciais do Cartola FC manualmente ou via JSON do F12</p>
 </div>
 
 <!-- Form -->
 <div class="max-w-4xl mx-auto">
     <form method="post" class="space-y-6">
-        <!-- Team Name -->
         <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-lg overflow-hidden">
             <div class="p-6 space-y-6">
+                <!-- JSON Quick Paste Box -->
+                <div class="bg-dark-blue-900/80 p-5 rounded-xl border border-cyan-500/40 shadow-inner">
+                    <div class="flex items-center justify-between mb-2">
+                        <label for="json_payload" class="text-base font-bold text-cyan-300 flex items-center space-x-2">
+                            <i class="fas fa-code text-cyan-400"></i>
+                            <span>Colar Payload JSON Completo (F12 / DevTools)</span>
+                        </label>
+                        <span id="json_badge" class="hidden text-xs bg-green-500/20 text-green-300 font-semibold px-2.5 py-1 rounded-full border border-green-500/40 animate-fade-in">
+                            <i class="fas fa-check-circle mr-1"></i> JSON Detectado & Extraído!
+                        </span>
+                    </div>
+                    <p class="text-xs text-dark-blue-300 mb-3">
+                        Cole aqui o JSON obtido no F12 (ex: <code>{"client_id": "...", "refresh_token": "...", "access_token": "...", "id_token": "..."}</code>). Os campos abaixo serão preenchidos automaticamente.
+                    </p>
+                    <textarea id="json_payload"
+                              name="json_payload"
+                              rows="3"
+                              class="w-full bg-dark-blue-950/90 border border-dark-blue-600/50 text-cyan-300 placeholder-dark-blue-500 rounded-lg px-4 py-3 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors duration-200 font-mono text-xs resize-none"
+                              placeholder='{"client_id":"cartola-web@apps.globoid","refresh_token":"eyJh...","access_token":"eyJh...","id_token":"eyJh..."}'></textarea>
+                </div>
+
+                <div class="relative flex py-1 items-center">
+                    <div class="flex-grow border-t border-dark-blue-700"></div>
+                    <span class="flex-shrink mx-4 text-xs font-semibold uppercase tracking-wider text-dark-blue-400">ou edite os campos individuais</span>
+                    <div class="flex-grow border-t border-dark-blue-700"></div>
+                </div>
+
+                <!-- Team Name -->
                 <div>
                     <label for="team_name" class="block text-lg font-medium text-white mb-2">
                         <i class="fas fa-users text-orange-400 mr-2"></i>
@@ -97,13 +124,74 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const jsonInput = document.getElementById('json_payload');
+    const accessTokenInput = document.getElementById('access_token');
+    const refreshTokenInput = document.getElementById('refresh_token');
+    const idTokenInput = document.getElementById('id_token');
+    const jsonBadge = document.getElementById('json_badge');
+
+    function tryParseAndFillJSON(text) {
+        if (!text) return false;
+        const trimmed = text.trim();
+        if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) return false;
+
+        try {
+            const data = JSON.parse(trimmed);
+            let updated = false;
+
+            if (data.access_token) {
+                accessTokenInput.value = data.access_token;
+                updated = true;
+            }
+            if (data.refresh_token) {
+                refreshTokenInput.value = data.refresh_token;
+                updated = true;
+            }
+            if (data.id_token) {
+                idTokenInput.value = data.id_token;
+                updated = true;
+            }
+
+            if (updated) {
+                jsonBadge.classList.remove('hidden');
+                setTimeout(() => {
+                    jsonBadge.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+                return true;
+            }
+        } catch (e) {
+            console.log('JSON parse error:', e);
+        }
+        return false;
+    }
+
+    if (jsonInput) {
+        jsonInput.addEventListener('input', function() {
+            tryParseAndFillJSON(this.value);
+        });
+        jsonInput.addEventListener('paste', function() {
+            setTimeout(() => tryParseAndFillJSON(this.value), 50);
+        });
+    }
+
+    if (accessTokenInput) {
+        accessTokenInput.addEventListener('input', function() {
+            if (this.value.trim().startsWith('{')) {
+                if (tryParseAndFillJSON(this.value)) {
+                    jsonInput.value = this.value;
+                }
+            }
+        });
+    }
+
     const form = document.querySelector('form');
-    form.addEventListener('submit', function(e) {
-        const submitBtn = form.querySelector('button[type="submit"]');
-        submitBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Salvando...';
-        submitBtn.disabled = true;
-    });
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Salvando...';
+            submitBtn.disabled = true;
+        });
+    }
 });
 </script>
 {% endblock %}
-
