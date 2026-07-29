@@ -1,118 +1,122 @@
-<div id="modalDetalhesAtacante" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-dark-blue-900 rounded-2xl border border-dark-blue-700 shadow-2xl max-w-3xl w-full p-6 relative max-h-[90vh] overflow-y-auto">
-        <!-- Botão de Fechar -->
-        <button onclick="fecharModalAtacante()" class="absolute top-4 right-4 text-dark-blue-300 hover:text-white text-xl">
-            <i class="fas fa-times"></i>
+<div id="modalDetalhesAtacante" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 shadow-2xl rounded-2xl max-w-3xl w-full p-6 relative max-h-[92vh] overflow-y-auto text-slate-100">
+        <!-- Botão Fechar -->
+        <button onclick="fecharModalAtacante()" class="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-colors shadow">
+            <i class="fas fa-times text-base"></i>
         </button>
 
-        <h3 class="text-2xl font-bold text-white mb-6 text-center flex items-center justify-center gap-3">
-            <img id="modalAtacanteClubeEscudo" src="" alt="Clube" class="w-8 h-8 rounded-full border border-dark-blue-600">
-            <img id="modalAtacanteFoto" src="" alt="Jogador" class="w-10 h-10 rounded-full border-2 border-red-400">
-            <span id="modalAtacanteNome">Detalhes do Atacante</span>
-        </h3>
-
-        <!-- Informações do Jogador -->
-        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
-            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <i class="fas fa-user-circle text-red-400"></i>
-                Informações do Jogador
-            </h4>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                    <p class="text-dark-blue-300 text-sm">Pontuação Total</p>
-                    <p id="modalAtacantePontuacao" class="text-white font-bold text-lg"></p>
+        <!-- Banner do Atleta (Header) -->
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800/90 to-rose-950/60 border border-slate-700/60 rounded-xl p-4 sm:p-5 mb-5 flex flex-wrap items-center justify-between gap-4 shadow-lg">
+            <div class="flex items-center gap-4">
+                <div class="relative">
+                    <img id="modalAtacanteFoto" src="" alt="Jogador" class="w-16 h-16 rounded-full border-2 border-rose-500 shadow-md object-cover bg-slate-800">
+                    <img id="modalAtacanteClubeEscudo" src="" alt="Clube" class="w-6 h-6 rounded-full absolute -bottom-1 -right-1 border border-slate-900 shadow">
                 </div>
                 <div>
-                    <p class="text-dark-blue-300 text-sm">Média</p>
-                    <p id="modalAtacanteMedia" class="text-white font-bold text-lg"></p>
-                </div>
-                <div>
-                    <p class="text-dark-blue-300 text-sm">Jogos</p>
-                    <p id="modalAtacanteJogos" class="text-white font-bold text-lg"></p>
-                </div>
-                <div>
-                    <p class="text-dark-blue-300 text-sm">Preço</p>
-                    <p id="modalAtacantePreco" class="text-green-400 font-bold text-lg"></p>
-                </div>
-                <div id="modalAtacanteEscalacoesContainer" class="hidden">
-                    <p class="text-dark-blue-300 text-sm">Escalações</p>
-                    <p id="modalAtacanteEscalacoes" class="text-blue-400 font-bold text-lg"></p>
+                    <div class="flex items-center gap-2">
+                        <h3 id="modalAtacanteNome" class="text-xl sm:text-2xl font-black text-white tracking-wide">Detalhes do Atacante</h3>
+                        <span class="bg-rose-500/20 text-rose-400 border border-rose-500/40 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Atacante</span>
+                    </div>
+                    <p id="modalAtacanteClube" class="text-slate-400 font-medium text-sm mt-0.5 flex items-center gap-1.5"></p>
                 </div>
             </div>
-            <div class="mt-3">
-                <p class="text-dark-blue-300 text-sm">Clube</p>
-                <p id="modalAtacanteClube" class="text-white font-semibold"></p>
+            <div class="bg-slate-800/80 border border-slate-700/60 px-4 py-2 rounded-xl text-right">
+                <p class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Preço Atual</p>
+                <p id="modalAtacantePreco" class="text-emerald-400 font-black text-xl"></p>
             </div>
         </div>
 
-        <!-- Confronto -->
-        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
-            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <i class="fas fa-futbol text-orange-400"></i>
-                Confronto
-            </h4>
-            <div class="flex items-center gap-2 mb-2">
-                <img id="modalAtacanteAdversarioEscudo" src="" alt="Adversário" class="w-8 h-8 rounded-full">
-                <p id="modalAtacanteAdversarioNome" class="text-white font-semibold"></p>
+        <!-- Cards de Métricas do Atacante -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+            <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3.5 text-center">
+                <p class="text-xs text-slate-400 font-medium mb-1">Média de Pontos</p>
+                <p id="modalAtacanteMedia" class="text-emerald-400 font-extrabold text-2xl"></p>
             </div>
-            <div>
-                <p class="text-dark-blue-300 text-sm">Peso do Jogo</p>
-                <p id="modalAtacantePesoJogo" class="font-bold text-lg"></p>
+            <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3.5 text-center">
+                <p class="text-xs text-slate-400 font-medium mb-1">Gols Marcados (G)</p>
+                <p id="modalAtacanteG" class="text-rose-400 font-extrabold text-2xl"></p>
             </div>
-        </div>
-
-        <!-- Scouts Principais (G, A) -->
-        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
-            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <i class="fas fa-star text-yellow-400"></i>
-                Scouts Principais
-            </h4>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-center">
-                    <p class="text-dark-blue-300 text-sm mb-1">Gol (G)</p>
-                    <p id="modalAtacanteG" class="text-red-400 font-bold text-xl"></p>
-                </div>
-                <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-center">
-                    <p class="text-dark-blue-300 text-sm mb-1">Assistência (A)</p>
-                    <p id="modalAtacanteA" class="text-blue-400 font-bold text-xl"></p>
-                </div>
+            <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3.5 text-center">
+                <p class="text-xs text-slate-400 font-medium mb-1">Assistências (A)</p>
+                <p id="modalAtacanteA" class="text-amber-400 font-extrabold text-2xl"></p>
+            </div>
+            <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3.5 text-center">
+                <p class="text-xs text-slate-400 font-medium mb-1">Finalizações (Média)</p>
+                <p id="modalAtacanteFinalizacoes" class="text-sky-400 font-extrabold text-2xl"></p>
             </div>
         </div>
 
         <!-- Scouts Detalhados -->
-        <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-dark-blue-700 mb-4">
-            <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                <i class="fas fa-chart-bar text-purple-400"></i>
-                Scouts Detalhados (Média por Jogo)
-            </h4>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-sm text-dark-blue-300">
-                <div><span class="font-medium text-white">FF:</span> <span id="modalAtacanteFF"></span></div>
-                <div><span class="font-medium text-white">FS:</span> <span id="modalAtacanteFS"></span></div>
-                <div><span class="font-medium text-white">FD:</span> <span id="modalAtacanteFD"></span></div>
-                <div><span class="font-medium text-white">G:</span> <span id="modalAtacanteGDetalhe"></span></div>
-                <div><span class="font-medium text-white">A:</span> <span id="modalAtacanteADetalhe"></span></div>
-                <div><span class="font-medium text-white">DS:</span> <span id="modalAtacanteDS"></span></div>
+        <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 mb-5">
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Volume de Scouts por Jogo</h4>
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-3 text-center">
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
+                    <p class="text-[10px] text-slate-400 font-medium">Finaliz. Fora (FF)</p>
+                    <p id="modalAtacanteFF" class="font-bold text-slate-200 text-sm mt-0.5"></p>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
+                    <p class="text-[10px] text-slate-400 font-medium">Faltas Sofridas (FS)</p>
+                    <p id="modalAtacanteFS" class="font-bold text-slate-200 text-sm mt-0.5"></p>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
+                    <p class="text-[10px] text-slate-400 font-medium">Finaliz. Defend. (FD)</p>
+                    <p id="modalAtacanteFD" class="font-bold text-slate-200 text-sm mt-0.5"></p>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
+                    <p class="text-[10px] text-slate-400 font-medium">Gols (G)</p>
+                    <p id="modalAtacanteGDetalhe" class="font-bold text-rose-400 text-sm mt-0.5"></p>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
+                    <p class="text-[10px] text-slate-400 font-medium">Assistências (A)</p>
+                    <p id="modalAtacanteADetalhe" class="font-bold text-amber-400 text-sm mt-0.5"></p>
+                </div>
+                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
+                    <p class="text-[10px] text-slate-400 font-medium">Desarmes (DS)</p>
+                    <p id="modalAtacanteDS" class="font-bold text-sky-400 text-sm mt-0.5"></p>
+                </div>
             </div>
         </div>
 
-        <!-- Argumentos -->
+        <!-- Confronto -->
+        <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 mb-5">
+            <h4 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <i class="fas fa-crosshairs text-rose-400"></i>
+                Análise do Confronto
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3 flex items-center gap-3">
+                    <img id="modalAtacanteAdversarioEscudo" src="" alt="Adversário" class="w-8 h-8 rounded-full">
+                    <div>
+                        <p class="text-[11px] text-slate-400 font-medium">Adversário</p>
+                        <p id="modalAtacanteAdversarioNome" class="text-white font-bold text-sm"></p>
+                    </div>
+                </div>
+                <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3">
+                    <p class="text-[11px] text-slate-400 font-medium">Peso do Jogo</p>
+                    <p id="modalAtacantePesoJogo" class="font-bold text-base mt-0.5"></p>
+                </div>
+            </div>
+            <div id="modalAtacanteEscalacoesContainer" class="mt-3 text-xs text-slate-400 hidden flex items-center gap-1.5">
+                <i class="fas fa-users text-sky-400"></i> Escalado em <span id="modalAtacanteEscalacoes" class="font-bold text-sky-300"></span> times no Cartola FC
+            </div>
+        </div>
+
+        <!-- Argumentos Pro / Contra -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-green-500/50">
-                <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                    <i class="fas fa-thumbs-up text-green-400"></i>
+            <div class="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-4">
+                <h4 class="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-2">
+                    <i class="fas fa-circle-check"></i>
                     Argumentos a Favor
                 </h4>
-                <ul id="modalAtacanteArgumentosFavor" class="list-none space-y-2 text-sm text-dark-blue-300">
-                    <!-- Argumentos serão preenchidos via JS -->
+                <ul id="modalAtacanteArgumentosFavor" class="space-y-2 text-xs text-slate-300">
                 </ul>
             </div>
-            <div class="bg-dark-blue-800/50 rounded-xl p-4 border border-red-500/50">
-                <h4 class="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                    <i class="fas fa-thumbs-down text-red-400"></i>
+            <div class="bg-rose-950/20 border border-rose-500/30 rounded-xl p-4">
+                <h4 class="text-sm font-bold text-rose-400 mb-3 flex items-center gap-2">
+                    <i class="fas fa-triangle-exclamation"></i>
                     Argumentos Contra
                 </h4>
-                <ul id="modalAtacanteArgumentosContra" class="list-none space-y-2 text-sm text-dark-blue-300">
-                    <!-- Argumentos serão preenchidos via JS -->
+                <ul id="modalAtacanteArgumentosContra" class="space-y-2 text-xs text-slate-300">
                 </ul>
             </div>
         </div>
@@ -152,47 +156,52 @@ async function openAtacanteModal(atletaId) {
         modal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
         
-        hideLoader();
     } catch (error) {
-        console.error('Erro ao abrir modal:', error);
-        hideLoader();
+        console.error('Erro ao carregar detalhes do atacante:', error);
         showToast(`Erro ao carregar detalhes: ${error.message}`, 'error');
+    } finally {
+        hideLoader();
     }
 }
 
 function preencherModalAtacante(dados) {
     document.getElementById('modalAtacanteNome').textContent = dados.apelido || dados.nome || 'N/A';
     document.getElementById('modalAtacanteClube').textContent = dados.clube_nome || 'N/A';
-    document.getElementById('modalAtacantePontuacao').textContent = formatNumber(dados.pontuacao_total || 0);
     document.getElementById('modalAtacanteMedia').textContent = formatNumber(dados.media || 0);
-    document.getElementById('modalAtacanteJogos').textContent = dados.jogos || 0;
     document.getElementById('modalAtacantePreco').textContent = `R$ ${formatNumber(dados.preco || 0)}`;
     
+    // Foto do jogador
     const fotoEl = document.getElementById('modalAtacanteFoto');
-    if (typeof getPlayerImage !== 'undefined') {
-        fotoEl.src = getPlayerImage(dados.atleta_id) || '';
-    } else {
-        fotoEl.src = dados.foto_url || '';
-    }
+    const fotoReal = dados.foto_url || (typeof getPlayerImage !== 'undefined' ? getPlayerImage(dados.atleta_id) : '');
+    fotoEl.src = fotoReal || 'https://via.placeholder.com/80';
+    fotoEl.onerror = function() {
+        this.src = 'https://via.placeholder.com/80';
+    };
+
     document.getElementById('modalAtacanteClubeEscudo').src = dados.clube_escudo_url || 'https://via.placeholder.com/45';
 
     document.getElementById('modalAtacanteAdversarioNome').textContent = dados.adversario_nome || 'N/A';
     document.getElementById('modalAtacanteAdversarioEscudo').src = dados.adversario_escudo_url || 'https://via.placeholder.com/20';
+    
     const pesoJogoEl = document.getElementById('modalAtacantePesoJogo');
     pesoJogoEl.textContent = formatNumber(dados.peso_jogo);
     if (dados.peso_jogo > 0) {
-        pesoJogoEl.className = 'font-bold text-green-400 text-lg';
+        pesoJogoEl.className = 'font-bold text-emerald-400 text-base';
     } else if (dados.peso_jogo < 0) {
-        pesoJogoEl.className = 'font-bold text-red-400 text-lg';
+        pesoJogoEl.className = 'font-bold text-rose-400 text-base';
     } else {
-        pesoJogoEl.className = 'font-bold text-gray-400 text-lg';
+        pesoJogoEl.className = 'font-bold text-slate-400 text-base';
     }
 
-    // Scouts principais
     document.getElementById('modalAtacanteG').textContent = formatNumber(dados.media_g);
     document.getElementById('modalAtacanteA').textContent = formatNumber(dados.media_a);
+    
+    const totalFinalizacoes = (dados.media_ff || 0) + (dados.media_fs || 0) + (dados.media_fd || 0);
+    const elemFinalizacoes = document.getElementById('modalAtacanteFinalizacoes');
+    if (elemFinalizacoes) {
+        elemFinalizacoes.textContent = formatNumber(totalFinalizacoes);
+    }
 
-    // Scouts detalhados
     document.getElementById('modalAtacanteFF').textContent = formatNumber(dados.media_ff);
     document.getElementById('modalAtacanteFS').textContent = formatNumber(dados.media_fs);
     document.getElementById('modalAtacanteFD').textContent = formatNumber(dados.media_fd);
@@ -200,7 +209,6 @@ function preencherModalAtacante(dados) {
     document.getElementById('modalAtacanteADetalhe').textContent = formatNumber(dados.media_a);
     document.getElementById('modalAtacanteDS').textContent = formatNumber(dados.media_ds);
 
-    // Escalações
     const escalacoesContainer = document.getElementById('modalAtacanteEscalacoesContainer');
     const escalacoes = dados.escalacoes || 0;
     if (escalacoes > 0) {
@@ -223,45 +231,32 @@ function gerarArgumentosAtacante(dados) {
     const argumentosFavor = [];
     const argumentosContra = [];
 
-    if (dados.gols_ultimas_rodadas !== undefined) {
-        const rodadas = dados.rodadas_analisadas || 5;
-        if (dados.gols_ultimas_rodadas === 0 && rodadas >= 3) {
-            argumentosContra.push({
-                texto: `Sem gols nas últimas ${rodadas} rodadas`,
-                icone: 'fa-times-circle'
-            });
-        } else if (dados.gols_ultimas_rodadas > 0 && dados.gols_ultimas_rodadas < 2 && rodadas >= 5) {
-            argumentosContra.push({
-                texto: `Apenas ${dados.gols_ultimas_rodadas} gol(s) nas últimas ${rodadas} rodadas`,
-                icone: 'fa-exclamation-triangle'
-            });
-        }
-    }
-
-    // Alto número de faltas cometidas
-    if (dados.faltas_cometidas_ultimas !== undefined) {
-        const rodadas = dados.rodadas_analisadas || 5;
-        const mediaFaltas = rodadas > 0 ? dados.faltas_cometidas_ultimas / rodadas : 0;
-        if (mediaFaltas >= 2.0) {
-            argumentosContra.push({
-                texto: `Alto número de faltas cometidas: ${dados.faltas_cometidas_ultimas} nas últimas ${rodadas} rodadas (${mediaFaltas.toFixed(2)} por jogo)`,
-                icone: 'fa-exclamation-triangle'
-            });
-        }
-    }
-
-    // Alto número de cartões
-    const totalCartoes = (dados.cartoes_amarelos_ultimas || 0) + (dados.cartoes_vermelhos_ultimas || 0);
-    if (totalCartoes >= 2) {
-        const rodadas = dados.rodadas_analisadas || 5;
-        argumentosContra.push({
-            texto: `Alto número de cartões: ${totalCartoes} nas últimas ${rodadas} rodadas (${dados.cartoes_amarelos_ultimas || 0} amarelos, ${dados.cartoes_vermelhos_ultimas || 0} vermelhos)`,
-            icone: 'fa-id-card'
+    if (dados.argumentos_favor && Array.isArray(dados.argumentos_favor) && dados.argumentos_favor.length > 0) {
+        dados.argumentos_favor.forEach(txt => {
+            argumentosFavor.push({ texto: txt, icone: 'fa-check-circle' });
         });
     }
 
-    renderizarArgumentos('modalAtacanteArgumentosFavor', argumentosFavor, 'green');
-    renderizarArgumentos('modalAtacanteArgumentosContra', argumentosContra, 'red');
+    if (dados.argumentos_contra && Array.isArray(dados.argumentos_contra) && dados.argumentos_contra.length > 0) {
+        dados.argumentos_contra.forEach(txt => {
+            argumentosContra.push({ texto: txt, icone: 'fa-exclamation-triangle' });
+        });
+    }
+
+    if (argumentosFavor.length === 0) {
+        if (dados.media >= 6.0) {
+            argumentosFavor.push({ texto: `Boa média de pontos: ${formatNumber(dados.media)} por jogo`, icone: 'fa-star' });
+        }
+    }
+
+    if (argumentosContra.length === 0) {
+        if (dados.media < 4.0 && dados.jogos > 3) {
+            argumentosContra.push({ texto: `Média baixa de pontos: ${formatNumber(dados.media)} por jogo`, icone: 'fa-exclamation-triangle' });
+        }
+    }
+
+    renderizarArgumentos('modalAtacanteArgumentosFavor', argumentosFavor, 'emerald');
+    renderizarArgumentos('modalAtacanteArgumentosContra', argumentosContra, 'rose');
 }
 
 function renderizarArgumentos(containerId, argumentos, cor) {
@@ -271,14 +266,14 @@ function renderizarArgumentos(containerId, argumentos, cor) {
     container.innerHTML = '';
 
     if (argumentos.length === 0) {
-        container.innerHTML = `<li class="text-dark-blue-400">Nenhum argumento ${cor === 'green' ? 'a favor' : 'contra'} encontrado.</li>`;
+        container.innerHTML = `<li class="text-slate-500 italic">Nenhum ponto registrado.</li>`;
         return;
     }
 
     argumentos.forEach(arg => {
         const li = document.createElement('li');
-        li.className = `flex items-start gap-2 text-${cor}-300`;
-        li.innerHTML = `<i class="fas ${arg.icone} flex-shrink-0 mt-1"></i> <span>${arg.texto}</span>`;
+        li.className = `flex items-start gap-2 text-${cor}-300/90`;
+        li.innerHTML = `<i class="fas ${arg.icone} flex-shrink-0 mt-0.5 text-${cor}-400"></i> <span>${arg.texto}</span>`;
         container.appendChild(li);
     });
 }

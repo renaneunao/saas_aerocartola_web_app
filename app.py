@@ -2448,7 +2448,7 @@ def api_goleiro_detalhes(atleta_id):
         if media_de >= 2.5:
             argumentos_favor.append(f"Média alta de defesas por jogo ({media_de:.1f} DE/jogo).")
         if peso_sg > 0:
-            argumentos_favor.append(f"Boa probabilidade de Saldo de Gol (SG) para o clube (+{peso_sg:.1f} pts).")
+            argumentos_favor.append(f"Boa probabilidade de Saldo de Gol (SG +5.0 no Cartola | Índice SG: {peso_sg:.2f}).")
         if adv_chutes_gol_media >= 6.0:
             argumentos_favor.append(f"Adversário cede alto volume de finalizações ({adv_chutes_gol_media:.1f} chutes/jogo).")
         if not argumentos_favor:
