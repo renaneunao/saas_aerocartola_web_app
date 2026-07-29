@@ -1606,7 +1606,36 @@ def api_salvar_ranking(modulo):
         print(f"Erro ao salvar ranking: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+def get_atleta_medias_mando(cursor, atleta_id, rodada_atual, temporada_atual):
+    """Calcula estatísticas de média básica (sem G/A/SG), casa e fora de um atleta."""
+    stats = {
+        'media_basica': 0.0,
+        'media_casa': 0.0,
+        'media_fora': 0.0,
+        'media_basica_casa': 0.0,
+        'media_basica_fora': 0.0
+    }
+    try:
+        cursor.execute('''
+            SELECT 
+                AVG(pontuacao - (COALESCE(scout_g, 0)*8.0 + COALESCE(scout_a, 0)*5.0 + COALESCE(scout_sg, 0)*5.0)) as media_basica,
+                AVG(CASE WHEN jogou_em_casa = TRUE THEN pontuacao END) as media_casa,
+                AVG(CASE WHEN jogou_em_casa = FALSE THEN pontuacao END) as media_fora,
+                AVG(CASE WHEN jogou_em_casa = TRUE THEN (pontuacao - (COALESCE(scout_g, 0)*8.0 + COALESCE(scout_a, 0)*5.0 + COALESCE(scout_sg, 0)*5.0)) END) as media_basica_casa,
+                AVG(CASE WHEN jogou_em_casa = FALSE THEN (pontuacao - (COALESCE(scout_g, 0)*8.0 + COALESCE(scout_a, 0)*5.0 + COALESCE(scout_sg, 0)*5.0)) END) as media_basica_fora
+            FROM acf_pontuados
+            WHERE atleta_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
+        ''', (atleta_id, rodada_atual, temporada_atual))
+        row = cursor.fetchone()
+        if row:
+            stats['media_basica'] = float(row[0]) if row[0] is not None else 0.0
+            stats['media_casa'] = float(row[1]) if row[1] is not None else 0.0
+            stats['media_fora'] = float(row[2]) if row[2] is not None else 0.0
+            stats['media_basica_casa'] = float(row[3]) if row[3] is not None else 0.0
+            stats['media_basica_fora'] = float(row[4]) if row[4] is not None else 0.0
+    except Exception as e:
+        print(f"Erro ao buscar médias básicas e mando: {e}")
+    return stats
 
 @app.route('/api/modulos/atacante/detalhes/<int:atleta_id>')
 @login_required
@@ -1867,12 +1896,16 @@ def api_atacante_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
         
+        # Buscar médias básicas e de mando
+        medias_mando = get_atleta_medias_mando(cursor, atleta_id, rodada_atual, temporada_atual)
+
         # Argumentos Reais (Especialistas de Futebol)
         argumentos_favor = []
         argumentos_contra = []
 
         total_finalizacoes = media_ff + media_fd
         gols_sofridos_mando = (adversario_gols_sofridos_casa / max(1, adversario_jogos_casa)) if not joga_em_casa else (adversario_gols_sofridos_fora / max(1, adversario_jogos_fora))
+        local_adv_txt = "atuando fora de casa (como visitante)" if joga_em_casa else "em seus domínios (como mandante)"
 
         if media_g >= 0.25:
             argumentos_favor.append(f"Excelente média de gols na temporada atual: {media_g:.2f} gols por partida.")
@@ -1881,7 +1914,7 @@ def api_atacante_detalhes(atleta_id):
         if gols_ultimas_rodadas >= 2:
             argumentos_favor.append(f"Fase iluminada: {gols_ultimas_rodadas} gols marcados nas últimas {rodadas_analisadas} rodadas.")
         if gols_sofridos_mando >= 1.2:
-            argumentos_favor.append(f"Enfrenta defesa do {adversario_nome} que cede em média {gols_sofridos_mando:.1f} gols no mando do jogo.")
+            argumentos_favor.append(f"Enfrenta a defesa do {adversario_nome} {local_adv_txt}, onde a equipe cede em média {gols_sofridos_mando:.1f} gols por partida.")
         if not argumentos_favor:
             argumentos_favor.append("Atacante titular e principal referência ofensiva da equipe.")
 
@@ -1905,6 +1938,11 @@ def api_atacante_detalhes(atleta_id):
             'foto_url': foto_url or '',
             'pontos_num': float(pontos_num) if pontos_num is not None else 0,
             'media': float(media_num) if media_num is not None else 0,
+            'media_basica': medias_mando['media_basica'],
+            'media_casa': medias_mando['media_casa'],
+            'media_fora': medias_mando['media_fora'],
+            'media_basica_casa': medias_mando['media_basica_casa'],
+            'media_basica_fora': medias_mando['media_basica_fora'],
             'preco': float(preco_num) if preco_num is not None else 0,
             'jogos': int(jogos_num) if jogos_num is not None else 0,
             'adversario_id': adversario_id,
@@ -2191,6 +2229,9 @@ def api_lateral_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
 
+        # Buscar médias básicas e de mando
+        medias_mando = get_atleta_medias_mando(cursor, atleta_id, rodada_atual, temporada_atual)
+
         # Argumentos Reais (Especialistas de Futebol)
         argumentos_favor = []
         argumentos_contra = []
@@ -2224,6 +2265,11 @@ def api_lateral_detalhes(atleta_id):
             'foto_url': foto_url or '',
             'pontos_num': float(pontos_num) if pontos_num is not None else 0,
             'media': float(media_num) if media_num is not None else 0,
+            'media_basica': medias_mando['media_basica'],
+            'media_casa': medias_mando['media_casa'],
+            'media_fora': medias_mando['media_fora'],
+            'media_basica_casa': medias_mando['media_basica_casa'],
+            'media_basica_fora': medias_mando['media_basica_fora'],
             'preco': float(preco_num) if preco_num is not None else 0,
             'jogos': int(jogos_num) if jogos_num is not None else 0,
             'adversario_id': adversario_id,
@@ -2440,6 +2486,9 @@ def api_goleiro_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
 
+        # Buscar médias básicas e de mando
+        medias_mando = get_atleta_medias_mando(cursor, atleta_id, rodada_atual, temporada_atual)
+
         # Gerar Argumentos Contextuais Reais (Especialistas de Futebol)
         argumentos_favor = []
         argumentos_contra = []
@@ -2473,6 +2522,11 @@ def api_goleiro_detalhes(atleta_id):
             'foto_url': foto_url or '',
             'pontos_num': float(pontos_num) if pontos_num is not None else 0,
             'media': float(media_num) if media_num is not None else 0,
+            'media_basica': medias_mando['media_basica'],
+            'media_casa': medias_mando['media_casa'],
+            'media_fora': medias_mando['media_fora'],
+            'media_basica_casa': medias_mando['media_basica_casa'],
+            'media_basica_fora': medias_mando['media_basica_fora'],
             'preco': float(preco_num) if preco_num is not None else 0,
             'jogos': int(jogos_num) if jogos_num is not None else 0,
             'adversario_id': adversario_id,
@@ -2660,6 +2714,9 @@ def api_zagueiro_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
 
+        # Buscar médias básicas e de mando
+        medias_mando = get_atleta_medias_mando(cursor, atleta_id, rodada_atual, temporada_atual)
+
         # Argumentos Reais (Especialistas de Futebol)
         argumentos_favor = []
         argumentos_contra = []
@@ -2693,6 +2750,11 @@ def api_zagueiro_detalhes(atleta_id):
             'foto_url': foto_url or '',
             'pontos_num': float(pontos_num) if pontos_num is not None else 0,
             'media': float(media_num) if media_num is not None else 0,
+            'media_basica': medias_mando['media_basica'],
+            'media_casa': medias_mando['media_casa'],
+            'media_fora': medias_mando['media_fora'],
+            'media_basica_casa': medias_mando['media_basica_casa'],
+            'media_basica_fora': medias_mando['media_basica_fora'],
             'preco': float(preco_num) if preco_num is not None else 0,
             'jogos': int(jogos_num) if jogos_num is not None else 0,
             'adversario_id': adversario_id,
@@ -2894,6 +2956,9 @@ def api_meia_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
 
+        # Buscar médias básicas e de mando
+        medias_mando = get_atleta_medias_mando(cursor, atleta_id, rodada_atual, temporada_atual)
+
         # Argumentos Reais (Especialistas de Futebol)
         argumentos_favor = []
         argumentos_contra = []
@@ -2932,6 +2997,11 @@ def api_meia_detalhes(atleta_id):
             'foto_url': foto_url or '',
             'pontos_num': float(pontos_num) if pontos_num is not None else 0,
             'media': float(media_num) if media_num is not None else 0,
+            'media_basica': medias_mando['media_basica'],
+            'media_casa': medias_mando['media_casa'],
+            'media_fora': medias_mando['media_fora'],
+            'media_basica_casa': medias_mando['media_basica_casa'],
+            'media_basica_fora': medias_mando['media_basica_fora'],
             'preco': float(preco_num) if preco_num is not None else 0,
             'jogos': int(jogos_num) if jogos_num is not None else 0,
             'adversario_id': adversario_id,

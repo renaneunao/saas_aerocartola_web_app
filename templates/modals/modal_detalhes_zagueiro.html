@@ -29,7 +29,7 @@
         <!-- Cards de Métricas do Zagueiro -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
             <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3.5 text-center">
-                <p class="text-xs text-slate-400 font-medium mb-1">Média de Pontos</p>
+                <p class="text-xs text-slate-400 font-medium mb-1">Média Geral</p>
                 <p id="modalZagueiroMedia" class="text-emerald-400 font-extrabold text-2xl"></p>
             </div>
             <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3.5 text-center">
@@ -43,6 +43,36 @@
             <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3.5 text-center">
                 <p class="text-xs text-slate-400 font-medium mb-1">Gols Marcados (G)</p>
                 <p id="modalZagueiroG" class="text-purple-400 font-extrabold text-2xl"></p>
+            </div>
+        </div>
+
+        <!-- Análise de Médias & Mando de Campo -->
+        <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 mb-5">
+            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <i class="fas fa-chart-line text-indigo-400"></i>
+                Análise de Médias & Mando de Campo (Média Básica exclui G, A e SG)
+            </h4>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-slate-900/60 border border-amber-500/30 rounded-lg p-3 text-center">
+                    <p class="text-[11px] text-amber-400 font-bold uppercase tracking-wider">Média Básica Geral</p>
+                    <p id="modalZagueiroMediaBasica" class="text-amber-400 font-black text-xl mt-0.5"></p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Sem Gols / Assist / SG</p>
+                </div>
+                <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3 text-center">
+                    <p class="text-[11px] text-slate-400 font-medium">Média em Casa</p>
+                    <p id="modalZagueiroMediaCasa" class="text-emerald-400 font-extrabold text-lg mt-0.5"></p>
+                    <p id="modalZagueiroMediaBasicaCasa" class="text-[10px] text-slate-400 mt-0.5"></p>
+                </div>
+                <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3 text-center">
+                    <p class="text-[11px] text-slate-400 font-medium">Média Fora de Casa</p>
+                    <p id="modalZagueiroMediaFora" class="text-sky-400 font-extrabold text-lg mt-0.5"></p>
+                    <p id="modalZagueiroMediaBasicaFora" class="text-[10px] text-slate-400 mt-0.5"></p>
+                </div>
+                <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3 text-center">
+                    <p class="text-[11px] text-slate-400 font-medium">Média Geral Total</p>
+                    <p id="modalZagueiroMediaGeralTotal" class="text-white font-extrabold text-lg mt-0.5"></p>
+                    <p class="text-[10px] text-slate-500 mt-0.5">Todas as rodadas</p>
+                </div>
             </div>
         </div>
 
@@ -141,8 +171,16 @@ function preencherModalZagueiro(dados) {
     document.getElementById('modalZagueiroNome').textContent = dados.apelido || dados.nome || 'N/A';
     document.getElementById('modalZagueiroClube').textContent = dados.clube_nome || 'N/A';
     document.getElementById('modalZagueiroMedia').textContent = formatNumber(dados.media || 0);
+    document.getElementById('modalZagueiroMediaGeralTotal').textContent = formatNumber(dados.media || 0);
     document.getElementById('modalZagueiroPreco').textContent = `R$ ${formatNumber(dados.preco || 0)}`;
     document.getElementById('modalZagueiroSG').textContent = `${formatNumber(dados.peso_sg || 0)} (probabilidade)`;
+
+    // Novas métricas de Média Básica & Mando
+    document.getElementById('modalZagueiroMediaBasica').textContent = formatNumber(dados.media_basica || 0);
+    document.getElementById('modalZagueiroMediaCasa').textContent = formatNumber(dados.media_casa || 0);
+    document.getElementById('modalZagueiroMediaBasicaCasa').textContent = `Básica: ${formatNumber(dados.media_basica_casa || 0)}`;
+    document.getElementById('modalZagueiroMediaFora').textContent = formatNumber(dados.media_fora || 0);
+    document.getElementById('modalZagueiroMediaBasicaFora').textContent = `Básica: ${formatNumber(dados.media_basica_fora || 0)}`;
     
     // Foto do jogador
     const fotoEl = document.getElementById('modalZagueiroFoto');

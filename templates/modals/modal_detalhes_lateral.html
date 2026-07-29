@@ -6,7 +6,7 @@
         </button>
 
         <!-- Banner do Atleta (Header) -->
-        <div class="bg-gradient-to-r from-slate-900 via-slate-800/90 to-blue-950/60 border border-slate-700/60 rounded-xl p-4 sm:p-5 mb-5 flex flex-wrap items-center justify-between gap-4 shadow-lg">
+        <div class="bg-gradient-to-r from-slate-900 via-slate-800/90 to-sky-950/60 border border-slate-700/60 rounded-xl p-4 sm:p-5 mb-5 flex flex-wrap items-center justify-between gap-4 shadow-lg">
             <div class="flex items-center gap-4">
                 <div class="relative">
                     <img id="modalLateralFoto" src="" alt="Jogador" class="w-16 h-16 rounded-full border-2 border-sky-400 shadow-md object-cover bg-slate-800">
@@ -29,7 +29,7 @@
         <!-- Cards de Métricas do Lateral -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
             <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3.5 text-center">
-                <p class="text-xs text-slate-400 font-medium mb-1">Média de Pontos</p>
+                <p class="text-xs text-slate-400 font-medium mb-1">Média Geral</p>
                 <p id="modalLateralMedia" class="text-emerald-400 font-extrabold text-2xl"></p>
             </div>
             <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-3.5 text-center">
@@ -46,33 +46,32 @@
             </div>
         </div>
 
-        <!-- Scouts Detalhados -->
+        <!-- Análise de Médias & Mando de Campo -->
         <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 mb-5">
-            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Volume de Scouts por Jogo</h4>
-            <div class="grid grid-cols-3 sm:grid-cols-6 gap-3 text-center">
-                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
-                    <p class="text-[10px] text-slate-400 font-medium">Finaliz. Fora (FF)</p>
-                    <p id="modalLateralFF" class="font-bold text-slate-200 text-sm mt-0.5"></p>
+            <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <i class="fas fa-chart-line text-sky-400"></i>
+                Análise de Médias & Mando de Campo (Média Básica exclui G, A e SG)
+            </h4>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-slate-900/60 border border-amber-500/30 rounded-lg p-3 text-center">
+                    <p class="text-[11px] text-amber-400 font-bold uppercase tracking-wider">Média Básica Geral</p>
+                    <p id="modalLateralMediaBasica" class="text-amber-400 font-black text-xl mt-0.5"></p>
+                    <p class="text-[10px] text-slate-400 mt-0.5">Sem Gols / Assist / SG</p>
                 </div>
-                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
-                    <p class="text-[10px] text-slate-400 font-medium">Faltas Sofridas (FS)</p>
-                    <p id="modalLateralFS" class="font-bold text-slate-200 text-sm mt-0.5"></p>
+                <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3 text-center">
+                    <p class="text-[11px] text-slate-400 font-medium">Média em Casa</p>
+                    <p id="modalLateralMediaCasa" class="text-emerald-400 font-extrabold text-lg mt-0.5"></p>
+                    <p id="modalLateralMediaBasicaCasa" class="text-[10px] text-slate-400 mt-0.5"></p>
                 </div>
-                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
-                    <p class="text-[10px] text-slate-400 font-medium">Finaliz. Defend. (FD)</p>
-                    <p id="modalLateralFD" class="font-bold text-slate-200 text-sm mt-0.5"></p>
+                <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3 text-center">
+                    <p class="text-[11px] text-slate-400 font-medium">Média Fora de Casa</p>
+                    <p id="modalLateralMediaFora" class="text-sky-400 font-extrabold text-lg mt-0.5"></p>
+                    <p id="modalLateralMediaBasicaFora" class="text-[10px] text-slate-400 mt-0.5"></p>
                 </div>
-                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
-                    <p class="text-[10px] text-slate-400 font-medium">Gols (G)</p>
-                    <p id="modalLateralGDetalhe" class="font-bold text-purple-400 text-sm mt-0.5"></p>
-                </div>
-                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
-                    <p class="text-[10px] text-slate-400 font-medium">Assistências (A)</p>
-                    <p id="modalLateralADetalhe" class="font-bold text-amber-400 text-sm mt-0.5"></p>
-                </div>
-                <div class="bg-slate-900/60 p-2.5 rounded-lg border border-slate-700/40">
-                    <p class="text-[10px] text-slate-400 font-medium">Desarmes (DS)</p>
-                    <p id="modalLateralDSDetalhe" class="font-bold text-sky-400 text-sm mt-0.5"></p>
+                <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3 text-center">
+                    <p class="text-[11px] text-slate-400 font-medium">Média Geral Total</p>
+                    <p id="modalLateralMediaGeralTotal" class="text-white font-extrabold text-lg mt-0.5"></p>
+                    <p class="text-[10px] text-slate-500 mt-0.5">Todas as rodadas</p>
                 </div>
             </div>
         </div>
@@ -172,9 +171,17 @@ function preencherModalLateral(dados) {
     document.getElementById('modalLateralNome').textContent = dados.apelido || dados.nome || 'N/A';
     document.getElementById('modalLateralClube').textContent = dados.clube_nome || 'N/A';
     document.getElementById('modalLateralMedia').textContent = formatNumber(dados.media || 0);
+    document.getElementById('modalLateralMediaGeralTotal').textContent = formatNumber(dados.media || 0);
     document.getElementById('modalLateralPreco').textContent = `R$ ${formatNumber(dados.preco || 0)}`;
     document.getElementById('modalLateralSG').textContent = `${formatNumber(dados.peso_sg || 0)} (probabilidade)`;
     
+    // Novas métricas de Média Básica & Mando
+    document.getElementById('modalLateralMediaBasica').textContent = formatNumber(dados.media_basica || 0);
+    document.getElementById('modalLateralMediaCasa').textContent = formatNumber(dados.media_casa || 0);
+    document.getElementById('modalLateralMediaBasicaCasa').textContent = `Básica: ${formatNumber(dados.media_basica_casa || 0)}`;
+    document.getElementById('modalLateralMediaFora').textContent = formatNumber(dados.media_fora || 0);
+    document.getElementById('modalLateralMediaBasicaFora').textContent = `Básica: ${formatNumber(dados.media_basica_fora || 0)}`;
+
     // Foto do jogador
     const fotoEl = document.getElementById('modalLateralFoto');
     const fotoReal = dados.foto_url || (typeof getPlayerImage !== 'undefined' ? getPlayerImage(dados.atleta_id) : '');
@@ -201,13 +208,6 @@ function preencherModalLateral(dados) {
     document.getElementById('modalLateralDS').textContent = formatNumber(dados.media_ds);
     document.getElementById('modalLateralA').textContent = formatNumber(dados.media_a);
     document.getElementById('modalLateralG').textContent = formatNumber(dados.media_g);
-
-    document.getElementById('modalLateralFF').textContent = formatNumber(dados.media_ff);
-    document.getElementById('modalLateralFS').textContent = formatNumber(dados.media_fs);
-    document.getElementById('modalLateralFD').textContent = formatNumber(dados.media_fd);
-    document.getElementById('modalLateralGDetalhe').textContent = formatNumber(dados.media_g);
-    document.getElementById('modalLateralADetalhe').textContent = formatNumber(dados.media_a);
-    document.getElementById('modalLateralDSDetalhe').textContent = formatNumber(dados.media_ds);
 
     const escalacoesContainer = document.getElementById('modalLateralEscalacoesContainer');
     const escalacoes = dados.escalacoes || 0;
