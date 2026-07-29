@@ -1867,7 +1867,7 @@ def api_atacante_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
         
-        # Argumentos Reais
+        # Argumentos Reais (Especialistas de Futebol)
         argumentos_favor = []
         argumentos_contra = []
 
@@ -1875,24 +1875,24 @@ def api_atacante_detalhes(atleta_id):
         gols_sofridos_mando = (adversario_gols_sofridos_casa / max(1, adversario_jogos_casa)) if not joga_em_casa else (adversario_gols_sofridos_fora / max(1, adversario_jogos_fora))
 
         if media_g >= 0.25:
-            argumentos_favor.append(f"Artilheiro prolífico (Média de {media_g:.2f} gols/jogo).")
+            argumentos_favor.append(f"Excelente média de gols na temporada atual: {media_g:.2f} gols por partida.")
         if total_finalizacoes >= 2.0:
-            argumentos_favor.append(f"Alto volume de finalizações ({total_finalizacoes:.1f} chutes/jogo).")
+            argumentos_favor.append(f"Alto volume de finalizações a gol: média de {total_finalizacoes:.1f} chutes por partida.")
         if gols_ultimas_rodadas >= 2:
-            argumentos_favor.append(f"Fase iluminada: {gols_ultimas_rodadas} gols anotados nas últimas rodadas.")
+            argumentos_favor.append(f"Fase iluminada: {gols_ultimas_rodadas} gols marcados nas últimas {rodadas_analisadas} rodadas.")
         if gols_sofridos_mando >= 1.2:
-            argumentos_favor.append(f"Defesa adversária cede em média {gols_sofridos_mando:.1f} gols no mando do jogo.")
+            argumentos_favor.append(f"Enfrenta defesa do {adversario_nome} que cede em média {gols_sofridos_mando:.1f} gols no mando do jogo.")
         if not argumentos_favor:
-            argumentos_favor.append("Atacante referência do setor ofensivo.")
+            argumentos_favor.append("Atacante titular e principal referência ofensiva da equipe.")
 
         if peso_jogo < 0:
-            argumentos_contra.append("Confronto truncado fora de casa.")
+            argumentos_contra.append(f"Duelo exigente fora de casa diante do {adversario_nome}.")
         if total_finalizacoes < 1.0:
-            argumentos_contra.append(f"Baixo volume de chutes a gol ({total_finalizacoes:.1f} chutes/jogo).")
+            argumentos_contra.append(f"Baixo volume de chutes a gol ({total_finalizacoes:.1f} finalizações por partida).")
         if media_g < 0.10:
-            argumentos_contra.append("Média baixa de gols anotados na temporada atual.")
+            argumentos_contra.append("Média reduzida de gols anotados na temporada atual.")
         if not argumentos_contra:
-            argumentos_contra.append("Sujeito a marcar apenas em caso de gol/assistência direta.")
+            argumentos_contra.append("Depende de participar diretamente de gols (G ou A) para alcançar alta pontuação no Cartola FC.")
         
         return jsonify({
             'atleta_id': atleta_id_val,
@@ -2191,27 +2191,27 @@ def api_lateral_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
 
-        # Argumentos Reais
+        # Argumentos Reais (Especialistas de Futebol)
         argumentos_favor = []
         argumentos_contra = []
 
         if media_ds >= 1.8:
-            argumentos_favor.append(f"Ótima média de desarmes por jogo ({media_ds:.1f} DS/jogo).")
+            argumentos_favor.append(f"Elevado índice de desarmes por partida ({media_ds:.1f} DS/jogo).")
         if peso_sg > 0:
-            argumentos_favor.append(f"Alta probabilidade de bonificação de Saldo de Gol (SG +5.0).")
+            argumentos_favor.append(f"Boa probabilidade de bonificação de Saldo de Gol (+5.0 pts no Cartola | Índice SG: {peso_sg:.2f}).")
         if media_a + media_g >= 0.15:
-            argumentos_favor.append(f"Participativo no ataque (Média de participações em gol: {(media_a+media_g):.2f}/jogo).")
+            argumentos_favor.append(f"Lateral ofensivo com presença constante no ataque (Média de participações em gol: {(media_a+media_g):.2f}/jogo).")
         if not argumentos_favor:
-            argumentos_favor.append("Lateral titular e presente na maioria das rodadas.")
+            argumentos_favor.append("Lateral titular com consistência defensiva e apoio ao ataque.")
 
         if peso_sg <= 0:
-            argumentos_contra.append("Risco moderado/alto de perder a bonificação de SG.")
+            argumentos_contra.append(f"Risco elevado de perda da bonificação de Saldo de Gol (+5.0 pts | Índice SG: {peso_sg:.2f}).")
         if media_ds < 1.0:
-            argumentos_contra.append(f"Média baixa de desarmes para um lateral ({media_ds:.1f} DS/jogo).")
+            argumentos_contra.append(f"Média discreta de desarmes para a posição ({media_ds:.1f} DS/jogo).")
         if peso_jogo < 0:
-            argumentos_contra.append("Confronto fora de casa contra adversário qualificado.")
+            argumentos_contra.append(f"Confronto exigente fora de casa diante do {adversario_nome}.")
         if not argumentos_contra:
-            argumentos_contra.append("Necessita de boa atuação coletiva do setor defensivo.")
+            argumentos_contra.append("Necessita de boa atuação coletiva do setor defensivo para pontuar alto no Cartola.")
 
         return jsonify({
             'atleta_id': atleta_id_val,
@@ -2440,27 +2440,27 @@ def api_goleiro_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
 
-        # Gerar Argumentos Contextuais Reais
+        # Gerar Argumentos Contextuais Reais (Especialistas de Futebol)
         argumentos_favor = []
         argumentos_contra = []
 
         if media_de >= 2.5:
-            argumentos_favor.append(f"Média alta de defesas por jogo ({media_de:.1f} DE/jogo).")
+            argumentos_favor.append(f"Alta média de defesas acumuladas por partida ({media_de:.1f} DE/jogo).")
         if peso_sg > 0:
-            argumentos_favor.append(f"Boa probabilidade de Saldo de Gol (SG +5.0 no Cartola | Índice SG: {peso_sg:.2f}).")
+            argumentos_favor.append(f"Boa probabilidade de garantir a bonificação de Saldo de Gol (+5.0 pts no Cartola | Índice SG: {peso_sg:.2f}).")
         if adv_chutes_gol_media >= 6.0:
-            argumentos_favor.append(f"Adversário cede alto volume de finalizações ({adv_chutes_gol_media:.1f} chutes/jogo).")
+            argumentos_favor.append(f"Adversário {adversario_nome} finaliza com frequência a gol ({adv_chutes_gol_media:.1f} chutes no alvo/jogo), gerando alto potencial de DE.")
         if not argumentos_favor:
-            argumentos_favor.append("Goleiro titular e com presença em campo garantida.")
+            argumentos_favor.append("Goleiro titular absoluto e seguro sob as traves.")
 
         if media_gols_sofridos >= 1.4:
-            argumentos_contra.append(f"Defesa do clube costuma sofrer gols ({media_gols_sofridos:.1f} gols/jogo).")
+            argumentos_contra.append(f"Sistema defensivo do clube costuma conceder gols (média de {media_gols_sofridos:.1f} gols/jogo).")
         if peso_jogo < 0:
-            argumentos_contra.append(f"Confronto considerado difícil fora de casa (Peso jogo: {peso_jogo:.1f}).")
+            argumentos_contra.append(f"Confronto desafiador fora de casa (Peso do jogo: {peso_jogo:+.2f}).")
         if adv_chutes_gol_media < 3.5:
-            argumentos_contra.append(f"Adversário finaliza pouco a gol ({adv_chutes_gol_media:.1f} chutes/jogo), limitando potencial de DE.")
+            argumentos_contra.append(f"Adversário {adversario_nome} finaliza pouco no alvo ({adv_chutes_gol_media:.1f} chutes/jogo), limitando o potencial de acumular defesas (DE).")
         if not argumentos_contra:
-            argumentos_contra.append("Adversário perigoso em jogadas de bola parada.")
+            argumentos_contra.append("Pontuação no Cartola FC dependente do desempenho coletivo do setor defensivo.")
         
         return jsonify({
             'atleta_id': atleta_id_val,
@@ -2660,27 +2660,27 @@ def api_zagueiro_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
 
-        # Argumentos Reais
+        # Argumentos Reais (Especialistas de Futebol)
         argumentos_favor = []
         argumentos_contra = []
 
         if peso_sg > 0:
-            argumentos_favor.append(f"Zaga do clube com bom potencial de manter o SG (+{peso_sg:.1f} pts).")
+            argumentos_favor.append(f"Forte tendência a garantir a bonificação de Saldo de Gol (+5.0 pts no Cartola | Índice SG: {peso_sg:.2f}).")
         if media_ds >= 1.5:
-            argumentos_favor.append(f"Zagueiro seguro em desarmes ({media_ds:.1f} DS/jogo).")
+            argumentos_favor.append(f"Solidez em desarmes e combates individuais ({media_ds:.1f} DS/jogo).")
         if media_g > 0.05:
-            argumentos_favor.append("Presença constante no ataque em jogadas de bola parada (Gols anotados na temporada).")
+            argumentos_favor.append("Presença constante na área adversária em jogadas de bola parada ofensiva.")
         if not argumentos_favor:
-            argumentos_favor.append("Zagueiro titular e firme nas disputas físicas.")
+            argumentos_favor.append("Zagueiro titular e pilar do sistema defensivo da equipe.")
 
         if peso_sg <= 0:
-            argumentos_contra.append("Confronto difícil para manter o Saldo de Gol (SG).")
+            argumentos_contra.append(f"Desafio exigente para segurar o Saldo de Gol diante do {adversario_nome} (Índice SG: {peso_sg:.2f}).")
         if media_fc >= 1.8:
-            argumentos_contra.append(f"Média alta de faltas cometidas ({media_fc:.1f} FC/jogo), risco de cartões.")
+            argumentos_contra.append(f"Índice elevado de faltas cometidas ({media_fc:.1f} FC/jogo), aumentando o risco de cartões (CA/CV).")
         if media_ds < 0.8:
-            argumentos_contra.append(f"Média baixa de desarmes para o setor defensivo ({media_ds:.1f} DS/jogo).")
+            argumentos_contra.append(f"Média discreta de desarmes para o setor defensivo ({media_ds:.1f} DS/jogo).")
         if not argumentos_contra:
-            argumentos_contra.append("Depende fortemente da manutenção do SG do sistema defensivo.")
+            argumentos_contra.append("Depende da manutenção do Saldo de Gol (SG) coletivo para alcançar pontuação elevada.")
 
         return jsonify({
             'atleta_id': atleta_id_val,
@@ -2894,7 +2894,7 @@ def api_meia_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
 
-        # Argumentos Reais
+        # Argumentos Reais (Especialistas de Futebol)
         argumentos_favor = []
         argumentos_contra = []
 
@@ -2902,24 +2902,24 @@ def api_meia_detalhes(atleta_id):
         participacao_gols = media_g + media_a
 
         if participacao_gols >= 0.2:
-            argumentos_favor.append(f"Alta taxa de participação direta em gols ({participacao_gols:.2f} G+A/jogo).")
+            argumentos_favor.append(f"Alta taxa de participação direta em gols (média de {participacao_gols:.2f} contribuições G+A/jogo).")
         if total_chutes >= 1.5:
-            argumentos_favor.append(f"Chuta bastante a gol (Média de {total_chutes:.1f} finalizações/jogo).")
+            argumentos_favor.append(f"Presença constante no setor ofensivo (média de {total_chutes:.1f} finalizações por partida).")
         if media_ds >= 1.5:
-            argumentos_favor.append(f"Meia ritmista com boa média de desarmes ({media_ds:.1f} DS/jogo).")
+            argumentos_favor.append(f"Meia ritmista com regularidade em desarmes ({media_ds:.1f} DS/jogo).")
         if adv_gols_sofridos_media >= 1.3:
-            argumentos_favor.append(f"Enfrenta defesa adversária frágil ({adv_gols_sofridos_media:.1f} gols sofridos/jogo).")
+            argumentos_favor.append(f"Enfrenta o sistema defensivo do {adversario_nome}, que cede em média {adv_gols_sofridos_media:.1f} gols por jogo.")
         if not argumentos_favor:
-            argumentos_favor.append("Meia titular e articulador de jogadas do clube.")
+            argumentos_favor.append("Meia titular e articulador principal das jogadas de criação.")
 
         if peso_jogo < 0:
-            argumentos_contra.append("Partida exigente fora de casa.")
+            argumentos_contra.append(f"Duelo exigente fora de casa diante do {adversario_nome}.")
         if participacao_gols < 0.08:
-            argumentos_contra.append(f"Pouca presença na área adversária ({participacao_gols:.2f} G+A/jogo).")
+            argumentos_contra.append(f"Baixa frequência em jogadas decisivas de ataque ({participacao_gols:.2f} G+A/jogo).")
         if media_ds < 0.8 and total_chutes < 1.0:
-            argumentos_contra.append("Volume de pontuação sem scouts principais é limitado.")
+            argumentos_contra.append("Pontuação sem scouts principais (G, A, DS) tende a ser moderada.")
         if not argumentos_contra:
-            argumentos_contra.append("Sujeito à oscilação do meio-campo do clube.")
+            argumentos_contra.append("Pontuação no Cartola depende diretamente da articulação no meio-campo e envolvimento no jogo.")
 
         return jsonify({
             'atleta_id': atleta_id_val,
