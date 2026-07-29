@@ -1917,6 +1917,8 @@ def api_atacante_detalhes(atleta_id):
             argumentos_favor.append(f"Fase iluminada: {gols_ultimas_rodadas} gols marcados nas últimas {rodadas_analisadas} rodadas.")
         if gols_sofridos_mando >= 1.2:
             argumentos_favor.append(f"Enfrenta a defesa do {adversario_nome} {local_adv_txt}, onde a equipe cede em média {gols_sofridos_mando:.1f} gols por partida.")
+        if medias_mando['media_basica'] >= 3.0:
+            argumentos_favor.append(f"Média básica alta ({medias_mando['media_basica']:.2f} pts), pontua bem mesmo sem gols ou assistências.")
         if not argumentos_favor:
             argumentos_favor.append("Atacante titular e principal referência ofensiva da equipe.")
 
@@ -1926,6 +1928,8 @@ def api_atacante_detalhes(atleta_id):
             argumentos_contra.append(f"Baixo volume de chutes a gol ({total_finalizacoes:.1f} finalizações por partida).")
         if media_g < 0.10:
             argumentos_contra.append("Média reduzida de gols anotados na temporada atual.")
+        if medias_mando['media_basica'] < 1.0:
+            argumentos_contra.append(f"Média básica baixa ({medias_mando['media_basica']:.2f} pts), pontuação depende muito de eventos decisivos (G/A).")
         if not argumentos_contra:
             argumentos_contra.append("Depende de participar diretamente de gols (G ou A) para alcançar alta pontuação no Cartola FC.")
         
@@ -2244,6 +2248,8 @@ def api_lateral_detalhes(atleta_id):
             argumentos_favor.append(f"Boa probabilidade de bonificação de Saldo de Gol (+5.0 pts no Cartola | Índice SG: {peso_sg:.2f}).")
         if media_a + media_g >= 0.15:
             argumentos_favor.append(f"Lateral ofensivo com presença constante no ataque (Média de participações em gol: {(media_a+media_g):.2f}/jogo).")
+        if medias_mando['media_basica'] >= 3.0:
+            argumentos_favor.append(f"Média básica alta ({medias_mando['media_basica']:.2f} pts), pontua bem mesmo sem gols, assistências ou SG.")
         if not argumentos_favor:
             argumentos_favor.append("Lateral titular com consistência defensiva e apoio ao ataque.")
 
@@ -2253,6 +2259,8 @@ def api_lateral_detalhes(atleta_id):
             argumentos_contra.append(f"Média discreta de desarmes para a posição ({media_ds:.1f} DS/jogo).")
         if peso_jogo < 0:
             argumentos_contra.append(f"Confronto exigente fora de casa diante do {adversario_nome}.")
+        if medias_mando['media_basica'] < 1.0:
+            argumentos_contra.append(f"Média básica baixa ({medias_mando['media_basica']:.2f} pts), pontuação depende muito de SG e assistências.")
         if not argumentos_contra:
             argumentos_contra.append("Necessita de boa atuação coletiva do setor defensivo para pontuar alto no Cartola.")
 
@@ -2501,6 +2509,8 @@ def api_goleiro_detalhes(atleta_id):
             argumentos_favor.append(f"Boa probabilidade de garantir a bonificação de Saldo de Gol (+5.0 pts no Cartola | Índice SG: {peso_sg:.2f}).")
         if adv_chutes_gol_media >= 6.0:
             argumentos_favor.append(f"Adversário {adversario_nome} finaliza com frequência a gol ({adv_chutes_gol_media:.1f} chutes no alvo/jogo), gerando alto potencial de DE.")
+        if medias_mando['media_basica'] >= 3.0:
+            argumentos_favor.append(f"Média básica alta ({medias_mando['media_basica']:.2f} pts), pontua bem mesmo sem bônus de SG.")
         if not argumentos_favor:
             argumentos_favor.append("Goleiro titular absoluto e seguro sob as traves.")
 
@@ -2510,6 +2520,8 @@ def api_goleiro_detalhes(atleta_id):
             argumentos_contra.append(f"Confronto desafiador fora de casa (Peso do jogo: {peso_jogo:+.2f}).")
         if adv_chutes_gol_media < 3.5:
             argumentos_contra.append(f"Adversário {adversario_nome} finaliza pouco no alvo ({adv_chutes_gol_media:.1f} chutes/jogo), limitando o potencial de acumular defesas (DE).")
+        if medias_mando['media_basica'] < 1.0:
+            argumentos_contra.append(f"Média básica baixa ({medias_mando['media_basica']:.2f} pts), pontuação depende muito do SG.")
         if not argumentos_contra:
             argumentos_contra.append("Pontuação no Cartola FC dependente do desempenho coletivo do setor defensivo.")
         
@@ -2729,6 +2741,8 @@ def api_zagueiro_detalhes(atleta_id):
             argumentos_favor.append(f"Solidez em desarmes e combates individuais ({media_ds:.1f} DS/jogo).")
         if media_g > 0.05:
             argumentos_favor.append("Presença constante na área adversária em jogadas de bola parada ofensiva.")
+        if medias_mando['media_basica'] >= 3.0:
+            argumentos_favor.append(f"Média básica alta ({medias_mando['media_basica']:.2f} pts), pontua bem mesmo sem gols ou SG.")
         if not argumentos_favor:
             argumentos_favor.append("Zagueiro titular e pilar do sistema defensivo da equipe.")
 
@@ -2738,6 +2752,8 @@ def api_zagueiro_detalhes(atleta_id):
             argumentos_contra.append(f"Índice elevado de faltas cometidas ({media_fc:.1f} FC/jogo), aumentando o risco de cartões (CA/CV).")
         if media_ds < 0.8:
             argumentos_contra.append(f"Média discreta de desarmes para o setor defensivo ({media_ds:.1f} DS/jogo).")
+        if medias_mando['media_basica'] < 1.0:
+            argumentos_contra.append(f"Média básica baixa ({medias_mando['media_basica']:.2f} pts), pontuação depende fortemente de manter o SG.")
         if not argumentos_contra:
             argumentos_contra.append("Depende da manutenção do Saldo de Gol (SG) coletivo para alcançar pontuação elevada.")
 
@@ -2976,6 +2992,8 @@ def api_meia_detalhes(atleta_id):
             argumentos_favor.append(f"Meia ritmista com regularidade em desarmes ({media_ds:.1f} DS/jogo).")
         if adv_gols_sofridos_media >= 1.3:
             argumentos_favor.append(f"Enfrenta o sistema defensivo do {adversario_nome}, que cede em média {adv_gols_sofridos_media:.1f} gols por jogo.")
+        if medias_mando['media_basica'] >= 3.0:
+            argumentos_favor.append(f"Média básica alta ({medias_mando['media_basica']:.2f} pts), pontua bem mesmo sem gols ou assistências.")
         if not argumentos_favor:
             argumentos_favor.append("Meia titular e articulador principal das jogadas de criação.")
 
@@ -2985,6 +3003,8 @@ def api_meia_detalhes(atleta_id):
             argumentos_contra.append(f"Baixa frequência em jogadas decisivas de ataque ({participacao_gols:.2f} G+A/jogo).")
         if media_ds < 0.8 and total_chutes < 1.0:
             argumentos_contra.append("Pontuação sem scouts principais (G, A, DS) tende a ser moderada.")
+        if medias_mando['media_basica'] < 1.0:
+            argumentos_contra.append(f"Média básica baixa ({medias_mando['media_basica']:.2f} pts), pontuação depende muito de gols e assistências.")
         if not argumentos_contra:
             argumentos_contra.append("Pontuação no Cartola depende diretamente da articulação no meio-campo e envolvimento no jogo.")
 
