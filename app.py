@@ -1713,14 +1713,16 @@ def api_atacante_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar peso do jogo: {e}")
         
-        # Buscar médias de scouts
+        # Buscar médias de scouts (DS, FF, FS, FD, G, A, FT)
         media_ds = 0
         media_ff = 0
         media_fs = 0
         media_fd = 0
         media_g = 0
         media_a = 0
-        
+        media_ft = 0
+        temporada_atual = get_temporada_atual()
+
         try:
             cursor.execute('''
                 SELECT 
@@ -1729,21 +1731,23 @@ def api_atacante_detalhes(atleta_id):
                     AVG(COALESCE(scout_fs, 0)) as avg_fs,
                     AVG(COALESCE(scout_fd, 0)) as avg_fd,
                     AVG(COALESCE(scout_g, 0)) as avg_g,
-                    AVG(COALESCE(scout_a, 0)) as avg_a
+                    AVG(COALESCE(scout_a, 0)) as avg_a,
+                    AVG(COALESCE(scout_ft, 0)) as avg_ft
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
+                WHERE atleta_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
+            ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
-            if stats_row and len(stats_row) >= 6:
+            if stats_row and len(stats_row) >= 7:
                 media_ds = float(stats_row[0]) if stats_row[0] is not None else 0
                 media_ff = float(stats_row[1]) if stats_row[1] is not None else 0
                 media_fs = float(stats_row[2]) if stats_row[2] is not None else 0
                 media_fd = float(stats_row[3]) if stats_row[3] is not None else 0
                 media_g = float(stats_row[4]) if stats_row[4] is not None else 0
                 media_a = float(stats_row[5]) if stats_row[5] is not None else 0
+                media_ft = float(stats_row[6]) if stats_row[6] is not None else 0
         except Exception as e:
-            print(f"Erro ao buscar médias de scouts: {e}")
+            print(f"Erro ao buscar médias de scouts do atacante: {e}")
         
         # Buscar número de escalações
         escalacoes = 0
@@ -1757,7 +1761,7 @@ def api_atacante_detalhes(atleta_id):
         except Exception as e:
             print(f"Erro ao buscar escalações: {e}")
         
-        # Buscar gols sofridos pelo adversário (casa e fora)
+        # Buscar gols sofridos pelo adversário (casa e fora) na temporada
         adversario_gols_sofridos_casa = 0
         adversario_gols_sofridos_fora = 0
         adversario_jogos_casa = 0
@@ -1770,9 +1774,9 @@ def api_atacante_detalhes(atleta_id):
                         SUM(placar_oficial_visitante) as gols_sofridos,
                         COUNT(*) as jogos
                     FROM acf_partidas
-                    WHERE clube_casa_id = %s AND rodada_id < %s AND valida = TRUE
+                    WHERE clube_casa_id = %s AND rodada_id < %s AND temporada = %s AND valida = TRUE
                       AND placar_oficial_visitante IS NOT NULL
-                ''', (adversario_id, rodada_atual))
+                ''', (adversario_id, rodada_atual, temporada_atual))
                 casa_row = cursor.fetchone()
                 if casa_row and casa_row[1] and casa_row[1] > 0:
                     adversario_gols_sofridos_casa = float(casa_row[0]) if casa_row[0] else 0
@@ -1784,9 +1788,9 @@ def api_atacante_detalhes(atleta_id):
                         SUM(placar_oficial_mandante) as gols_sofridos,
                         COUNT(*) as jogos
                     FROM acf_partidas
-                    WHERE clube_visitante_id = %s AND rodada_id < %s AND valida = TRUE
+                    WHERE clube_visitante_id = %s AND rodada_id < %s AND temporada = %s AND valida = TRUE
                       AND placar_oficial_mandante IS NOT NULL
-                ''', (adversario_id, rodada_atual))
+                ''', (adversario_id, rodada_atual, temporada_atual))
                 fora_row = cursor.fetchone()
                 if fora_row and fora_row[1] and fora_row[1] > 0:
                     adversario_gols_sofridos_fora = float(fora_row[0]) if fora_row[0] else 0
@@ -1800,25 +1804,25 @@ def api_atacante_detalhes(atleta_id):
             try:
                 cursor.execute('''
                     SELECT clube_casa_id, clube_visitante_id FROM acf_partidas
-                    WHERE rodada_id = %s AND valida = TRUE
+                    WHERE rodada_id = %s AND temporada = %s AND valida = TRUE
                     AND (clube_casa_id = %s OR clube_visitante_id = %s)
-                ''', (rodada_atual, clube_id, clube_id))
+                ''', (rodada_atual, temporada_atual, clube_id, clube_id))
                 partida_row = cursor.fetchone()
                 if partida_row and len(partida_row) >= 2:
                     joga_em_casa = (partida_row[0] == clube_id)
             except Exception as e:
                 print(f"Erro ao verificar se joga em casa: {e}")
         
-        # Buscar gols feitos pelo atacante nas últimas 5 rodadas
+        # Buscar gols feitos pelo atacante nas últimas 5 rodadas da temporada
         gols_ultimas_rodadas = 0
         rodadas_analisadas = 5
         try:
             cursor.execute('''
                 SELECT SUM(scout_g) as total_gols
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id >= %s AND rodada_id < %s
+                WHERE atleta_id = %s AND rodada_id >= %s AND rodada_id < %s AND temporada = %s
                   AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual - rodadas_analisadas, rodada_atual))
+            ''', (atleta_id, rodada_atual - rodadas_analisadas, rodada_atual, temporada_atual))
             gols_row = cursor.fetchone()
             if gols_row and gols_row[0] is not None:
                 gols_ultimas_rodadas = int(gols_row[0]) if gols_row[0] > 0 else 0
@@ -1836,9 +1840,9 @@ def api_atacante_detalhes(atleta_id):
                     SUM(COALESCE(scout_ca, 0)) as total_ca,
                     SUM(COALESCE(scout_cv, 0)) as total_cv
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id >= %s AND rodada_id < %s
+                WHERE atleta_id = %s AND rodada_id >= %s AND rodada_id < %s AND temporada = %s
                   AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual - rodadas_analisadas, rodada_atual))
+            ''', (atleta_id, rodada_atual - rodadas_analisadas, rodada_atual, temporada_atual))
             faltas_cartoes_row = cursor.fetchone()
             if faltas_cartoes_row:
                 faltas_cometidas_ultimas = int(faltas_cartoes_row[0]) if faltas_cartoes_row[0] else 0
@@ -1872,6 +1876,33 @@ def api_atacante_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
         
+        # Argumentos Reais
+        argumentos_favor = []
+        argumentos_contra = []
+
+        total_finalizacoes = media_ff + media_fd + media_ft
+        gols_sofridos_mando = (adversario_gols_sofridos_casa / max(1, adversario_jogos_casa)) if not joga_em_casa else (adversario_gols_sofridos_fora / max(1, adversario_jogos_fora))
+
+        if media_g >= 0.25:
+            argumentos_favor.append(f"Artilheiro prolífico (Média de {media_g:.2f} gols/jogo).")
+        if total_finalizacoes >= 2.0:
+            argumentos_favor.append(f"Alto volume de finalizações ({total_finalizacoes:.1f} chutes/jogo).")
+        if gols_ultimas_rodadas >= 2:
+            argumentos_favor.append(f"Fase iluminada: {gols_ultimas_rodadas} gols anotados nas últimas rodadas.")
+        if gols_sofridos_mando >= 1.2:
+            argumentos_favor.append(f"Defesa adversária cede em média {gols_sofridos_mando:.1f} gols no mando do jogo.")
+        if not argumentos_favor:
+            argumentos_favor.append("Atacante referência do setor ofensivo.")
+
+        if peso_jogo < 0:
+            argumentos_contra.append("Confronto truncado fora de casa.")
+        if total_finalizacoes < 1.0:
+            argumentos_contra.append(f"Baixo volume de chutes a gol ({total_finalizacoes:.1f} chutes/jogo).")
+        if media_g < 0.10:
+            argumentos_contra.append("Média baixa de gols anotados na temporada atual.")
+        if not argumentos_contra:
+            argumentos_contra.append("Sujeito a marcar apenas em caso de gol/assistência direta.")
+        
         return jsonify({
             'atleta_id': atleta_id_val,
             'apelido': apelido or nome or 'N/A',
@@ -1893,8 +1924,10 @@ def api_atacante_detalhes(atleta_id):
             'media_ff': media_ff,
             'media_fs': media_fs,
             'media_fd': media_fd,
+            'media_ft': media_ft,
             'media_g': media_g,
             'media_a': media_a,
+            'total_finalizacoes': total_finalizacoes,
             'pontuacao_total': pontuacao_total,
             'escalacoes': escalacoes,
             'adversario_gols_sofridos_casa': adversario_gols_sofridos_casa,
@@ -1906,7 +1939,9 @@ def api_atacante_detalhes(atleta_id):
             'rodadas_analisadas': rodadas_analisadas,
             'faltas_cometidas_ultimas': faltas_cometidas_ultimas,
             'cartoes_amarelos_ultimas': cartoes_amarelos_ultimas,
-            'cartoes_vermelhos_ultimas': cartoes_vermelhos_ultimas
+            'cartoes_vermelhos_ultimas': cartoes_vermelhos_ultimas,
+            'argumentos_favor': argumentos_favor,
+            'argumentos_contra': argumentos_contra
         })
         
     except Exception as e:
@@ -2080,14 +2115,15 @@ def api_lateral_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pesos: {e}")
         
-        # Buscar médias de scouts (foco em DS, A, SG)
+        # Buscar médias de scouts (foco em DS, A, G, FF, FS, FD)
         media_ds = 0
         media_a = 0
         media_g = 0
         media_ff = 0
         media_fs = 0
         media_fd = 0
-        
+        temporada_atual = get_temporada_atual()
+
         try:
             cursor.execute('''
                 SELECT 
@@ -2098,8 +2134,8 @@ def api_lateral_detalhes(atleta_id):
                     AVG(COALESCE(scout_fs, 0)) as avg_fs,
                     AVG(COALESCE(scout_fd, 0)) as avg_fd
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
+                WHERE atleta_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
+            ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
             if stats_row and len(stats_row) >= 6:
@@ -2110,8 +2146,23 @@ def api_lateral_detalhes(atleta_id):
                 media_fs = float(stats_row[4]) if stats_row[4] is not None else 0
                 media_fd = float(stats_row[5]) if stats_row[5] is not None else 0
         except Exception as e:
-            print(f"Erro ao buscar médias de scouts: {e}")
-        
+            print(f"Erro ao buscar médias de scouts do lateral: {e}")
+
+        # Buscar média de desarmes cedidos pelo ataque do adversário
+        adv_desarmes_cedidos = 0
+        if adversario_id:
+            try:
+                cursor.execute('''
+                    SELECT AVG(COALESCE(scout_fs, 0) + COALESCE(scout_i, 0))
+                    FROM acf_pontuados
+                    WHERE clube_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
+                ''', (adversario_id, rodada_atual, temporada_atual))
+                adv_ds_row = cursor.fetchone()
+                if adv_ds_row and adv_ds_row[0] is not None:
+                    adv_desarmes_cedidos = float(adv_ds_row[0])
+            except Exception as e:
+                print(f"Erro ao buscar desarmes cedidos pelo adversario: {e}")
+
         # Buscar número de escalações
         escalacoes = 0
         try:
@@ -2121,7 +2172,7 @@ def api_lateral_detalhes(atleta_id):
                 escalacoes = int(escalacoes_row[0]) if escalacoes_row[0] > 0 else 0
         except Exception as e:
             print(f"Erro ao buscar escalações: {e}")
-        
+
         # Buscar pontuação total do ranking
         pontuacao_total = 0
         if team_id:
@@ -2146,7 +2197,29 @@ def api_lateral_detalhes(atleta_id):
                                     break
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
-        
+
+        # Argumentos Reais
+        argumentos_favor = []
+        argumentos_contra = []
+
+        if media_ds >= 1.8:
+            argumentos_favor.append(f"Ótima média de desarmes por jogo ({media_ds:.1f} DS/jogo).")
+        if peso_sg > 0:
+            argumentos_favor.append(f"Alta probabilidade de bonificação de Saldo de Gol (SG +5.0).")
+        if media_a + media_g >= 0.15:
+            argumentos_favor.append(f"Participativo no ataque (Média de participações em gol: {(media_a+media_g):.2f}/jogo).")
+        if not argumentos_favor:
+            argumentos_favor.append("Lateral titular e presente na maioria das rodadas.")
+
+        if peso_sg <= 0:
+            argumentos_contra.append("Risco moderado/alto de perder a bonificação de SG.")
+        if media_ds < 1.0:
+            argumentos_contra.append(f"Média baixa de desarmes para um lateral ({media_ds:.1f} DS/jogo).")
+        if peso_jogo < 0:
+            argumentos_contra.append("Confronto fora de casa contra adversário qualificado.")
+        if not argumentos_contra:
+            argumentos_contra.append("Necessita de boa atuação coletiva do setor defensivo.")
+
         return jsonify({
             'atleta_id': atleta_id_val,
             'apelido': apelido or nome or 'N/A',
@@ -2171,6 +2244,9 @@ def api_lateral_detalhes(atleta_id):
             'media_ff': media_ff,
             'media_fs': media_fs,
             'media_fd': media_fd,
+            'adv_desarmes_cedidos': adv_desarmes_cedidos,
+            'argumentos_favor': argumentos_favor,
+            'argumentos_contra': argumentos_contra,
             'pontuacao_total': pontuacao_total,
             'escalacoes': escalacoes
         })
@@ -2284,31 +2360,24 @@ def api_goleiro_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pesos: {e}")
         
-        # Buscar médias de scouts (foco em DE - defesas)
+        # Buscar médias de scouts (foco em DE + DP - defesas totais)
         media_de = 0
         media_gols_sofridos = 0
-        
+        temporada_atual = get_temporada_atual()
+
         try:
             cursor.execute('''
                 SELECT 
-                    AVG(COALESCE(scout_de, 0)) as avg_de
+                    AVG(COALESCE(scout_de, 0) + COALESCE(scout_dp, 0)) as avg_de
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
+                WHERE atleta_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
+            ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
             if stats_row and stats_row[0] is not None:
                 media_de = float(stats_row[0])
             
-            # Buscar média de gols sofridos
-            cursor.execute('''
-                SELECT AVG(COALESCE(pontos_num, 0))
-                FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
-            gols_row = cursor.fetchone()
-            # Gols sofridos são calculados negativamente na pontuação
-            # Vamos buscar das partidas
+            # Buscar média de gols sofridos pelo clube do goleiro na temporada
             if clube_id:
                 cursor.execute('''
                     SELECT 
@@ -2317,14 +2386,29 @@ def api_goleiro_detalhes(atleta_id):
                                  ELSE 0 END) as media_gols_sofridos
                     FROM acf_partidas
                     WHERE (clube_casa_id = %s OR clube_visitante_id = %s)
-                      AND rodada_id < %s AND valida = TRUE
+                      AND rodada_id < %s AND temporada = %s AND valida = TRUE
                       AND (placar_oficial_mandante IS NOT NULL AND placar_oficial_visitante IS NOT NULL)
-                ''', (clube_id, clube_id, clube_id, clube_id, rodada_atual))
+                ''', (clube_id, clube_id, clube_id, clube_id, rodada_atual, temporada_atual))
                 gols_sofridos_row = cursor.fetchone()
                 if gols_sofridos_row and gols_sofridos_row[0] is not None:
                     media_gols_sofridos = float(gols_sofridos_row[0])
         except Exception as e:
-            print(f"Erro ao buscar médias de scouts: {e}")
+            print(f"Erro ao buscar médias de scouts do goleiro: {e}")
+
+        # Buscar volume de chutes a gol do adversário (chutes fora + chutes defendidos pelo adversário por jogo)
+        adv_chutes_gol_media = 0
+        if adversario_id:
+            try:
+                cursor.execute('''
+                    SELECT AVG(COALESCE(scout_ff, 0) + COALESCE(scout_fd, 0) + COALESCE(scout_ft, 0))
+                    FROM acf_pontuados
+                    WHERE clube_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
+                ''', (adversario_id, rodada_atual, temporada_atual))
+                adv_chutes_row = cursor.fetchone()
+                if adv_chutes_row and adv_chutes_row[0] is not None:
+                    adv_chutes_gol_media = float(adv_chutes_row[0])
+            except Exception as e:
+                print(f"Erro ao buscar chutes a gol do adversario: {e}")
         
         # Buscar número de escalações
         escalacoes = 0
@@ -2360,6 +2444,28 @@ def api_goleiro_detalhes(atleta_id):
                                     break
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
+
+        # Gerar Argumentos Contextuais Reais
+        argumentos_favor = []
+        argumentos_contra = []
+
+        if media_de >= 2.5:
+            argumentos_favor.append(f"Média alta de defesas por jogo ({media_de:.1f} DE/jogo).")
+        if peso_sg > 0:
+            argumentos_favor.append(f"Boa probabilidade de Saldo de Gol (SG) para o clube (+{peso_sg:.1f} pts).")
+        if adv_chutes_gol_media >= 6.0:
+            argumentos_favor.append(f"Adversário cede alto volume de finalizações ({adv_chutes_gol_media:.1f} chutes/jogo).")
+        if not argumentos_favor:
+            argumentos_favor.append("Goleiro titular e com presença em campo garantida.")
+
+        if media_gols_sofridos >= 1.4:
+            argumentos_contra.append(f"Defesa do clube costuma sofrer gols ({media_gols_sofridos:.1f} gols/jogo).")
+        if peso_jogo < 0:
+            argumentos_contra.append(f"Confronto considerado difícil fora de casa (Peso jogo: {peso_jogo:.1f}).")
+        if adv_chutes_gol_media < 3.5:
+            argumentos_contra.append(f"Adversário finaliza pouco a gol ({adv_chutes_gol_media:.1f} chutes/jogo), limitando potencial de DE.")
+        if not argumentos_contra:
+            argumentos_contra.append("Adversário perigoso em jogadas de bola parada.")
         
         return jsonify({
             'atleta_id': atleta_id_val,
@@ -2381,6 +2487,9 @@ def api_goleiro_detalhes(atleta_id):
             'peso_sg': peso_sg,
             'media_de': media_de,
             'media_gols_sofridos': media_gols_sofridos,
+            'adv_chutes_gol_media': adv_chutes_gol_media,
+            'argumentos_favor': argumentos_favor,
+            'argumentos_contra': argumentos_contra,
             'pontuacao_total': pontuacao_total,
             'escalacoes': escalacoes
         })
@@ -2494,22 +2603,30 @@ def api_zagueiro_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pesos: {e}")
         
-        # Buscar médias de scouts (foco em DS - desarmes)
+        # Buscar médias de scouts (DS, FC, Gols de zagueiro)
         media_ds = 0
-        
+        media_fc = 0
+        media_g = 0
+        temporada_atual = get_temporada_atual()
+
         try:
             cursor.execute('''
-                SELECT AVG(COALESCE(scout_ds, 0)) as avg_ds
+                SELECT 
+                    AVG(COALESCE(scout_ds, 0)) as avg_ds,
+                    AVG(COALESCE(scout_fc, 0)) as avg_fc,
+                    AVG(COALESCE(scout_g, 0)) as avg_g
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
+                WHERE atleta_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
+            ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
-            if stats_row and stats_row[0] is not None:
-                media_ds = float(stats_row[0])
+            if stats_row and len(stats_row) >= 3:
+                media_ds = float(stats_row[0]) if stats_row[0] is not None else 0
+                media_fc = float(stats_row[1]) if stats_row[1] is not None else 0
+                media_g = float(stats_row[2]) if stats_row[2] is not None else 0
         except Exception as e:
-            print(f"Erro ao buscar médias de scouts: {e}")
-        
+            print(f"Erro ao buscar médias de scouts do zagueiro: {e}")
+
         # Buscar número de escalações
         escalacoes = 0
         try:
@@ -2519,7 +2636,7 @@ def api_zagueiro_detalhes(atleta_id):
                 escalacoes = int(escalacoes_row[0]) if escalacoes_row[0] > 0 else 0
         except Exception as e:
             print(f"Erro ao buscar escalações: {e}")
-        
+
         # Buscar pontuação total do ranking
         pontuacao_total = 0
         if team_id:
@@ -2544,7 +2661,29 @@ def api_zagueiro_detalhes(atleta_id):
                                     break
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
-        
+
+        # Argumentos Reais
+        argumentos_favor = []
+        argumentos_contra = []
+
+        if peso_sg > 0:
+            argumentos_favor.append(f"Zaga do clube com bom potencial de manter o SG (+{peso_sg:.1f} pts).")
+        if media_ds >= 1.5:
+            argumentos_favor.append(f"Zagueiro seguro em desarmes ({media_ds:.1f} DS/jogo).")
+        if media_g > 0.05:
+            argumentos_favor.append("Presença constante no ataque em jogadas de bola parada (Gols anotados na temporada).")
+        if not argumentos_favor:
+            argumentos_favor.append("Zagueiro titular e firme nas disputas físicas.")
+
+        if peso_sg <= 0:
+            argumentos_contra.append("Confronto difícil para manter o Saldo de Gol (SG).")
+        if media_fc >= 1.8:
+            argumentos_contra.append(f"Média alta de faltas cometidas ({media_fc:.1f} FC/jogo), risco de cartões.")
+        if media_ds < 0.8:
+            argumentos_contra.append(f"Média baixa de desarmes para o setor defensivo ({media_ds:.1f} DS/jogo).")
+        if not argumentos_contra:
+            argumentos_contra.append("Depende fortemente da manutenção do SG do sistema defensivo.")
+
         return jsonify({
             'atleta_id': atleta_id_val,
             'apelido': apelido or nome or 'N/A',
@@ -2564,6 +2703,10 @@ def api_zagueiro_detalhes(atleta_id):
             'peso_jogo': peso_jogo,
             'peso_sg': peso_sg,
             'media_ds': media_ds,
+            'media_fc': media_fc,
+            'media_g': media_g,
+            'argumentos_favor': argumentos_favor,
+            'argumentos_contra': argumentos_contra,
             'pontuacao_total': pontuacao_total,
             'escalacoes': escalacoes
         })
@@ -2666,14 +2809,16 @@ def api_meia_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar peso do jogo: {e}")
         
-        # Buscar médias de scouts (foco em A - assistências e G - gols)
+        # Buscar médias de scouts (A, G, DS, FF, FS, FD, FT)
         media_a = 0
         media_g = 0
         media_ds = 0
         media_ff = 0
         media_fs = 0
         media_fd = 0
-        
+        media_ft = 0
+        temporada_atual = get_temporada_atual()
+
         try:
             cursor.execute('''
                 SELECT 
@@ -2682,22 +2827,41 @@ def api_meia_detalhes(atleta_id):
                     AVG(COALESCE(scout_ds, 0)) as avg_ds,
                     AVG(COALESCE(scout_ff, 0)) as avg_ff,
                     AVG(COALESCE(scout_fs, 0)) as avg_fs,
-                    AVG(COALESCE(scout_fd, 0)) as avg_fd
+                    AVG(COALESCE(scout_fd, 0)) as avg_fd,
+                    AVG(COALESCE(scout_ft, 0)) as avg_ft
                 FROM acf_pontuados
-                WHERE atleta_id = %s AND rodada_id < %s AND entrou_em_campo = TRUE
-            ''', (atleta_id, rodada_atual))
+                WHERE atleta_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
+            ''', (atleta_id, rodada_atual, temporada_atual))
             
             stats_row = cursor.fetchone()
-            if stats_row and len(stats_row) >= 6:
+            if stats_row and len(stats_row) >= 7:
                 media_a = float(stats_row[0]) if stats_row[0] is not None else 0
                 media_g = float(stats_row[1]) if stats_row[1] is not None else 0
                 media_ds = float(stats_row[2]) if stats_row[2] is not None else 0
                 media_ff = float(stats_row[3]) if stats_row[3] is not None else 0
                 media_fs = float(stats_row[4]) if stats_row[4] is not None else 0
                 media_fd = float(stats_row[5]) if stats_row[5] is not None else 0
+                media_ft = float(stats_row[6]) if stats_row[6] is not None else 0
         except Exception as e:
-            print(f"Erro ao buscar médias de scouts: {e}")
-        
+            print(f"Erro ao buscar médias de scouts do meia: {e}")
+
+        # Buscar média de gols sofridos pelo adversário
+        adv_gols_sofridos_media = 0
+        if adversario_id:
+            try:
+                cursor.execute('''
+                    SELECT AVG(CASE WHEN clube_casa_id = %s THEN placar_oficial_visitante ELSE placar_oficial_mandante END)
+                    FROM acf_partidas
+                    WHERE (clube_casa_id = %s OR clube_visitante_id = %s)
+                      AND rodada_id < %s AND temporada = %s AND valida = TRUE
+                      AND (placar_oficial_mandante IS NOT NULL AND placar_oficial_visitante IS NOT NULL)
+                ''', (adversario_id, adversario_id, adversario_id, rodada_atual, temporada_atual))
+                adv_gols_row = cursor.fetchone()
+                if adv_gols_row and adv_gols_row[0] is not None:
+                    adv_gols_sofridos_media = float(adv_gols_row[0])
+            except Exception as e:
+                print(f"Erro ao buscar gols sofridos do adversario: {e}")
+
         # Buscar número de escalações
         escalacoes = 0
         try:
@@ -2707,7 +2871,7 @@ def api_meia_detalhes(atleta_id):
                 escalacoes = int(escalacoes_row[0]) if escalacoes_row[0] > 0 else 0
         except Exception as e:
             print(f"Erro ao buscar escalações: {e}")
-        
+
         # Buscar pontuação total do ranking
         pontuacao_total = 0
         if team_id:
@@ -2732,7 +2896,34 @@ def api_meia_detalhes(atleta_id):
                                     break
             except Exception as e:
                 print(f"Erro ao buscar pontuação do ranking: {e}")
-        
+
+        # Argumentos Reais
+        argumentos_favor = []
+        argumentos_contra = []
+
+        total_chutes = media_ff + media_fd + media_ft
+        participacao_gols = media_g + media_a
+
+        if participacao_gols >= 0.2:
+            argumentos_favor.append(f"Alta taxa de participação direta em gols ({participacao_gols:.2f} G+A/jogo).")
+        if total_chutes >= 1.5:
+            argumentos_favor.append(f"Chuta bastante a gol (Média de {total_chutes:.1f} finalizações/jogo).")
+        if media_ds >= 1.5:
+            argumentos_favor.append(f"Meia ritmista com boa média de desarmes ({media_ds:.1f} DS/jogo).")
+        if adv_gols_sofridos_media >= 1.3:
+            argumentos_favor.append(f"Enfrenta defesa adversária frágil ({adv_gols_sofridos_media:.1f} gols sofridos/jogo).")
+        if not argumentos_favor:
+            argumentos_favor.append("Meia titular e articulador de jogadas do clube.")
+
+        if peso_jogo < 0:
+            argumentos_contra.append("Partida exigente fora de casa.")
+        if participacao_gols < 0.08:
+            argumentos_contra.append(f"Pouca presença na área adversária ({participacao_gols:.2f} G+A/jogo).")
+        if media_ds < 0.8 and total_chutes < 1.0:
+            argumentos_contra.append("Volume de pontuação sem scouts principais é limitado.")
+        if not argumentos_contra:
+            argumentos_contra.append("Sujeito à oscilação do meio-campo do clube.")
+
         return jsonify({
             'atleta_id': atleta_id_val,
             'apelido': apelido or nome or 'N/A',
@@ -2756,6 +2947,11 @@ def api_meia_detalhes(atleta_id):
             'media_ff': media_ff,
             'media_fs': media_fs,
             'media_fd': media_fd,
+            'media_ft': media_ft,
+            'total_chutes': total_chutes,
+            'adv_gols_sofridos_media': adv_gols_sofridos_media,
+            'argumentos_favor': argumentos_favor,
+            'argumentos_contra': argumentos_contra,
             'pontuacao_total': pontuacao_total,
             'escalacoes': escalacoes
         })

@@ -217,67 +217,28 @@ function gerarArgumentosMeia(dados) {
     const argumentosFavor = [];
     const argumentosContra = [];
 
-    if (dados.media >= 7.0) {
-        argumentosFavor.push({
-            texto: `Boa média de pontos: ${formatNumber(dados.media)} por jogo`,
-            icone: 'fa-star'
-        });
-    } else if (dados.media < 5.0 && dados.jogos > 3) {
-        argumentosContra.push({
-            texto: `Média baixa de pontos: ${formatNumber(dados.media)} por jogo`,
-            icone: 'fa-exclamation-triangle'
+    if (dados.argumentos_favor && Array.isArray(dados.argumentos_favor) && dados.argumentos_favor.length > 0) {
+        dados.argumentos_favor.forEach(txt => {
+            argumentosFavor.push({ texto: txt, icone: 'fa-check-circle' });
         });
     }
 
-    if (dados.peso_jogo > 0.5) {
-        argumentosFavor.push({
-            texto: `Confronto favorável contra ${dados.adversario_nome} (peso: ${formatNumber(dados.peso_jogo)})`,
-            icone: 'fa-thumbs-up'
-        });
-    } else if (dados.peso_jogo < -0.5) {
-        argumentosContra.push({
-            texto: `Confronto difícil contra ${dados.adversario_nome} (peso: ${formatNumber(dados.peso_jogo)})`,
-            icone: 'fa-thumbs-down'
+    if (dados.argumentos_contra && Array.isArray(dados.argumentos_contra) && dados.argumentos_contra.length > 0) {
+        dados.argumentos_contra.forEach(txt => {
+            argumentosContra.push({ texto: txt, icone: 'fa-exclamation-triangle' });
         });
     }
 
-    // Assistências (muito importante para meias)
-    if (dados.media_a >= 0.4) {
-        argumentosFavor.push({
-            texto: `Boa média de assistências: ${formatNumber(dados.media_a)} por jogo`,
-            icone: 'fa-hand-holding'
-        });
-    } else if (dados.media_a < 0.2 && dados.jogos > 3) {
-        argumentosContra.push({
-            texto: `Baixa média de assistências: ${formatNumber(dados.media_a)} por jogo`,
-            icone: 'fa-exclamation-triangle'
-        });
+    if (argumentosFavor.length === 0) {
+        if (dados.media >= 6.0) {
+            argumentosFavor.push({ texto: `Boa média de pontos: ${formatNumber(dados.media)} por jogo`, icone: 'fa-star' });
+        }
     }
 
-    // Gols (muito importante para meias)
-    if (dados.media_g >= 0.3) {
-        argumentosFavor.push({
-            texto: `Boa média de gols: ${formatNumber(dados.media_g)} por jogo`,
-            icone: 'fa-futbol'
-        });
-    } else if (dados.media_g < 0.1 && dados.jogos > 3) {
-        argumentosContra.push({
-            texto: `Baixa média de gols: ${formatNumber(dados.media_g)} por jogo`,
-            icone: 'fa-times-circle'
-        });
-    }
-
-    const precoPorPonto = dados.media > 0 ? (dados.preco || 0) / dados.media : 0;
-    if (precoPorPonto < 100000) {
-        argumentosFavor.push({
-            texto: `Bom custo-benefício: R$ ${formatNumber(precoPorPonto)} por ponto`,
-            icone: 'fa-dollar-sign'
-        });
-    } else if (precoPorPonto > 200000) {
-        argumentosContra.push({
-            texto: `Preço elevado em relação à média: R$ ${formatNumber(precoPorPonto)} por ponto`,
-            icone: 'fa-dollar-sign'
-        });
+    if (argumentosContra.length === 0) {
+        if (dados.media < 4.0 && dados.jogos > 3) {
+            argumentosContra.push({ texto: `Média baixa de pontos: ${formatNumber(dados.media)} por jogo`, icone: 'fa-exclamation-triangle' });
+        }
     }
 
     renderizarArgumentos('modalMeiaArgumentosFavor', argumentosFavor, 'green');
