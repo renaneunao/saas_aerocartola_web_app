@@ -836,7 +836,10 @@ async function renderizarTabelaZagueiros(resultados) {
                 <div class="font-medium text-white text-xs">${jogador.clube_nome}</div>
             </td>
             <td class="py-2 px-1.5 ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
-                <div class="font-medium text-orange-300 text-xs">${jogador.adversario_nome || 'N/A'}</div>
+                <div class="flex items-center gap-1.5 font-medium text-orange-300 text-xs">
+                    <img src="${jogador.adversario_escudo_url || ''}" alt="${jogador.adversario_nome || 'N/A'}" class="w-5 h-5 object-contain" onerror="this.style.display='none'">
+                    <span>${jogador.adversario_nome || 'N/A'}</span>
+                </div>
             </td>
             <td class="py-2 px-1.5 text-center ${isBloqueado ? 'opacity-30' : ''}" ${isBloqueado ? 'style="filter: blur(8px);"' : ''}>
                 <div class="text-sm font-bold ${(jogador.pontuacao_total || 0) >= 10 ? 'text-green-400' : (jogador.pontuacao_total || 0) >= 5 ? 'text-yellow-400' : 'text-red-400'}">

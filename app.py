@@ -1,17 +1,73 @@
 from flask import Flask, jsonify, render_template, Response, request, redirect, url_for, flash, session
+from flask.sessions import SecureCookieSessionInterface
 import traceback
 import json
 from datetime import datetime, timezone, timedelta
 import os
 from dotenv import load_dotenv
 from utils.utilidades import get_temporada_atual
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Carregar variáveis de ambiente do .env
 load_dotenv()
 
+
+def _parse_bool(value, default=False):
+    """Converte uma variável de ambiente booleana sem tratar qualquer texto como verdadeiro."""
+    if value is None:
+        return default
+    return str(value).strip().lower() in {'1', 'true', 'yes', 'on'}
+
+
+class ProxyAwareSessionInterface(SecureCookieSessionInterface):
+    """Usa Secure no cookie quando a requisição original chegou por HTTPS.
+
+    O Nginx termina o TLS e encaminha X-Forwarded-Proto. Quando o app é
+    executado localmente em HTTP, o cookie continua utilizável para não
+    quebrar o desenvolvimento e os health checks.
+    """
+
+    def get_cookie_secure(self, app):
+        configured = app.config.get('SESSION_COOKIE_SECURE')
+        if configured is not None:
+            return configured
+        return request.is_secure
+
+
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'change-me-to-a-secure-random-value')
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
+app.config.update(
+    # Sessão marcada como permanente: 30 dias. Sem a marcação, o Flask não
+    # envia Expires/Max-Age e o cookie termina ao fechar o navegador.
+    PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    # None permite decidir por request.is_secure (após ProxyFix). Pode ser
+    # fixado via SESSION_COOKIE_SECURE=true/false no ambiente.
+    SESSION_COOKIE_SECURE=(
+        _parse_bool(os.getenv('SESSION_COOKIE_SECURE'))
+        if os.getenv('SESSION_COOKIE_SECURE') is not None
+        else None
+    ),
+    SESSION_REFRESH_EACH_REQUEST=False,
+)
+app.session_interface = ProxyAwareSessionInterface()
+
+# O Nginx deste serviço envia exatamente um conjunto de X-Forwarded-*.
+# Limitar a um salto evita confiar em uma cadeia arbitrariamente longa.
+try:
+    proxy_hops = max(0, int(os.getenv('PROXY_FIX_HOPS', '1')))
+except (TypeError, ValueError):
+    proxy_hops = 1
+if proxy_hops:
+    app.wsgi_app = ProxyFix(
+        app.wsgi_app,
+        x_for=proxy_hops,
+        x_proto=proxy_hops,
+        x_host=proxy_hops,
+        x_port=proxy_hops,
+        x_prefix=proxy_hops,
+    )
 
 from database import get_db_connection, close_db_connection
 from models.users import (
@@ -24,7 +80,41 @@ from models.teams import get_all_user_teams, create_team, get_team, update_team
 
 # Registrar Blueprints
 from routes.pagamento import pagamento_bp
+from routes.player_availability import player_availability_bp
+from routes.scout_crossing import scout_crossing_bp
 app.register_blueprint(pagamento_bp)
+app.register_blueprint(player_availability_bp)
+app.register_blueprint(scout_crossing_bp)
+
+
+def _get_player_availability_rules(conn, user_id, team_id, season, round_number):
+    """Obtém as regras da rodada sem alterar tabelas existentes.
+
+    A tabela é criada apenas de forma idempotente na primeira utilização da
+    funcionalidade nova. As regras são sempre limitadas ao usuário e ao time
+    selecionado para impedir vazamento entre times.
+    """
+    from models.player_availability import (
+        create_player_availability_table,
+        list_player_availability,
+        RULE_LOCK_IN,
+        RULE_SAVE,
+    )
+
+    create_player_availability_table(conn)
+    records = list_player_availability(
+        conn,
+        user_id=user_id,
+        team_id=team_id,
+        season=season,
+        round_number=round_number,
+    )
+    rules = {int(item['athlete_id']): item['rule'] for item in records}
+    return {
+        'rules': rules,
+        'saved_ids': {athlete_id for athlete_id, rule in rules.items() if rule == RULE_SAVE},
+        'forced_ids': {athlete_id for athlete_id, rule in rules.items() if rule == RULE_LOCK_IN},
+    }
 
 # Timezone: Brasília (America/Sao_Paulo)
 try:
@@ -233,7 +323,13 @@ def login():
     if request.method == 'POST':
         username_or_email = request.form.get('username', '').strip()
         password = request.form.get('password', '')
-        remember_me = bool(request.form.get('remember'))
+        # ``remember`` era o nome usado por versões antigas do template.
+        # Aceitá-lo aqui evita quebrar formulários/cache antigos, enquanto o
+        # contrato atual usa ``remember_me``.
+        remember_value = request.form.get('remember_me')
+        if remember_value is None:
+            remember_value = request.form.get('remember')
+        remember_me = _parse_bool(remember_value)
         
         if not username_or_email or not password:
             flash('Por favor, preencha todos os campos.', 'error')
@@ -243,11 +339,11 @@ def login():
         
         if auth_result['success']:
             user = auth_result['user']
-            # Se 'remember_me' for verdadeiro, tornar a sessão permanente (30 dias no navegador)
-            if remember_me:
-                session.permanent = True
-            else:
-                session.permanent = False
+            # Descarta qualquer estado anônimo/permanente anterior antes de
+            # criar a sessão autenticada. Isso garante que desmarcar o
+            # checkbox nunca herde a duração de um login anterior.
+            session.clear()
+            session.permanent = remember_me
             session['user_id'] = user['id']
             session['username'] = user['username']
             # Inicializar time selecionado com o primeiro time do usuário (se houver)
@@ -1587,6 +1683,13 @@ def api_salvar_ranking(modulo):
         # Salvar ranking
         conn = get_db_connection()
         try:
+            availability = _get_player_availability_rules(
+                conn, user['id'], team_id, get_temporada_atual(), int(rodada_atual)
+            )
+            ranking_data = [
+                jogador for jogador in ranking_data
+                if jogador.get('atleta_id') not in availability['saved_ids']
+            ]
             from models.user_rankings import save_team_ranking
             ranking_id = save_team_ranking(
                 conn,
@@ -3074,6 +3177,12 @@ def api_modulo_dados(modulo):
         team_id = session.get('selected_team_id')
         if not team_id:
             return jsonify({'error': 'Nenhum time selecionado'}), 400
+
+        availability = _get_player_availability_rules(
+            conn, user['id'], team_id, get_temporada_atual(), rodada_atual
+        )
+        forced_ids = sorted(availability['forced_ids'])
+        saved_ids = sorted(availability['saved_ids'])
         
         # Buscar configuração DO TIME (não só do usuário!)
         from models.user_configurations import get_user_default_configuration
@@ -3111,14 +3220,31 @@ def api_modulo_dados(modulo):
             return jsonify({'error': 'Módulo inválido'}), 400
         
         # Buscar atletas com dados necessários (sem peso_jogo e peso_sg, eles vêm das tabelas de perfis)
-        cursor.execute('''
+        status_clauses = ['a.status_id = %s']
+        status_params = [7]
+        if forced_ids:
+            forced_placeholders = ','.join(['%s'] * len(forced_ids))
+            status_clauses.append(
+                f'(a.status_id IN (2, 3, 5) AND a.atleta_id IN ({forced_placeholders}))'
+            )
+            status_params.extend(forced_ids)
+
+        excluded_clause = ''
+        excluded_params = []
+        if saved_ids:
+            excluded_placeholders = ','.join(['%s'] * len(saved_ids))
+            excluded_clause = f' AND a.atleta_id NOT IN ({excluded_placeholders})'
+            excluded_params = saved_ids
+
+        cursor.execute(f'''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.pontos_num, a.media_num, 
                    a.preco_num, a.jogos_num, c.nome as clube_nome,
                    c.abreviacao as clube_abrev, COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.posicao_id = %s AND a.status_id = 7 AND a.temporada = %s
-        ''', (posicao_id, get_temporada_atual()))
+            WHERE a.posicao_id = %s AND a.temporada = %s
+              AND ({' OR '.join(status_clauses)}){excluded_clause}
+        ''', [posicao_id, get_temporada_atual()] + status_params + excluded_params)
         atletas_raw = cursor.fetchall()
         
         # Buscar peso_jogo e peso_sg das tabelas de perfis baseado na configuração do usuário
@@ -3191,12 +3317,37 @@ def api_modulo_dados(modulo):
                     'jogos_num': int(jogos) if jogos else 0,
                     'peso_jogo': peso_jogo_dict.get(clube_id, 0),
                     'peso_sg': peso_sg_dict.get(clube_id, 0),
-                    'adversario_id': adversario_id
+                    'adversario_id': adversario_id,
+                    'availability_rule': availability['rules'].get(atleta_id),
+                    'is_forced': atleta_id in availability['forced_ids'],
                 })
             except Exception as e:
                 print(f"Erro ao processar atleta: {e}, row: {row}")
                 continue
         
+        # Calcular media_basica (excluindo G, A, SG) em lote para todos os atletas
+        media_basica_dict = {}
+        atleta_ids_for_mb = [a['atleta_id'] for a in atletas]
+        if atleta_ids_for_mb:
+            try:
+                ph = ','.join(['%s'] * len(atleta_ids_for_mb))
+                cursor.execute(f'''
+                    SELECT atleta_id,
+                           AVG(pontuacao - (COALESCE(scout_g, 0)*8.0 + COALESCE(scout_a, 0)*5.0 + COALESCE(scout_sg, 0)*5.0)) as media_basica
+                    FROM acf_pontuados
+                    WHERE atleta_id IN ({ph}) AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
+                    GROUP BY atleta_id
+                ''', atleta_ids_for_mb + [rodada_atual, get_temporada_atual()])
+                for row_mb in cursor.fetchall():
+                    if row_mb and len(row_mb) >= 2:
+                        media_basica_dict[row_mb[0]] = round(float(row_mb[1]), 2) if row_mb[1] is not None else 0.0
+            except Exception as e:
+                print(f"Erro ao buscar media_basica em lote: {e}")
+
+        # Injetar media_basica nos atletas
+        for a in atletas:
+            a['media_basica'] = media_basica_dict.get(a['atleta_id'], 0.0)
+
         # Buscar dados de pontuados para cálculos
         # 1. Buscar médias de scouts por atleta
         atleta_ids = [a['atleta_id'] for a in atletas]
@@ -3363,8 +3514,10 @@ def api_modulo_dados(modulo):
         for atleta in atletas:
             if atleta['adversario_id'] and atleta['adversario_id'] in clubes_dict:
                 atleta['adversario_nome'] = clubes_dict[atleta['adversario_id']]['nome']
+                atleta['adversario_escudo_url'] = clubes_dict[atleta['adversario_id']]['escudo_url']
             else:
                 atleta['adversario_nome'] = 'N/A'
+                atleta['adversario_escudo_url'] = ''
         
         # Buscar pesos do módulo
         from utils.weights import get_weight
@@ -3917,6 +4070,9 @@ def api_escalacao_dados():
         cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
+        availability = _get_player_availability_rules(
+            conn, user['id'], team_id, get_temporada_atual(), rodada_atual
+        )
         
         # Buscar configuração padrão do usuário para este time
         from models.user_configurations import get_user_default_configuration
@@ -4045,7 +4201,10 @@ def api_escalacao_dados():
                         
                         ranking_normalizado.append(jogador_norm)
                     
-                    rankings_por_posicao[pos_nome] = ranking_normalizado
+                    rankings_por_posicao[pos_nome] = [
+                        jogador for jogador in ranking_normalizado
+                        if jogador.get('atleta_id') not in availability['saved_ids']
+                    ]
                     print(f"[DEBUG] Ranking {pos_nome}: {len(ranking_normalizado)} jogadores normalizados")
                     if ranking_normalizado:
                         sample = ranking_normalizado[0]
@@ -4178,7 +4337,8 @@ def api_escalacao_dados():
                     'status_id': status_id,
                     'pontuacao_total': 0  # Goleiros nulos não precisam de pontuação
                 }
-                todos_goleiros.append(goleiro_data)
+                if goleiro_data['atleta_id'] not in availability['saved_ids']:
+                    todos_goleiros.append(goleiro_data)
         
         print(f"[DEBUG] Total de goleiros processados: {len(todos_goleiros)}")
         print(f"[DEBUG] Goleiros prováveis (status 2 ou 7): {goleiros_provaveis_count}")
@@ -4430,6 +4590,16 @@ def api_escalar_time():
         team_id = session.get('selected_team_id')
         if not team_id:
             return jsonify({'error': 'Nenhum time selecionado'}), 400
+
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT COALESCE(MAX(rodada_id), 1) FROM acf_partidas WHERE temporada = %s',
+            (get_temporada_atual(),),
+        )
+        rodada_atual_envio = int(cursor.fetchone()[0] or 1)
+        availability_envio = _get_player_availability_rules(
+            conn, user['id'], team_id, get_temporada_atual(), rodada_atual_envio
+        )
         
         # Buscar team no banco
         team = get_team(conn, team_id)
@@ -4525,6 +4695,21 @@ def api_escalar_time():
                     break
             if reserva_luxo_id:
                 break
+
+        selecionados = set(atletas_ids)
+        selecionados.update(atleta_id for atleta_id in reservas_map.values() if atleta_id)
+        if reserva_luxo_id:
+            selecionados.add(reserva_luxo_id)
+        poupados_selecionados = sorted(
+            int(atleta_id) for atleta_id in selecionados
+            if atleta_id in availability_envio['saved_ids']
+        )
+        if poupados_selecionados:
+            return jsonify({
+                'error': 'A escalação contém jogador(es) marcados para poupar nesta rodada.',
+                'atletas_bloqueados': poupados_selecionados,
+                'rodada': rodada_atual_envio,
+            }), 400
         
         print(f"[DEBUG] Total de atletas (incluindo reservas): {len(atletas_ids)}")
         

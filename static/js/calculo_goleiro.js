@@ -136,7 +136,8 @@ class CalculoGoleiro {
             peso_sg: parseFloat(peso_sg_final.toFixed(2)),
             media_gols_adversario: parseFloat(media_gols_adversario.toFixed(2)),
             adversario_id, adversario_nome: adversario_nome || 'N/A',
-            foto: atleta.foto || ''
+            foto: atleta.foto || '',
+            media_basica: atleta.media_basica || 0
         };
     }
 }

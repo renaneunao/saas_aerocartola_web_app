@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Disponibilidade dos jogadores — Aero Cartola{% endblock %}
+
+{% block content %}
+<main class="max-w-7xl mx-auto px-4 py-6" id="availabilityPage">
+    <section class="glass rounded-2xl border border-[rgba(0,229,255,0.12)] p-5 mb-5">
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            <div>
+                <span class="text-[10px] uppercase tracking-[0.2em] text-neon-cyan font-semibold">Controle por rodada</span>
+                <h1 class="text-2xl md:text-3xl font-bold text-white mt-1">Disponibilidade dos jogadores</h1>
+                <p class="text-text-secondary text-sm mt-2 max-w-2xl">
+                    Marque quem deve ser poupado e quem você crava que joga. As regras valem somente para o time,
+                    temporada e rodada selecionados e afetam rankings e escalação ideal.
+                </p>
+            </div>
+            <div class="flex items-center gap-2 text-xs text-text-secondary bg-bg-secondary/60 rounded-xl px-3 py-2">
+                <i class="fas fa-circle-info text-neon-cyan"></i>
+                <span id="availabilityContext">Carregando rodada...</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="glass rounded-2xl border border-[rgba(0,229,255,0.09)] p-4 mb-5">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <label class="text-xs text-text-secondary">Posição
+                <select id="availabilityPosition" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2">
+                    <option value="">Todas as posições</option>
+                    <option value="1">Goleiros</option><option value="2">Laterais</option>
+                    <option value="3">Zagueiros</option><option value="4">Meias</option>
+                    <option value="5">Atacantes</option><option value="6">Técnicos</option>
+                </select>
+            </label>
+            <label class="text-xs text-text-secondary">Temporada
+                <input id="availabilitySeason" type="number" min="1" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="Atual">
+            </label>
+            <label class="text-xs text-text-secondary">Rodada
+                <input id="availabilityRound" type="number" min="1" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="Atual">
+            </label>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-4" role="tablist" aria-label="Filtro de regras">
+            <button class="availability-tab active" data-filter="all" type="button">Todos</button>
+            <button class="availability-tab" data-filter="poupar" type="button"><i class="fas fa-ban mr-1"></i>Poupados</button>
+            <button class="availability-tab" data-filter="cravado" type="button"><i class="fas fa-lock mr-1"></i>Cravados</button>
+            <button id="availabilityReload" type="button" class="ml-auto rounded-lg px-3 py-2 text-xs bg-white/5 hover:bg-white/10 text-text-secondary hover:text-white">
+                <i class="fas fa-rotate mr-1"></i>Atualizar
+            </button>
+        </div>
+    </section>
+
+    <section class="glass rounded-2xl border border-[rgba(0,229,255,0.09)] overflow-hidden">
+        <div class="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+            <div><h2 class="text-sm font-semibold text-white">Jogadores disponíveis para decisão</h2><p class="text-xs text-text-muted">Nulos não podem ser cravados como jogadores que vão atuar.</p></div>
+            <span id="availabilityCount" class="text-xs text-text-secondary">—</span>
+        </div>
+        <div id="availabilityFeedback" class="hidden px-4 py-3 text-sm"></div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm min-w-[760px]">
+                <thead class="bg-bg-secondary/70 text-text-muted text-[10px] uppercase tracking-wider">
+                    <tr><th class="text-left px-4 py-3">Jogador</th><th class="text-left px-4 py-3">Posição</th><th class="text-left px-4 py-3">Clube</th><th class="text-left px-4 py-3">Status atual</th><th class="text-right px-4 py-3">Decisão</th></tr>
+                </thead>
+                <tbody id="availabilityRows" class="divide-y divide-white/5"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+<script src="{{ url_for('static', filename='js/player-availability.js') }}"></script>
+{% endblock %}

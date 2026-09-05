@@ -2,838 +2,132 @@
 {% block title %}Escalação Ideal - Cartola Aero{% endblock %}
 
 {% block content %}
-<style>
-.toggle-switch {
-    position: relative;
-    display: inline-block;
-    width: 60px;
-    height: 34px;
-}
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #4a5568;
-    transition: .4s;
-    border-radius: 34px;
-}
-.slider:before {
-    position: absolute;
-    content: "";
-    height: 26px;
-    width: 26px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: .4s;
-    border-radius: 50%;
-}
-input:checked + .slider {
-    background-color: #10b981;
-}
-input:checked + .slider:before {
-    transform: translateX(26px);
-}
-.prioridade-item {
-    cursor: move;
-}
-.prioridade-item:hover {
-    background-color: rgba(59, 130, 246, 0.1);
-}
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/escalacao-ideal.css') }}">
 
-<style>
-/* Override do container pai para esta página */
-main > div:first-child {
-    max-width: none !important;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-}
-</style>
-<div class="py-4">
-    <!-- Page Header -->
-    <div class="text-center mb-8">
-        <div class="flex items-center justify-center space-x-3 mb-4">
-            <div class="p-3 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg">
-                <i class="fas fa-trophy text-2xl text-white"></i>
-            </div>
-            <h1 class="text-4xl font-bold bg-gradient-to-r from-white to-yellow-200 bg-clip-text text-transparent">
-                Escalação Ideal
-            </h1>
-        </div>
-        <p class="text-dark-blue-200 text-lg">Configure e calcule a melhor escalação para seu time</p>
+<div id="escalacaoIdealPage"
+     class="ideal-page"
+     data-hack-goleiro="{{ 'true' if permissions.hackGoleiro else 'false' }}"
+     data-fechar-defesa="{{ 'true' if permissions.fecharDefesa else 'false' }}"
+     data-reordenar-prioridades="{{ 'true' if permissions.reordenarPrioridades else 'false' }}"
+     data-pode-escalar="{{ 'true' if permissions.podeEscalar else 'false' }}"
+     data-ver-escalacao="{{ 'true' if permissions.verEscalacaoIdealCompleta else 'false' }}">
+
+  <header class="ideal-hero">
+    <div>
+      <div class="ideal-kicker">Aero intelligence · rodada <span id="heroRound">—</span></div>
+      <h1>Escalação ideal</h1>
+      <p>Monte, revise e envie o melhor time com clareza sobre cada decisão.</p>
     </div>
+    <a class="ideal-back" href="{{ url_for('modulos') }}"><i class="fas fa-arrow-left"></i> Voltar aos módulos</a>
+  </header>
 
-    <!-- Navigation -->
-    <div class="mb-6">
-        <nav class="flex space-x-2">
-            <a href="{{ url_for('modulos') }}" 
-               class="inline-flex items-center px-4 py-2 text-sm font-medium text-dark-blue-300 hover:text-white hover:bg-dark-blue-700/50 rounded-lg transition-all duration-200">
-                <i class="fas fa-arrow-left mr-2"></i>
-                Voltar aos Módulos
-            </a>
-        </nav>
-    </div>
+  <section id="infoInicialContent" class="ideal-surface ideal-team-strip" aria-label="Resumo do time">
+    <div class="ideal-empty"><div><i class="fas fa-circle-notch fa-spin"></i><p>Carregando dados do time...</p></div></div>
+  </section>
 
-    <!-- Grid de 2 colunas: Configurações (1/4) | Resultados (3/4) -->
-    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
-        
-        <!-- Coluna da Esquerda: Configurações (1 coluna) -->
-        <div class="lg:col-span-1">
-            <!-- Painel de Configuração -->
-            <div class="bg-gradient-to-br from-yellow-900/50 to-orange-900/50 backdrop-blur-sm rounded-2xl border border-yellow-500/50 shadow-xl overflow-hidden mb-6">
-                <div class="bg-gradient-to-r from-yellow-700/80 to-orange-800/80 p-4 border-b border-yellow-500/50">
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fas fa-cogs"></i>
-                        Configurações
-                    </h3>
-                </div>
-                
-                <div class="p-4 space-y-4">
-                    <!-- Formação -->
-                    <div>
-                        <label class="text-sm font-semibold text-white mb-2 block">Formação</label>
-                        <select id="formationSelect" class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                            <option value="4-3-3">4-3-3</option>
-                            <option value="4-4-2">4-4-2</option>
-                            <option value="3-5-2">3-5-2</option>
-                            <option value="3-4-3">3-4-3</option>
-                            <option value="4-5-1">4-5-1</option>
-                            <option value="5-4-1">5-4-1</option>
-                        </select>
-                    </div>
-
-                    <!-- Posição do Capitão -->
-                    <div>
-                        <label class="text-sm font-semibold text-white mb-2 block">Posição do Capitão</label>
-                        <select id="posicaoCapitao" class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                            <option value="atacantes">Atacantes</option>
-                            <option value="meias">Meias</option>
-                            <option value="laterais">Laterais</option>
-                            <option value="zagueiros">Zagueiros</option>
-                            <option value="goleiros">Goleiros</option>
-                        </select>
-                    </div>
-
-                    <!-- Posição do Reserva de Luxo -->
-                    <div>
-                        <label class="text-sm font-semibold text-white mb-2 block">Posição do Reserva de Luxo</label>
-                        <select id="posicaoReservaLuxo" class="w-full px-3 py-2 bg-dark-blue-800/50 border border-yellow-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                            <option value="atacantes">Atacantes</option>
-                            <option value="meias">Meias</option>
-                            <option value="laterais">Laterais</option>
-                            <option value="zagueiros">Zagueiros</option>
-                            <option value="goleiros">Goleiros</option>
-                        </select>
-                    </div>
-
-                    <!-- Hack do Goleiro -->
-                    <div class="flex items-center justify-between p-3 bg-dark-blue-800/30 rounded-lg border border-yellow-500/30 relative {% if not permissions.hackGoleiro %}opacity-50{% endif %}" {% if not permissions.hackGoleiro %}style="filter: blur(0.5px);"{% endif %}>
-                        {% if not permissions.hackGoleiro %}
-                        <div class="absolute bottom-2 right-2 z-10 pointer-events-auto">
-                            <a href="{{ url_for('pagamento.index') }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition-all duration-200 shadow-xl">
-                                <i class="fas fa-arrow-up mr-1"></i>
-                                Upgrade
-                            </a>
-                        </div>
-                        {% endif %}
-                        <div class="flex-1 mr-3">
-                            <label class="text-sm font-semibold text-white mb-1 block">Hack do Goleiro</label>
-                            <p class="text-yellow-200 text-xs">Goleiro titular nulo (não joga)</p>
-                        </div>
-                        <label class="toggle-switch flex-shrink-0">
-                            <input type="checkbox" id="hackGoleiroToggle" {% if not permissions.hackGoleiro %}disabled{% endif %}>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <!-- Fechar Defesa -->
-                    <div class="flex items-center justify-between p-3 bg-dark-blue-800/30 rounded-lg border border-yellow-500/30 relative {% if not permissions.fecharDefesa %}opacity-50{% endif %}" {% if not permissions.fecharDefesa %}style="filter: blur(0.5px);"{% endif %}>
-                        {% if not permissions.fecharDefesa %}
-                        <div class="absolute bottom-2 right-2 z-10 pointer-events-auto">
-                            <a href="{{ url_for('pagamento.index') }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition-all duration-200 shadow-xl">
-                                <i class="fas fa-arrow-up mr-1"></i>
-                                Upgrade
-                            </a>
-                        </div>
-                        {% endif %}
-                        <div class="flex-1 mr-3">
-                            <label class="text-sm font-semibold text-white mb-1 block">Fechar Defesa</label>
-                            <p class="text-yellow-200 text-xs">Prioriza defesa do melhor clube por SG</p>
-                        </div>
-                        <label class="toggle-switch flex-shrink-0">
-                            <input type="checkbox" id="fecharDefesaToggle" {% if not permissions.fecharDefesa %}disabled{% endif %}>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-
-                    <!-- Ordem de Prioridades -->
-                    <div class="relative {% if not permissions.reordenarPrioridades %}opacity-50{% endif %}" {% if not permissions.reordenarPrioridades %}style="filter: blur(0.5px);"{% endif %}>
-                        {% if not permissions.reordenarPrioridades %}
-                        <div class="absolute bottom-2 right-2 z-10 pointer-events-auto">
-                            <a href="{{ url_for('pagamento.index') }}" class="inline-flex items-center justify-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition-all duration-200 shadow-xl">
-                                <i class="fas fa-arrow-up mr-1"></i>
-                                Upgrade
-                            </a>
-                        </div>
-                        {% endif %}
-                        <label class="text-sm font-semibold text-white mb-2 block">
-                            <i class="fas fa-sort mr-1"></i>
-                            Ordem de Prioridades (arraste para reordenar)
-                        </label>
-                        <div id="prioridadesLista" class="space-y-1 {% if not permissions.reordenarPrioridades %}pointer-events-none{% endif %}">
-                            <!-- Será preenchido dinamicamente -->
-                        </div>
-                    </div>
-
-                    <!-- Botões -->
-                    <div class="space-y-2 pt-4 border-t border-yellow-500/30">
-                        <!-- Info: Configurações salvas automaticamente -->
-                        <div class="bg-blue-900/30 border border-blue-500/30 rounded-lg p-3 mb-3">
-                            <p class="text-blue-300 text-sm text-center">
-                                <i class="fas fa-info-circle mr-1"></i>
-                                Configurações salvas e recalculadas automaticamente
-                            </p>
-                        </div>
-                        
-                        <button onclick="calcularEscalacao()" id="calcularBtn" class="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white font-bold rounded-lg transition-all shadow-lg">
-                            <i class="fas fa-calculator mr-2"></i>
-                            Calcular Escalação Ideal
-                        </button>
-                        {% if not permissions.podeEscalar %}
-                        <div class="relative">
-                            <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                                <a href="{{ url_for('pagamento.index') }}" class="pointer-events-auto inline-flex items-center justify-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-xl">
-                                    <i class="fas fa-arrow-up mr-2"></i>
-                                    Upgrade
-                                </a>
-                            </div>
-                            <button class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold rounded-lg transition-all shadow-lg opacity-30" style="filter: blur(1px);" disabled>
-                                <i class="fas fa-paper-plane mr-2"></i>
-                                Escalar Time no Cartola
-                            </button>
-                        </div>
-                        {% else %}
-                        <button onclick="escalarTime()" id="escalarBtn" class="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                            <i class="fas fa-paper-plane mr-2"></i>
-                            Escalar Time no Cartola
-                        </button>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
+  <div class="ideal-workspace">
+    <aside class="ideal-sidebar">
+      <section class="ideal-surface ideal-panel">
+        <div class="ideal-panel-head">
+          <div>
+            <h2 class="ideal-panel-title"><i class="fas fa-sliders-h"></i> Estratégia</h2>
+            <p class="ideal-panel-subtitle">Defina o contexto antes do cálculo.</p>
+          </div>
+          <span class="ideal-eyebrow">ao vivo</span>
         </div>
-        
-        <!-- Coluna da Direita: Console e Resultado (3 colunas) -->
-        <div class="lg:col-span-3 space-y-4">
-            <!-- Informações do Time -->
-            <div class="bg-gradient-to-br from-dark-blue-900/50 to-dark-blue-800/50 backdrop-blur-sm rounded-xl border border-dark-blue-500/50 shadow-xl p-4">
-                <div id="infoInicialContent" class="flex flex-wrap items-center justify-center gap-6">
-                    <div class="text-center text-gray-400 py-2">
-                        <i class="fas fa-spinner fa-spin text-lg mb-1"></i>
-                        <p>Carregando informações...</p>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Console de Logs -->
-            <div id="consolePanel" class="bg-gradient-to-br from-gray-900/90 to-gray-800/90 backdrop-blur-sm rounded-2xl border border-gray-500/50 shadow-xl overflow-hidden">
-                <div class="bg-gradient-to-r from-gray-700/80 to-gray-800/80 p-4 border-b border-gray-500/50 flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fas fa-terminal"></i>
-                        Console de Cálculo
-                    </h3>
-                    <button onclick="limparConsole()" class="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-sm rounded-lg transition-all">
-                        <i class="fas fa-trash mr-1"></i>Limpar
-                    </button>
-                </div>
-                <div id="progressLog" class="text-green-400 text-xs leading-relaxed p-6 bg-black/80 font-mono max-h-[400px] overflow-y-auto whitespace-pre-wrap break-words">
-                    <div id="waitingMessage" class="text-gray-500">Aguardando cálculo...</div>
-                </div>
-            </div>
-
-            <!-- Resultado da Escalação -->
-            <div id="resultadoPanel" class="hidden bg-gradient-to-br from-yellow-900/50 to-orange-900/50 backdrop-blur-sm rounded-2xl border border-yellow-500/50 shadow-xl overflow-hidden relative">
-                {% if not permissions.verEscalacaoIdealCompleta %}
-                <div id="escalacaoBlurOverlay" class="absolute inset-0 bg-dark-blue-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6 pointer-events-none">
-                    <div class="pointer-events-auto text-center">
-                        <i class="fas fa-lock text-yellow-400 text-4xl mb-4"></i>
-                        <p class="text-white text-lg font-bold mb-2">Escalação Completa Bloqueada</p>
-                        <p class="text-yellow-300 text-sm mb-4">Visualize a escalação completa no plano Avançado ou Pro</p>
-                        <a href="{{ url_for('pagamento.index') }}" class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-xl">
-                            <i class="fas fa-arrow-up mr-2"></i>
-                            Upgrade
-                        </a>
-                    </div>
-                </div>
-                {% endif %}
-                <div class="bg-gradient-to-r from-yellow-700/80 to-orange-800/80 p-4 border-b border-yellow-500/50">
-                    <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                        <i class="fas fa-users"></i>
-                        Escalação Calculada
-                    </h3>
-                </div>
-                <div id="escalacaoContent" class="p-6 {% if not permissions.verEscalacaoIdealCompleta %}opacity-30{% endif %}" {% if not permissions.verEscalacaoIdealCompleta %}style="filter: blur(1px);"{% endif %}>
-                    <!-- Será preenchido dinamicamente -->
-                </div>
-            </div>
-
+        <div class="ideal-form-group">
+          <label class="ideal-label" for="formationSelect"><span>Formação</span><span>11 atletas</span></label>
+          <select id="formationSelect" class="ideal-select">
+            <option value="4-3-3">4-3-3 · equilíbrio ofensivo</option>
+            <option value="4-4-2">4-4-2 · meio-campo forte</option>
+            <option value="3-5-2">3-5-2 · domínio central</option>
+            <option value="3-4-3">3-4-3 · ataque agressivo</option>
+            <option value="4-5-1">4-5-1 · segurança e controle</option>
+            <option value="5-4-1">5-4-1 · defesa fechada</option>
+          </select>
         </div>
-    </div>
 
-    <!-- Rankings Top 5 - Full Width -->
-    <div class="bg-gradient-to-br from-dark-blue-900/50 to-dark-blue-800/50 backdrop-blur-sm rounded-xl border border-dark-blue-500/50 shadow-xl overflow-hidden">
-        <div class="bg-gradient-to-r from-dark-blue-700/80 to-dark-blue-800/80 p-4 border-b border-dark-blue-500/50">
-            <h3 class="text-lg font-bold text-white">Top 5 Rankings</h3>
-            <p class="text-dark-blue-200 text-sm">Melhores jogadores e clubes por posição e peso</p>
+        <div class="ideal-form-group">
+          <label class="ideal-label" for="posicaoCapitao">Capitão</label>
+          <select id="posicaoCapitao" class="ideal-select">
+            <option value="atacantes">Atacantes</option>
+            <option value="meias">Meias</option>
+            <option value="laterais">Laterais</option>
+            <option value="zagueiros">Zagueiros</option>
+            <option value="goleiros">Goleiros</option>
+          </select>
         </div>
-        <div id="top5CardsContent" class="p-4">
-            <div class="text-center text-gray-400 py-8">
-                <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
-                <p>Carregando rankings...</p>
-            </div>
+
+        <div class="ideal-form-group">
+          <label class="ideal-label" for="posicaoReservaLuxo">Reserva de luxo</label>
+          <select id="posicaoReservaLuxo" class="ideal-select">
+            <option value="atacantes">Atacantes</option>
+            <option value="meias">Meias</option>
+            <option value="laterais">Laterais</option>
+            <option value="zagueiros">Zagueiros</option>
+            <option value="goleiros">Goleiros</option>
+          </select>
         </div>
-    </div>
+
+        <div class="ideal-switch-card {% if not permissions.hackGoleiro %}is-locked{% endif %}">
+          <div><div class="ideal-switch-title">Hack do goleiro</div><div class="ideal-switch-copy">Permite goleiro nulo com maior valor de mercado.</div>{% if not permissions.hackGoleiro %}<a class="ideal-upgrade" href="{{ url_for('pagamento.index') }}"><i class="fas fa-lock"></i> Upgrade para desbloquear</a>{% endif %}</div>
+          <label class="ideal-switch"><input type="checkbox" id="hackGoleiroToggle" {% if not permissions.hackGoleiro %}disabled{% endif %}><span></span></label>
+        </div>
+
+        <div class="ideal-switch-card {% if not permissions.fecharDefesa %}is-locked{% endif %}">
+          <div><div class="ideal-switch-title">Fechar defesa</div><div class="ideal-switch-copy">Concentra a linha defensiva no melhor SG.</div>{% if not permissions.fecharDefesa %}<a class="ideal-upgrade" href="{{ url_for('pagamento.index') }}"><i class="fas fa-lock"></i> Upgrade para desbloquear</a>{% endif %}</div>
+          <label class="ideal-switch"><input type="checkbox" id="fecharDefesaToggle" {% if not permissions.fecharDefesa %}disabled{% endif %}><span></span></label>
+        </div>
+      </section>
+
+      <section class="ideal-surface ideal-panel">
+        <div class="ideal-panel-head">
+          <div><h2 class="ideal-panel-title"><i class="fas fa-sort-amount-down"></i> Prioridades</h2><p class="ideal-panel-subtitle">Arraste para indicar onde preservar orçamento.</p></div>
+        </div>
+        <div id="prioridadesLista" class="ideal-priority"></div>
+        {% if not permissions.reordenarPrioridades %}<a class="ideal-upgrade" href="{{ url_for('pagamento.index') }}"><i class="fas fa-lock"></i> Reordenar no plano avançado</a>{% endif %}
+      </section>
+
+      <section class="ideal-surface ideal-panel">
+        <div class="ideal-actions" style="padding-top:0;margin-top:0;border-top:0">
+          <div class="ideal-save-note"><i class="fas fa-shield-alt"></i> As configurações são salvas automaticamente.</div>
+          <button id="calcularBtn" class="ideal-btn ideal-btn-primary" type="button" onclick="calcularEscalacao()"><i class="fas fa-bolt"></i> Calcular escalação</button>
+          {% if permissions.podeEscalar %}
+            <button id="escalarBtn" class="ideal-btn ideal-btn-green" type="button" onclick="escalarTime()" disabled><i class="fas fa-paper-plane"></i> Escalar no Cartola</button>
+          {% else %}
+            <button id="escalarBtn" class="ideal-btn ideal-btn-green" type="button" disabled><i class="fas fa-lock"></i> Escalar no Cartola</button>
+            <a class="ideal-upgrade" style="justify-content:center" href="{{ url_for('pagamento.index') }}"><i class="fas fa-arrow-up"></i> Faça upgrade para escalar</a>
+          {% endif %}
+        </div>
+      </section>
+    </aside>
+
+    <main class="ideal-main">
+      <section id="resultadoPanel" class="ideal-surface ideal-result hidden">
+        {% if not permissions.verEscalacaoIdealCompleta %}
+          <div id="escalacaoBlurOverlay" class="ideal-lock-overlay"><div><i class="fas fa-lock"></i><strong>Escalação completa bloqueada</strong><p>Veja titulares, reservas e projeções completas no plano Avançado ou Pro.</p><a class="ideal-upgrade" href="{{ url_for('pagamento.index') }}"><i class="fas fa-arrow-up"></i> Conhecer planos</a></div></div>
+        {% endif %}
+        <div class="ideal-result-head">
+          <div><div class="ideal-result-title"><i class="fas fa-futbol"></i> Time recomendado</div><div class="ideal-result-meta">Revise o campo, o saldo e os sinais antes de enviar.</div></div>
+          <button id="manualEditBtn" class="ideal-btn ideal-btn-quiet" type="button"><i class="fas fa-pen"></i> Editar manualmente</button>
+        </div>
+        <div id="escalacaoContent" class="ideal-result-body"></div>
+      </section>
+
+      <section id="consolePanel" class="ideal-surface ideal-console">
+        <div class="ideal-console-head"><h3><i class="fas fa-terminal"></i> Logs de cálculo e escalação</h3><div><span id="consoleStatus" class="ideal-console-status">aguardando execução</span><button id="clearConsoleBtn" class="ideal-btn ideal-btn-quiet" type="button" onclick="limparConsole()" style="margin-left:8px"><i class="fas fa-eraser"></i> Limpar</button></div></div>
+        <div id="progressLog" class="ideal-console-body"><div id="waitingMessage" class="ideal-log-entry">Aguardando cálculo...</div></div>
+      </section>
+
+      <section class="ideal-surface ideal-rankings">
+        <div class="ideal-panel-head"><div><h2 class="ideal-panel-title"><i class="fas fa-chart-bar"></i> Radar da rodada</h2><p class="ideal-panel-subtitle">Top 4 dos rankings que alimentam a escalação.</p></div></div>
+        <div id="top5CardsContent"><div class="ideal-empty"><div><i class="fas fa-chart-line"></i><p>Carregando rankings...</p></div></div></div>
+      </section>
+    </main>
+  </div>
 </div>
 
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js') }}"></script>
-<script src="{{ url_for('static', filename='js/calculo_escalacao.js') }}"></script>
-<script>
-// Estado das prioridades
-let prioridadesOrdenadas = ['atacantes', 'laterais', 'meias', 'zagueiros', 'goleiros', 'treinadores'];
-let configCarregada = false;
-
-// Armazenar última escalação calculada
-let ultimaEscalacao = null;
-
-// Inicializar ao carregar
-document.addEventListener('DOMContentLoaded', async function() {
-    // Verificar se todos os módulos foram calculados
-    await verificarStatusModulos();
-    
-    await carregarConfiguracoes();
-    await carregarCardsTop5();
-    renderizarPrioridades();
-    configurarEventListeners();
-});
-
-// Verificar se todos os módulos de posição foram calculados
-async function verificarStatusModulos() {
-    try {
-        const response = await fetch('/api/modulos/status');
-        if (!response.ok) {
-            throw new Error('Erro ao verificar status dos módulos');
-        }
-        
-        const data = await response.json();
-        
-        if (!data.todos_calculados) {
-            // Módulos não calculados - bloquear página
-            const nomes = {
-                'goleiro': 'Goleiros',
-                'lateral': 'Laterais',
-                'zagueiro': 'Zagueiros',
-                'meia': 'Meias',
-                'atacante': 'Atacantes',
-                'treinador': 'Técnicos'
-            };
-            
-            const modulosPendentes = Object.keys(data.status)
-                .filter(m => !data.status[m])
-                .map(m => nomes[m])
-                .join(', ');
-            
-            // Mostrar alerta e redirecionar
-            await showAlert(
-                'Módulos Não Calculados',
-                `Você precisa calcular TODOS os módulos de posição antes de acessar a escalação ideal.\n\nMódulos pendentes: ${modulosPendentes}\n\nRedirecionando para a página de módulos...`
-            );
-            
-            window.location.href = '/modulos';
-            throw new Error('Módulos não calculados');
-        }
-        
-        console.log('✅ Todos os módulos calculados! Escalação liberada.');
-    } catch (error) {
-        console.error('Erro ao verificar status:', error);
-        throw error;
-    }
-}
-
-// Carregar configurações
-async function carregarConfiguracoes() {
-    try {
-        const response = await fetch('/api/escalacao-ideal/config');
-        const config = await response.json();
-        
-        // Verificar permissões
-        const temHackGoleiro = {% if permissions.hackGoleiro %}true{% else %}false{% endif %};
-        const temFecharDefesa = {% if permissions.fecharDefesa %}true{% else %}false{% endif %};
-        
-        document.getElementById('formationSelect').value = config.formation || '4-3-3';
-        // Se não tiver permissão, inicializar como false
-        document.getElementById('hackGoleiroToggle').checked = temHackGoleiro ? (config.hack_goleiro || false) : false;
-        document.getElementById('fecharDefesaToggle').checked = temFecharDefesa ? (config.fechar_defesa || false) : false;
-        document.getElementById('posicaoCapitao').value = config.posicao_capitao || 'atacantes';
-        document.getElementById('posicaoReservaLuxo').value = config.posicao_reserva_luxo || 'atacantes';
-        
-        // Prioridades
-        if (config.prioridades) {
-            // Converter 'tecnicos' para 'treinadores' se necessário (migração)
-            prioridadesOrdenadas = config.prioridades.split(',').map(p => p === 'tecnicos' ? 'treinadores' : p);
-            renderizarPrioridades();
-        }
-        
-        configCarregada = true;
-    } catch (error) {
-        console.error('Erro ao carregar configurações:', error);
-    }
-}
-
-// Renderizar lista de prioridades
-function renderizarPrioridades() {
-    const container = document.getElementById('prioridadesLista');
-    const nomes = {
-        'atacantes': 'Atacantes',
-        'laterais': 'Laterais',
-        'meias': 'Meias',
-        'zagueiros': 'Zagueiros',
-        'goleiros': 'Goleiros',
-        'treinadores': 'Técnicos'
-    };
-    
-    const icons = {
-        'atacantes': 'fa-futbol',
-        'laterais': 'fa-arrows-alt-h',
-        'meias': 'fa-running',
-        'zagueiros': 'fa-shield-alt',
-        'goleiros': 'fa-hands',
-        'treinadores': 'fa-clipboard-list'
-    };
-    
-    // Verificar permissão de reordenar
-    const podeReordenar = {% if permissions.reordenarPrioridades %}true{% else %}false{% endif %};
-    
-    container.innerHTML = prioridadesOrdenadas.map((pos, idx) => `
-        <div class="prioridade-item flex items-center gap-3 p-2 bg-dark-blue-800/50 rounded border border-yellow-500/30" draggable="${podeReordenar}" data-posicao="${pos}" data-index="${idx}">
-            <i class="fas fa-grip-vertical text-gray-400"></i>
-            <span class="flex-1 text-white text-sm flex items-center gap-2">
-                <i class="fas ${icons[pos]} text-yellow-400"></i>
-                ${idx + 1}. ${nomes[pos]}
-            </span>
-        </div>
-    `).join('');
-    
-    // Adicionar drag and drop apenas se tiver permissão
-    if (podeReordenar) {
-        const items = container.querySelectorAll('.prioridade-item');
-        items.forEach(item => {
-            item.addEventListener('dragstart', handleDragStart);
-            item.addEventListener('dragover', handleDragOver);
-            item.addEventListener('drop', handleDrop);
-            item.addEventListener('dragend', handleDragEnd);
-        });
-    }
-}
-
-let draggedItem = null;
-
-function handleDragStart(e) {
-    draggedItem = this;
-    this.style.opacity = '0.5';
-}
-
-function handleDragOver(e) {
-    e.preventDefault();
-    return false;
-}
-
-function handleDrop(e) {
-    e.stopPropagation();
-    if (draggedItem !== this) {
-        const fromIndex = parseInt(draggedItem.dataset.index);
-        const toIndex = parseInt(this.dataset.index);
-        
-        // Reordenar array
-        const item = prioridadesOrdenadas.splice(fromIndex, 1)[0];
-        prioridadesOrdenadas.splice(toIndex, 0, item);
-        
-        renderizarPrioridades();
-    }
-    return false;
-}
-
-function handleDragEnd(e) {
-    this.style.opacity = '1';
-}
-
-// Salvar configurações
-async function salvarConfiguracoes() {
-    const formation = document.getElementById('formationSelect').value;
-    const hackGoleiro = document.getElementById('hackGoleiroToggle').checked;
-    const fecharDefesa = document.getElementById('fecharDefesaToggle').checked;
-    const posicaoCapitao = document.getElementById('posicaoCapitao').value;
-    const posicaoReservaLuxo = document.getElementById('posicaoReservaLuxo').value;
-    const prioridades = prioridadesOrdenadas.join(',');
-    
-    try {
-        const response = await fetch('/api/escalacao-ideal/config', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                formation,
-                hack_goleiro: hackGoleiro,
-                fechar_defesa: fecharDefesa,
-                posicao_capitao: posicaoCapitao,
-                posicao_reserva_luxo: posicaoReservaLuxo,
-                prioridades
-            })
-        });
-        
-        if (response.ok) {
-            adicionarLog('✅ Configurações salvas com sucesso!', 'success');
-        }
-    } catch (error) {
-        console.error('Erro ao salvar:', error);
-        adicionarLog('❌ Erro ao salvar configurações', 'error');
-    }
-}
-
-// Calcular escalação
-async function calcularEscalacao() {
-    const btn = document.getElementById('calcularBtn');
-    btn.disabled = true;
-    limparConsole();
-    document.getElementById('resultadoPanel').classList.add('hidden');
-    
-    showLoader('Calculando escalação ideal...');
-    
-    try {
-        // Buscar dados
-        const response = await fetch('/api/escalacao-ideal/dados');
-        const dados = await response.json();
-        
-        if (dados.error) {
-            throw new Error(dados.error);
-        }
-        
-        // Configurações
-        const formation = document.getElementById('formationSelect').value;
-        const hackGoleiro = document.getElementById('hackGoleiroToggle').checked;
-        const fecharDefesa = document.getElementById('fecharDefesaToggle').checked;
-        const posicaoCapitao = document.getElementById('posicaoCapitao').value;
-        const posicaoReservaLuxo = document.getElementById('posicaoReservaLuxo').value;
-        
-        // Criar instância do calculador
-        const escalador = new EscalacaoIdeal({
-            rodada_atual: dados.rodada_atual,
-            patrimonio: dados.patrimonio,
-            rankings_por_posicao: dados.rankings_por_posicao,
-            todos_goleiros: dados.todos_goleiros || [],
-            clubes_sg: dados.clubes_sg || [],
-            adversarios_dict: dados.adversarios_dict || {},
-            formacao: formation,
-            posicao_capitao: posicaoCapitao,
-            posicao_reserva_luxo: posicaoReservaLuxo,
-            prioridades: prioridadesOrdenadas,
-            fechar_defesa: fecharDefesa,
-            hack_goleiro: hackGoleiro
-        });
-        
-        // Configurar callback de logs
-        escalador.setLogCallback((msg) => adicionarLog(msg, 'log'));
-        
-        // Calcular
-        const resultado = await escalador.calcular();
-        
-        // Armazenar escalação para uso posterior
-        ultimaEscalacao = resultado;
-        
-        // Habilitar botão de escalar
-        document.getElementById('escalarBtn').disabled = false;
-        
-        // Exibir resultado (passar clubes_dict para escudos)
-        exibirResultado(resultado, dados.clubes_dict);
-        
-    } catch (error) {
-        adicionarLog(`\n❌ ERRO: ${error.message}`, 'error');
-        console.error(error);
-        
-        // Garantir que escalação anterior é invalidada
-        ultimaEscalacao = null;
-        document.getElementById('escalarBtn').disabled = true;
-    } finally {
-        hideLoader();
-        btn.disabled = false;
-    }
-}
-
-// Limpar console
-function limparConsole() {
-    document.getElementById('progressLog').innerHTML = '<div id="waitingMessage" class="text-gray-500">Console limpo. Aguardando cálculo...</div>';
-}
-
-// Adicionar log
-function adicionarLog(message, tipo = 'log') {
-    const logContainer = document.getElementById('progressLog');
-    const waitingMessage = document.getElementById('waitingMessage');
-    if (waitingMessage) waitingMessage.remove();
-    
-    const logEntry = document.createElement('div');
-    const estilos = {
-        'log': 'text-green-400',
-        'info': 'text-blue-400',
-        'success': 'text-green-300 font-bold',
-        'error': 'text-red-400 font-bold',
-        'warning': 'text-yellow-400'
-    };
-    
-    logEntry.textContent = message;
-    logEntry.className = `${estilos[tipo] || 'text-green-400'} leading-relaxed`;
-    logContainer.appendChild(logEntry);
-    logContainer.scrollTop = logContainer.scrollHeight;
-}
-
-// Exibir resultado
-function exibirResultado(resultado, clubesDict = {}) {
-    const panel = document.getElementById('resultadoPanel');
-    const content = document.getElementById('escalacaoContent');
-    
-    // Info resumida compacta
-    let html = `
-        <div class="flex gap-3 mb-4">
-            <div class="flex-1 bg-gradient-to-br from-yellow-600/20 to-yellow-800/20 rounded-lg px-3 py-2 border border-yellow-500/40">
-                <div class="text-yellow-300 text-xs">💰 Custo</div>
-                <div class="text-white text-lg font-bold">R$ ${resultado.custoTotal.toFixed(2)}</div>
-            </div>
-            <div class="flex-1 bg-gradient-to-br from-green-600/20 to-green-800/20 rounded-lg px-3 py-2 border border-green-500/40">
-                <div class="text-green-300 text-xs">📊 Pontuação</div>
-                <div class="text-white text-lg font-bold">${resultado.pontuacaoTotal.toFixed(2)}</div>
-            </div>
-            <div class="flex-1 bg-gradient-to-br from-blue-600/20 to-blue-800/20 rounded-lg px-3 py-2 border border-blue-500/40">
-                <div class="text-blue-300 text-xs">💵 Sobra</div>
-                <div class="text-white text-lg font-bold">R$ ${(resultado.patrimonio - resultado.custoTotal).toFixed(2)}</div>
-            </div>
-        </div>
-    `;
-    
-    // Mapear ícones e nomes
-    const posConfig = {
-        'goleiros': { nome: 'GOL', icon: '🧤', cor: 'bg-yellow-600/30 border-yellow-500' },
-        'zagueiros': { nome: 'ZAG', icon: '🛡️', cor: 'bg-blue-600/30 border-blue-500' },
-        'laterais': { nome: 'LAT', icon: '↔️', cor: 'bg-cyan-600/30 border-cyan-500' },
-        'meias': { nome: 'MEI', icon: '⚡', cor: 'bg-purple-600/30 border-purple-500' },
-        'atacantes': { nome: 'ATA', icon: '⚽', cor: 'bg-red-600/30 border-red-500' },
-        'treinadores': { nome: 'TÉC', icon: '📋', cor: 'bg-gray-600/30 border-gray-500' }
-    };
-    
-    // Função auxiliar para renderizar jogador
-    const renderJogador = (j, showCusto = true, isLuxo = false) => {
-        const capitao = j.eh_capitao ? '<span class="ml-1 px-1.5 py-0.5 bg-yellow-500 text-yellow-900 text-[10px] font-bold rounded">C</span>' : '';
-        const luxoBadge = isLuxo ? '<span class="ml-1 px-1.5 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded">💎 LUXO</span>' : '';
-        const custoText = showCusto ? `C$ ${j.preco_num?.toFixed(2)}` : '<span class="text-gray-400 text-xs">sem custo</span>';
-        
-        // Foto do jogador
-        const fotoUrl = j.foto || '';
-        const fotoEl = fotoUrl 
-            ? `<img src="${fotoUrl}" alt="${j.apelido}" class="w-8 h-8 rounded-full object-cover border border-[rgba(0,229,255,0.15)]" onerror="this.style.display='none'">`
-            : `<div class="w-8 h-8 rounded-full bg-[rgba(0,229,255,0.08)] border border-[rgba(0,229,255,0.1)] flex items-center justify-center flex-shrink-0"><span class="text-neon-cyan font-bold text-[10px]">${(j.apelido || '?').substring(0, 2).toUpperCase()}</span></div>`;
-        
-        // Escudo do clube
-        const clube = clubesDict[j.clube_id] || {};
-        const escudoUrl = clube.escudo_url || '';
-        const escudo = escudoUrl
-            ? `<img src="${escudoUrl}" alt="${clube.nome || ''}" class="w-5 h-5 rounded inline-block" onerror="this.style.display='none'">`
-            : '';
-        
-        const bgColor = isLuxo ? 'bg-purple-900/40 border border-purple-500/30' : 'bg-dark-blue-900/40';
-        
-        return `
-            <div class="flex items-start gap-2 ${bgColor} rounded px-3 py-2">
-                <div class="flex-shrink-0 mt-0.5">${fotoEl}</div>
-                <div class="flex-shrink-0 mt-0.5">${escudo}</div>
-                <div class="flex-1 min-w-0">
-                    <div class="text-white font-semibold text-sm">${j.apelido}${capitao}${luxoBadge}</div>
-                    <div class="text-yellow-300 text-xs font-medium">${custoText}</div>
-                </div>
-            </div>
-        `;
-    };
-    
-    // TITULARES - Layout em grid por posição
-    html += `
-        <div class="bg-gradient-to-b from-green-900/20 to-dark-blue-900/30 rounded-lg p-3 mb-3 border border-green-700/30">
-            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-green-600/30">
-                <span class="text-xl">⭐</span>
-                <h4 class="text-white font-bold text-sm">TIME TITULAR</h4>
-            </div>
-            <div class="grid grid-cols-6 gap-2">
-    `;
-    
-    const ordem = ['goleiros', 'zagueiros', 'laterais', 'meias', 'atacantes', 'treinadores'];
-    for (const pos of ordem) {
-        const jogadores = resultado.titulares[pos] || [];
-        if (jogadores.length > 0) {
-            const config = posConfig[pos];
-            html += `
-                <div class="${config.cor} rounded-lg p-2 border">
-                    <div class="text-center mb-2">
-                        <span class="text-lg">${config.icon}</span>
-                        <div class="text-white text-[10px] font-bold">${config.nome}</div>
-                    </div>
-                    <div class="space-y-1">
-                        ${jogadores.map(j => renderJogador(j, true)).join('')}
-                    </div>
-                </div>
-            `;
-        }
-    }
-    
-    html += '</div></div>';
-    
-    // RESERVAS (incluindo reserva de luxo)
-    html += `
-        <div class="bg-dark-blue-800/20 rounded-lg p-4 border border-dark-blue-600/30">
-            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-dark-blue-600/30">
-                <span class="text-xl">🔄</span>
-                <h4 class="text-white font-bold">RESERVAS</h4>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-    `;
-    
-    for (const pos of ordem) {
-        const todosReservas = resultado.reservas[pos] || [];
-        if (todosReservas.length > 0) {
-            const config = posConfig[pos];
-            html += `
-                <div class="bg-dark-blue-900/40 rounded-lg p-3 border border-dark-blue-700">
-                    <div class="flex items-center gap-2 mb-2 pb-2 border-b border-dark-blue-600">
-                        <span class="text-lg">${config.icon}</span>
-                        <span class="text-gray-300 text-sm font-semibold">${config.nome}</span>
-                    </div>
-                    <div class="space-y-2">
-                        ${todosReservas.map(j => renderJogador(j, false, j.eh_reserva_luxo)).join('')}
-                    </div>
-                </div>
-            `;
-        }
-    }
-    
-    html += '</div></div>';
-    
-    content.innerHTML = html;
-    panel.classList.remove('hidden');
-}
-
-// Escalar time no Cartola
-async function escalarTime() {
-    if (!ultimaEscalacao) {
-        showAlert('Calcule a escalação ideal primeiro!', 'Atenção', 'warning');
-        return;
-    }
-    
-    const confirmado = await showConfirm(
-        'Confirma escalar este time no Cartola FC?',
-        '🚀 Escalar Time',
-        { confirmText: 'Sim, escalar!', cancelText: 'Cancelar' }
-    );
-    
-    if (!confirmado) return;
-    
-    const btn = document.getElementById('escalarBtn');
-    const btnText = btn.innerHTML;
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Escalando...';
-    
-    showLoader('Escalando time no Cartola FC...');
-    
-    // Ler formação ATUAL do select (pode ter mudado após o cálculo)
-    const formacaoAtual = document.getElementById('formationSelect').value;
-    
-    try {
-        const response = await fetch('/api/escalacao-ideal/escalar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                escalacao: ultimaEscalacao,
-                formacao: formacaoAtual
-            })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.success) {
-            adicionarLog(`\n✅ ${data.mensagem}`, 'success');
-            showToast('Time escalado com sucesso! Boa sorte na rodada! 🍀', 'success', 5000);
-        } else {
-            const errorMsg = data.error || 'Erro desconhecido';
-            adicionarLog(`\n❌ Erro ao escalar: ${errorMsg}`, 'error');
-            
-            if (data.detalhes && data.detalhes.erros) {
-                const erros = Object.entries(data.detalhes.erros).map(([k, v]) => `${k}: ${v}`).join('\n');
-                adicionarLog(`Detalhes:\n${erros}`, 'error');
-            }
-            
-            showAlert(errorMsg, 'Erro ao Escalar', 'error');
-        }
-    } catch (error) {
-        console.error('Erro ao escalar:', error);
-        adicionarLog(`\n❌ Erro de conexão: ${error.message}`, 'error');
-        showAlert(error.message, 'Erro de Conexão', 'error');
-    } finally {
-        hideLoader();
-        btn.disabled = false;
-        btn.innerHTML = btnText;
-    }
-}
-
-// Configurar event listeners
-function configurarEventListeners() {
-    // Todos os campos de configuração
-    const configFields = [
-        'formationSelect',
-        'hackGoleiroToggle',
-        'fecharDefesaToggle',
-        'posicaoCapitao',
-        'posicaoReservaLuxo',
-        'prioridadesInput'
-    ];
-    
-    // Adicionar listener para cada campo
-    configFields.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            const eventType = element.type === 'checkbox' ? 'change' : 'change';
-            element.addEventListener(eventType, () => {
-                if (configCarregada) {
-                    aoMudarConfiguracao();
-                }
-            });
-        }
-    });
-}
-
-// Função chamada ao mudar qualquer configuração
-async function aoMudarConfiguracao() {
-    // Invalidar escalação anterior
-    ultimaEscalacao = null;
-    document.getElementById('escalarBtn').disabled = true;
-    
-    // Salvar configurações
-    await salvarConfiguracoes();
-    
-    // Recalcular automaticamente
-    showToast('Configuração alterada. Recalculando...', 'info', 2000);
-    await calcularEscalacao();
-}
-</script>
+<script src="{{ url_for('static', filename='js/escalacao-ideal-page.js') }}"></script>
 {% endblock %}

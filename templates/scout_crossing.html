@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Cruzamento de Scouts{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/scout-crossing.css') }}">
+
+<main class="scout-crossing-page" id="scoutCrossingPage"
+      data-options-url="{{ url_for('scout_crossing.options') }}"
+      data-crossing-url="{{ url_for('scout_crossing.crossing') }}"
+      data-detail-url-template="{{ url_for('scout_crossing.detail', atleta_id=0, rodada=0) }}"
+      data-selected-player="{{ selected_player or '' }}"
+      data-selected-opponent="{{ selected_opponent or '' }}">
+    <section class="scout-crossing-hero">
+        <div>
+            <p class="scout-crossing-eyebrow"><i class="fas fa-crosshairs"></i> Análise de confronto</p>
+            <h1>Cruzamento de Scouts</h1>
+            <p>Combine jogador, posição, rodada e adversário para enxergar o contexto por trás da pontuação.</p>
+        </div>
+        <div class="scout-crossing-hero-mark" aria-hidden="true"><i class="fas fa-chart-line"></i></div>
+    </section>
+
+    <section class="scout-crossing-panel scout-crossing-filters" aria-labelledby="scoutCrossingFiltersTitle">
+        <div class="scout-crossing-panel-heading">
+            <div>
+                <p class="scout-crossing-kicker">Filtros</p>
+                <h2 id="scoutCrossingFiltersTitle">Monte seu cruzamento</h2>
+            </div>
+            <span class="scout-crossing-live-dot"><span></span> Dados ACF</span>
+        </div>
+
+        <form id="scoutCrossingForm" class="scout-crossing-filter-grid">
+            <label class="scout-crossing-field scout-crossing-field-player">
+                <span>Jogador</span>
+                <select id="scoutCrossingPlayer" name="atleta_id" required disabled>
+                    <option value="">Selecione a posição primeiro</option>
+                </select>
+            </label>
+            <label class="scout-crossing-field">
+                <span>Posição</span>
+                <select id="scoutCrossingPosition" name="posicao_id" required>
+                    {% for position in position_options %}
+                    <option value="{{ position.id }}" {% if position.id == selected_position %}selected{% endif %}>{{ position.label }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="scout-crossing-field">
+                <span>Temporada</span>
+                <select id="scoutCrossingSeason" name="temporada" required>
+                    {% for season in season_options %}
+                    <option value="{{ season }}" {% if season == selected_season %}selected{% endif %}>{{ season }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="scout-crossing-field">
+                <span>Rodada até</span>
+                <select id="scoutCrossingRound" name="rodada" required>
+                    {% for round in round_options %}
+                    <option value="{{ round }}" {% if round == selected_round %}selected{% endif %}>Rodada {{ round }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="scout-crossing-field">
+                <span>Adversário</span>
+                <select id="scoutCrossingOpponent" name="adversario_id" disabled>
+                    <option value="">Todos os adversários</option>
+                </select>
+            </label>
+            <button class="scout-crossing-submit" type="submit" id="scoutCrossingSubmit">
+                <i class="fas fa-arrows-to-circle"></i>
+                <span>Cruzar scouts</span>
+            </button>
+        </form>
+        <p class="scout-crossing-filter-help" id="scoutCrossingFilterHelp">Escolha uma posição para carregar os jogadores disponíveis.</p>
+    </section>
+
+    <div id="scoutCrossingAlert" class="scout-crossing-alert" role="status" hidden></div>
+    {% if database_error %}
+    <div class="scout-crossing-alert scout-crossing-alert-error">{{ database_error }}</div>
+    {% endif %}
+
+    <section id="scoutCrossingEmpty" class="scout-crossing-empty">
+        <div class="scout-crossing-empty-icon"><i class="fas fa-magnifying-glass-chart"></i></div>
+        <h2>Selecione um jogador para começar</h2>
+        <p>O painel vai reunir as últimas notas, scouts mais frequentes da posição, adversários e desempenho em casa ou fora.</p>
+    </section>
+
+    <section id="scoutCrossingResults" hidden>
+        <div class="scout-crossing-player-card">
+            <div class="scout-crossing-player-identity">
+                <div class="scout-crossing-player-avatar" id="scoutCrossingPlayerAvatar"><i class="fas fa-user"></i></div>
+                <div>
+                    <p class="scout-crossing-kicker">Jogador analisado</p>
+                    <h2 id="scoutCrossingPlayerName">—</h2>
+                    <p id="scoutCrossingPlayerMeta">—</p>
+                </div>
+            </div>
+            <div class="scout-crossing-summary-grid" id="scoutCrossingSummary"></div>
+        </div>
+
+        <div class="scout-crossing-section-grid">
+            <section class="scout-crossing-panel">
+                <div class="scout-crossing-panel-heading">
+                    <div><p class="scout-crossing-kicker">Histórico recente</p><h2>Últimas pontuações</h2></div>
+                    <span class="scout-crossing-panel-note">Clique para detalhar</span>
+                </div>
+                <div id="scoutCrossingRecent" class="scout-crossing-recent-list"></div>
+            </section>
+
+            <section class="scout-crossing-panel">
+                <div class="scout-crossing-panel-heading">
+                    <div><p class="scout-crossing-kicker">Referência da posição</p><h2>Principais scouts</h2></div>
+                    <span class="scout-crossing-panel-note">média por jogo</span>
+                </div>
+                <div id="scoutCrossingPositionScouts" class="scout-crossing-scout-list"></div>
+            </section>
+        </div>
+
+        <div class="scout-crossing-section-grid">
+            <section class="scout-crossing-panel">
+                <div class="scout-crossing-panel-heading">
+                    <div><p class="scout-crossing-kicker">Confrontos no recorte</p><h2>Adversários</h2></div>
+                </div>
+                <div id="scoutCrossingOpponents" class="scout-crossing-opponent-list"></div>
+            </section>
+
+            <section class="scout-crossing-panel">
+                <div class="scout-crossing-panel-heading">
+                    <div><p class="scout-crossing-kicker">Mando de campo</p><h2>Casa / Fora</h2></div>
+                </div>
+                <div id="scoutCrossingHomeAway" class="scout-crossing-home-away"></div>
+            </section>
+        </div>
+    </section>
+</main>
+
+{% include 'modals/modal_cruzamento_scouts.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/scout-crossing.js') }}"></script>
+{% endblock %}
