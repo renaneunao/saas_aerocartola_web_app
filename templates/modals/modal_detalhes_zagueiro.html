@@ -123,9 +123,9 @@
                 </ul>
             </div>
         </div>
-        <button type="button" class="mt-5 w-full rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 text-sm font-semibold text-cyan-200 hover:bg-cyan-400/20 transition" onclick="openScoutCrossingModal(dadosZagueiroAtual?.atleta_id, { position_id: 3 })">
-            <i class="fas fa-crosshairs mr-2"></i>Cruzar scouts deste jogador
-        </button>
+        {% set scout_prefix = 'Zagueiro' %}
+        {% set scout_position_id = 3 %}
+        {% include 'modals/_scout_history.html' %}
     </div>
 </div>
 
@@ -187,7 +187,7 @@ function preencherModalZagueiro(dados) {
     
     // Foto do jogador
     const fotoEl = document.getElementById('modalZagueiroFoto');
-    const fotoReal = dados.foto_url || (typeof getPlayerImage !== 'undefined' ? getPlayerImage(dados.atleta_id) : '');
+    const fotoReal = typeof resolvePlayerPhoto === 'function' ? resolvePlayerPhoto(dados.foto_url, dados.atleta_id) : dados.foto_url;
     fotoEl.src = fotoReal || 'https://via.placeholder.com/80';
     fotoEl.onerror = function() {
         this.src = 'https://via.placeholder.com/80';
@@ -222,6 +222,7 @@ function preencherModalZagueiro(dados) {
     }
 
     gerarArgumentosZagueiro(dados);
+    loadModalScoutHistory('Zagueiro', dados.atleta_id, 3, dados.foto_url);
 }
 
 function fecharModalZagueiro() {

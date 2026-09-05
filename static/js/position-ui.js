@@ -21,8 +21,12 @@
     }
 
     function setupWeightPanel(form) {
-        const panel = form.closest('.relative');
-        if (!panel || panel.dataset.positionConfigReady === 'true') return;
+        if (!form) return;
+
+        // O próprio formulário também possui a classe `relative`. O painel
+        // real é o contêiner pai, que contém cabeçalho, overlay e formulário.
+        const panel = form.parentElement;
+        if (!panel || panel === form || panel.dataset.positionConfigReady === 'true') return;
 
         const header = panel.firstElementChild;
         if (!header) return;
@@ -69,35 +73,63 @@
             .forEach((element) => setupWeightPanel(element.tagName === 'FORM' ? element : element.form));
     }
 
-    function teamShieldFromPlayerCell(playerCell, clubName) {
-        if (!playerCell) return '';
-        const images = Array.from(playerCell.querySelectorAll('img'));
-        const matchingImage = images.find((image) => image.alt === clubName);
-        return matchingImage || images[1] || null;
+    function imageSource(image) {
+        return image && image.getAttribute('src') && image.getAttribute('src') !== ''
+            ? image.getAttribute('src')
+            : '';
+    }
+
+    function fallbackShield(cell, alt) {
+        if (!cell) return '';
+        const image = Array.from(cell.querySelectorAll('img')).find((candidate) =>
+            (candidate.getAttribute('alt') || '').trim() === alt
+        ) || cell.querySelector('img');
+        return imageSource(image);
+    }
+
+    function shieldMarkup(url, name, abbreviation) {
+        if (url) {
+            return `<img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" class="position-game-shield">`;
+        }
+        // Nunca substitua um escudo por um escudo genérico. Se a origem não
+        // tiver URL, mantenha uma identificação textual curta do clube.
+        return `<span class="position-game-shield-fallback" aria-hidden="true">${escapeHtml((abbreviation || name || '?').slice(0, 3).toUpperCase())}</span>`;
     }
 
     function renderGameCell(clubCell, opponentCell, playerCell) {
-        const clubName = textOf(clubCell) || 'Clube';
+        const playerClubName = textOf(clubCell) || 'Clube';
         const opponentName = textOf(opponentCell) || 'Adversário';
-        const shield = teamShieldFromPlayerCell(playerCell, clubName);
-        const opponentShield = opponentCell?.querySelector('img');
-        const shieldMarkup = shield && shield.src
-            ? `<img src="${escapeHtml(shield.src)}" alt="${escapeHtml(clubName)}" class="position-game-shield">`
-            : '<i class="fas fa-shield-halved position-game-shield-icon" aria-hidden="true"></i>';
-        const opponentShieldMarkup = opponentShield && opponentShield.src
-            ? `<img src="${escapeHtml(opponentShield.src)}" alt="${escapeHtml(opponentName)}" class="position-game-shield">`
-            : '<i class="fas fa-shield-halved" aria-hidden="true"></i>';
+        const playerIsHome = clubCell.dataset.positionPlayerHome === 'true';
+        const playerIsAway = clubCell.dataset.positionPlayerHome === 'false';
+        const knownMando = playerIsHome || playerIsAway;
+
+        // A ordem visual segue a partida real: mandante à esquerda e
+        // visitante à direita. O destaque acompanha o clube do atleta.
+        const homeName = knownMando
+            ? (playerIsHome ? playerClubName : opponentName)
+            : playerClubName;
+        const awayName = knownMando
+            ? (playerIsAway ? playerClubName : opponentName)
+            : opponentName;
+        const homeIsPlayer = knownMando ? playerIsHome : true;
+        const awayIsPlayer = knownMando ? playerIsAway : false;
+        const homeUrl = clubCell.dataset.positionHomeShield ||
+            (homeIsPlayer ? fallbackShield(playerCell, playerClubName) : fallbackShield(opponentCell, opponentName));
+        const awayUrl = clubCell.dataset.positionAwayShield ||
+            (awayIsPlayer ? fallbackShield(playerCell, playerClubName) : fallbackShield(opponentCell, opponentName));
+        const teamMarkup = (name, url, isPlayer, sideLabel) => `
+            <span class="position-game-team ${isPlayer ? 'position-game-team--player' : 'position-game-team--opponent'}"
+                  aria-label="${escapeHtml(sideLabel)}: ${escapeHtml(name)}"
+                  title="${escapeHtml(name)}">
+                ${shieldMarkup(url, name, name)}
+                <span class="position-game-team-name">${escapeHtml(name)}</span>
+            </span>`;
 
         clubCell.innerHTML = `
-            <div class="position-game" title="${escapeHtml(clubName)} contra ${escapeHtml(opponentName)}">
-                <span class="position-game-team position-game-team--player">
-                    ${shieldMarkup}
-                    <span class="position-game-team-name">${escapeHtml(clubName)}</span>
-                </span>
+            <div class="position-game" title="${escapeHtml(homeName)} contra ${escapeHtml(awayName)}">
+                ${teamMarkup(homeName, homeUrl, homeIsPlayer, 'Casa')}
                 <span class="position-game-vs" aria-hidden="true">VS</span>
-                <span class="position-game-team position-game-team--opponent" aria-label="Adversário: ${escapeHtml(opponentName)}" title="Adversário oculto">
-                    ${opponentShieldMarkup}
-                </span>
+                ${teamMarkup(awayName, awayUrl, awayIsPlayer, 'Fora')}
             </div>`;
         clubCell.classList.add('position-game-cell');
     }
@@ -169,7 +201,15 @@
         document.querySelectorAll('table').forEach(prepareTable);
     }
 
+    function isPositionPage() {
+        return Boolean(
+            document.querySelector('form#pesosForm') ||
+            document.querySelector('table[id^="tabela"]')
+        );
+    }
+
     function initialize() {
+        if (isPositionPage()) document.body.classList.add('position-page');
         setupWeightPanels();
         setupPositionTables();
 

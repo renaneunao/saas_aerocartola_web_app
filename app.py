@@ -3166,8 +3166,15 @@ def api_modulo_dados(modulo):
     try:
         cursor = conn.cursor()
         
-        # Buscar rodada atual
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        # Buscar rodada atual da temporada corrente.
+        temporada_atual = get_temporada_atual()
+        cursor.execute('''
+            SELECT rodada_id
+            FROM acf_partidas
+            WHERE temporada = %s AND valida = TRUE
+            ORDER BY partida_data DESC NULLS LAST, rodada_id DESC
+            LIMIT 1
+        ''', (temporada_atual,))
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -3195,14 +3202,33 @@ def api_modulo_dados(modulo):
         cursor.execute('''
             SELECT clube_casa_id, clube_visitante_id
             FROM acf_partidas
-            WHERE rodada_id = %s AND valida = TRUE
-        ''', (rodada_atual,))
+            WHERE rodada_id = %s AND temporada = %s AND valida = TRUE
+        ''', (rodada_atual, temporada_atual))
         partidas = cursor.fetchall()
-        
+
         adversarios_dict = {}
+        partidas_por_clube = {}
         for casa_id, visitante_id in partidas:
+            if casa_id is None or visitante_id is None:
+                continue
             adversarios_dict[casa_id] = visitante_id
             adversarios_dict[visitante_id] = casa_id
+            partida_casa = {
+                'casa_id': casa_id,
+                'visitante_id': visitante_id,
+                'joga_em_casa': True,
+            }
+            partida_fora = {
+                'casa_id': casa_id,
+                'visitante_id': visitante_id,
+                'joga_em_casa': False,
+            }
+            # JSON de rankings antigos pode trazer o clube como string;
+            # mantenha os dois formatos somente no mapa em memória.
+            partidas_por_clube[casa_id] = partida_casa
+            partidas_por_clube[str(casa_id)] = partida_casa
+            partidas_por_clube[visitante_id] = partida_fora
+            partidas_por_clube[str(visitante_id)] = partida_fora
         
         # Buscar dados de atletas baseado no módulo
         posicao_map = {
@@ -3512,6 +3538,18 @@ def api_modulo_dados(modulo):
         
         # Adicionar nome do adversário aos atletas
         for atleta in atletas:
+            partida_info = partidas_por_clube.get(atleta['clube_id'])
+            if partida_info:
+                atleta['casa_id'] = partida_info['casa_id']
+                atleta['visitante_id'] = partida_info['visitante_id']
+                atleta['joga_em_casa'] = partida_info['joga_em_casa']
+                casa = clubes_dict.get(partida_info['casa_id'], {})
+                visitante = clubes_dict.get(partida_info['visitante_id'], {})
+                atleta['casa_nome'] = casa.get('nome') or 'Casa'
+                atleta['visitante_nome'] = visitante.get('nome') or 'Fora'
+                atleta['casa_escudo_url'] = casa.get('escudo_url') or ''
+                atleta['visitante_escudo_url'] = visitante.get('escudo_url') or ''
+
             if atleta['adversario_id'] and atleta['adversario_id'] in clubes_dict:
                 atleta['adversario_nome'] = clubes_dict[atleta['adversario_id']]['nome']
                 atleta['adversario_escudo_url'] = clubes_dict[atleta['adversario_id']]['escudo_url']
@@ -3641,6 +3679,36 @@ def api_modulo_dados(modulo):
         
         # Garantir que ranking_salvo seja uma lista ou None antes de retornar
         ranking_para_json = ranking_salvo if (ranking_salvo and isinstance(ranking_salvo, list) and len(ranking_salvo) > 0) else None
+
+        # Rankings antigos não tinham os metadados do confronto. Enriqueça a
+        # resposta apenas em memória, usando a partida real da rodada atual;
+        # nenhum registro persistido é apagado ou regravado.
+        if ranking_para_json:
+            ranking_enriquecido = []
+            for item in ranking_para_json:
+                if not isinstance(item, dict):
+                    ranking_enriquecido.append(item)
+                    continue
+                item = dict(item)
+                partida_info = partidas_por_clube.get(item.get('clube_id'))
+                if partida_info:
+                    casa = clubes_dict.get(partida_info['casa_id'], {})
+                    visitante = clubes_dict.get(partida_info['visitante_id'], {})
+                    em_casa = partida_info['joga_em_casa']
+                    item.update({
+                        'casa_id': partida_info['casa_id'],
+                        'visitante_id': partida_info['visitante_id'],
+                        'joga_em_casa': em_casa,
+                        'casa_nome': casa.get('nome') or 'Casa',
+                        'visitante_nome': visitante.get('nome') or 'Fora',
+                        'casa_escudo_url': casa.get('escudo_url') or '',
+                        'visitante_escudo_url': visitante.get('escudo_url') or '',
+                        'adversario_id': partida_info['visitante_id'] if em_casa else partida_info['casa_id'],
+                        'adversario_nome': visitante.get('nome') if em_casa else casa.get('nome'),
+                        'adversario_escudo_url': visitante.get('escudo_url', '') if em_casa else casa.get('escudo_url', ''),
+                    })
+                ranking_enriquecido.append(item)
+            ranking_para_json = ranking_enriquecido
         
         print(f"[API] Retornando ranking_salvo para JSON: tipo={type(ranking_para_json)}, tamanho={len(ranking_para_json) if ranking_para_json else 0}")
         

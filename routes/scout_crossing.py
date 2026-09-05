@@ -117,7 +117,7 @@ def _current_context(cursor):
         """
         SELECT COALESCE(MAX(rodada_id), 1) AS rodada_atual
         FROM acf_partidas
-        WHERE temporada = %s
+        WHERE temporada = %s AND valida = TRUE
         """,
         (temporada,),
     )
@@ -350,6 +350,7 @@ def _serialize_match(row):
         "mando_label": {"casa": "Casa", "fora": "Fora"}.get(mando, "Sem mando"),
         "adversario_id": adversario_id,
         "adversario_nome": adversario_nome,
+        "adversario": _club_payload(adversario_id, adversario_nome),
         "casa_nome": row["casa_nome"] or "Casa",
         "visitante_nome": row["visitante_nome"] or "Visitante",
         "casa": _club_payload(casa_id, row["casa_nome"]),
@@ -588,7 +589,7 @@ def _attach_conceded_scouts(cursor, matches, posicao_id, temporada):
                     )
               )
             """,
-            (club_id, posicao_id, round_id, temporada, temporada, club_id, opponent_id, opponent_id, club_id),
+            (opponent_id, posicao_id, round_id, temporada, temporada, club_id, opponent_id, opponent_id, club_id),
         )
         row = cursor.fetchone()
         match["cedidos_adversario"] = {

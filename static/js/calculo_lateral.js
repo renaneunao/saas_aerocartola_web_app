@@ -80,6 +80,7 @@ class CalculoLateral {
         // Se não tem jogo na rodada, ignorar (retornar pontuação nula)
         if (!tem_adversario) {
             return {
+                ...atleta,
                 atleta_id,
                 apelido,
                 clube_id,
@@ -141,6 +142,7 @@ class CalculoLateral {
         const pontuacao_total_final = pontuacao_inicial * peso_escalacao;
 
         return {
+            ...atleta,
             atleta_id, apelido, clube_id, clube_nome, clube_abrev, clube_escudo_url,
             pontuacao_total: isNaN(pontuacao_total_final) ? 0 : parseFloat(pontuacao_total_final.toFixed(2)),
             media: parseFloat(media_num_val.toFixed(2)),

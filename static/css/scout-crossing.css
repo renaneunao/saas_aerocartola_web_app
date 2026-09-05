@@ -27,7 +27,9 @@
 .scx-team img:not([src]), .scx-match img:not([src]) { display:none; }
 .scx-team b { max-width:4rem; overflow:hidden; font-size:.62rem; text-overflow:ellipsis; white-space:nowrap; }
 .scx-position { display:flex; align-items:center; gap:.4rem; padding:.52rem .65rem; font-size:.68rem; white-space:nowrap; }
-.scx-position i { color:var(--scx-accent); }
+.scx-position b { display:grid; place-items:center; min-width:1.85rem; height:1.35rem; padding:0 .25rem; border:1px solid rgba(148,163,184,.22); color:var(--scx-accent); font:700 .57rem 'JetBrains Mono',monospace; letter-spacing:.02em; }
+.scx-position.is-selected b { border-color:var(--scx-accent); background:rgba(53,199,217,.12); }
+.scx-team-fallback { display:grid; place-items:center; width:1.65rem; height:1.65rem; color:var(--scx-accent); font-size:.85rem; }
 .scx-player-line { display:flex; align-items:flex-end; gap:1rem; margin-top:.95rem; padding-top:.85rem; border-top:1px solid rgba(148,163,184,.1); }
 .scx-player-line label { display:grid; gap:.35rem; width:min(360px,100%); }
 .scx-player-line label > span { color:var(--scx-muted); font-size:.65rem; font-weight:700; }

@@ -185,20 +185,22 @@ html {
 .position-table td.position-player-sticky {
   position: sticky;
   left: 0;
-  min-width: 12rem;
-  max-width: 14rem;
+  width: 9.5rem;
+  min-width: 9.5rem;
+  max-width: 10rem;
   z-index: 4;
-  background: rgba(11, 17, 32, 0.98);
-  box-shadow: 8px 0 16px -16px rgba(0, 229, 255, 0.85);
+  background: rgba(17, 27, 46, 0.99);
+  box-shadow: none;
+  border-right: 1px solid rgba(148, 163, 184, 0.10);
 }
 
 .position-table thead th.position-player-sticky {
   z-index: 8;
-  background: rgba(24, 35, 56, 0.99);
+  background: rgba(17, 27, 46, 0.99);
 }
 
 .position-table tbody tr:hover td.position-player-sticky {
-  background: rgba(24, 35, 56, 0.99);
+  background: rgba(17, 27, 46, 0.99);
 }
 
 .position-game-cell {
@@ -245,6 +247,21 @@ html {
   filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.35));
 }
 
+.position-game-shield-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  flex: 0 0 1.4rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.46rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .position-game-shield-icon,
 .position-game-team--opponent i {
   display: inline-flex;
@@ -265,6 +282,142 @@ html {
   font-weight: 700;
   letter-spacing: 0.08em;
   opacity: 0.85;
+}
+
+/* Compactação exclusiva das páginas de posição em telas pequenas. */
+@media (max-width: 640px) {
+  body.position-page {
+    font-size: 0.72rem;
+  }
+
+  body.position-page main > div {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    padding-top: 4rem !important;
+  }
+
+  body.position-page nav a,
+  body.position-page nav button {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 0.62rem !important;
+  }
+
+  body.position-page .position-config-panel input,
+  body.position-page .position-config-panel button {
+    font-size: 0.62rem !important;
+  }
+
+  body.position-page .text-4xl {
+    font-size: 1.5rem !important;
+    line-height: 1.15 !important;
+  }
+
+  body.position-page .text-lg {
+    font-size: 0.78rem !important;
+  }
+
+  body.position-page .mb-8 {
+    margin-bottom: 0.9rem !important;
+  }
+
+  body.position-page .mb-6 {
+    margin-bottom: 0.65rem !important;
+  }
+
+  body.position-page .position-config-panel {
+    border-radius: 0.75rem;
+  }
+
+  body.position-page .position-config-header {
+    min-height: 2.35rem;
+    padding: 0.45rem 0.65rem !important;
+  }
+
+  body.position-page .position-config-header h3 {
+    font-size: 0.72rem !important;
+  }
+
+  body.position-page .position-config-header p {
+    font-size: 0.58rem !important;
+  }
+
+  body.position-page .position-config-panel > form {
+    padding: 0.55rem !important;
+  }
+
+  body.position-page .position-table-scroll {
+    margin-inline: -0.25rem;
+  }
+
+  body.position-page .position-table {
+    min-width: 560px;
+    font-size: 0.58rem;
+  }
+
+  body.position-page .position-table th,
+  body.position-page .position-table td {
+    padding: 0.24rem 0.22rem !important;
+  }
+
+  body.position-page .position-table th:first-child,
+  body.position-page .position-table td:first-child {
+    width: 2.25rem;
+    min-width: 2.25rem;
+  }
+
+  body.position-page .position-table th.position-player-sticky,
+  body.position-page .position-table td.position-player-sticky {
+    width: 7rem;
+    min-width: 7rem;
+    max-width: 7rem;
+  }
+
+  body.position-page .position-player-sticky > div {
+    gap: 0.2rem !important;
+  }
+
+  body.position-page .position-player-sticky .w-7 {
+    width: 1.35rem !important;
+    height: 1.35rem !important;
+  }
+
+  body.position-page .position-player-sticky .w-5 {
+    width: 1rem !important;
+    height: 1rem !important;
+  }
+
+  body.position-page .position-player-sticky .text-xs,
+  body.position-page .position-player-sticky .text-sm {
+    font-size: 0.58rem !important;
+  }
+
+  body.position-page .position-game-cell {
+    min-width: 5.8rem;
+  }
+
+  body.position-page .position-game {
+    min-width: 5.25rem;
+    gap: 0.18rem;
+  }
+
+  body.position-page .position-game-shield,
+  body.position-page .position-game-shield-fallback,
+  body.position-page .position-game-shield-icon,
+  body.position-page .position-game-team--opponent i {
+    width: 0.85rem;
+    height: 0.85rem;
+    flex-basis: 0.85rem;
+    font-size: 0.62rem;
+  }
+
+  body.position-page .position-game-team-name {
+    max-width: 2.5rem;
+    font-size: 0.5rem;
+  }
+
+  body.position-page .position-game-vs {
+    font-size: 0.42rem;
+  }
 }
 
 /* --- Animations --- */

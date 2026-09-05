@@ -29,7 +29,7 @@
             <div class="scx-position-rail" id="scoutCrossingPositions" role="listbox" aria-label="Posições">
                 {% for position in position_options %}
                 <button type="button" class="scx-position{% if position.id == selected_position %} is-selected{% endif %}" data-position="{{ position.id }}" role="option" aria-selected="{{ 'true' if position.id == selected_position else 'false' }}">
-                    <i class="fas {% if position.id == 1 %}fa-hands{% elif position.id == 2 %}fa-person-running{% elif position.id == 3 %}fa-shield-halved{% elif position.id == 4 %}fa-bolt{% elif position.id == 5 %}fa-bullseye{% else %}fa-clipboard-user{% endif %}"></i><span>{{ position.label }}</span>
+                    <b aria-hidden="true">{% if position.id == 1 %}GOL{% elif position.id == 2 %}LAT{% elif position.id == 3 %}ZAG{% elif position.id == 4 %}MEI{% elif position.id == 5 %}ATA{% else %}TEC{% endif %}</b><span>{{ position.label }}</span>
                 </button>
                 {% endfor %}
             </div>

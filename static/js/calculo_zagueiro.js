@@ -107,6 +107,7 @@ class CalculoZagueiro {
         // Se não tem jogo na rodada, ignorar (retornar pontuação nula)
         if (!tem_adversario) {
             return {
+                ...atleta,
                 atleta_id,
                 apelido,
                 clube_id,
@@ -186,6 +187,7 @@ class CalculoZagueiro {
         }
 
         return {
+            ...atleta,
             atleta_id,
             apelido,
             clube_id,
