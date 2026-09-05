@@ -17,6 +17,7 @@ from psycopg2.extras import RealDictCursor
 load_dotenv()
 
 from database import close_db_connection, get_db_connection
+from utils.team_shields import get_team_shield
 from utils.utilidades import get_temporada_atual
 
 
@@ -109,6 +110,88 @@ def _position_id(value):
     return value if value in POSITION_BY_ID else None
 
 
+def _current_context(cursor):
+    """Sempre trabalha com a temporada atual e a última rodada disponível."""
+    temporada = get_temporada_atual()
+    cursor.execute(
+        """
+        SELECT COALESCE(MAX(rodada_id), 1) AS rodada_atual
+        FROM acf_partidas
+        WHERE temporada = %s
+        """,
+        (temporada,),
+    )
+    row = cursor.fetchone()
+    rodada = _json_int(row["rodada_atual"] if hasattr(row, "keys") else row[0])
+    return temporada, rodada
+
+
+def _club_payload(clube_id, nome=None):
+    clube_id = _json_int(clube_id)
+    return {
+        "id": clube_id,
+        "nome": nome or "Clube não informado",
+        "escudo": get_team_shield(clube_id, size="45x45") or "",
+    }
+
+
+def _team_options(cursor, temporada, rodada):
+    cursor.execute(
+        """
+        SELECT DISTINCT c.id, c.nome, c.abreviacao
+        FROM acf_partidas p
+        JOIN acf_clubes c ON c.id IN (p.clube_casa_id, p.clube_visitante_id)
+        WHERE p.temporada = %s AND p.rodada_id = %s AND p.valida = TRUE
+        ORDER BY c.nome
+        """,
+        (temporada, rodada),
+    )
+    return [
+        {
+            **_club_payload(row["id"], row["nome"]),
+            "abreviacao": row["abreviacao"] or row["nome"],
+        }
+        for row in cursor.fetchall()
+    ]
+
+
+def _match_options(cursor, clube_id, temporada, rodada):
+    cursor.execute(
+        """
+        SELECT p.partida_id, p.clube_casa_id, p.clube_visitante_id,
+               casa.nome AS casa_nome, visitante.nome AS visitante_nome,
+               p.placar_oficial_mandante, p.placar_oficial_visitante,
+               p.local, p.partida_data
+        FROM acf_partidas p
+        LEFT JOIN acf_clubes casa ON casa.id = p.clube_casa_id
+        LEFT JOIN acf_clubes visitante ON visitante.id = p.clube_visitante_id
+        WHERE p.temporada = %s AND p.rodada_id = %s
+          AND p.valida = TRUE
+          AND (%s IN (p.clube_casa_id, p.clube_visitante_id))
+        ORDER BY p.partida_id
+        """,
+        (temporada, rodada, clube_id),
+    )
+    matches = []
+    for row in cursor.fetchall():
+        home = _club_payload(row["clube_casa_id"], row["casa_nome"])
+        away = _club_payload(row["clube_visitante_id"], row["visitante_nome"])
+        is_home = _json_int(clube_id) == home["id"]
+        matches.append(
+            {
+                "id": _json_int(row["partida_id"]),
+                "casa": home,
+                "fora": away,
+                "adversario": away if is_home else home,
+                "mando": "casa" if is_home else "fora",
+                "placar_casa": row["placar_oficial_mandante"],
+                "placar_fora": row["placar_oficial_visitante"],
+                "local": row["local"] or "",
+            }
+        )
+    return matches
+
+
 def _season_options(cursor):
     cursor.execute(
         """
@@ -138,7 +221,7 @@ def _round_options(cursor, temporada):
     return [_json_int(row["rodada_id"]) for row in cursor.fetchall()]
 
 
-def _player_options(cursor, temporada, posicao_id):
+def _player_options(cursor, temporada, posicao_id, clube_id=None):
     """Retorna atletas da temporada, com histórico como fallback para temporadas antigas."""
     cursor.execute(
         """
@@ -146,10 +229,13 @@ def _player_options(cursor, temporada, posicao_id):
             SELECT atleta_id, clube_id, posicao_id, apelido, nome, foto, rodada_id
             FROM acf_atletas_historico
             WHERE temporada = %s AND posicao_id = %s
+              AND (%s IS NULL OR clube_id = %s)
             UNION ALL
-            SELECT atleta_id, clube_id, posicao_id, apelido, nome, foto, rodada_id
+            SELECT atleta_id, clube_id, posicao_id, apelido, nome,
+                   COALESCE(foto_custom, foto) AS foto, rodada_id
             FROM acf_atletas
             WHERE temporada = %s AND posicao_id = %s
+              AND (%s IS NULL OR clube_id = %s)
         ), latest AS (
             SELECT DISTINCT ON (atleta_id)
                 atleta_id, clube_id, posicao_id, apelido, nome, foto
@@ -165,7 +251,7 @@ def _player_options(cursor, temporada, posicao_id):
         LEFT JOIN acf_clubes c ON c.id = l.clube_id
         ORDER BY nome
         """,
-        (temporada, posicao_id, temporada, posicao_id),
+        (temporada, posicao_id, clube_id, clube_id, temporada, posicao_id, clube_id, clube_id),
     )
     return [
         {
@@ -254,16 +340,20 @@ def _serialize_match(row):
 
     return {
         "atleta_id": _json_int(row["atleta_id"]),
+        "posicao_id": _json_int(row["posicao_id"]),
         "rodada": _json_int(row["rodada_id"]),
         "pontuacao": _json_number(row["pontuacao"]),
         "entrou_em_campo": bool(row["entrou_em_campo"]),
         "clube_id": clube_id,
+        "partida_id": _json_int(row["partida_id"]),
         "mando": mando,
         "mando_label": {"casa": "Casa", "fora": "Fora"}.get(mando, "Sem mando"),
         "adversario_id": adversario_id,
         "adversario_nome": adversario_nome,
         "casa_nome": row["casa_nome"] or "Casa",
         "visitante_nome": row["visitante_nome"] or "Visitante",
+        "casa": _club_payload(casa_id, row["casa_nome"]),
+        "fora": _club_payload(visitante_id, row["visitante_nome"]),
         "placar_casa": row["placar_oficial_mandante"],
         "placar_fora": row["placar_oficial_visitante"],
         "local": row["local"] or "",
@@ -280,7 +370,8 @@ def _player_snapshot(cursor, atleta_id, temporada, posicao_id):
             FROM acf_atletas_historico
             WHERE atleta_id = %s AND temporada = %s AND posicao_id = %s
             UNION ALL
-            SELECT atleta_id, clube_id, posicao_id, apelido, nome, foto, rodada_id
+            SELECT atleta_id, clube_id, posicao_id, apelido, nome,
+                   COALESCE(foto_custom, foto) AS foto, rodada_id
             FROM acf_atletas
             WHERE atleta_id = %s AND temporada = %s AND posicao_id = %s
             UNION ALL
@@ -294,7 +385,7 @@ def _player_snapshot(cursor, atleta_id, temporada, posicao_id):
                s.foto, c.nome AS clube_nome
         FROM snapshots s
         LEFT JOIN acf_clubes c ON c.id = s.clube_id
-        ORDER BY s.rodada_id DESC NULLS LAST
+        ORDER BY (s.foto IS NOT NULL) DESC, s.rodada_id DESC NULLS LAST
         LIMIT 1
         """,
         (
@@ -409,6 +500,108 @@ def _aggregate_matches(matches):
     }
 
 
+def _ceded_scouts(cursor, partida_id, clube_id, posicao_id, temporada):
+    """Scouts produzidos pelo time do atleta contra o adversário no jogo selecionado.
+
+    Na prática, esse é o retrato do que o adversário cedeu à posição analisada
+    naquela partida, sem misturar rodadas ou confrontos anteriores.
+    """
+    if not partida_id or not clube_id or not posicao_id or not POSITION_SCOUTS.get(posicao_id):
+        return {"jogos": 0, "pontuacao": 0, "scouts": []}
+
+    columns = ", ".join(
+        f"SUM(COALESCE(p.scout_{key}, 0)) AS total_{key}" for key in POSITION_SCOUTS[posicao_id]
+    )
+    cursor.execute(
+        f"""
+        SELECT COUNT(*) FILTER (WHERE p.entrou_em_campo = TRUE) AS jogos,
+               COALESCE(SUM(CASE WHEN p.entrou_em_campo = TRUE THEN p.pontuacao ELSE 0 END), 0) AS pontuacao,
+               {columns}
+        FROM acf_pontuados p
+        JOIN acf_partidas partida
+          ON partida.partida_id = %s
+         AND partida.temporada = %s
+         AND partida.rodada_id = p.rodada_id
+         AND partida.valida = TRUE
+        WHERE p.temporada = %s
+          AND p.clube_id = %s
+          AND p.posicao_id = %s
+          AND p.entrou_em_campo = TRUE
+        """,
+        (partida_id, temporada, temporada, clube_id, posicao_id),
+    )
+    row = cursor.fetchone()
+    return {
+        "jogos": _json_int(row["jogos"] if row else 0),
+        "pontuacao": _json_number(row["pontuacao"] if row else 0),
+        "scouts": [
+            {
+                "codigo": key,
+                "nome": SCOUT_LABELS[key],
+                "total": _json_int(row[f"total_{key}"] if row else 0),
+            }
+            for key in POSITION_SCOUTS[posicao_id]
+        ],
+    }
+
+
+def _attach_conceded_scouts(cursor, matches, posicao_id, temporada):
+    """Enriquece cada jogo com os scouts cedidos pelo adversário.
+
+    O recorte usa os jogadores da mesma posição que enfrentaram aquele
+    adversário no mesmo campeonato e rodada. Assim o modal mostra a
+    referência do confronto sem alterar os cálculos ou os dados históricos.
+    """
+    main_scouts = POSITION_SCOUTS.get(posicao_id, ())
+    if not main_scouts:
+        return matches
+
+    for match in matches:
+        opponent_id = match.get("adversario_id")
+        club_id = match.get("clube_id")
+        round_id = match.get("rodada")
+        if not opponent_id or not club_id or not round_id:
+            match["cedidos_adversario"] = {"jogos": 0, "scouts": {}}
+            continue
+
+        select_columns = ", ".join(
+            f"AVG(COALESCE(p.scout_{key}, 0)) AS {key}" for key in main_scouts
+        )
+        cursor.execute(
+            f"""
+            SELECT COUNT(*) AS jogos, {select_columns}
+            FROM acf_pontuados p
+            WHERE p.clube_id = %s
+              AND p.posicao_id = %s
+              AND p.rodada_id = %s
+              AND (p.temporada = %s OR p.temporada IS NULL)
+              AND p.entrou_em_campo = TRUE
+              AND EXISTS (
+                  SELECT 1
+                  FROM acf_partidas partida
+                  WHERE partida.temporada = %s
+                    AND partida.rodada_id = p.rodada_id
+                    AND partida.valida = TRUE
+                    AND (
+                        (partida.clube_casa_id = %s AND partida.clube_visitante_id = %s)
+                        OR (partida.clube_casa_id = %s AND partida.clube_visitante_id = %s)
+                    )
+              )
+            """,
+            (club_id, posicao_id, round_id, temporada, temporada, club_id, opponent_id, opponent_id, club_id),
+        )
+        row = cursor.fetchone()
+        match["cedidos_adversario"] = {
+            "adversario_id": opponent_id,
+            "adversario_nome": match.get("adversario_nome"),
+            "jogos": _json_int(row["jogos"] if row else 0),
+            "scouts": {
+                key: _json_number(row[key] if row else 0) for key in main_scouts
+            },
+        }
+    return matches
+
+
 def _api_error(message, status=400):
     return jsonify({"error": message}), status
 
@@ -420,36 +613,27 @@ def index():
     if not conn:
         return render_template(
             "scout_crossing.html",
-            season_options=[],
-            selected_season=get_temporada_atual(),
+            current_season=get_temporada_atual(),
+            current_round=1,
+            team_options=[],
             position_options=POSITION_OPTIONS,
             selected_position=5,
-            selected_round=None,
             selected_player=None,
-            selected_opponent=None,
             database_error="Não foi possível conectar ao banco de dados.",
         ), 503
 
     try:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        seasons = _season_options(cursor)
-        selected_season = _int_arg("temporada", seasons[0] if seasons else get_temporada_atual(), 2000, 2100)
-        if seasons and selected_season not in seasons:
-            selected_season = seasons[0]
-        rounds = _round_options(cursor, selected_season)
-        selected_round = _int_arg("rodada", rounds[0] if rounds else 1, 1, 100)
+        current_season, current_round = _current_context(cursor)
         selected_position = _position_id(request.args.get("posicao_id")) or 5
         selected_player = _int_arg("atleta_id", None, 1)
-        selected_opponent = _int_arg("adversario_id", None, 1)
         return render_template(
             "scout_crossing.html",
-            season_options=seasons or [selected_season],
-            round_options=rounds,
-            selected_season=selected_season,
+            current_season=current_season,
+            current_round=current_round,
+            team_options=_team_options(cursor, current_season, current_round),
             selected_position=selected_position,
-            selected_round=selected_round,
             selected_player=selected_player,
-            selected_opponent=selected_opponent,
             position_options=POSITION_OPTIONS,
             database_error=None,
         )
@@ -457,13 +641,11 @@ def index():
         print(f"[SCOUT CROSSING] Erro ao renderizar página: {exc}")
         return render_template(
             "scout_crossing.html",
-            season_options=[],
-            round_options=[],
-            selected_season=get_temporada_atual(),
+            current_season=get_temporada_atual(),
+            current_round=1,
+            team_options=[],
             selected_position=5,
-            selected_round=1,
             selected_player=None,
-            selected_opponent=None,
             position_options=POSITION_OPTIONS,
             database_error="Não foi possível carregar os filtros.",
         ), 500
@@ -474,28 +656,30 @@ def index():
 @scout_crossing_bp.route("/api/opcoes")
 @login_required
 def options():
-    temporada = _int_arg("temporada", None, 2000, 2100)
+    clube_id = _int_arg("clube_id", None, 1)
     posicao_id = _position_id(request.args.get("posicao_id"))
-    if not temporada or not posicao_id:
-        return _api_error("Temporada e posição são obrigatórias.")
 
     conn = get_db_connection()
     if not conn:
         return _api_error("Banco de dados indisponível.", 503)
     try:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
-        rounds = _round_options(cursor, temporada)
-        players = _player_options(cursor, temporada, posicao_id)
-        rodada = _int_arg("rodada", rounds[0] if rounds else 1, 1, 100)
+        temporada, rodada = _current_context(cursor)
+        teams = _team_options(cursor, temporada, rodada)
+        if clube_id and clube_id not in {team["id"] for team in teams}:
+            clube_id = None
+        players = _player_options(cursor, temporada, posicao_id, clube_id) if posicao_id else []
         atleta_id = _int_arg("atleta_id", None, 1)
-        opponents = []
-        if atleta_id:
-            matches = _match_query(cursor, atleta_id, temporada, rodada)
-            opponents = [
-                {"id": item["id"], "nome": item["nome"]}
-                for item in _aggregate_matches(matches)["adversarios"]
-            ]
-        return jsonify({"temporadas": _season_options(cursor), "rodadas": rounds, "jogadores": players, "adversarios": opponents})
+        matches = _match_options(cursor, clube_id, temporada, rodada) if clube_id else []
+        return jsonify(
+            {
+                "temporada": temporada,
+                "rodada": rodada,
+                "times": teams,
+                "jogadores": players,
+                "confrontos": matches,
+            }
+        )
     except Exception as exc:
         print(f"[SCOUT CROSSING] Erro ao carregar opções: {exc}")
         return _api_error("Não foi possível carregar as opções.", 500)
@@ -513,16 +697,7 @@ def context():
         return jsonify({"error": "Banco de dados indisponível."}), 503
     try:
         cursor = conn.cursor()
-        temporada = get_temporada_atual()
-        cursor.execute(
-            """
-            SELECT COALESCE(MAX(rodada_id), 1)
-            FROM acf_partidas
-            WHERE temporada = %s
-            """,
-            (temporada,),
-        )
-        rodada = _json_int(cursor.fetchone()[0])
+        temporada, rodada = _current_context(cursor)
         return jsonify({"temporada": temporada, "rodada": rodada})
     finally:
         close_db_connection(conn)
@@ -532,25 +707,33 @@ def context():
 @login_required
 def crossing():
     atleta_id = _int_arg("atleta_id", None, 1)
-    temporada = _int_arg("temporada", None, 2000, 2100)
-    rodada = _int_arg("rodada", None, 1, 100)
     posicao_id = _position_id(request.args.get("posicao_id"))
     adversario_id = _int_arg("adversario_id", None, 1)
-    if not atleta_id or not temporada or not rodada or not posicao_id:
-        return _api_error("Jogador, posição, temporada e rodada são obrigatórios.")
+    if not atleta_id or not posicao_id:
+        return _api_error("Jogador e posição são obrigatórios.")
 
     conn = get_db_connection()
     if not conn:
         return _api_error("Banco de dados indisponível.", 503)
     try:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
+        temporada, rodada = _current_context(cursor)
         player = _player_snapshot(cursor, atleta_id, temporada, posicao_id)
         if not player:
             return _api_error("Jogador não encontrado para a temporada e posição informadas.", 404)
 
-        matches = _match_query(cursor, atleta_id, temporada, rodada, adversario_id=adversario_id)
+        matches = _match_query(
+            cursor,
+            atleta_id,
+            temporada,
+            rodada,
+            adversario_id=adversario_id,
+            rodada_exata=rodada if adversario_id else None,
+        )
+        _attach_conceded_scouts(cursor, matches, posicao_id, temporada)
         summary = _aggregate_matches(matches)
         recent = matches[:8]
+        confronto = matches[0] if adversario_id and matches else None
         return jsonify(
             {
                 "filtros": {
@@ -564,6 +747,8 @@ def crossing():
                 "resumo": summary,
                 "ultimas_pontuacoes": recent,
                 "scouts_da_posicao": _position_scouts(cursor, posicao_id, temporada, rodada),
+                "confronto": confronto,
+                "cedidos_adversario": (confronto or {}).get("cedidos_adversario", {"jogos": 0, "scouts": {}}),
             }
         )
     except Exception as exc:
@@ -576,18 +761,16 @@ def crossing():
 @scout_crossing_bp.route("/api/detalhe/<int:atleta_id>/<int:rodada>")
 @login_required
 def detail(atleta_id, rodada):
-    temporada = _int_arg("temporada", None, 2000, 2100)
-    if not temporada:
-        return _api_error("Temporada é obrigatória.")
-
     conn = get_db_connection()
     if not conn:
         return _api_error("Banco de dados indisponível.", 503)
     try:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
+        temporada, _ = _current_context(cursor)
         matches = _match_query(cursor, atleta_id, temporada, rodada, rodada_exata=rodada)
         if not matches:
             return _api_error("Detalhe da rodada não encontrado.", 404)
+        _attach_conceded_scouts(cursor, matches, matches[0].get("posicao_id"), temporada)
         return jsonify(matches[0])
     except Exception as exc:
         print(f"[SCOUT CROSSING] Erro no detalhe: {exc}")

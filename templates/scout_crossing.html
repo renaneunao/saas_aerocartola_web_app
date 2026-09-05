@@ -4,137 +4,72 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/scout-crossing.css') }}">
-
-<main class="scout-crossing-page" id="scoutCrossingPage"
+<main class="scx-page" id="scoutCrossingPage"
       data-options-url="{{ url_for('scout_crossing.options') }}"
       data-crossing-url="{{ url_for('scout_crossing.crossing') }}"
-      data-detail-url-template="{{ url_for('scout_crossing.detail', atleta_id=0, rodada=0) }}"
-      data-selected-player="{{ selected_player or '' }}"
-      data-selected-opponent="{{ selected_opponent or '' }}">
-    <section class="scout-crossing-hero">
+      data-current-season="{{ current_season }}"
+      data-current-round="{{ current_round }}"
+      data-selected-player="{{ selected_player or '' }}">
+    <header class="scx-header">
         <div>
-            <p class="scout-crossing-eyebrow"><i class="fas fa-crosshairs"></i> Análise de confronto</p>
-            <h1>Cruzamento de Scouts</h1>
-            <p>Combine jogador, posição, rodada e adversário para enxergar o contexto por trás da pontuação.</p>
+            <p class="scx-overline"><i class="fas fa-crosshairs"></i> Análise de confronto</p>
+            <h1>Cruzamento de scouts</h1>
+            <p class="scx-subtitle">Veja o histórico do jogador e o que o adversário cede no confronto da rodada atual.</p>
         </div>
-        <div class="scout-crossing-hero-mark" aria-hidden="true"><i class="fas fa-chart-line"></i></div>
-    </section>
+        <div class="scx-context"><span class="scx-live-dot"></span><span>Atual</span><strong>R{{ current_round }}</strong></div>
+    </header>
 
-    <section class="scout-crossing-panel scout-crossing-filters" aria-labelledby="scoutCrossingFiltersTitle">
-        <div class="scout-crossing-panel-heading">
-            <div>
-                <p class="scout-crossing-kicker">Filtros</p>
-                <h2 id="scoutCrossingFiltersTitle">Monte seu cruzamento</h2>
+    <section class="scx-selector" aria-label="Filtros do cruzamento">
+        <div class="scx-selector-row">
+            <div class="scx-section-label"><span>1</span><div><strong>Escolha o time</strong><small>Clubes da rodada atual</small></div></div>
+            <div class="scx-rail" id="scoutCrossingTeams" role="listbox" aria-label="Times"></div>
+        </div>
+        <div class="scx-selector-row scx-position-row">
+            <div class="scx-section-label"><span>2</span><div><strong>Escolha a posição</strong><small>Scouts principais da posição</small></div></div>
+            <div class="scx-position-rail" id="scoutCrossingPositions" role="listbox" aria-label="Posições">
+                {% for position in position_options %}
+                <button type="button" class="scx-position{% if position.id == selected_position %} is-selected{% endif %}" data-position="{{ position.id }}" role="option" aria-selected="{{ 'true' if position.id == selected_position else 'false' }}">
+                    <i class="fas {% if position.id == 1 %}fa-hands{% elif position.id == 2 %}fa-person-running{% elif position.id == 3 %}fa-shield-halved{% elif position.id == 4 %}fa-bolt{% elif position.id == 5 %}fa-bullseye{% else %}fa-clipboard-user{% endif %}"></i><span>{{ position.label }}</span>
+                </button>
+                {% endfor %}
             </div>
-            <span class="scout-crossing-live-dot"><span></span> Dados ACF</span>
         </div>
-
-        <form id="scoutCrossingForm" class="scout-crossing-filter-grid">
-            <label class="scout-crossing-field scout-crossing-field-player">
-                <span>Jogador</span>
-                <select id="scoutCrossingPlayer" name="atleta_id" required disabled>
-                    <option value="">Selecione a posição primeiro</option>
-                </select>
-            </label>
-            <label class="scout-crossing-field">
-                <span>Posição</span>
-                <select id="scoutCrossingPosition" name="posicao_id" required>
-                    {% for position in position_options %}
-                    <option value="{{ position.id }}" {% if position.id == selected_position %}selected{% endif %}>{{ position.label }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <label class="scout-crossing-field">
-                <span>Temporada</span>
-                <select id="scoutCrossingSeason" name="temporada" required>
-                    {% for season in season_options %}
-                    <option value="{{ season }}" {% if season == selected_season %}selected{% endif %}>{{ season }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <label class="scout-crossing-field">
-                <span>Rodada até</span>
-                <select id="scoutCrossingRound" name="rodada" required>
-                    {% for round in round_options %}
-                    <option value="{{ round }}" {% if round == selected_round %}selected{% endif %}>Rodada {{ round }}</option>
-                    {% endfor %}
-                </select>
-            </label>
-            <label class="scout-crossing-field">
-                <span>Adversário</span>
-                <select id="scoutCrossingOpponent" name="adversario_id" disabled>
-                    <option value="">Todos os adversários</option>
-                </select>
-            </label>
-            <button class="scout-crossing-submit" type="submit" id="scoutCrossingSubmit">
-                <i class="fas fa-arrows-to-circle"></i>
-                <span>Cruzar scouts</span>
-            </button>
-        </form>
-        <p class="scout-crossing-filter-help" id="scoutCrossingFilterHelp">Escolha uma posição para carregar os jogadores disponíveis.</p>
+        <div class="scx-player-line">
+            <label for="scoutCrossingPlayer"><span>Jogador analisado</span><select id="scoutCrossingPlayer" disabled><option>Selecione o time e a posição</option></select></label>
+            <span id="scoutCrossingSelectionHint" class="scx-selection-hint">Selecione um time para começar.</span>
+        </div>
     </section>
 
-    <div id="scoutCrossingAlert" class="scout-crossing-alert" role="status" hidden></div>
-    {% if database_error %}
-    <div class="scout-crossing-alert scout-crossing-alert-error">{{ database_error }}</div>
-    {% endif %}
-
-    <section id="scoutCrossingEmpty" class="scout-crossing-empty">
-        <div class="scout-crossing-empty-icon"><i class="fas fa-magnifying-glass-chart"></i></div>
-        <h2>Selecione um jogador para começar</h2>
-        <p>O painel vai reunir as últimas notas, scouts mais frequentes da posição, adversários e desempenho em casa ou fora.</p>
+    <section class="scx-match-section" id="scoutCrossingMatches" hidden>
+        <div class="scx-match-heading"><div><p class="scx-overline">Confronto da rodada {{ current_round }}</p><h2>Escolha o jogo</h2></div><span>O adversário selecionado será usado no cruzamento.</span></div>
+        <div class="scx-match-rail" id="scoutCrossingMatchRail"></div>
     </section>
 
-    <section id="scoutCrossingResults" hidden>
-        <div class="scout-crossing-player-card">
-            <div class="scout-crossing-player-identity">
-                <div class="scout-crossing-player-avatar" id="scoutCrossingPlayerAvatar"><i class="fas fa-user"></i></div>
-                <div>
-                    <p class="scout-crossing-kicker">Jogador analisado</p>
-                    <h2 id="scoutCrossingPlayerName">—</h2>
-                    <p id="scoutCrossingPlayerMeta">—</p>
-                </div>
-            </div>
-            <div class="scout-crossing-summary-grid" id="scoutCrossingSummary"></div>
+    <div id="scoutCrossingAlert" class="scx-alert" role="status" hidden></div>
+    {% if database_error %}<div class="scx-alert scx-alert-error">{{ database_error }}</div>{% endif %}
+
+    <section id="scoutCrossingEmpty" class="scx-empty">
+        <i class="fas fa-chart-simple"></i><h2>Monte seu cruzamento</h2><p>Selecione time, posição, jogador e confronto. O resultado aparece aqui sem alterar o contexto da rodada atual.</p>
+    </section>
+
+    <section id="scoutCrossingResults" class="scx-results" hidden>
+        <div class="scx-player-card">
+            <div class="scx-player-identity"><div class="scx-avatar" id="scoutCrossingPlayerAvatar"><i class="fas fa-user"></i></div><div><p class="scx-overline">Jogador analisado</p><h2 id="scoutCrossingPlayerName">—</h2><p id="scoutCrossingPlayerMeta">—</p></div></div>
+            <div class="scx-summary" id="scoutCrossingSummary"></div>
         </div>
 
-        <div class="scout-crossing-section-grid">
-            <section class="scout-crossing-panel">
-                <div class="scout-crossing-panel-heading">
-                    <div><p class="scout-crossing-kicker">Histórico recente</p><h2>Últimas pontuações</h2></div>
-                    <span class="scout-crossing-panel-note">Clique para detalhar</span>
-                </div>
-                <div id="scoutCrossingRecent" class="scout-crossing-recent-list"></div>
-            </section>
+        <section class="scx-confrontation" id="scoutCrossingConfrontation"></section>
 
-            <section class="scout-crossing-panel">
-                <div class="scout-crossing-panel-heading">
-                    <div><p class="scout-crossing-kicker">Referência da posição</p><h2>Principais scouts</h2></div>
-                    <span class="scout-crossing-panel-note">média por jogo</span>
-                </div>
-                <div id="scoutCrossingPositionScouts" class="scout-crossing-scout-list"></div>
-            </section>
+        <div class="scx-result-grid">
+            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Histórico</p><h2>Últimas pontuações</h2></div><span>Clique para abrir a partida</span></div><div id="scoutCrossingRecent" class="scx-recent-list"></div></section>
+            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Referência da posição</p><h2>Principais scouts</h2></div><span>Média por jogo</span></div><div id="scoutCrossingPositionScouts" class="scx-scout-list"></div></section>
         </div>
-
-        <div class="scout-crossing-section-grid">
-            <section class="scout-crossing-panel">
-                <div class="scout-crossing-panel-heading">
-                    <div><p class="scout-crossing-kicker">Confrontos no recorte</p><h2>Adversários</h2></div>
-                </div>
-                <div id="scoutCrossingOpponents" class="scout-crossing-opponent-list"></div>
-            </section>
-
-            <section class="scout-crossing-panel">
-                <div class="scout-crossing-panel-heading">
-                    <div><p class="scout-crossing-kicker">Mando de campo</p><h2>Casa / Fora</h2></div>
-                </div>
-                <div id="scoutCrossingHomeAway" class="scout-crossing-home-away"></div>
-            </section>
+        <div class="scx-result-grid">
+            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Desempenho</p><h2>Adversários</h2></div></div><div id="scoutCrossingOpponents" class="scx-opponent-list"></div></section>
+            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Mando</p><h2>Casa / Fora</h2></div></div><div id="scoutCrossingHomeAway" class="scx-home-away"></div></section>
         </div>
     </section>
 </main>
-
-{% include 'modals/modal_cruzamento_scouts.html' %}
 {% endblock %}
 
 {% block scripts %}
