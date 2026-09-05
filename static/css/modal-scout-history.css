@@ -1,0 +1,217 @@
+.modal-scout-history {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid rgba(148, 163, 184, .16);
+}
+
+.modal-scout-history-heading,
+.modal-scout-history-row-head,
+.modal-scout-history-game {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+}
+
+.modal-scout-history-kicker {
+    margin: 0 0 .2rem;
+    color: #64748b;
+    font-size: .67rem;
+    font-weight: 800;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+}
+
+.modal-scout-history h4 {
+    margin: 0;
+    color: #e2e8f0;
+    font-size: .98rem;
+    font-weight: 800;
+}
+
+.modal-scout-history-status {
+    color: #94a3b8;
+    font-size: .72rem;
+    white-space: nowrap;
+}
+
+.modal-scout-history-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .5rem;
+    margin: .8rem 0;
+}
+
+.modal-scout-history-summary-card {
+    padding: .65rem .7rem;
+    border: 1px solid rgba(148, 163, 184, .13);
+    border-radius: .7rem;
+    background: rgba(15, 23, 42, .55);
+}
+
+.modal-scout-history-summary-card span {
+    display: block;
+    color: #64748b;
+    font-size: .65rem;
+}
+
+.modal-scout-history-summary-card strong {
+    display: block;
+    margin-top: .15rem;
+    color: #f8fafc;
+    font-size: .95rem;
+}
+
+.modal-scout-history-list {
+    display: grid;
+    gap: .5rem;
+}
+
+.modal-scout-history-item {
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, .14);
+    border-radius: .8rem;
+    background: rgba(15, 23, 42, .42);
+}
+
+.modal-scout-history-row {
+    width: 100%;
+    padding: .7rem .75rem;
+    color: #cbd5e1;
+    text-align: left;
+    cursor: pointer;
+}
+
+.modal-scout-history-row:hover,
+.modal-scout-history-item.is-open .modal-scout-history-row {
+    background: rgba(30, 41, 59, .72);
+}
+
+.modal-scout-history-round {
+    min-width: 2rem;
+    color: #67e8f9;
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+.modal-scout-history-game {
+    justify-content: flex-start;
+    min-width: 0;
+    flex: 1;
+}
+
+.modal-scout-history-game strong,
+.modal-scout-history-game small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.modal-scout-history-game strong {
+    color: #f8fafc;
+    font-size: .78rem;
+}
+
+.modal-scout-history-game small {
+    margin-top: .15rem;
+    color: #94a3b8;
+    font-size: .67rem;
+}
+
+.modal-scout-history-point {
+    min-width: 3rem;
+    color: #a7f3d0;
+    font-size: 1rem;
+    font-weight: 900;
+    text-align: right;
+}
+
+.modal-scout-history-point-wrap {
+    display: flex;
+    align-items: flex-end;
+    flex-direction: column;
+    gap: .1rem;
+    min-width: 5.5rem;
+}
+
+.modal-scout-history-inline-scouts {
+    max-width: 12rem;
+    overflow: hidden;
+    color: #94a3b8;
+    font-size: .62rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.modal-scout-history-detail {
+    display: none;
+    padding: .65rem .75rem .75rem;
+    border-top: 1px solid rgba(148, 163, 184, .12);
+    background: rgba(2, 6, 23, .36);
+}
+
+.modal-scout-history-item.is-open .modal-scout-history-detail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: .75rem;
+}
+
+.modal-scout-history-detail-title {
+    margin: 0 0 .35rem;
+    color: #94a3b8;
+    font-size: .65rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+.modal-scout-history-scouts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .3rem;
+}
+
+.modal-scout-history-scout {
+    padding: .24rem .4rem;
+    border-radius: .4rem;
+    background: rgba(51, 65, 85, .55);
+    color: #cbd5e1;
+    font-size: .68rem;
+}
+
+.modal-scout-history-scout strong {
+    margin-left: .2rem;
+    color: #f8fafc;
+}
+
+.modal-scout-history-empty {
+    padding: 1rem;
+    border: 1px dashed rgba(148, 163, 184, .2);
+    border-radius: .75rem;
+    color: #64748b;
+    font-size: .75rem;
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .modal-scout-history-summary {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .modal-scout-history-summary-card {
+        padding: .5rem;
+    }
+
+    .modal-scout-history-summary-card strong {
+        font-size: .82rem;
+    }
+
+    .modal-scout-history-item.is-open .modal-scout-history-detail {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-scout-history-status {
+        font-size: .65rem;
+    }
+}
