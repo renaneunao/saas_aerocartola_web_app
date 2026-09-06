@@ -256,38 +256,27 @@ html {
   z-index: 8;
 }
 
-.position-table tbody tr:hover td.position-player-sticky {
-  background: transparent;
-}
-
-.position-game-cell {
-  min-width: 6.5rem;
-}
-
-.position-game {
-  display: grid;
-  grid-template-rows: minmax(1.25rem, auto) auto minmax(1.25rem, auto);
+.position-player-line {
+  display: inline-flex;
   align-items: center;
-  justify-items: stretch;
-  gap: 0.05rem;
-  min-width: 6rem;
+  gap: 0.35rem !important;
 }
 
-.position-game-team {
-  display: flex;
+.position-game-inline {
+  display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  min-width: 0;
-  width: 100%;
+  flex: 0 0 auto;
+  gap: 0.15rem;
+  min-width: 4.45rem;
   line-height: 1;
 }
 
-.position-game-team--home {
-  align-self: end;
-}
-
-.position-game-team--away {
-  align-self: start;
+.position-game-inline-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.12rem;
+  min-width: 0;
+  line-height: 1;
 }
 
 .position-game-team--player {
@@ -302,12 +291,11 @@ html {
   filter: grayscale(1);
 }
 
-.position-game-shield,
-.position-game-shield-icon,
-.position-game-team--opponent i {
-  width: 1.4rem;
-  height: 1.4rem;
-  flex: 0 0 1.4rem;
+.position-game-inline .position-game-shield,
+.position-game-inline .position-game-shield-fallback {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
 }
 
 .position-game-shield {
@@ -318,39 +306,31 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.4rem;
-  height: 1.4rem;
-  flex: 0 0 1.4rem;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 999px;
   color: var(--text-muted);
-  font-size: 0.46rem;
+  font-size: 0.36rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
 
-.position-game-shield-icon,
-.position-game-team--opponent i {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-}
-
-.position-game-team-name {
-  max-width: 4.5rem;
+.position-game-inline-name {
+  max-width: 1.65rem;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 0.6rem;
+  font-size: 0.48rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   white-space: nowrap;
 }
 
-.position-game-vs {
+.position-game-inline-vs {
   color: #64748b;
-  font-size: 0.45rem;
+  font-size: 0.58rem;
   font-weight: 700;
   line-height: 1;
   text-align: center;
@@ -463,33 +443,26 @@ html {
     font-size: 0.58rem !important;
   }
 
-  body.position-page .position-game-cell {
-    min-width: 4.8rem;
+  body.position-page .position-game-inline {
+    min-width: 3.9rem;
+    gap: 0.08rem;
   }
 
-  body.position-page .position-game {
-    min-width: 4.5rem;
-    grid-template-rows: minmax(0.95rem, auto) auto minmax(0.95rem, auto);
-    gap: 0.03rem;
-  }
-
-  body.position-page .position-game-shield,
-  body.position-page .position-game-shield-fallback,
-  body.position-page .position-game-shield-icon,
-  body.position-page .position-game-team--opponent i {
+  body.position-page .position-game-inline .position-game-shield,
+  body.position-page .position-game-inline .position-game-shield-fallback {
     width: 0.85rem;
     height: 0.85rem;
     flex-basis: 0.85rem;
-    font-size: 0.62rem;
+    font-size: 0.3rem;
   }
 
-  body.position-page .position-game-team-name {
-    max-width: 2.7rem;
-    font-size: 0.43rem;
+  body.position-page .position-game-inline-name {
+    max-width: 1.35rem;
+    font-size: 0.39rem;
   }
 
-  body.position-page .position-game-vs {
-    font-size: 0.42rem;
+  body.position-page .position-game-inline-vs {
+    font-size: 0.5rem;
   }
 }
 

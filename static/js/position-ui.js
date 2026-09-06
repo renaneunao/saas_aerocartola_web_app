@@ -96,7 +96,7 @@
         return `<span class="position-game-shield-fallback" aria-hidden="true">${escapeHtml((abbreviation || name || '?').slice(0, 3).toUpperCase())}</span>`;
     }
 
-    function renderGameCell(clubCell, opponentCell, playerCell) {
+    function renderGameInline(clubCell, opponentCell, playerCell) {
         const playerClubName = textOf(clubCell) || 'Clube';
         const opponentName = textOf(opponentCell) || 'Adversário';
         const playerIsHome = clubCell.dataset.positionPlayerHome === 'true';
@@ -118,20 +118,24 @@
         const awayUrl = clubCell.dataset.positionAwayShield ||
             (awayIsPlayer ? fallbackShield(playerCell, playerClubName) : fallbackShield(opponentCell, opponentName));
         const teamMarkup = (name, url, isPlayer, sideLabel, sideClass) => `
-            <span class="position-game-team position-game-team--${sideClass} ${isPlayer ? 'position-game-team--player' : 'position-game-team--opponent'}"
+            <span class="position-game-inline-team position-game-inline-team--${sideClass} ${isPlayer ? 'position-game-team--player' : 'position-game-team--opponent'}"
                   aria-label="${escapeHtml(sideLabel)}: ${escapeHtml(name)}"
                   title="${escapeHtml(name)}">
-                ${shieldMarkup(url, name, name)}
-                <span class="position-game-team-name">${escapeHtml(name)}</span>
+                ${sideClass === 'home' ? `<span class="position-game-inline-name">${escapeHtml(name)}</span>${shieldMarkup(url, name, name)}` : `${shieldMarkup(url, name, name)}<span class="position-game-inline-name">${escapeHtml(name)}</span>`}
             </span>`;
 
-        clubCell.innerHTML = `
-            <div class="position-game" title="${escapeHtml(homeName)} contra ${escapeHtml(awayName)}">
+        const gameMarkup = `<span class="position-game-inline" title="${escapeHtml(homeName)} contra ${escapeHtml(awayName)}" aria-label="${escapeHtml(homeName)} contra ${escapeHtml(awayName)}">
                 ${teamMarkup(homeName, homeUrl, homeIsPlayer, 'Casa', 'home')}
-                <span class="position-game-vs" aria-hidden="true">VS</span>
+                <span class="position-game-inline-vs" aria-hidden="true">×</span>
                 ${teamMarkup(awayName, awayUrl, awayIsPlayer, 'Fora', 'away')}
-            </div>`;
-        clubCell.classList.add('position-game-cell');
+            </span>`;
+        const playerLine = playerCell.querySelector('.flex.items-center') || playerCell.firstElementChild;
+        if (playerLine) {
+            playerLine.classList.add('position-player-line');
+            playerLine.insertAdjacentHTML('afterbegin', gameMarkup);
+        } else {
+            playerCell.insertAdjacentHTML('afterbegin', gameMarkup);
+        }
     }
 
     function prepareTable(table) {
@@ -149,9 +153,7 @@
             const label = textOf(cell).toLowerCase();
             return label === 'clube' || label === 'casa';
         });
-        const gameIndex = originalClubIndex >= 0
-            ? originalClubIndex
-            : headers.findIndex((cell) => textOf(cell).toLowerCase() === 'jogo');
+        const gameIndex = originalClubIndex >= 0 ? originalClubIndex : headers.findIndex((cell) => textOf(cell).toLowerCase() === 'jogo');
         const opponentIndex = headers.findIndex((cell) => {
             const label = textOf(cell).toLowerCase();
             return label === 'adversário' || label === 'adversario' || label === 'visitante';
@@ -159,19 +161,15 @@
         const hasOpponentColumn = opponentIndex >= 0 || table.dataset.positionHasOpponent === 'true';
         if (opponentIndex >= 0) table.dataset.positionHasOpponent = 'true';
 
-        if (playerIndex < 0 || gameIndex < 0) return;
+        if (playerIndex < 0) return;
 
         headerRow.children[playerIndex].classList.add('position-player-sticky');
-        const clubHeader = headerRow.children[gameIndex];
-        if (textOf(clubHeader).toLowerCase() !== 'jogo') clubHeader.textContent = 'Jogo';
-        clubHeader.classList.add('position-game-header');
-        if (clubHeader.getAttribute('title') !== 'Clube do atleta e adversário') {
-            clubHeader.setAttribute('title', 'Clube do atleta e adversário');
-        }
+        table.querySelectorAll('tbody tr').forEach((row) => {
+            row.children[playerIndex]?.classList.add('position-player-sticky');
+        });
+        if (table.dataset.positionGameMerged === 'true' || gameIndex < 0) return;
 
-        if (opponentIndex >= 0 && opponentIndex !== gameIndex) {
-            headerRow.children[opponentIndex].remove();
-        }
+        const clubHeader = headerRow.children[gameIndex];
 
         table.querySelectorAll('tbody tr').forEach((row) => {
             const cells = Array.from(row.children);
@@ -179,22 +177,27 @@
 
             const playerCell = cells[playerIndex];
             const clubCell = cells[gameIndex];
-            const gameAlreadyReady = clubCell.dataset.positionGameReady === 'true';
-            // Após a primeira passagem, o cabeçalho já se chama "Jogo", mas
-            // novas linhas ainda podem vir com as duas células originais.
             const opponentCell = hasOpponentColumn
                 ? (opponentIndex >= 0
                     ? cells[opponentIndex]
-                    : (!gameAlreadyReady && cells.length > headerRow.children.length ? cells[gameIndex + 1] : null))
+                    : (cells.length > gameIndex + 1 ? cells[gameIndex + 1] : null))
                 : null;
 
-            playerCell.classList.add('position-player-sticky');
-            if (!gameAlreadyReady) {
-                renderGameCell(clubCell, opponentCell, playerCell);
-                clubCell.dataset.positionGameReady = 'true';
+            if (playerCell.dataset.positionGameReady !== 'true') {
+                renderGameInline(clubCell, opponentCell, playerCell);
+                playerCell.dataset.positionGameReady = 'true';
             }
-            if (opponentCell && opponentCell !== clubCell) opponentCell.remove();
         });
+
+        [opponentIndex, gameIndex].filter((index, position, indexes) => index >= 0 && indexes.indexOf(index) === position)
+            .sort((a, b) => b - a)
+            .forEach((index) => headerRow.children[index]?.remove());
+        table.querySelectorAll('tbody tr').forEach((row) => {
+            [opponentIndex, gameIndex].filter((index, position, indexes) => index >= 0 && indexes.indexOf(index) === position)
+                .sort((a, b) => b - a)
+                .forEach((index) => row.children[index]?.remove());
+        });
+        table.dataset.positionGameMerged = 'true';
     }
 
     function setupPositionTables() {
