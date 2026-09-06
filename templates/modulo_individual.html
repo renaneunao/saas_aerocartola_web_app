@@ -1218,12 +1218,6 @@ function renderizarTabelaGoleiros(resultados) {
                             <span class="text-white font-bold text-xs">${jogador.apelido.substring(0, 2)}</span>
                         </div>
                     </div>
-                    <div class="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden">
-                        <img src="${jogador.clube_escudo_url || ''}" alt="${jogador.clube_nome}" class="w-full h-full object-cover">
-                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display: none;">
-                            <span class="text-white font-bold text-xs">${jogador.clube_abrev}</span>
-                        </div>
-                    </div>
                     <div>
                         <div class="font-bold text-white">${jogador.apelido}</div>
                         <div class="text-xs text-dark-blue-400">ID: ${jogador.atleta_id}</div>

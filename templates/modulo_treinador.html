@@ -744,12 +744,6 @@ async function renderizarTabelaTreinadores(resultados) {
                             <span class="text-white font-bold text-xs">${jogador.apelido.substring(0, 2)}</span>
                         </div>
                     </div>
-                    <div class="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                        <img src="${jogador.clube_escudo_url || ''}" alt="${jogador.clube_nome}" class="w-full h-full object-cover">
-                        <div class="w-full h-full bg-gray-600 rounded-full flex items-center justify-center" style="display:none">
-                            <span class="text-white font-bold text-xs">${jogador.clube_abrev}</span>
-                        </div>
-                    </div>
                     <div class="min-w-0">
                         <div class="font-semibold text-white text-xs truncate">${jogador.apelido}</div>
                     </div>

@@ -4,9 +4,7 @@
     border-top: 1px solid rgba(148, 163, 184, .16);
 }
 
-.modal-scout-history-heading,
-.modal-scout-history-row-head,
-.modal-scout-history-game {
+.modal-scout-history-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -75,6 +73,9 @@
 }
 
 .modal-scout-history-row {
+    display: grid;
+    grid-template-columns: 2.35rem minmax(0, 1fr) minmax(6.5rem, auto);
+    align-items: center;
     width: 100%;
     padding: .7rem .75rem;
     color: #cbd5e1;
@@ -95,9 +96,8 @@
 }
 
 .modal-scout-history-game {
-    justify-content: flex-start;
+    display: block;
     min-width: 0;
-    flex: 1;
 }
 
 .modal-scout-history-game strong,
@@ -157,6 +157,14 @@
     gap: .75rem;
 }
 
+.modal-scout-history-detail > div {
+    min-width: 0;
+    padding: .55rem .65rem;
+    border: 1px solid rgba(148, 163, 184, .1);
+    border-radius: .55rem;
+    background: rgba(15, 23, 42, .3);
+}
+
 .modal-scout-history-detail-title {
     margin: 0 0 .35rem;
     color: #94a3b8;
@@ -195,6 +203,11 @@
 }
 
 @media (max-width: 640px) {
+    .modal-scout-history-row {
+        grid-template-columns: 2rem minmax(0, 1fr) minmax(4.5rem, auto);
+        padding: .6rem;
+    }
+
     .modal-scout-history-summary {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }

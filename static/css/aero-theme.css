@@ -131,13 +131,74 @@ html {
   cursor: pointer;
   justify-content: space-between;
   transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  background: rgba(17, 27, 46, 0.72) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14) !important;
 }
 
 .position-config-header:hover,
 .position-config-header:focus-visible {
-  background-color: rgba(168, 85, 247, 0.14);
+  background-color: rgba(51, 65, 85, 0.42) !important;
   outline: none;
-  box-shadow: inset 0 -1px 0 rgba(0, 229, 255, 0.18);
+  box-shadow: none;
+}
+
+/* O painel é funcional, mas não deve competir visualmente com a tabela. */
+.position-config-panel {
+  background: rgba(11, 17, 32, 0.78) !important;
+  border: 1px solid rgba(148, 163, 184, 0.16) !important;
+  border-radius: 0.8rem !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.position-config-panel > .position-config-header {
+  min-height: 2.7rem;
+  padding: 0.55rem 0.8rem !important;
+}
+
+.position-config-panel > .position-config-header > .flex,
+.position-config-panel > .position-config-header .flex.items-center {
+  gap: 0.55rem;
+}
+
+.position-config-panel > .position-config-header i:not(.position-config-chevron) {
+  color: #94a3b8 !important;
+  font-size: 0.78rem !important;
+}
+
+.position-config-panel > .position-config-header h3 {
+  color: #e2e8f0 !important;
+  font-size: 0.78rem !important;
+}
+
+.position-config-panel > .position-config-header p {
+  color: #94a3b8 !important;
+  font-size: 0.63rem !important;
+}
+
+.position-config-panel form {
+  background: rgba(11, 17, 32, 0.45);
+}
+
+.position-config-panel form label {
+  color: #94a3b8 !important;
+}
+
+.position-config-panel form input,
+.position-config-panel form select {
+  border-color: rgba(148, 163, 184, 0.2) !important;
+  background: rgba(15, 23, 42, 0.72) !important;
+}
+
+.position-config-panel form button {
+  background: #334155 !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.position-config-panel form button:hover:not(:disabled) {
+  background: #475569 !important;
 }
 
 .position-config-chevron {
@@ -185,41 +246,48 @@ html {
 .position-table td.position-player-sticky {
   position: sticky;
   left: 0;
-  width: 9.5rem;
-  min-width: 9.5rem;
-  max-width: 10rem;
+  width: 8.25rem;
+  min-width: 8.25rem;
+  max-width: 8.25rem;
   z-index: 4;
-  background: rgba(17, 27, 46, 0.99);
-  box-shadow: none;
-  border-right: 1px solid rgba(148, 163, 184, 0.10);
 }
 
 .position-table thead th.position-player-sticky {
   z-index: 8;
-  background: rgba(17, 27, 46, 0.99);
 }
 
 .position-table tbody tr:hover td.position-player-sticky {
-  background: rgba(17, 27, 46, 0.99);
+  background: transparent;
 }
 
 .position-game-cell {
-  min-width: 9.5rem;
+  min-width: 6.5rem;
 }
 
 .position-game {
-  display: inline-flex;
+  display: grid;
+  grid-template-rows: minmax(1.25rem, auto) auto minmax(1.25rem, auto);
   align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  min-width: 8.75rem;
+  justify-items: stretch;
+  gap: 0.05rem;
+  min-width: 6rem;
 }
 
 .position-game-team {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 0.35rem;
   min-width: 0;
+  width: 100%;
+  line-height: 1;
+}
+
+.position-game-team--home {
+  align-self: end;
+}
+
+.position-game-team--away {
+  align-self: start;
 }
 
 .position-game-team--player {
@@ -244,7 +312,6 @@ html {
 
 .position-game-shield {
   object-fit: contain;
-  filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.35));
 }
 
 .position-game-shield-fallback {
@@ -271,17 +338,22 @@ html {
 }
 
 .position-game-team-name {
-  max-width: 5.5rem;
+  max-width: 4.5rem;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .position-game-vs {
-  color: var(--neon-cyan);
-  font-size: 0.58rem;
+  color: #64748b;
+  font-size: 0.45rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  opacity: 0.85;
+  line-height: 1;
+  text-align: center;
 }
 
 /* Compactação exclusiva das páginas de posição em telas pequenas. */
@@ -367,9 +439,9 @@ html {
 
   body.position-page .position-table th.position-player-sticky,
   body.position-page .position-table td.position-player-sticky {
-    width: 7rem;
-    min-width: 7rem;
-    max-width: 7rem;
+    width: 6.5rem;
+    min-width: 6.5rem;
+    max-width: 6.5rem;
   }
 
   body.position-page .position-player-sticky > div {
@@ -392,12 +464,13 @@ html {
   }
 
   body.position-page .position-game-cell {
-    min-width: 5.8rem;
+    min-width: 4.8rem;
   }
 
   body.position-page .position-game {
-    min-width: 5.25rem;
-    gap: 0.18rem;
+    min-width: 4.5rem;
+    grid-template-rows: minmax(0.95rem, auto) auto minmax(0.95rem, auto);
+    gap: 0.03rem;
   }
 
   body.position-page .position-game-shield,
@@ -411,8 +484,8 @@ html {
   }
 
   body.position-page .position-game-team-name {
-    max-width: 2.5rem;
-    font-size: 0.5rem;
+    max-width: 2.7rem;
+    font-size: 0.43rem;
   }
 
   body.position-page .position-game-vs {

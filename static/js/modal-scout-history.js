@@ -32,17 +32,17 @@
     };
 
     function scoutMarkup(scouts) {
-        const entries = Object.entries(scouts || {});
-        if (!entries.length) return '<span class="modal-scout-history-empty">Sem scouts registrados</span>';
+        const entries = Object.entries(scouts || {}).filter(([, value]) => Number(value) > 0);
+        if (!entries.length) return '<span class="modal-scout-history-empty">Nenhum scout acima de zero</span>';
         return entries.map(([code, value]) =>
             `<span class="modal-scout-history-scout">${escapeHtml(labels[code] || code.toUpperCase())}<strong>${escapeHtml(number(value))}</strong></span>`
         ).join('');
     }
 
     function scoutSummary(scouts) {
-        const entries = Object.entries(scouts || {});
+        const entries = Object.entries(scouts || {}).filter(([, value]) => Number(value) > 0);
         if (!entries.length) return '';
-        return `(${entries.map(([code, value]) => `${labels[code] || code.toUpperCase()} ${Number(value) || 0}`).join(' · ')})`;
+        return `(${entries.map(([code, value]) => `${labels[code] || code.toUpperCase()} ${number(value)}`).join(' · ')})`;
     }
 
     function render(prefix, data, fallbackPhoto) {
@@ -71,9 +71,10 @@
         list.innerHTML = matches.map((match) => {
             const conceded = match.cedidos_adversario || {};
             const concededScouts = conceded.scouts || {};
-            const concededText = Object.keys(concededScouts).length
-                ? Object.entries(concededScouts).map(([code, value]) => `${labels[code] || code.toUpperCase()} ${number(value)}`).join(' · ')
-                : 'Sem referência de cedidos';
+            const positiveConceded = Object.entries(concededScouts).filter(([, value]) => Number(value) > 0);
+            const concededText = positiveConceded.length
+                ? positiveConceded.map(([code, value]) => `${labels[code] || code.toUpperCase()} ${number(value)}`).join(' · ')
+                : 'Nenhum scout acima de zero';
             return `<article class="modal-scout-history-item">
                 <button type="button" class="modal-scout-history-row" aria-expanded="false">
                     <span class="modal-scout-history-round">R${escapeHtml(match.rodada)}</span>

@@ -117,8 +117,8 @@
             (homeIsPlayer ? fallbackShield(playerCell, playerClubName) : fallbackShield(opponentCell, opponentName));
         const awayUrl = clubCell.dataset.positionAwayShield ||
             (awayIsPlayer ? fallbackShield(playerCell, playerClubName) : fallbackShield(opponentCell, opponentName));
-        const teamMarkup = (name, url, isPlayer, sideLabel) => `
-            <span class="position-game-team ${isPlayer ? 'position-game-team--player' : 'position-game-team--opponent'}"
+        const teamMarkup = (name, url, isPlayer, sideLabel, sideClass) => `
+            <span class="position-game-team position-game-team--${sideClass} ${isPlayer ? 'position-game-team--player' : 'position-game-team--opponent'}"
                   aria-label="${escapeHtml(sideLabel)}: ${escapeHtml(name)}"
                   title="${escapeHtml(name)}">
                 ${shieldMarkup(url, name, name)}
@@ -127,9 +127,9 @@
 
         clubCell.innerHTML = `
             <div class="position-game" title="${escapeHtml(homeName)} contra ${escapeHtml(awayName)}">
-                ${teamMarkup(homeName, homeUrl, homeIsPlayer, 'Casa')}
+                ${teamMarkup(homeName, homeUrl, homeIsPlayer, 'Casa', 'home')}
                 <span class="position-game-vs" aria-hidden="true">VS</span>
-                ${teamMarkup(awayName, awayUrl, awayIsPlayer, 'Fora')}
+                ${teamMarkup(awayName, awayUrl, awayIsPlayer, 'Fora', 'away')}
             </div>`;
         clubCell.classList.add('position-game-cell');
     }
