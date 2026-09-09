@@ -20,7 +20,7 @@ def _parse_bool(value, default=False):
 
 
 class ProxyAwareSessionInterface(SecureCookieSessionInterface):
-    """Usa Secure no cookie quando a requisição original chegou por HTTPS.
+    """Calcula ``Secure`` usando o esquema original da requisição.
 
     O Nginx termina o TLS e encaminha X-Forwarded-Proto. Quando o app é
     executado localmente em HTTP, o cookie continua utilizável para não
@@ -37,6 +37,14 @@ class ProxyAwareSessionInterface(SecureCookieSessionInterface):
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'change-me-to-a-secure-random-value')
 app.config.update(
+    # Nome próprio: o host também publica outros serviços, e o nome padrão
+    # ``session`` poderia ser sobrescrito por outro app no mesmo domínio.
+    SESSION_COOKIE_NAME=os.getenv('SESSION_COOKIE_NAME', 'aero_session'),
+    # Host-only é intencional: evita vazamento para subdomínios e funciona
+    # tanto no IP atual quanto em um domínio futuro. O caminho único impede
+    # conflitos com aplicações montadas em subcaminhos.
+    SESSION_COOKIE_DOMAIN=None,
+    SESSION_COOKIE_PATH='/',
     # Sessão marcada como permanente: 30 dias. Sem a marcação, o Flask não
     # envia Expires/Max-Age e o cookie termina ao fechar o navegador.
     PERMANENT_SESSION_LIFETIME=timedelta(days=30),
@@ -49,7 +57,10 @@ app.config.update(
         if os.getenv('SESSION_COOKIE_SECURE') is not None
         else None
     ),
-    SESSION_REFRESH_EACH_REQUEST=False,
+    # Renova a validade de uma sessão permanente enquanto o usuário usa o
+    # sistema, inclusive em navegadores móveis que fazem limpeza agressiva
+    # de cookies antigos.
+    SESSION_REFRESH_EACH_REQUEST=True,
 )
 app.session_interface = ProxyAwareSessionInterface()
 
