@@ -1,5 +1,5 @@
 (function () {
-  const state = { items: [], filter: 'all', season: null, round: null };
+  const state = { items: [], filter: 'all', season: null, round: null, teamId: null };
   const positionNames = { 1: 'Goleiro', 2: 'Lateral', 3: 'Zagueiro', 4: 'Meia', 5: 'Atacante', 6: 'Técnico' };
   const statusColors = { 2: 'text-neon-amber', 3: 'text-neon-red', 5: 'text-neon-red', 6: 'text-neon-red', 7: 'text-neon-green' };
 
@@ -55,6 +55,7 @@
     if (!response.ok) throw new Error(data.error || 'Não foi possível carregar jogadores.');
     state.items = data.items || [];
     state.season = data.season; state.round = data.round_number;
+    state.teamId = data.team_id || state.teamId;
     if (!$('availabilitySeason').value) $('availabilitySeason').value = data.season;
     if (!$('availabilityRound').value) $('availabilityRound').value = data.round_number;
     $('availabilityContext').textContent = `Temporada ${data.season} · Rodada ${data.round_number} · Time selecionado`;
@@ -62,7 +63,7 @@
   }
 
   async function save(athleteId, rule) {
-    const response = await fetch('/api/player-availability', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ athlete_id: athleteId, rule, temporada: Number($('availabilitySeason').value), rodada: Number($('availabilityRound').value) }) });
+    const response = await fetch('/api/player-availability', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ team_id: state.teamId, athlete_id: athleteId, rule, temporada: Number($('availabilitySeason').value), rodada: Number($('availabilityRound').value) }) });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a regra.');
     feedback(rule === 'poupar' ? 'Jogador marcado para ser poupado.' : 'Jogador cravado como provável para a escalação.', 'info');
@@ -70,7 +71,7 @@
   }
 
   async function clear(athleteId) {
-    const params = new URLSearchParams({ temporada: $('availabilitySeason').value, rodada: $('availabilityRound').value });
+    const params = new URLSearchParams({ team_id: state.teamId, temporada: $('availabilitySeason').value, rodada: $('availabilityRound').value });
     const response = await fetch(`/api/player-availability/${athleteId}?${params}`, { method: 'DELETE' });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Não foi possível limpar a regra.');

@@ -2,7 +2,8 @@
 {% block title %}Dashboard — Aero Cartola{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 lg:py-6 animate-fade-in-up">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<div class="dashboard-page max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 lg:py-6 animate-fade-in-up">
 
     <!-- Cabeçalho: Time + Rodada -->
     <div class="glass rounded-2xl neon-border p-4 mb-4">
@@ -24,19 +25,27 @@
                 {% endif %}
             </div>
             {% if rodada and rodada.rodada %}
-            <div class="flex items-center space-x-3 text-sm">
-                <div class="glass-light rounded-xl px-3 py-1.5 border border-[rgba(0,229,255,0.1)] text-center min-w-[60px]">
+            <div class="dashboard-round-summary">
+                <div class="dashboard-round-card">
                     <p class="text-[10px] text-text-muted uppercase tracking-wider">Rodada</p>
                     <p class="text-white font-bold font-mono text-lg leading-none">{{ rodada.rodada }}</p>
                 </div>
-                <div class="glass-light rounded-xl px-3 py-1.5 border {% if rodada.status == 'aberto' %}border-[rgba(0,255,136,0.2)]{% else %}border-[rgba(239,68,68,0.2)]{% endif %} text-center min-w-[80px]">
+                <div class="dashboard-market-card {% if rodada.status == 'aberto' %}is-open{% else %}is-closed{% endif %}">
                     <p class="text-[10px] text-text-muted uppercase tracking-wider">Mercado</p>
                     <p class="font-bold text-sm leading-none {% if rodada.status == 'aberto' %}text-neon-green{% else %}text-neon-red{% endif %}">{{ 'ABERTO' if rodada.status == 'aberto' else 'FECHADO' }}</p>
                 </div>
-                {% if rodada.prazo and rodada.prazo != 'fechado' %}
-                <div class="glass-light rounded-xl px-3 py-1.5 border border-[rgba(0,229,255,0.15)] text-center min-w-[80px]">
-                    <p class="text-[10px] text-text-muted uppercase tracking-wider">Prazo</p>
-                    <p class="text-neon-cyan font-bold font-mono text-sm leading-none">{{ rodada.prazo }}</p>
+                {% if rodada.fechamento_iso %}
+                <div class="dashboard-deadline" data-market-deadline="{{ rodada.fechamento_iso }}">
+                    <div class="dashboard-deadline-label">
+                        <span>Fecha em</span>
+                        <strong>{{ rodada.fechamento_str }}</strong>
+                    </div>
+                    <div class="dashboard-countdown" aria-live="polite">
+                        <span><b data-countdown-days>--</b><small>dias</small></span>
+                        <span><b data-countdown-hours>--</b><small>h</small></span>
+                        <span><b data-countdown-minutes>--</b><small>min</small></span>
+                        <span><b data-countdown-seconds>--</b><small>seg</small></span>
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -109,88 +118,120 @@
     </div>
 
     <!-- Ações Rápidas -->
-    <div class="glass rounded-2xl neon-border p-4 mb-4">
-        <h2 class="text-sm font-semibold text-white mb-3 flex items-center"><i class="fas fa-bolt text-neon-amber mr-2 text-xs"></i>Ações Rápidas</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-            <a href="{{ url_for('credenciais') }}" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,229,255,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,229,255,0.04)] transition-all duration-200 group text-center">
-                <i class="fas fa-people-group text-neon-cyan text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Times</span><span class="text-text-muted text-[10px] leading-tight">Gerenciar</span>
+    <section class="dashboard-section dashboard-actions-section">
+        <div class="dashboard-section-heading">
+            <div><span class="dashboard-eyebrow">Atalhos</span><h2>Ações rápidas</h2></div>
+            <p>Continue sua análise sem sair do contexto da rodada.</p>
+        </div>
+        <div class="dashboard-actions-grid">
+            <a href="{{ url_for('credenciais') }}" class="dashboard-action">
+                <i class="fas fa-people-group"></i><span><strong>Meus times</strong><small>Gerenciar credenciais</small></span><i class="fas fa-arrow-right"></i>
             </a>
-            <a href="{{ url_for('modulos') }}" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(168,85,247,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(168,85,247,0.04)] transition-all duration-200 group text-center">
-                <i class="fas fa-microchip text-neon-purple text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Rankings</span><span class="text-text-muted text-[10px] leading-tight">Calcular</span>
+            <a href="{{ url_for('modulos') }}" class="dashboard-action">
+                <i class="fas fa-ranking-star"></i><span><strong>Calcular posições</strong><small>Abrir rankings</small></span><i class="fas fa-arrow-right"></i>
             </a>
             {% if not permissions.podeEscalar %}
-            <div class="relative flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(0,255,136,0.06)] bg-[rgba(0,255,136,0.01)] text-center" style="filter: blur(1px);">
-                <i class="fas fa-chess-board text-neon-green text-xl mb-1.5"></i>
-                <span class="text-white text-xs font-medium leading-tight">Escalação</span><span class="text-text-muted text-[10px] leading-tight">Ideal</span>
+            <div class="dashboard-action is-disabled">
+                <i class="fas fa-chess-board"></i><span><strong>Escalação ideal</strong><small>Disponível em outro plano</small></span><i class="fas fa-lock"></i>
             </div>
             {% else %}
-            <a href="{{ url_for('modulo_escalacao_ideal') }}" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,255,136,0.2)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,255,136,0.04)] transition-all duration-200 group text-center">
-                <i class="fas fa-chess-board text-neon-green text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Escalação</span><span class="text-text-muted text-[10px] leading-tight">Ideal</span>
+            <a href="{{ url_for('modulo_escalacao_ideal') }}" class="dashboard-action">
+                <i class="fas fa-chess-board"></i><span><strong>Escalação ideal</strong><small>Montar ou revisar</small></span><i class="fas fa-arrow-right"></i>
             </a>
             {% endif %}
             {% if status.tem_perfis and permissions.podeEscalar %}
-            <button id="escalacaoRapidaBtn" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(0,255,136,0.08)] hover:border-[rgba(0,255,136,0.25)] bg-[rgba(0,255,136,0.02)] hover:bg-[rgba(0,255,136,0.06)] transition-all duration-200 group text-center w-full">
-                <i class="fas fa-bolt text-neon-green text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Rápida</span><span class="text-text-muted text-[10px] leading-tight">1 clique</span>
+            <button id="escalacaoRapidaBtn" class="dashboard-action">
+                <i class="fas fa-wand-magic-sparkles"></i><span><strong>Escalação rápida</strong><small>Calcular em um clique</small></span><i class="fas fa-arrow-right"></i>
             </button>
             {% elif status.tem_perfis and not permissions.podeEscalar %}
-            <div class="relative flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(0,255,136,0.04)] bg-[rgba(0,255,136,0.01)] text-center" style="filter: blur(1px);">
-                <i class="fas fa-bolt text-neon-green text-xl mb-1.5"></i>
-                <span class="text-white text-xs font-medium leading-tight">Rápida</span><span class="text-text-muted text-[10px] leading-tight">1 clique</span>
+            <div class="dashboard-action is-disabled">
+                <i class="fas fa-wand-magic-sparkles"></i><span><strong>Escalação rápida</strong><small>Disponível em outro plano</small></span><i class="fas fa-lock"></i>
             </div>
             {% endif %}
             {% if status.tem_perfis and permissions.multiEscalacao %}
-            <button id="escalarTodosTimesBtn" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(245,158,11,0.08)] hover:border-[rgba(245,158,11,0.25)] bg-[rgba(245,158,11,0.02)] hover:bg-[rgba(245,158,11,0.06)] transition-all duration-200 group text-center w-full">
-                <i class="fas fa-layer-group text-neon-amber text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Todos</span><span class="text-text-muted text-[10px] leading-tight">em lote</span>
+            <button id="escalarTodosTimesBtn" class="dashboard-action">
+                <i class="fas fa-layer-group"></i><span><strong>Todos os times</strong><small>Processar em lote</small></span><i class="fas fa-arrow-right"></i>
             </button>
             {% elif status.tem_perfis and not permissions.multiEscalacao %}
-            <div class="relative flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(245,158,11,0.04)] bg-[rgba(245,158,11,0.01)] text-center" style="filter: blur(1px);">
-                <i class="fas fa-layer-group text-neon-amber text-xl mb-1.5"></i>
-                <span class="text-white text-xs font-medium leading-tight">Todos</span><span class="text-text-muted text-[10px] leading-tight">em lote</span>
+            <div class="dashboard-action is-disabled">
+                <i class="fas fa-layer-group"></i><span><strong>Todos os times</strong><small>Disponível em outro plano</small></span><i class="fas fa-lock"></i>
             </div>
             {% endif %}
-            <button onclick="window.location.reload()" class="flex flex-col items-center justify-center p-3 rounded-xl border border-[rgba(255,255,255,0.04)] hover:border-[rgba(0,229,255,0.15)] bg-[rgba(255,255,255,0.01)] hover:bg-[rgba(0,229,255,0.03)] transition-all duration-200 group text-center w-full">
-                <i class="fas fa-rotate text-neon-cyan text-xl mb-1.5 group-hover:scale-110 transition-transform"></i>
-                <span class="text-white text-xs font-medium leading-tight">Atualizar</span><span class="text-text-muted text-[10px] leading-tight">Refresh</span>
+            <a href="{{ url_for('player_availability.player_availability_page') }}" class="dashboard-action">
+                <i class="fas fa-user-check"></i><span><strong>Disponibilidade</strong><small>Poupar ou cravar</small></span><i class="fas fa-arrow-right"></i>
+            </a>
+            <button onclick="window.location.reload()" class="dashboard-action">
+                <i class="fas fa-rotate"></i><span><strong>Atualizar dados</strong><small>Sincronizar painel</small></span><i class="fas fa-arrow-right"></i>
             </button>
         </div>
-    </div>
+    </section>
 
-    <!-- Próximos Passos / Tudo Pronto -->
-    {% if not status.tem_perfis or not status.tem_calculos or not status.tem_escalacao %}
-    <div class="glass rounded-2xl neon-border p-4">
-        <h2 class="text-sm font-semibold text-white mb-3 flex items-center"><i class="fas fa-route text-neon-cyan mr-2 text-xs"></i>Próximos Passos</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {% if not status.tem_perfis %}
-            <div class="flex items-start space-x-2 p-3 rounded-xl bg-[rgba(0,229,255,0.02)] border border-[rgba(0,229,255,0.06)]">
-                <span class="flex-shrink-0 w-6 h-6 bg-[rgba(0,229,255,0.1)] text-neon-cyan rounded-lg flex items-center justify-center font-bold text-[11px] border border-[rgba(0,229,255,0.15)]">1</span>
-                <div class="min-w-0"><p class="text-white text-xs font-medium mb-0.5">Perfis de Jogo</p><a href="{{ url_for('pagina_inicial') }}" class="text-neon-cyan text-[11px] hover:underline">Configurar →</a></div>
-            </div>
-            {% elif not status.tem_calculos %}
-            <div class="flex items-start space-x-2 p-3 rounded-xl bg-[rgba(168,85,247,0.02)] border border-[rgba(168,85,247,0.06)]">
-                <span class="flex-shrink-0 w-6 h-6 bg-[rgba(168,85,247,0.1)] text-neon-purple rounded-lg flex items-center justify-center font-bold text-[11px] border border-[rgba(168,85,247,0.15)]">2</span>
-                <div class="min-w-0"><p class="text-white text-xs font-medium mb-0.5">Calcular Rankings</p><a href="{{ url_for('modulos') }}" class="text-neon-purple text-[11px] hover:underline">Calcular →</a></div>
-            </div>
-            {% elif not status.tem_escalacao %}
-            <div class="flex items-start space-x-2 p-3 rounded-xl bg-[rgba(0,255,136,0.02)] border border-[rgba(0,255,136,0.06)] {% if not permissions.podeEscalar %}opacity-40{% endif %}">
-                <span class="flex-shrink-0 w-6 h-6 bg-[rgba(0,255,136,0.1)] text-neon-green rounded-lg flex items-center justify-center font-bold text-[11px] border border-[rgba(0,255,136,0.15)]">3</span>
-                <div class="min-w-0"><p class="text-white text-xs font-medium mb-0.5">Escalar Time</p>{% if permissions.podeEscalar %}<a href="{{ url_for('modulo_escalacao_ideal') }}" class="text-neon-green text-[11px] hover:underline">Escalar →</a>{% else %}<span class="text-neon-purple text-[11px] font-medium">Upgrade necessário</span>{% endif %}</div>
-            </div>
-            {% endif %}
+    <!-- Central da rodada -->
+    <section class="dashboard-section dashboard-round-hub">
+        <div class="dashboard-section-heading">
+            <div><span class="dashboard-eyebrow">Rodada {{ rodada.rodada or '—' }}</span><h2>Central da rodada</h2></div>
+            {% if rodada.atualizado_em %}<p>Consulta atualizada em {{ rodada.atualizado_em }}</p>{% endif %}
         </div>
-    </div>
-    {% else %}
-    <div class="glass rounded-2xl neon-border-strong p-5 text-center">
-        <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-[rgba(0,255,136,0.08)] border border-[rgba(0,255,136,0.15)] flex items-center justify-center"><i class="fas fa-check text-xl text-neon-green"></i></div>
-        <h2 class="text-base font-bold text-white mb-1">Tudo Pronto!</h2>
-        <p class="text-text-secondary text-sm mb-3">Time configurado e pronto para jogar.</p>
-        {% if permissions.podeEscalar %}<a href="{{ url_for('modulo_escalacao_ideal') }}" class="inline-flex items-center px-4 py-2 bg-[rgba(0,255,136,0.06)] text-neon-green border border-[rgba(0,255,136,0.15)] rounded-xl text-sm font-medium hover:bg-[rgba(0,255,136,0.12)] transition-all"><i class="fas fa-eye mr-2 text-xs"></i>Ver Escalação</a>{% endif %}
-    </div>
-    {% endif %}
+
+        <div class="dashboard-insight-grid">
+            <article class="dashboard-readiness {% if status.tem_perfis and status.tem_calculos and status.tem_escalacao %}is-ready{% endif %}">
+                <i class="fas {% if status.tem_perfis and status.tem_calculos and status.tem_escalacao %}fa-circle-check{% else %}fa-list-check{% endif %}"></i>
+                <div>
+                    <span>Seu planejamento</span>
+                    {% if status.tem_perfis and status.tem_calculos and status.tem_escalacao %}
+                    <strong>Tudo pronto</strong><small>Perfis, rankings e escalação concluídos.</small>
+                    {% elif not status.tem_perfis %}
+                    <strong>Configure os perfis</strong><small>É o primeiro passo para calcular a rodada.</small>
+                    {% elif not status.tem_calculos %}
+                    <strong>Calcule os rankings</strong><small>Os perfis já estão definidos.</small>
+                    {% else %}
+                    <strong>Monte a escalação</strong><small>Os cálculos da rodada estão disponíveis.</small>
+                    {% endif %}
+                </div>
+            </article>
+
+            <article class="dashboard-insight">
+                <span class="dashboard-insight-icon"><i class="fas fa-person-running"></i></span>
+                <div><small>Mercado de atletas</small><strong>{{ rodada.atletas.provaveis if rodada.atletas else '—' }} prováveis</strong>
+                    <p>{% if rodada.atletas %}{{ rodada.atletas.duvidas }} dúvidas · {{ rodada.atletas.indisponiveis }} indisponíveis{% else %}Dados não disponíveis{% endif %}</p></div>
+            </article>
+
+            <article class="dashboard-insight">
+                <span class="dashboard-insight-icon"><i class="fas fa-user-shield"></i></span>
+                <div><small>Suas decisões</small><strong>{{ rodada.disponibilidade.cravados }} cravados</strong>
+                    <p>{{ rodada.disponibilidade.poupados }} poupados nesta rodada</p></div>
+                <a href="{{ url_for('player_availability.player_availability_page') }}" aria-label="Editar disponibilidade"><i class="fas fa-arrow-right"></i></a>
+            </article>
+
+            <article class="dashboard-insight">
+                <span class="dashboard-insight-icon"><i class="fas fa-fire"></i></span>
+                <div><small>Favorito do mercado</small>
+                    {% if rodada.favorito %}<strong>{{ rodada.favorito.nome }} · {{ rodada.favorito.clube }}</strong><p><span data-locale-number="{{ rodada.favorito.escalacoes }}">{{ rodada.favorito.escalacoes }}</span> escalações</p>
+                    {% else %}<strong>Sem destaque disponível</strong><p>Aguardando atualização do mercado</p>{% endif %}
+                </div>
+            </article>
+        </div>
+
+        <div class="dashboard-fixtures-heading">
+            <div><span>Confrontos</span><small>{{ rodada.confrontos_validos }} válidos para pontuação</small></div>
+            <a href="{{ url_for('scout_crossing.index') }}">Cruzar scouts <i class="fas fa-arrow-right"></i></a>
+        </div>
+        {% if rodada.confrontos %}
+        <div class="dashboard-fixtures" aria-label="Confrontos da rodada">
+            {% for jogo in rodada.confrontos %}
+            <article class="dashboard-fixture {% if not jogo.valida %}is-invalid{% endif %}">
+                <div class="dashboard-fixture-team"><span>{{ jogo.casa.abreviacao }}</span>{% if jogo.casa.escudo %}<img src="{{ jogo.casa.escudo }}" alt="{{ jogo.casa.nome }}">{% endif %}</div>
+                <b>×</b>
+                <div class="dashboard-fixture-team is-away">{% if jogo.visitante.escudo %}<img src="{{ jogo.visitante.escudo }}" alt="{{ jogo.visitante.nome }}">{% endif %}<span>{{ jogo.visitante.abreviacao }}</span></div>
+                <small>{% if jogo.data %}{{ jogo.data[8:10] }}/{{ jogo.data[5:7] }} · {{ jogo.data[11:16] }}{% else %}Data a definir{% endif %}</small>
+                {% if not jogo.valida %}<em>não válida</em>{% endif %}
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="dashboard-empty">Os confrontos ainda não foram publicados pelo Cartola.</div>
+        {% endif %}
+    </section>
 </div>
 
 <script src="{{ url_for('static', filename='js/calculo_goleiro.js') }}"></script>
@@ -201,4 +242,5 @@
 <script src="{{ url_for('static', filename='js/calculo_treinador.js') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 {% endblock %}

@@ -134,16 +134,14 @@
         fixture.title = `${homeName} x ${awayName}`;
         fixture.setAttribute('aria-label', `${homeName} contra ${awayName}`);
         fixture.innerHTML = `
-            <span class="position-game-label position-game-label--home ${homeIsPlayer ? 'position-game-team--player' : 'position-game-team--opponent'}">
-                ${escapeHtml(abbreviation(homeName, homeAbbr))}
-            </span>
-            <span class="position-game-shields" aria-hidden="true">
+            <span class="position-game-side position-game-side--home ${homeIsPlayer ? 'position-game-team--player' : 'position-game-team--opponent'}">
+                <span class="position-game-label">${escapeHtml(abbreviation(homeName, homeAbbr))}</span>
                 ${shieldMarkup(homeUrl, homeName, homeAbbr, homeIsPlayer ? 'position-game-shield--player' : 'position-game-shield--opponent')}
-                <span class="position-game-inline-vs">×</span>
-                ${shieldMarkup(awayUrl, awayName, awayAbbr, awayIsPlayer ? 'position-game-shield--player' : 'position-game-shield--opponent')}
             </span>
-            <span class="position-game-label position-game-label--away ${awayIsPlayer ? 'position-game-team--player' : 'position-game-team--opponent'}">
-                ${escapeHtml(abbreviation(awayName, awayAbbr))}
+            <span class="position-game-inline-vs" aria-hidden="true">×</span>
+            <span class="position-game-side position-game-side--away ${awayIsPlayer ? 'position-game-team--player' : 'position-game-team--opponent'}">
+                ${shieldMarkup(awayUrl, awayName, awayAbbr, awayIsPlayer ? 'position-game-shield--player' : 'position-game-shield--opponent')}
+                <span class="position-game-label">${escapeHtml(abbreviation(awayName, awayAbbr))}</span>
             </span>`;
         return fixture;
     }
@@ -159,7 +157,7 @@
         if (table.classList.contains('position-player-table')) return true;
         if (POSITION_TABLE_PATTERN.test(table.id || '')) return true;
         const labels = Array.from(table.querySelectorAll('thead th')).map((cell) => textOf(cell).toLowerCase());
-        return labels.includes('jogador') && labels.includes('pontuação');
+        return (labels.includes('jogador') || labels.includes('nome')) && labels.includes('pontuação');
     }
 
     function prepareTable(table) {
@@ -181,18 +179,28 @@
         const opponentIndex = headerOpponentIndex >= 0 ? headerOpponentIndex :
             (Number.isInteger(storedOpponentIndex) ? storedOpponentIndex : -1);
 
-        // Treinadores e tabelas de outros módulos não têm adversário; nunca
-        // tente fundir uma coluna inexistente por posição numérica.
-        if (!Number.isInteger(playerIndex) || !Number.isInteger(clubIndex) || opponentIndex < 0) return;
+        // Técnicos não têm confronto próprio na tabela, mas ainda precisam
+        // manter o jogador fixo durante a rolagem horizontal.
+        if (!Number.isInteger(playerIndex)) return;
         table.dataset.positionPlayerIndex = String(playerIndex);
-        table.dataset.positionClubIndex = String(clubIndex);
+        if (Number.isInteger(clubIndex)) table.dataset.positionClubIndex = String(clubIndex);
         if (headerOpponentIndex >= 0) table.dataset.positionOpponentIndex = String(headerOpponentIndex);
 
         headerRow.children[playerIndex].classList.add('position-player-sticky');
+        if (headerOpponentIndex >= 0 && Number.isInteger(clubIndex)) {
+            headerRow.children[clubIndex].classList.add('position-match-source');
+            headerRow.children[headerOpponentIndex].classList.add('position-match-source');
+        }
         table.querySelectorAll('tbody tr').forEach((row) => {
             const playerCell = row.children[playerIndex];
+            if (headerOpponentIndex >= 0 && Number.isInteger(clubIndex)) {
+                row.children[clubIndex]?.classList.add('position-match-source');
+                row.children[opponentIndex]?.classList.add('position-match-source');
+            }
             if (playerCell) markPlayerCell(playerCell);
         });
+
+        if (opponentIndex < 0 || !Number.isInteger(clubIndex)) return;
 
         let renderedRows = 0;
         const newlyRenderedRows = [];
@@ -219,9 +227,9 @@
                 const playerLine = playerCell.querySelector('.flex.items-center') || playerCell.firstElementChild;
                 if (playerLine) {
                     playerLine.classList.add('position-player-line');
-                    playerLine.insertBefore(fixture, playerLine.firstChild);
+                    playerLine.appendChild(fixture);
                 } else {
-                    playerCell.insertBefore(fixture, playerCell.firstChild);
+                    playerCell.appendChild(fixture);
                 }
                 clubCell.dataset.positionFixtureReady = 'true';
                 playerCell.dataset.positionGameReady = 'true';
@@ -230,19 +238,16 @@
             renderedRows += 1;
         });
 
-        // Não remova cabeçalho/células enquanto o tbody ainda está vazio.
-        // Os renderizadores assíncronos inserem as linhas depois do DOMReady.
+        // Não altere a quantidade de células. Os renderizadores assíncronos
+        // substituem o tbody e reaproveitam os mesmos índices do cabeçalho;
+        // ocultar as células-fonte mantém Pontuação/Média/Jogos alinhados.
         if (!renderedRows) return;
 
-        if (headerOpponentIndex >= 0) {
-            [headerOpponentIndex, clubIndex]
-                .sort((a, b) => b - a)
-                .forEach((index) => headerRow.children[index]?.remove());
-        }
+        headerRow.children[clubIndex]?.classList.add('position-match-source');
+        headerRow.children[opponentIndex]?.classList.add('position-match-source');
         newlyRenderedRows.forEach((row) => {
-            [opponentIndex, clubIndex]
-                .sort((a, b) => b - a)
-                .forEach((index) => row.children[index]?.remove());
+            row.children[clubIndex]?.classList.add('position-match-source');
+            row.children[opponentIndex]?.classList.add('position-match-source');
         });
     }
 

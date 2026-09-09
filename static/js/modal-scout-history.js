@@ -31,18 +31,33 @@
         return imageUrl(primary) || imageUrl(mapped) || '';
     };
 
-    function scoutMarkup(scouts) {
-        const entries = Object.entries(scouts || {}).filter(([, value]) => Number(value) > 0);
-        if (!entries.length) return '<span class="modal-scout-history-empty">Nenhum scout acima de zero</span>';
-        return entries.map(([code, value]) =>
-            `<span class="modal-scout-history-scout">${escapeHtml(labels[code] || code.toUpperCase())}<strong>${escapeHtml(number(value))}</strong></span>`
-        ).join('');
-    }
-
     function scoutSummary(scouts) {
         const entries = Object.entries(scouts || {}).filter(([, value]) => Number(value) > 0);
         if (!entries.length) return '';
-        return `(${entries.map(([code, value]) => `${labels[code] || code.toUpperCase()} ${number(value)}`).join(' · ')})`;
+        return entries.map(([code, value]) =>
+            `<span><b>${escapeHtml(labels[code] || code.toUpperCase())}</b> ${escapeHtml(number(value))}</span>`
+        ).join('');
+    }
+
+    function roundCard(round, match) {
+        if (!match) {
+            return `<article class="modal-scout-history-item is-empty" aria-label="Rodada ${round}, sem dados">
+                <span class="modal-scout-history-round">R${round}</span>
+                <span class="modal-scout-history-no-data">Sem dados</span>
+            </article>`;
+        }
+        const scouts = scoutSummary(match.scouts);
+        return `<article class="modal-scout-history-item" aria-label="Rodada ${round}, ${number(match.pontuacao)} pontos">
+            <div class="modal-scout-history-card-head">
+                <span class="modal-scout-history-round">R${round}</span>
+                <strong class="modal-scout-history-point">${number(match.pontuacao)}</strong>
+            </div>
+            <div class="modal-scout-history-game">
+                <strong>${escapeHtml(match.adversario_nome || 'Adversário não informado')}</strong>
+                <small>${escapeHtml(match.mando_label || 'Sem mando')} · ${escapeHtml(match.casa_nome || 'Casa')} x ${escapeHtml(match.visitante_nome || 'Fora')}</small>
+            </div>
+            <div class="modal-scout-history-inline-scouts">${scouts || '<span class="is-muted">Sem scouts positivos</span>'}</div>
+        </article>`;
     }
 
     function render(prefix, data, fallbackPhoto) {
@@ -51,7 +66,9 @@
         const status = root.querySelector(`#modal${prefix}ScoutHistoryStatus`);
         const summary = root.querySelector(`#modal${prefix}ScoutHistorySummary`);
         const list = root.querySelector(`#modal${prefix}ScoutHistoryList`);
-        const matches = data.ultimas_pontuacoes || [];
+        // Uma linha sem entrada em campo não é uma pontuação do jogador;
+        // ela deve aparecer como rodada sem dados no calendário de 1 a 38.
+        const matches = (data.ultimas_pontuacoes || []).filter((match) => match.entrou_em_campo === true);
         const photo = imageUrl(data.jogador?.foto) || imageUrl(fallbackPhoto);
 
         if (status) status.textContent = photo ? 'Dados atuais' : 'Dados atuais · foto indisponível';
@@ -63,38 +80,17 @@
             ].map(([label, value]) => `<div class="modal-scout-history-summary-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
         }
 
-        if (!matches.length) {
-            list.innerHTML = '<div class="modal-scout-history-empty">Nenhuma pontuação encontrada até a rodada atual.</div>';
-            return;
-        }
-
-        list.innerHTML = matches.map((match) => {
-            const conceded = match.cedidos_adversario || {};
-            const concededScouts = conceded.scouts || {};
-            const positiveConceded = Object.entries(concededScouts).filter(([, value]) => Number(value) > 0);
-            const concededText = positiveConceded.length
-                ? positiveConceded.map(([code, value]) => `${labels[code] || code.toUpperCase()} ${number(value)}`).join(' · ')
-                : 'Nenhum scout acima de zero';
-            return `<article class="modal-scout-history-item">
-                <button type="button" class="modal-scout-history-row" aria-expanded="false">
-                    <span class="modal-scout-history-round">R${escapeHtml(match.rodada)}</span>
-                    <span class="modal-scout-history-game"><strong>${escapeHtml(match.adversario_nome || 'Adversário não informado')}</strong><small>${escapeHtml(match.mando_label || 'Mando indisponível')} · ${escapeHtml(match.casa_nome || 'Casa')} x ${escapeHtml(match.visitante_nome || 'Fora')}</small></span>
-                    <span class="modal-scout-history-point-wrap"><small class="modal-scout-history-inline-scouts">${escapeHtml(scoutSummary(match.scouts))}</small><strong class="modal-scout-history-point">${number(match.pontuacao)}</strong></span>
-                </button>
-                <div class="modal-scout-history-detail">
-                    <div><p class="modal-scout-history-detail-title">Scouts do jogador</p><div class="modal-scout-history-scouts">${scoutMarkup(match.scouts)}</div></div>
-                    <div><p class="modal-scout-history-detail-title">Cedidos pelo adversário · ${escapeHtml(concededText)}</p><div class="modal-scout-history-scouts">${scoutMarkup(concededScouts)}</div></div>
-                </div>
-            </article>`;
+        const byRound = new Map(matches.map((match) => [Number(match.rodada), match]));
+        const ranges = [[1, 13], [14, 26], [27, 38]];
+        list.innerHTML = ranges.map(([start, end]) => {
+            const cards = Array.from({ length: end - start + 1 }, (_, index) => {
+                const round = start + index;
+                return roundCard(round, byRound.get(round));
+            }).join('');
+            return `<section class="modal-scout-history-column" aria-label="Rodadas ${start} a ${end}">
+                <p class="modal-scout-history-range">R${start}–R${end}</p>${cards}
+            </section>`;
         }).join('');
-
-        list.querySelectorAll('.modal-scout-history-row').forEach((button) => {
-            button.addEventListener('click', () => {
-                const item = button.closest('.modal-scout-history-item');
-                const expanded = item.classList.toggle('is-open');
-                button.setAttribute('aria-expanded', String(expanded));
-            });
-        });
     }
 
     async function load(prefix, atletaId, positionId, fallbackPhoto) {

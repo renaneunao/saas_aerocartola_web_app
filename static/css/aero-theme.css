@@ -99,31 +99,34 @@ html {
   background-clip: text;
 }
 
-/* --- Custom Scrollbar (Neon) --- */
-.neon-scroll {
+/* --- Barras de rolagem globais, discretas e consistentes --- */
+html,
+body,
+* {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 229, 255, 0.3) rgba(11, 17, 32, 0.4);
+  scrollbar-color: rgba(100, 116, 139, 0.48) rgba(6, 11, 20, 0.7) !important;
 }
 
-.neon-scroll::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+*::-webkit-scrollbar {
+  width: 4px !important;
+  height: 4px !important;
 }
 
-.neon-scroll::-webkit-scrollbar-track {
-  background: rgba(11, 17, 32, 0.3);
-  border-radius: 10px;
+*::-webkit-scrollbar-track {
+  background: rgba(6, 11, 20, 0.7) !important;
+  border-radius: 999px;
 }
 
-.neon-scroll::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #00E5FF, #4494FF, #00E5FF);
-  border-radius: 10px;
-  box-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
+*::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.48) !important;
+  border: 1px solid rgba(6, 11, 20, 0.68);
+  border-radius: 999px;
+  box-shadow: none !important;
 }
 
-.neon-scroll::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #33EAFF, #66AAFF, #33EAFF);
-  box-shadow: 0 0 10px rgba(0, 229, 255, 0.5);
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.58) !important;
+  box-shadow: none !important;
 }
 
 /* --- Position module controls and tables --- */
@@ -249,10 +252,25 @@ html {
 .position-table td.position-player-sticky {
   position: sticky;
   left: 0;
-  width: 8.25rem;
-  min-width: 8.25rem;
-  max-width: 8.25rem;
+  width: 9.75rem;
+  min-width: 9.75rem;
+  max-width: 9.75rem;
   z-index: 4;
+}
+
+/* Máscara neutra para a coluna fixa: evita que as colunas roladas vazem por
+   baixo dela sem criar um destaque visual diferente para o jogador. */
+.position-table td.position-player-sticky {
+  background: #0b1120;
+}
+
+.position-table th.position-player-sticky {
+  background: #0b1120;
+}
+
+.position-table th.position-match-source,
+.position-table td.position-match-source {
+  display: none !important;
 }
 
 .position-table thead th.position-player-sticky {
@@ -263,7 +281,21 @@ html {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem !important;
+  width: 100%;
   min-width: 0;
+}
+
+.position-player-line > :first-child {
+  flex: 0 0 auto;
+}
+
+.position-player-line > .position-game-inline {
+  order: 3;
+}
+
+.position-player-line > .min-w-0 {
+  flex: 1 1 auto;
+  min-width: 2.8rem;
 }
 
 .position-game-inline {
@@ -272,8 +304,22 @@ html {
   justify-content: center;
   flex: 0 0 auto;
   gap: 0.15rem;
-  min-width: 4.9rem;
+  min-width: 4.8rem;
   line-height: 1;
+}
+
+.position-game-side {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.position-game-side--home {
+  transform: translateY(-0.12rem);
+}
+
+.position-game-side--away {
+  transform: translateY(0.12rem);
 }
 
 .position-game-label {
@@ -469,9 +515,9 @@ html {
 
   body.position-page .position-table th.position-player-sticky,
   body.position-page .position-table td.position-player-sticky {
-    width: 6.5rem;
-    min-width: 6.5rem;
-    max-width: 6.5rem;
+    width: 7.2rem;
+    min-width: 7.2rem;
+    max-width: 7.2rem;
   }
 
   body.position-page .position-player-sticky > div {
@@ -494,7 +540,7 @@ html {
   }
 
   body.position-page .position-game-inline {
-    min-width: 4rem;
+    min-width: 3.95rem;
     gap: 0.08rem;
   }
 
@@ -522,6 +568,179 @@ html {
 
   body.position-page .position-game-inline-vs {
     font-size: 0.5rem;
+  }
+}
+
+/* --- Botões neutros da aplicação --- */
+.aero-button-neutral,
+.aero-button-details {
+  background: rgba(51, 65, 85, 0.82) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  color: #e2e8f0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.aero-button-neutral:hover:not(:disabled),
+.aero-button-details:hover:not(:disabled) {
+  background: rgba(71, 85, 105, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.36) !important;
+  color: #f8fafc !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.aero-button-details {
+  border-radius: 0.5rem !important;
+  font-weight: 600 !important;
+}
+
+/* --- Tabelas legadas: rolagem horizontal sem empilhar células --- */
+.aero-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+table.aero-responsive-table {
+  display: table;
+  border-collapse: collapse;
+}
+
+table.aero-responsive-table thead { display: table-header-group; }
+table.aero-responsive-table tbody { display: table-row-group; }
+table.aero-responsive-table tr { display: table-row; }
+table.aero-responsive-table th,
+table.aero-responsive-table td { display: table-cell; }
+
+/* Componente de confronto usado nos perfis de peso. */
+.profile-fixture-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.profile-fixture-rank {
+  width: 1.1rem;
+  flex: 0 0 1.1rem;
+  color: var(--text-muted);
+  font-size: 0.62rem;
+  font-weight: 700;
+}
+
+.profile-fixture {
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  min-width: 0;
+}
+
+.profile-fixture-weight {
+  margin-left: auto;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Compactação global para celulares. Mantém controles tocáveis e desktop intacto. */
+@media (max-width: 640px) {
+  html {
+    font-size: 10px;
+  }
+
+  body {
+    line-height: 1.3;
+  }
+
+  body.aero-global-ui main > div,
+  body.aero-global-ui main > section {
+    max-width: 100%;
+  }
+
+  body.aero-global-ui main > .p-8,
+  body.aero-global-ui main .p-8 {
+    padding: 1rem !important;
+  }
+
+  body.aero-global-ui main > .p-6,
+  body.aero-global-ui main .p-6 {
+    padding: 0.85rem !important;
+  }
+
+  body.aero-global-ui main .px-8 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  body.aero-global-ui main .py-8 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  body.aero-global-ui main .gap-8 { gap: 1rem !important; }
+  body.aero-global-ui main .gap-6 { gap: 0.8rem !important; }
+  body.aero-global-ui main .space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem !important; }
+  body.aero-global-ui main .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.8rem !important; }
+
+  body.aero-global-ui .text-5xl {
+    font-size: 2rem !important;
+    line-height: 1.05 !important;
+  }
+
+  body.aero-global-ui .text-4xl {
+    font-size: 1.7rem !important;
+    line-height: 1.1 !important;
+  }
+
+  body.aero-global-ui .text-3xl {
+    font-size: 1.45rem !important;
+    line-height: 1.15 !important;
+  }
+
+  body.aero-global-ui [role="dialog"],
+  body.aero-global-ui .fixed.inset-0 > div {
+    max-width: calc(100vw - 1.2rem) !important;
+    max-height: calc(100dvh - 1.2rem) !important;
+  }
+
+  body.aero-global-ui input:not([type="checkbox"]):not([type="radio"]),
+  body.aero-global-ui select,
+  body.aero-global-ui textarea {
+    max-width: 100%;
+    min-height: 3.2rem;
+    padding: 0.65rem 0.8rem !important;
+    font-size: 16px !important;
+  }
+
+  body.aero-global-ui button,
+  body.aero-global-ui a[role="button"] {
+    max-width: 100%;
+  }
+
+  .aero-table-scroll {
+    width: 100%;
+  }
+
+  table.aero-responsive-table {
+    width: max-content;
+    min-width: 100%;
+    font-size: 0.9rem;
+    table-layout: auto;
+  }
+
+  table.aero-responsive-table th,
+  table.aero-responsive-table td {
+    padding: 0.45rem 0.55rem !important;
+    vertical-align: middle;
+  }
+
+  .profile-fixture-row {
+    gap: 0.22rem;
+  }
+
+  .profile-fixture-weight {
+    font-size: 0.62rem;
   }
 }
 

@@ -80,6 +80,7 @@ class EscalacaoIdeal {
             '3-5-2': { goleiro: 1, zagueiro: 3, lateral: 0, meia: 5, atacante: 2, treinador: 1 },
             '3-4-3': { goleiro: 1, zagueiro: 3, lateral: 0, meia: 4, atacante: 3, treinador: 1 },
             '4-5-1': { goleiro: 1, zagueiro: 2, lateral: 2, meia: 5, atacante: 1, treinador: 1 },
+            '5-3-2': { goleiro: 1, zagueiro: 3, lateral: 2, meia: 3, atacante: 2, treinador: 1 },
             '5-4-1': { goleiro: 1, zagueiro: 3, lateral: 2, meia: 4, atacante: 1, treinador: 1 }
         };
         return formacoes[formacaoStr] || formacoes['4-3-3'];

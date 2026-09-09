@@ -44,6 +44,7 @@
             <option value="3-5-2">3-5-2 · domínio central</option>
             <option value="3-4-3">3-4-3 · ataque agressivo</option>
             <option value="4-5-1">4-5-1 · segurança e controle</option>
+            <option value="5-3-2">5-3-2 · proteção e transição</option>
             <option value="5-4-1">5-4-1 · defesa fechada</option>
           </select>
         </div>
@@ -81,6 +82,21 @@
         </div>
       </section>
 
+      <section class="ideal-surface ideal-panel ideal-availability-panel">
+        <div class="ideal-panel-head">
+          <div><h2 class="ideal-panel-title"><i class="fas fa-user-check"></i> Disponibilidade</h2><p class="ideal-panel-subtitle">Ajuste um atleta e recalcule sem sair da escalação.</p></div>
+        </div>
+        <label class="ideal-label" for="availabilityAthleteInput">Jogador da rodada</label>
+        <input id="availabilityAthleteInput" class="ideal-input" list="availabilityAthletes" placeholder="Digite o nome do jogador" autocomplete="off">
+        <datalist id="availabilityAthletes"></datalist>
+        <div class="ideal-availability-actions">
+          <button id="markUnavailableBtn" class="ideal-btn ideal-btn-danger" type="button"><i class="fas fa-ban"></i> Não joga</button>
+          <button id="markAvailableBtn" class="ideal-btn ideal-btn-secondary" type="button"><i class="fas fa-check"></i> Joga</button>
+        </div>
+        <button id="availabilityRecalculateBtn" class="ideal-btn ideal-btn-quiet ideal-btn-full" type="button"><i class="fas fa-sync-alt"></i> Recarregar e recalcular</button>
+        <div id="availabilityHint" class="ideal-inline-hint">Selecione um atleta para aplicar a regra na rodada atual.</div>
+      </section>
+
       <section class="ideal-surface ideal-panel">
         <div class="ideal-panel-head">
           <div><h2 class="ideal-panel-title"><i class="fas fa-sort-amount-down"></i> Prioridades</h2><p class="ideal-panel-subtitle">Arraste para indicar onde preservar orçamento.</p></div>
@@ -94,9 +110,9 @@
           <div class="ideal-save-note"><i class="fas fa-shield-alt"></i> As configurações são salvas automaticamente.</div>
           <button id="calcularBtn" class="ideal-btn ideal-btn-primary" type="button" onclick="calcularEscalacao()"><i class="fas fa-bolt"></i> Calcular escalação</button>
           {% if permissions.podeEscalar %}
-            <button id="escalarBtn" class="ideal-btn ideal-btn-green" type="button" onclick="escalarTime()" disabled><i class="fas fa-paper-plane"></i> Escalar no Cartola</button>
+            <button id="escalarBtn" class="ideal-btn ideal-btn-green" type="button" onclick="escalarTime()" disabled><i class="fas fa-paper-plane"></i> Enviar escalação</button>
           {% else %}
-            <button id="escalarBtn" class="ideal-btn ideal-btn-green" type="button" disabled><i class="fas fa-lock"></i> Escalar no Cartola</button>
+            <button id="escalarBtn" class="ideal-btn ideal-btn-green" type="button" disabled><i class="fas fa-lock"></i> Enviar escalação</button>
             <a class="ideal-upgrade" style="justify-content:center" href="{{ url_for('pagamento.index') }}"><i class="fas fa-arrow-up"></i> Faça upgrade para escalar</a>
           {% endif %}
         </div>
@@ -125,6 +141,30 @@
         <div id="top5CardsContent"><div class="ideal-empty"><div><i class="fas fa-chart-line"></i><p>Carregando rankings...</p></div></div></div>
       </section>
     </main>
+  </div>
+
+  <div id="playerPicker" class="ideal-picker" aria-hidden="true" hidden>
+    <button class="ideal-picker-backdrop" type="button" data-picker-close aria-label="Fechar seleção"></button>
+    <section class="ideal-picker-sheet" role="dialog" aria-modal="true" aria-labelledby="playerPickerTitle">
+      <header class="ideal-picker-head">
+        <div><span id="playerPickerContext" class="ideal-eyebrow">Titular</span><h3 id="playerPickerTitle">Escolher atleta</h3></div>
+        <button class="ideal-icon-btn" type="button" data-picker-close aria-label="Fechar"><i class="fas fa-times"></i></button>
+      </header>
+      <div class="ideal-picker-filters">
+        <label><span>Nome</span><input id="pickerName" class="ideal-input" type="search" placeholder="Buscar"></label>
+        <label><span>Time</span><select id="pickerClub" class="ideal-select"><option value="">Todos</option></select></label>
+        <label><span>Pontuação mín.</span><input id="pickerPoints" class="ideal-input" type="number" step="0.1" placeholder="0"></label>
+        <label><span>Preço máx.</span><input id="pickerPrice" class="ideal-input" type="number" step="0.01" placeholder="Sem limite"></label>
+        <label><span>Scout</span><select id="pickerScout" class="ideal-select"><option value="">Qualquer scout</option></select></label>
+        <label><span>Scout mín.</span><input id="pickerScoutValue" class="ideal-input" type="number" step="0.01" placeholder="0"></label>
+      </div>
+      <div id="playerPickerRule" class="ideal-picker-rule"></div>
+      <div id="playerPickerResults" class="ideal-picker-results"></div>
+      <footer class="ideal-picker-footer">
+        <button id="removePlayerBtn" class="ideal-btn ideal-btn-danger" type="button"><i class="fas fa-trash-alt"></i> Remover desta posição</button>
+        <button class="ideal-btn ideal-btn-quiet" type="button" data-picker-close>Cancelar</button>
+      </footer>
+    </section>
   </div>
 </div>
 

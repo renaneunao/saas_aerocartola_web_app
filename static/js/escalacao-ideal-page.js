@@ -13,13 +13,15 @@
     treinadores: { singular: 'treinador', label: 'Técnicos', short: 'TÉC', icon: 'fa-clipboard-list', color: 'slate' }
   };
   const POSITION_ORDER = ['goleiros', 'zagueiros', 'laterais', 'meias', 'atacantes', 'treinadores'];
-  const FIELD_ROWS = [
-    ['atacantes'],
-    ['meias'],
-    ['zagueiros', 'laterais'],
-    ['goleiros'],
-    ['treinadores']
-  ];
+  const FORMATION_COUNTS = {
+    '4-3-3': { goleiros: 1, zagueiros: 2, laterais: 2, meias: 3, atacantes: 3 },
+    '4-4-2': { goleiros: 1, zagueiros: 2, laterais: 2, meias: 4, atacantes: 2 },
+    '3-5-2': { goleiros: 1, zagueiros: 3, laterais: 0, meias: 5, atacantes: 2 },
+    '3-4-3': { goleiros: 1, zagueiros: 3, laterais: 0, meias: 4, atacantes: 3 },
+    '4-5-1': { goleiros: 1, zagueiros: 2, laterais: 2, meias: 5, atacantes: 1 },
+    '5-3-2': { goleiros: 1, zagueiros: 3, laterais: 2, meias: 3, atacantes: 2 },
+    '5-4-1': { goleiros: 1, zagueiros: 3, laterais: 2, meias: 4, atacantes: 1 }
+  };
   const PRIORITY_LABELS = {
     atacantes: 'Atacantes', laterais: 'Laterais', meias: 'Meias',
     zagueiros: 'Zagueiros', goleiros: 'Goleiros', treinadores: 'Técnicos'
@@ -28,8 +30,10 @@
   const state = {
     data: null,
     clubes: {},
-    editing: false,
-    draggedItem: null
+    editing: true,
+    draggedItem: null,
+    availability: [],
+    picker: null
   };
 
   window.prioridadesOrdenadas = ['atacantes', 'laterais', 'meias', 'zagueiros', 'goleiros', 'treinadores'];
@@ -225,51 +229,79 @@
   function candidatesFor(position, current) {
     const singular = POSITIONS[position].singular;
     const source = [...(state.data?.rankings_por_posicao?.[singular] || [])];
+    if (position === 'goleiros') source.push(...(state.data?.todos_goleiros || []));
     if (current && !source.some(player => idOf(player) === idOf(current))) source.unshift(current);
-    return source.slice(0, 28);
-  }
-
-  function manualSelect(position, index, current) {
-    if (!state.editing) return '';
-    const options = candidatesFor(position, current).map(player => `<option value="${escapeHtml(idOf(player))}" ${idOf(player) === idOf(current) ? 'selected' : ''}>${escapeHtml(player.apelido || 'Jogador')} · ${money(price(player))}</option>`).join('');
-    return `<select class="ideal-manual-select" aria-label="Editar jogador" onchange="manualSelecionarJogador('${position}', ${index}, this.value)">${options}</select>`;
+    const unique = new Map(source.filter(player => idOf(player)).map(player => [idOf(player), player]));
+    return [...unique.values()];
   }
 
   function playerCard(player, position, index) {
     const club = clubFor(player);
-    const badges = `${player?.eh_capitao ? '<span class="ideal-badge ideal-badge-captain">CAP</span>' : ''}${player?.eh_reserva_luxo ? '<span class="ideal-badge ideal-badge-luxury">LUXO</span>' : ''}`;
-    return `<div class="ideal-player" title="${escapeHtml(club.nome || '')}">${badges}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player?.apelido || 'N/A')}</span><span class="ideal-player-data">${money(price(player))} · ${points(player).toFixed(1)}</span>${manualSelect(position, index, player)}</div>`;
+    const badges = player?.eh_capitao ? '<span class="ideal-badge ideal-badge-captain">CAP</span>' : '';
+    return `<button type="button" class="ideal-player" title="Trocar ${escapeHtml(player?.apelido || 'jogador')}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}">${badges}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player?.apelido || 'N/A')}</span><span class="ideal-player-data">${money(price(player))} · ${points(player).toFixed(1)} pts</span><span class="ideal-player-action">editar</span></button>`;
+  }
+
+  function emptySlot(position, index) {
+    return `<button type="button" class="ideal-player ideal-player-empty" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}"><span class="ideal-empty-plus"><i class="fas fa-plus"></i></span><span class="ideal-player-name">Escolher</span><span class="ideal-player-action">adicionar</span></button>`;
+  }
+
+  function playerSlots(result, position) {
+    const count = FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3'];
+    const players = (result.titulares?.[position] || []).filter(Boolean);
+    const total = Math.max(count[position] || 0, players.length);
+    return Array.from({ length: total }, (_, index) => players[index] ? playerCard(players[index], position, index) : emptySlot(position, index)).join('');
+  }
+
+  function fieldGroup(result, position, className = '') {
+    const count = FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3'];
+    if (!count[position] && !(result.titulares?.[position] || []).length) return '';
+    return `<div class="ideal-field-group ${className}"><div class="ideal-field-pos">${POSITIONS[position].label}</div><div class="ideal-field-players">${playerSlots(result, position)}</div></div>`;
   }
 
   function renderField(result) {
-    return `<div class="ideal-field"><div class="ideal-field-line"></div><div class="ideal-field-circle"></div><div class="ideal-field-tag"><span>titulares</span><span>${escapeHtml($('formationSelect').value)}</span></div><div class="ideal-field-rows">${FIELD_ROWS.map(row => `<div class="ideal-field-row">${row.map(position => {
-      const players = result.titulares?.[position] || [];
-      if (!players.length) return '';
-      return `<div class="ideal-field-group"><div class="ideal-field-pos">${POSITIONS[position].label}</div>${players.map((player, index) => playerCard(player, position, index)).join('')}</div>`;
-    }).join('')}</div>`).join('')}</div></div>`;
+    const formation = $('formationSelect')?.value || '4-3-3';
+    return `<div class="ideal-field ideal-field--${formation.replace('-', '')}"><div class="ideal-field-line"></div><div class="ideal-field-circle"></div><div class="ideal-field-goal ideal-field-goal-top"><span></span></div><div class="ideal-field-goal ideal-field-goal-bottom"><span></span></div><div class="ideal-field-tag"><span>titulares</span><span>${escapeHtml(formation)}</span></div><div class="ideal-field-rows"><div class="ideal-field-row ideal-field-row-attack">${fieldGroup(result, 'atacantes')}</div><div class="ideal-field-row ideal-field-row-midfield">${fieldGroup(result, 'meias')}</div><div class="ideal-field-row ideal-field-row-defense"><div class="ideal-field-defense-wide">${fieldGroup(result, 'laterais', 'ideal-field-group-wide')}</div><div class="ideal-field-defense-center">${fieldGroup(result, 'zagueiros', 'ideal-field-group-center')}</div></div><div class="ideal-field-row ideal-field-row-goalkeeper">${fieldGroup(result, 'goleiros')}</div></div><div class="ideal-field-coach">${fieldGroup(result, 'treinadores', 'ideal-field-group-coach')}</div></div>`;
   }
 
   function renderBench(result) {
-    const groups = POSITION_ORDER.filter(position => (result.reservas?.[position] || []).length).map(position => {
-      const players = result.reservas[position];
-      return `<div class="ideal-bench-group"><div class="ideal-bench-label">${POSITIONS[position].label}</div>${players.map(player => {
-        const isLuxury = Boolean(player.eh_reserva_luxo);
-        return `<div class="ideal-bench-player">${avatar(player)}<span class="ideal-player-name">${escapeHtml(player.apelido || 'N/A')}</span><span class="ideal-player-data">${isLuxury ? 'LUXO · ' : ''}${money(price(player))}</span></div>`;
-      }).join('')}</div>`;
+    const positions = POSITION_ORDER.filter(position => position !== 'treinadores');
+    const groups = positions.map(position => {
+      const players = (result.reservas?.[position] || []).filter(Boolean);
+      const player = players[0];
+      const card = player ? `<button type="button" class="ideal-bench-player" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0">${player.eh_reserva_luxo ? '<span class="ideal-badge ideal-badge-luxury">LUXO</span>' : ''}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player.apelido || 'N/A')}</span><span class="ideal-player-data">${money(price(player))}</span><span class="ideal-player-action">editar</span></button>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
+      return `<div class="ideal-bench-group"><div class="ideal-bench-label">${POSITIONS[position].label}<small>mais barata que o titular</small></div>${card}</div>`;
     }).join('');
-    return `<aside class="ideal-bench"><div class="ideal-bench-head"><span class="ideal-bench-title"><i class="fas fa-exchange-alt"></i>Reservas</span><span class="ideal-bench-note">sem custo</span></div>${groups || '<div class="ideal-bench-note">Nenhuma reserva disponível para esta combinação.</div>'}</aside>`;
+    return `<aside class="ideal-bench"><div class="ideal-bench-head"><span class="ideal-bench-title"><i class="fas fa-exchange-alt"></i>Reservas</span><span class="ideal-bench-note">sem custo</span></div>${groups}</aside>`;
   }
 
   function recomputeResult() {
     if (!window.ultimaEscalacao) return;
-    window.ultimaEscalacao.custoTotal = POSITION_ORDER.flatMap(position => window.ultimaEscalacao.titulares?.[position] || []).reduce((total, player) => total + price(player), 0);
-    window.ultimaEscalacao.pontuacaoTotal = POSITION_ORDER.flatMap(position => window.ultimaEscalacao.titulares?.[position] || []).reduce((total, player) => total + points(player), 0);
+    const result = window.ultimaEscalacao;
+    result.titulares ||= {};
+    result.reservas ||= {};
+    POSITION_ORDER.forEach(position => {
+      result.titulares[position] = (result.titulares[position] || []).filter(Boolean);
+      result.reservas[position] = (result.reservas[position] || []).filter(Boolean);
+      if (result.titulares[position].length && result.reservas[position].length) {
+        const minimumStarterPrice = Math.min(...result.titulares[position].map(price));
+        result.reservas[position] = result.reservas[position].filter((player) => price(player) < minimumStarterPrice);
+      }
+      result.titulares[position].forEach(player => { player.eh_capitao = false; player.eh_reserva_luxo = false; });
+      result.reservas[position].forEach(player => { player.eh_capitao = false; player.eh_reserva_luxo = false; });
+    });
+    const captainPosition = $('posicaoCapitao')?.value || 'atacantes';
+    const captainPool = result.titulares[captainPosition] || [];
+    if (captainPool.length) captainPool.reduce((best, player) => points(player) > points(best) ? player : best).eh_capitao = true;
+    const luxuryPosition = $('posicaoReservaLuxo')?.value || 'atacantes';
+    const luxury = result.reservas[luxuryPosition]?.[0];
+    if (luxury && luxuryPosition !== 'treinadores') luxury.eh_reserva_luxo = true;
+    result.custoTotal = POSITION_ORDER.flatMap(position => result.titulares[position] || []).reduce((total, player) => total + price(player), 0);
+    result.pontuacaoTotal = POSITION_ORDER.flatMap(position => result.titulares[position] || []).reduce((total, player) => total + points(player), 0);
   }
 
   function renderManualEditor(result) {
-    const rows = POSITION_ORDER.flatMap(position => (result.titulares?.[position] || []).map((player, index) => `<div class="ideal-manual-row"><label>${POSITIONS[position].short} · ${escapeHtml(player.apelido || 'N/A')}</label><select onchange="manualSelecionarJogador('${position}', ${index}, this.value)">${candidatesFor(position, player).map(candidate => `<option value="${escapeHtml(idOf(candidate))}" ${idOf(candidate) === idOf(player) ? 'selected' : ''}>${escapeHtml(candidate.apelido || 'Jogador')}</option>`).join('')}</select></div>`));
     const editor = $('manualEditor');
-    if (editor) editor.innerHTML = `<p>Troque atletas individualmente e revise o saldo. A escalação manual continua sendo enviada pelo contrato atual.</p><div class="ideal-manual-list">${rows.join('')}</div>`;
+    if (editor) editor.innerHTML = `<p><i class="fas fa-circle-info"></i> Clique em qualquer atleta ou vaga no campo e nos reservas para trocar. O saldo, capitão e reserva de luxo são recalculados a cada alteração.</p>`;
   }
 
   function exibirResultado(result, clubesDict = {}) {
@@ -284,7 +316,9 @@
     content.innerHTML = `<div class="ideal-metrics"><div class="ideal-metric cost"><span>Investimento</span><strong>${money(result.custoTotal)}</strong><em>titulares</em></div><div class="ideal-metric balance"><span>Saldo disponível</span><strong>${money(balance)}</strong><em>patrimônio ${money(patrimonio)}</em></div><div class="ideal-metric points"><span>Projeção</span><strong>${safeNumber(result.pontuacaoTotal).toFixed(2)} pts</strong><em>${captain ? `capitão: ${escapeHtml(captain.apelido)}` : 'sem capitão definido'}</em></div></div><div class="ideal-field-layout">${renderField(result)}${renderBench(result)}</div><div id="manualEditor" class="ideal-manual-editor ${state.editing ? 'is-open' : ''}"></div>`;
     renderManualEditor(result);
     panel.classList.remove('hidden');
-    $('escalarBtn').disabled = false;
+    const expected = Object.values(FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3']).reduce((sum, value) => sum + value, 0) + 1;
+    const actual = POSITION_ORDER.flatMap(position => result.titulares?.[position] || []).length;
+    $('escalarBtn').disabled = actual !== expected;
   }
 
   async function calcularEscalacao() {
@@ -294,7 +328,7 @@
     $('resultadoPanel')?.classList.add('hidden');
     showLoading('Calculando escalação ideal...');
     try {
-      const data = state.data || await loadData();
+      const data = await loadData();
       const escalador = new window.EscalacaoIdeal({
         rodada_atual: data.rodada_atual,
         patrimonio: data.patrimonio,
@@ -363,12 +397,185 @@
     const current = window.ultimaEscalacao.titulares?.[position]?.[index];
     const candidate = candidatesFor(position, current).find(player => idOf(player) === String(athleteId));
     if (!candidate) return;
-    const replacement = { ...candidate, eh_capitao: Boolean(current?.eh_capitao) };
+    const used = POSITION_ORDER.flatMap(item => [
+      ...(window.ultimaEscalacao.titulares?.[item] || []),
+      ...(window.ultimaEscalacao.reservas?.[item] || [])
+    ]).filter(player => player && idOf(player) !== idOf(current));
+    if (used.some(player => idOf(player) === idOf(candidate))) return notify('Este atleta já está em outra vaga.', 'warning');
+    const replacement = { ...candidate };
     window.ultimaEscalacao.titulares[position][index] = replacement;
     recomputeResult();
     exibirResultado(window.ultimaEscalacao, state.clubes);
     if (state.editing) $('manualEditor')?.classList.add('is-open');
     adicionarLog(`↻ ${POSITIONS[position].short}: ${replacement.apelido} selecionado manualmente.`, 'info');
+  }
+
+  function currentPickerPlayer() {
+    const picker = state.picker;
+    if (!picker || !window.ultimaEscalacao) return null;
+    const group = picker.kind === 'reserve' ? window.ultimaEscalacao.reservas : window.ultimaEscalacao.titulares;
+    return group?.[picker.position]?.[picker.index] || null;
+  }
+
+  function scoutValue(player, scout) {
+    if (!scout) return 0;
+    return safeNumber(player?.[`media_${scout}`] ?? player?.[`avg_${scout}`] ?? player?.[`scout_${scout}`] ?? player?.[scout]);
+  }
+
+  function pickerPool() {
+    return candidatesFor(state.picker.position, currentPickerPlayer());
+  }
+
+  function renderPickerFilters(pool) {
+    const club = $('pickerClub');
+    const scout = $('pickerScout');
+    if (club) {
+      const clubs = new Map(pool.map(player => [String(player.clube_id || ''), clubFor(player).nome || player.clube_nome || `Clube #${player.clube_id}`]).filter(([id]) => id));
+      club.innerHTML = '<option value="">Todos os times</option>' + [...clubs.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, name]) => `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`).join('');
+    }
+    if (scout) {
+      const keys = new Set();
+      pool.forEach(player => Object.keys(player || {}).forEach(key => { if (/^(media|avg|scout)_/.test(key)) keys.add(key.replace(/^(media|avg|scout)_/, '')); }));
+      ['ds', 'fs', 'ff', 'fd', 'g', 'a', 'sg', 'de'].forEach(key => keys.add(key));
+      scout.innerHTML = '<option value="">Qualquer scout</option>' + [...keys].sort().map(key => `<option value="${escapeHtml(key)}">${escapeHtml(key.toUpperCase())}</option>`).join('');
+    }
+  }
+
+  function renderPickerResults() {
+    if (!state.picker) return;
+    const target = $('playerPickerResults');
+    if (!target) return;
+    const current = currentPickerPlayer();
+    const used = new Set(POSITION_ORDER.flatMap(position => [
+      ...(window.ultimaEscalacao?.titulares?.[position] || []),
+      ...(window.ultimaEscalacao?.reservas?.[position] || [])
+    ]).filter(Boolean).filter(player => idOf(player) !== idOf(current)).map(idOf));
+    const name = ($('pickerName')?.value || '').trim().toLocaleLowerCase();
+    const clubId = $('pickerClub')?.value || '';
+    const minPoints = safeNumber($('pickerPoints')?.value);
+    const maxPrice = $('pickerPrice')?.value === '' ? Infinity : safeNumber($('pickerPrice')?.value);
+    const scout = $('pickerScout')?.value || '';
+    const minScout = safeNumber($('pickerScoutValue')?.value);
+    const starterPool = window.ultimaEscalacao?.titulares?.[state.picker.position] || [];
+    const reserveLimit = state.picker.kind === 'reserve' && starterPool.length ? Math.min(...starterPool.map(price)) : Infinity;
+    const candidates = pickerPool().filter(player => {
+      const playerName = `${player.apelido || ''} ${player.nome || ''}`.toLocaleLowerCase();
+      if (name && !playerName.includes(name)) return false;
+      if (clubId && String(player.clube_id) !== clubId) return false;
+      if (points(player) < minPoints || price(player) > maxPrice) return false;
+      if (scout && scoutValue(player, scout) < minScout) return false;
+      if (state.picker.kind === 'reserve' && price(player) >= reserveLimit) return false;
+      return !used.has(idOf(player));
+    }).slice(0, 80);
+    const rule = $('playerPickerRule');
+    if (rule) rule.textContent = state.picker.kind === 'reserve' ? `Reserva: preço abaixo de ${reserveLimit === Infinity ? '—' : money(reserveLimit)} do titular mais barato.` : 'Titular: escolha um atleta da posição com os filtros abaixo.';
+    target.innerHTML = candidates.length ? candidates.map(player => `<button type="button" class="ideal-picker-player" data-picker-athlete="${escapeHtml(idOf(player))}">${avatar(player, 'ideal-picker-avatar')}<span><strong>${escapeHtml(player.apelido || player.nome || 'Jogador')}</strong><small>${escapeHtml(clubFor(player).nome || player.clube_nome || 'Clube')} · ${money(price(player))} · ${points(player).toFixed(2)} pts</small></span><em>${scout ? scoutValue(player, scout).toFixed(2) : 'selecionar'}</em></button>`).join('') : '<div class="ideal-picker-empty">Nenhum atleta atende aos filtros e às regras desta vaga.</div>';
+    target.querySelectorAll('[data-picker-athlete]').forEach(button => button.addEventListener('click', () => applyPicker(button.dataset.pickerAthlete)));
+  }
+
+  function openPicker(position, kind, index) {
+    if (!window.ultimaEscalacao) return notify('Calcule a escalação antes de editar.', 'warning');
+    state.picker = { position, kind, index: Number(index) || 0 };
+    const current = currentPickerPlayer();
+    $('playerPickerContext').textContent = `${kind === 'reserve' ? 'Reserva' : 'Titular'} · ${POSITIONS[position].label}`;
+    $('playerPickerTitle').textContent = current ? `Trocar ${current.apelido || 'atleta'}` : `Adicionar ${POSITIONS[position].singular}`;
+    ['pickerName', 'pickerPoints', 'pickerPrice', 'pickerScoutValue'].forEach(id => { if ($(id)) $(id).value = ''; });
+    const pool = pickerPool();
+    renderPickerFilters(pool);
+    renderPickerResults();
+    const picker = $('playerPicker');
+    picker.hidden = false; picker.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('ideal-picker-open');
+  }
+
+  function closePicker() {
+    const picker = $('playerPicker');
+    if (!picker) return;
+    picker.hidden = true; picker.setAttribute('aria-hidden', 'true'); state.picker = null;
+    document.body.classList.remove('ideal-picker-open');
+  }
+
+  function applyPicker(athleteId) {
+    if (!state.picker || !window.ultimaEscalacao) return;
+    const current = currentPickerPlayer();
+    const candidate = pickerPool().find(player => idOf(player) === String(athleteId));
+    if (!candidate) return;
+    const all = POSITION_ORDER.flatMap(position => [
+      ...(window.ultimaEscalacao.titulares?.[position] || []),
+      ...(window.ultimaEscalacao.reservas?.[position] || [])
+    ]).filter(Boolean).filter(player => idOf(player) !== idOf(current));
+    if (all.some(player => idOf(player) === idOf(candidate))) return notify('Este atleta já está em outra vaga.', 'warning');
+    if (state.picker.kind === 'reserve') {
+      const starters = window.ultimaEscalacao.titulares?.[state.picker.position] || [];
+      const limit = starters.length ? Math.min(...starters.map(price)) : Infinity;
+      if (price(candidate) >= limit) return notify(`A reserva precisa custar menos que ${money(limit)}.`, 'warning');
+    }
+    const group = state.picker.kind === 'reserve' ? window.ultimaEscalacao.reservas : window.ultimaEscalacao.titulares;
+    group[state.picker.position] ||= [];
+    group[state.picker.position][state.picker.index] = { ...candidate, eh_capitao: false, eh_reserva_luxo: false };
+    recomputeResult();
+    const selectedPosition = state.picker.position;
+    closePicker();
+    exibirResultado(window.ultimaEscalacao, state.clubes);
+    adicionarLog(`↻ ${POSITIONS[selectedPosition].short}: ${candidate.apelido || candidate.nome} atualizado manualmente.`, 'info');
+  }
+
+  function removePickerPlayer() {
+    if (!state.picker || !window.ultimaEscalacao) return;
+    const removedPosition = state.picker.position;
+    const group = state.picker.kind === 'reserve' ? window.ultimaEscalacao.reservas : window.ultimaEscalacao.titulares;
+    (group[removedPosition] || []).splice(state.picker.index, 1);
+    recomputeResult();
+    closePicker();
+    exibirResultado(window.ultimaEscalacao, state.clubes);
+    adicionarLog(`↘ ${POSITIONS[removedPosition]?.short || 'Atleta'} removido para revisão.`, 'warning');
+  }
+
+  async function loadAvailabilityCandidates() {
+    if (!state.data?.team_id) return;
+    try {
+      const params = new URLSearchParams({
+        team_id: state.data.team_id,
+        season: state.data.temporada_atual || '',
+        round_number: state.data.rodada_atual || ''
+      });
+      const response = await fetch(`/api/player-availability/candidates?${params}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Disponibilidade indisponível.');
+      state.availability = data.items || [];
+      const list = $('availabilityAthletes');
+      if (list) list.innerHTML = state.availability.map(item => `<option value="${escapeHtml(item.apelido)}">${escapeHtml(item.clube_nome || '')} · ${escapeHtml(item.status_nome || '')}</option>`).join('');
+    } catch (error) {
+      const hint = $('availabilityHint');
+      if (hint) hint.textContent = error.message;
+    }
+  }
+
+  function selectedAvailabilityAthlete() {
+    const value = ($('availabilityAthleteInput')?.value || '').trim().toLocaleLowerCase();
+    if (!value) return null;
+    return state.availability.find(item => String(item.atleta_id) === value || String(item.apelido || '').toLocaleLowerCase() === value) || null;
+  }
+
+  async function applyAvailability(rule) {
+    const athlete = selectedAvailabilityAthlete();
+    if (!athlete || !state.data?.team_id) return notify('Escolha um atleta da lista de disponibilidade.', 'warning');
+    const hint = $('availabilityHint');
+    if (hint) hint.textContent = 'Salvando regra e atualizando cálculos...';
+    try {
+      const response = await fetch('/api/player-availability', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: state.data.team_id, season: state.data.temporada_atual, round_number: state.data.rodada_atual, athlete_id: athlete.atleta_id, rule })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a disponibilidade.');
+      if (hint) hint.textContent = `${athlete.apelido} marcado como ${rule === 'poupar' ? 'não joga' : 'joga'}. Recalculando...`;
+      await calcularEscalacao();
+      await loadAvailabilityCandidates();
+    } catch (error) {
+      if (hint) hint.textContent = error.message;
+      notify(error.message, 'error');
+    }
   }
 
   async function aoMudarConfiguracao(fromPriority = false) {
@@ -388,6 +595,18 @@
   function bindEvents() {
     ['formationSelect', 'hackGoleiroToggle', 'fecharDefesaToggle', 'posicaoCapitao', 'posicaoReservaLuxo'].forEach(id => $(id)?.addEventListener('change', () => aoMudarConfiguracao()));
     $('manualEditBtn')?.addEventListener('click', toggleManualEdit);
+    $('escalacaoContent')?.addEventListener('click', (event) => {
+      const target = event.target.closest('[data-picker-kind]');
+      if (target) openPicker(target.dataset.pickerPosition, target.dataset.pickerKind, target.dataset.pickerIndex);
+    });
+    document.querySelectorAll('[data-picker-close]').forEach(element => element.addEventListener('click', closePicker));
+    $('removePlayerBtn')?.addEventListener('click', removePickerPlayer);
+    ['pickerName', 'pickerClub', 'pickerPoints', 'pickerPrice', 'pickerScout', 'pickerScoutValue'].forEach(id => $(id)?.addEventListener('input', renderPickerResults));
+    ['pickerClub', 'pickerScout'].forEach(id => $(id)?.addEventListener('change', renderPickerResults));
+    $('markUnavailableBtn')?.addEventListener('click', () => applyAvailability('poupar'));
+    $('markAvailableBtn')?.addEventListener('click', () => applyAvailability('cravado'));
+    $('availabilityRecalculateBtn')?.addEventListener('click', calcularEscalacao);
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closePicker(); });
   }
 
   async function init() {
@@ -396,6 +615,7 @@
       if (!(await verificarStatusModulos())) return;
       await carregarConfiguracoes();
       await loadData();
+      await loadAvailabilityCandidates();
       bindEvents();
       adicionarLog('Dados da rodada carregados. Ajuste as opções e calcule quando estiver pronto.', 'info');
     } catch (error) {

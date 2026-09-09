@@ -2,6 +2,28 @@
 {% block title %}Configurar Perfis - Cartola Manager{% endblock %}
 
 {% block content %}
+{% macro confronto_peso(clube, peso, indice) %}
+    {% set time = clubes_dict.get(clube.clube_id, {}) %}
+    {% set adversario = clubes_dict.get(clube.adversario_id, {}) %}
+    {% set time_em_casa = clube.local == 'C' %}
+    {% set casa = time if time_em_casa else adversario %}
+    {% set fora = adversario if time_em_casa else time %}
+    <div class="profile-fixture-row">
+        <span class="profile-fixture-rank">{{ indice }}.</span>
+        <span class="position-game-inline profile-fixture" title="{{ casa.nome|default('Casa') }} x {{ fora.nome|default('Visitante') }}">
+            <span class="position-game-side position-game-side--home {{ 'position-game-team--player' if time_em_casa else 'position-game-team--opponent' }}">
+                <span class="position-game-label">{{ casa.abreviacao|default('---') }}</span>
+                {% if casa.escudo_url %}<img src="{{ casa.escudo_url }}" alt="{{ casa.nome|default('Casa') }}" class="position-game-shield {{ 'position-game-shield--player' if time_em_casa else 'position-game-shield--opponent' }}">{% endif %}
+            </span>
+            <span class="position-game-inline-vs" aria-hidden="true">×</span>
+            <span class="position-game-side position-game-side--away {{ 'position-game-team--opponent' if time_em_casa else 'position-game-team--player' }}">
+                {% if fora.escudo_url %}<img src="{{ fora.escudo_url }}" alt="{{ fora.nome|default('Visitante') }}" class="position-game-shield {{ 'position-game-shield--opponent' if time_em_casa else 'position-game-shield--player' }}">{% endif %}
+                <span class="position-game-label">{{ fora.abreviacao|default('---') }}</span>
+            </span>
+        </span>
+        <span class="profile-fixture-weight" style="color: {{ clube.peso_color }};">{{ peso }}</span>
+    </div>
+{% endmacro %}
 <div class="pagina-inicial-container">
 <style>
     /* Desabilitar scroll da página */
@@ -80,31 +102,6 @@
         flex-direction: column;
     }
     
-    /* Scrollbar customizado - fino e bonito */
-    .profile-scroll-container::-webkit-scrollbar {
-        height: 8px;
-    }
-    
-    .profile-scroll-container::-webkit-scrollbar-track {
-        background: rgba(11, 17, 32, 0.4);
-        border-radius: 10px;
-    }
-    
-    .profile-scroll-container::-webkit-scrollbar-thumb {
-        background: linear-gradient(90deg, #00E5FF, #4494FF);
-        border-radius: 10px;
-    }
-    
-    .profile-scroll-container::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(90deg, #4494FF, #00E5FF);
-    }
-    
-    /* Para Firefox */
-    .profile-scroll-container {
-        scrollbar-width: thin;
-        scrollbar-color: #00E5FF rgba(11, 17, 32, 0.4);
-    }
-    
     /* Grid de cards - reverter direção para ordem correta */
     .profile-cards-grid {
         display: flex;
@@ -143,49 +140,28 @@
         position: relative;
     }
     
-    /* Scrollbar vertical customizada para container de times */
+    /* As barras de rolagem são padronizadas globalmente em aero-theme.css. */
     .profile-card .ranking-list {
         overflow-y: auto !important;
         flex: 1 1 0;
         min-height: 0;
         max-height: 100%;
-        scrollbar-width: thin;
-        scrollbar-color: #00E5FF rgba(11, 17, 32, 0.3);
         position: relative;
     }
     
     .profile-card [class*="overflow-y-auto"] {
         overflow-y: auto !important;
-        scrollbar-width: thin;
-        scrollbar-color: #00E5FF rgba(11, 17, 32, 0.3);
-    }
-    
-    .profile-card .ranking-list::-webkit-scrollbar,
-    .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .profile-card .ranking-list::-webkit-scrollbar-track,
-    .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar-track {
-        background: rgba(15, 23, 42, 0.3);
-        border-radius: 10px;
-    }
-    
-    .profile-card .ranking-list::-webkit-scrollbar-thumb,
-    .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #00E5FF, #4494FF);
-        border-radius: 10px;
-    }
-    
-    .profile-card .ranking-list::-webkit-scrollbar-thumb:hover,
-    .profile-card [class*="overflow-y-auto"]::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #4494FF, #00E5FF);
     }
     
     @media (max-width: 640px) {
+        .profile-slider-container {
+            height: calc(100vh - 4rem);
+            min-height: 0;
+        }
+
         .profile-card {
-        flex: 0 0 160px;
-        min-width: 160px;
+            flex: 0 0 145px;
+            min-width: 145px;
         }
     }
 </style>
@@ -262,53 +238,8 @@
                                                 <div class="ranking-list space-y-0.5">
                                                     {% for clube in perfil.top_clubes %}
                                                     <div class="bg-slate-900/70 rounded-lg px-2 py-1.5 hover:bg-slate-800/90 transition-colors border border-slate-700/30">
-                                                    <div class="flex items-center justify-between text-xs mb-0.5">
-                                                        <div class="flex items-center space-x-1.5 flex-1 min-w-0">
-                                                            {% if clube.clube_id in clubes_dict and clubes_dict[clube.clube_id].escudo_url %}
-                                                            <img src="{{ clubes_dict[clube.clube_id].escudo_url }}" 
-                                                                 alt="{{ clubes_dict[clube.clube_id].nome }}" 
-                                                                 class="w-5 h-5 rounded-full flex-shrink-0">
-                                                            {% else %}
-                                                            <div class="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
-                                                                <span class="text-xs text-slate-300">{{ loop.index }}</span>
-                                                            </div>
-                                                            {% endif %}
-                                                            <span class="text-white truncate font-medium text-xs relative">
-                                                                <!-- Badge de Casa/Fora na frente da abreviação do time -->
-                                                                {% if clube.local %}
-                                                                <span class="absolute top-1/2 -translate-y-1/2 left-0 w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold {% if clube.local == 'C' %}bg-green-600 text-white{% else %}bg-orange-600 text-white{% endif %} shadow-sm border border-slate-900 z-10" title="{% if clube.local == 'C' %}Joga em Casa{% else %}Joga Fora{% endif %}">
-                                                                    {{ clube.local }}
-                                                                </span>
-                                                                <span class="pl-4">{{ loop.index }}. {% if clube.clube_id in clubes_dict %}{{ clubes_dict[clube.clube_id].nome }}{% else %}Time {{ clube.clube_id }}{% endif %}</span>
-                                                                {% else %}
-                                                                {{ loop.index }}. {% if clube.clube_id in clubes_dict %}{{ clubes_dict[clube.clube_id].nome }}{% else %}Time {{ clube.clube_id }}{% endif %}
-                                                                {% endif %}
-                                                            </span>
-                                                        </div>
-                                                        <span class="font-bold ml-2 whitespace-nowrap text-xs" style="color: {{ clube.peso_color }};">{{ clube.peso_jogo_str }}</span>
+                                                        {{ confronto_peso(clube, clube.peso_jogo_str, loop.index) }}
                                                     </div>
-                                                    {% if clube.adversario_id and clube.adversario_id in clubes_dict %}
-                                                    <div class="flex items-center space-x-1.5 text-xs text-slate-400 mt-0.5 pl-6">
-                                                        <span class="text-slate-500 text-xs">vs</span>
-                                                        {% if clubes_dict[clube.adversario_id].escudo_url %}
-                                                        <img src="{{ clubes_dict[clube.adversario_id].escudo_url }}" 
-                                                             alt="{{ clubes_dict[clube.adversario_id].nome }}" 
-                                                             class="w-3.5 h-3.5 rounded-full flex-shrink-0">
-                                                        {% endif %}
-                                                        <span class="truncate text-xs relative">
-                                                            <!-- Badge de Casa/Fora na frente da abreviação do adversário -->
-                                                            {% if clube.adversario_local %}
-                                                            <span class="absolute top-1/2 -translate-y-1/2 left-0 w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold {% if clube.adversario_local == 'C' %}bg-green-600 text-white{% else %}bg-orange-600 text-white{% endif %} shadow-sm border border-slate-900 z-10" title="{% if clube.adversario_local == 'C' %}Joga em Casa{% else %}Joga Fora{% endif %}">
-                                                                {{ clube.adversario_local }}
-                                                            </span>
-                                                            <span class="pl-4">{{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}</span>
-                                                            {% else %}
-                                                            {{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}
-                                                            {% endif %}
-                                                        </span>
-                                                    </div>
-                                                    {% endif %}
-                                                </div>
                                                     {% endfor %}
                                                     {% if perfil.top_clubes|length == 0 %}
                                                     <p class="text-xs text-slate-500 italic">Sem dados disponíveis</p>
@@ -386,53 +317,8 @@
                                                 <div class="ranking-list space-y-0.5">
                                                     {% for clube in perfil.top_clubes %}
                                                     <div class="bg-slate-900/70 rounded-lg px-2 py-1.5 hover:bg-slate-800/90 transition-colors border border-slate-700/30">
-                                                    <div class="flex items-center justify-between text-xs mb-0.5">
-                                                        <div class="flex items-center space-x-1.5 flex-1 min-w-0">
-                                                            {% if clube.clube_id in clubes_dict and clubes_dict[clube.clube_id].escudo_url %}
-                                                            <img src="{{ clubes_dict[clube.clube_id].escudo_url }}" 
-                                                                 alt="{{ clubes_dict[clube.clube_id].nome }}" 
-                                                                 class="w-5 h-5 rounded-full flex-shrink-0">
-                                                            {% else %}
-                                                            <div class="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
-                                                                <span class="text-xs text-slate-300">{{ loop.index }}</span>
-                                                            </div>
-                                                            {% endif %}
-                                                            <span class="text-white truncate font-medium text-xs relative">
-                                                                <!-- Badge de Casa/Fora na frente da abreviação do time -->
-                                                                {% if clube.local %}
-                                                                <span class="absolute top-1/2 -translate-y-1/2 left-0 w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold {% if clube.local == 'C' %}bg-green-600 text-white{% else %}bg-orange-600 text-white{% endif %} shadow-sm border border-slate-900 z-10" title="{% if clube.local == 'C' %}Joga em Casa{% else %}Joga Fora{% endif %}">
-                                                                    {{ clube.local }}
-                                                                </span>
-                                                                <span class="pl-4">{{ loop.index }}. {% if clube.clube_id in clubes_dict %}{{ clubes_dict[clube.clube_id].nome }}{% else %}Time {{ clube.clube_id }}{% endif %}</span>
-                                                                {% else %}
-                                                                {{ loop.index }}. {% if clube.clube_id in clubes_dict %}{{ clubes_dict[clube.clube_id].nome }}{% else %}Time {{ clube.clube_id }}{% endif %}
-                                                                {% endif %}
-                                                            </span>
-                                                        </div>
-                                                        <span class="font-bold ml-2 whitespace-nowrap text-xs" style="color: {{ clube.peso_color }};">{{ clube.peso_sg_str }}</span>
+                                                        {{ confronto_peso(clube, clube.peso_sg_str, loop.index) }}
                                                     </div>
-                                                    {% if clube.adversario_id and clube.adversario_id in clubes_dict %}
-                                                    <div class="flex items-center space-x-1.5 text-xs text-slate-400 mt-0.5 pl-6">
-                                                        <span class="text-slate-500 text-xs">vs</span>
-                                                        {% if clubes_dict[clube.adversario_id].escudo_url %}
-                                                        <img src="{{ clubes_dict[clube.adversario_id].escudo_url }}" 
-                                                             alt="{{ clubes_dict[clube.adversario_id].nome }}" 
-                                                             class="w-3.5 h-3.5 rounded-full flex-shrink-0">
-                                                        {% endif %}
-                                                        <span class="truncate text-xs relative">
-                                                            <!-- Badge de Casa/Fora na frente da abreviação do adversário -->
-                                                            {% if clube.adversario_local %}
-                                                            <span class="absolute top-1/2 -translate-y-1/2 left-0 w-3 h-3 rounded-full flex items-center justify-center text-[7px] font-bold {% if clube.adversario_local == 'C' %}bg-green-600 text-white{% else %}bg-orange-600 text-white{% endif %} shadow-sm border border-slate-900 z-10" title="{% if clube.adversario_local == 'C' %}Joga em Casa{% else %}Joga Fora{% endif %}">
-                                                                {{ clube.adversario_local }}
-                                                            </span>
-                                                            <span class="pl-4">{{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}</span>
-                                                            {% else %}
-                                                            {{ clubes_dict[clube.adversario_id].nome or 'Adversário' }}
-                                                            {% endif %}
-                                                        </span>
-                                                    </div>
-                                                    {% endif %}
-                                                </div>
                                                     {% endfor %}
                                                     {% if perfil.top_clubes|length == 0 %}
                                                     <p class="text-xs text-slate-500 italic">Sem dados disponíveis</p>

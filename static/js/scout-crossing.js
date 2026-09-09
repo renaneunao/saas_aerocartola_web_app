@@ -2,7 +2,7 @@
     'use strict';
 
     const page = document.getElementById('scoutCrossingPage');
-    const state = { temporada: Number(page?.dataset.currentSeason || 0), rodada: Number(page?.dataset.currentRound || 0), teamId: null, posicaoId: null, atletaId: null, adversarioId: null, matches: [] };
+    const state = { temporada: Number(page?.dataset.currentSeason || 0), rodada: Number(page?.dataset.currentRound || 0), teamId: null, posicaoId: null, atletaId: null };
     const shortScouts = { a: 'A', ca: 'CA', cv: 'CV', de: 'DEF', ds: 'DS', fc: 'FC', fd: 'FD', ff: 'FF', fs: 'FS', g: 'G', gs: 'GS', i: 'IMP', sg: 'SG' };
     const scoutLabels = { a: 'Assistências', ca: 'Cartões amarelos', cv: 'Cartões vermelhos', de: 'Defesas', ds: 'Desarmes', fc: 'Faltas cometidas', fd: 'Finalizações defendidas', ff: 'Finalizações para fora', fs: 'Faltas sofridas', g: 'Gols', gs: 'Gols sofridos', i: 'Impedimentos', sg: 'Saldo de gols' };
 
@@ -19,8 +19,10 @@
     }
 
     function normalizedPhoto(value, athleteId) {
-        let photo = value || (typeof getPlayerImage === 'function' ? getPlayerImage(Number(athleteId)) : '') || '';
+        let photo = value || (typeof window.getPlayerImage === 'function' ? window.getPlayerImage(Number(athleteId)) : '') || '';
         if (photo.startsWith('//')) photo = `https:${photo}`;
+        photo = photo.replace(/FORMATO/gi, '220x220');
+        if (photo.startsWith('http://')) photo = `https://${photo.slice(7)}`;
         return photo;
     }
 
@@ -35,7 +37,7 @@
         if (!rail) return;
         rail.innerHTML = teams.length ? teams.map(teamButton).join('') : '<span class="scx-muted">Nenhum time encontrado na rodada atual.</span>';
         rail.querySelectorAll('[data-team]').forEach((button) => button.addEventListener('click', () => {
-            state.teamId = Number(button.dataset.team); state.atletaId = null; state.adversarioId = null; renderTeams(teams); loadOptions();
+            state.teamId = Number(button.dataset.team); state.atletaId = null; renderTeams(teams); loadOptions();
         }));
     }
 
@@ -45,25 +47,7 @@
         select.innerHTML = '<option value="">Selecione o jogador</option>' + players.map((player) => `<option value="${player.id}">${escapeHtml(player.nome)} · ${escapeHtml(player.clube_nome)}</option>`).join('');
         select.disabled = !players.length;
         if (state.atletaId && players.some((player) => Number(player.id) === Number(state.atletaId))) select.value = String(state.atletaId);
-        $('scoutCrossingSelectionHint').textContent = players.length ? 'Agora escolha o jogador e o confronto abaixo.' : 'Nenhum jogador encontrado nessa combinação.';
-    }
-
-    function matchButton(match) {
-        const selected = Number(state.adversarioId) === Number(match.adversario.id);
-        return `<button type="button" class="scx-match${selected ? ' is-selected' : ''}" data-opponent="${match.adversario.id}" role="option" aria-selected="${selected}">
-            <img src="${escapeHtml(match.casa.escudo || '')}" alt="${escapeHtml(match.casa.nome)}" loading="lazy"><span class="scx-match-copy"><strong>${escapeHtml(match.casa.nome)}</strong><small>${match.mando === 'casa' ? 'Você joga em casa' : 'Você joga fora'}</small></span><span class="scx-match-vs">x</span><img src="${escapeHtml(match.fora.escudo || '')}" alt="${escapeHtml(match.fora.nome)}" loading="lazy">
-        </button>`;
-    }
-
-    function renderMatches(matches) {
-        state.matches = matches || [];
-        const section = $('scoutCrossingMatches'); const rail = $('scoutCrossingMatchRail');
-        if (!section || !rail) return;
-        section.hidden = !state.atletaId || !state.matches.length;
-        rail.innerHTML = state.matches.length ? state.matches.map(matchButton).join('') : '<span class="scx-muted">Esse time não tem confronto válido nesta rodada.</span>';
-        rail.querySelectorAll('[data-opponent]').forEach((button) => button.addEventListener('click', () => {
-            state.adversarioId = Number(button.dataset.opponent); renderMatches(state.matches); runCrossing();
-        }));
+        $('scoutCrossingSelectionHint').textContent = players.length ? 'Escolha o jogador; o confronto será identificado automaticamente.' : 'Nenhum jogador encontrado nessa combinação.';
     }
 
     async function loadOptions() {
@@ -72,30 +56,38 @@
         state.posicaoId = Number(position);
         if (!state.teamId) { $('scoutCrossingPlayer').disabled = true; return; }
         const params = new URLSearchParams({ clube_id: state.teamId, posicao_id: state.posicaoId });
+        if (state.atletaId) params.set('atleta_id', state.atletaId);
         const select = $('scoutCrossingPlayer'); select.disabled = true; select.innerHTML = '<option>Carregando jogadores...</option>';
         try {
             const response = await fetch(`${page.dataset.optionsUrl}?${params}`); const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Não foi possível carregar as opções.');
             state.temporada = Number(data.temporada); state.rodada = Number(data.rodada);
-            renderTeams(data.times || []); renderPlayers(data.jogadores || []); renderMatches(data.confrontos || []);
-            if (page.dataset.selectedPlayer && !state.atletaId) { state.atletaId = Number(page.dataset.selectedPlayer); select.value = String(state.atletaId); }
+            if (data.clube_id) state.teamId = Number(data.clube_id);
+            if (page.dataset.selectedPlayer && !state.atletaId) state.atletaId = Number(page.dataset.selectedPlayer);
+            renderTeams(data.times || []); renderPlayers(data.jogadores || []);
+            if (state.atletaId && select.value === String(state.atletaId)) runCrossing();
         } catch (error) { setAlert(error.message, true); select.innerHTML = '<option>Não foi possível carregar</option>'; }
     }
 
     function scoutSummary(scouts) {
-        const parts = Object.entries(scouts || {}).filter(([, value]) => Number(value) !== 0).map(([code, value]) => `${shortScouts[code] || code} ${integer(value)}`);
+        const parts = Object.entries(scouts || {}).filter(([, value]) => Number(value) > 0).map(([code, value]) => `${shortScouts[code] || code} ${integer(value)}`);
         return parts.length ? parts.join(' · ') : 'sem scouts';
     }
 
     function renderSummary(summary) {
-        $('scoutCrossingSummary').innerHTML = [['Média', number(summary.media), true], ['Jogos', integer(summary.jogos)], ['Maior', number(summary.maior_pontuacao)], ['Menor', number(summary.menor_pontuacao)]].map(([label, value, accent]) => `<div class="scx-summary-item${accent ? ' accent' : ''}"><span>${label}</span><strong>${value}</strong></div>`).join('');
+        $('scoutCrossingSummary').innerHTML = [['Média', number(summary.media), true], ['Jogos', integer(summary.jogos)], ['Última', number(summary.ultima_pontuacao)], ['Maior', number(summary.maior_pontuacao)], ['Menor', number(summary.menor_pontuacao)]].map(([label, value, accent]) => `<div class="scx-summary-item${accent ? ' accent' : ''}"><span>${label}</span><strong>${value}</strong></div>`).join('');
     }
 
     function renderRecent(matches) {
         const target = $('scoutCrossingRecent');
-        if (!matches.length) { target.innerHTML = '<div class="scx-muted">Nenhuma pontuação encontrada.</div>'; return; }
-        target.innerHTML = matches.map((match) => `<button type="button" class="scx-recent-row" data-round="${match.rodada}"><span class="scx-round">R${match.rodada}</span><span class="scx-match-copy"><strong>${escapeHtml(match.adversario_nome)}</strong><small>${escapeHtml(match.mando_label)} · ${escapeHtml(match.casa_nome)} x ${escapeHtml(match.visitante_nome)}</small></span><span class="scx-points">${number(match.pontuacao)} <em>(${escapeHtml(scoutSummary(match.scouts))})</em></span><i class="fas fa-chevron-right"></i></button>`).join('');
-        target.querySelectorAll('[data-round]').forEach((button) => button.addEventListener('click', () => openDetail(Number(button.dataset.round))));
+        const playedMatches = matches.filter((match) => match.entrou_em_campo === true);
+        if (!playedMatches.length) { target.innerHTML = '<div class="scx-muted">Nenhuma pontuação encontrada.</div>'; return; }
+        target.innerHTML = playedMatches.map((match) => `<article class="scx-recent-row" role="button" tabindex="0" data-round="${Number(match.rodada) || 0}"><span class="scx-round">R${match.rodada}</span><span class="scx-match-copy"><strong>${escapeHtml(match.adversario_nome)}</strong><small>${escapeHtml(match.mando_label)} · ${escapeHtml(match.casa_nome)} x ${escapeHtml(match.visitante_nome)}</small></span><span class="scx-points">${number(match.pontuacao)} <em>(${escapeHtml(scoutSummary(match.scouts))})</em></span><i class="fas fa-chevron-right" aria-hidden="true"></i></article>`).join('');
+        target.querySelectorAll('[data-round]').forEach((row) => {
+            const open = () => openDetail(Number(row.dataset.round));
+            row.addEventListener('click', open);
+            row.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } });
+        });
     }
 
     function renderPositionScouts(scouts) {
@@ -117,23 +109,29 @@
         if (!match) { target.hidden = true; target.innerHTML = ''; return; }
         target.hidden = false;
         const opponent = match.adversario || {};
-        const scouts = ceded.scouts || {};
-        target.innerHTML = `<div class="scx-confrontation-head"><div class="scx-confrontation-title"><img src="${escapeHtml(opponent.escudo || '')}" alt="${escapeHtml(opponent.nome || '')}"><div><strong>O que ${escapeHtml(opponent.nome || 'o adversário')} cedeu</strong><small>${escapeHtml(match.casa_nome)} x ${escapeHtml(match.visitante_nome)} · ${match.mando_label}</small></div></div><strong class="scx-confrontation-score">${number(match.pontuacao)}</strong></div><div class="scx-conceded">${Object.entries(scouts).map(([code, value]) => `<div class="scx-conceded-item"><span>${escapeHtml(shortScouts[code] || code)} · ${escapeHtml(scoutLabels[code] || code)}</span><strong>${number(value)}</strong></div>`).join('') || '<span class="scx-muted">Sem scouts cedidos registrados.</span>'}</div>`;
+        const scouts = Object.entries(ceded.scouts || {}).filter(([, value]) => Number(value) > 0);
+        target.innerHTML = `<div class="scx-confrontation-head"><div class="scx-confrontation-title"><img src="${escapeHtml(opponent.escudo || '')}" alt="${escapeHtml(opponent.nome || '')}"><div><strong>O que ${escapeHtml(opponent.nome || 'o adversário')} cede por jogo</strong><small>${escapeHtml(match.casa_nome)} x ${escapeHtml(match.visitante_nome)} · ${escapeHtml(match.mando_label)} · ${integer(ceded.jogos)} jogo(s) anteriores</small></div></div><strong class="scx-confrontation-score">${number(ceded.pontuacao)} pts</strong></div><div class="scx-conceded">${scouts.map(([code, value]) => `<div class="scx-conceded-item"><span>${escapeHtml(shortScouts[code] || code)} · ${escapeHtml(scoutLabels[code] || code)}</span><strong>${number(value)}</strong></div>`).join('') || '<span class="scx-muted">Sem scouts cedidos registrados.</span>'}</div>`;
     }
 
     function renderResult(data) {
         $('scoutCrossingEmpty').hidden = true; $('scoutCrossingResults').hidden = false;
-        $('scoutCrossingPlayerName').textContent = data.jogador.nome;
-        $('scoutCrossingPlayerMeta').textContent = `${data.jogador.posicao} · ${data.jogador.clube_nome} · R${data.filtros.rodada}`;
+        if (!data.jogador) throw new Error('Dados do jogador não retornados pela análise.');
+        $('scoutCrossingPlayerName').textContent = data.jogador.nome || 'Jogador';
+        const currentStats = [
+            data.jogador.media_num ? `média ${number(data.jogador.media_num)}` : '',
+            data.jogador.jogos_num ? `${integer(data.jogador.jogos_num)} jogos` : '',
+            data.jogador.pontos_num ? `${number(data.jogador.pontos_num)} pts` : ''
+        ].filter(Boolean).join(' · ');
+        $('scoutCrossingPlayerMeta').textContent = `${data.jogador.posicao || 'Posição'} · ${data.jogador.clube_nome || 'Clube'} · R${data.filtros.rodada}${currentStats ? ` · ${currentStats}` : ''}`;
         const avatar = $('scoutCrossingPlayerAvatar'); const photo = normalizedPhoto(data.jogador.foto, data.jogador.id);
         avatar.innerHTML = photo ? `<img src="${escapeHtml(photo)}" alt="${escapeHtml(data.jogador.nome)}">` : '<i class="fas fa-user"></i>';
-        const image = avatar.querySelector('img'); if (image) image.onerror = () => { const fallback = typeof getPlayerImage === 'function' ? getPlayerImage(data.jogador.id) : ''; if (fallback && image.src !== fallback) image.src = fallback; else { image.remove(); avatar.innerHTML = '<i class="fas fa-user"></i>'; } };
+        const image = avatar.querySelector('img'); if (image) image.onerror = () => { const fallback = typeof window.getPlayerImage === 'function' ? window.getPlayerImage(data.jogador.id) : ''; if (fallback && image.src !== fallback) image.src = fallback; else { image.remove(); avatar.innerHTML = '<i class="fas fa-user"></i>'; } };
         renderSummary(data.resumo); renderConfrontation(data); renderRecent(data.ultimas_pontuacoes || []); renderPositionScouts(data.scouts_da_posicao || []); renderOpponents(data.resumo.adversarios || []); renderHomeAway(data.resumo.mando || []);
     }
 
     async function runCrossing() {
-        if (!state.atletaId || !state.posicaoId || !state.adversarioId) { setAlert('Selecione o jogador e o confronto da rodada.', true); return; }
-        const params = new URLSearchParams({ atleta_id: state.atletaId, posicao_id: state.posicaoId, adversario_id: state.adversarioId });
+        if (!state.atletaId || !state.posicaoId) { setAlert('Selecione o jogador.', true); return; }
+        const params = new URLSearchParams({ atleta_id: state.atletaId, posicao_id: state.posicaoId });
         setAlert('Calculando o cruzamento...');
         try { const response = await fetch(`${page.dataset.crossingUrl}?${params}`); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Não foi possível executar o cruzamento.'); state.temporada = Number(data.filtros.temporada); state.rodada = Number(data.filtros.rodada); renderResult(data); setAlert(''); } catch (error) { setAlert(error.message, true); }
     }
@@ -160,10 +158,16 @@
     window.closeScoutCrossingModal = closeModal;
 
     if (!page) return;
-    $('scoutCrossingPlayer')?.addEventListener('change', (event) => { state.atletaId = Number(event.target.value) || null; state.adversarioId = null; renderMatches(state.matches); $('scoutCrossingResults').hidden = true; });
-    document.querySelectorAll('.scx-position').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.scx-position').forEach((item) => { item.classList.remove('is-selected'); item.setAttribute('aria-selected', 'false'); }); button.classList.add('is-selected'); button.setAttribute('aria-selected', 'true'); state.posicaoId = Number(button.dataset.position); state.atletaId = null; state.adversarioId = null; loadOptions(); }));
+    $('scoutCrossingPlayer')?.addEventListener('change', (event) => { state.atletaId = Number(event.target.value) || null; $('scoutCrossingResults').hidden = true; if (state.atletaId) runCrossing(); });
+    document.querySelectorAll('.scx-position').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.scx-position').forEach((item) => { item.classList.remove('is-selected'); item.setAttribute('aria-selected', 'false'); }); button.classList.add('is-selected'); button.setAttribute('aria-selected', 'true'); state.posicaoId = Number(button.dataset.position); state.atletaId = null; loadOptions(); }));
     document.querySelectorAll('[data-scout-crossing-close]').forEach((element) => element.addEventListener('click', closeModal));
     document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeModal(); });
     state.posicaoId = Number(document.querySelector('.scx-position.is-selected')?.dataset.position || 5);
-    fetch(`${page.dataset.optionsUrl}?posicao_id=${state.posicaoId}`).then((response) => response.json()).then((data) => { renderTeams(data.times || []); const first = data.times?.[0]; if (first) { state.teamId = first.id; renderTeams(data.times); loadOptions(); } }).catch((error) => setAlert(error.message, true));
+    const initialParams = new URLSearchParams({ posicao_id: state.posicaoId });
+    if (page.dataset.selectedPlayer) initialParams.set('atleta_id', page.dataset.selectedPlayer);
+    fetch(`${page.dataset.optionsUrl}?${initialParams}`).then((response) => response.json()).then((data) => {
+        const firstTeamId = Number(data.clube_id || data.times?.[0]?.id || 0);
+        renderTeams(data.times || []);
+        if (firstTeamId) { state.teamId = firstTeamId; if (page.dataset.selectedPlayer) state.atletaId = Number(page.dataset.selectedPlayer); renderTeams(data.times || []); loadOptions(); }
+    }).catch((error) => setAlert(error.message, true));
 }());

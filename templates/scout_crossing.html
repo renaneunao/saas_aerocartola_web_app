@@ -40,16 +40,11 @@
         </div>
     </section>
 
-    <section class="scx-match-section" id="scoutCrossingMatches" hidden>
-        <div class="scx-match-heading"><div><p class="scx-overline">Confronto da rodada {{ current_round }}</p><h2>Escolha o jogo</h2></div><span>O adversário selecionado será usado no cruzamento.</span></div>
-        <div class="scx-match-rail" id="scoutCrossingMatchRail"></div>
-    </section>
-
     <div id="scoutCrossingAlert" class="scx-alert" role="status" hidden></div>
     {% if database_error %}<div class="scx-alert scx-alert-error">{{ database_error }}</div>{% endif %}
 
     <section id="scoutCrossingEmpty" class="scx-empty">
-        <i class="fas fa-chart-simple"></i><h2>Monte seu cruzamento</h2><p>Selecione time, posição, jogador e confronto. O resultado aparece aqui sem alterar o contexto da rodada atual.</p>
+        <i class="fas fa-chart-simple"></i><h2>Monte seu cruzamento</h2><p>Selecione time, posição e jogador. O confronto da rodada atual será identificado automaticamente.</p>
     </section>
 
     <section id="scoutCrossingResults" class="scx-results" hidden>
@@ -61,7 +56,7 @@
         <section class="scx-confrontation" id="scoutCrossingConfrontation"></section>
 
         <div class="scx-result-grid">
-            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Histórico</p><h2>Últimas pontuações</h2></div><span>Clique para abrir a partida</span></div><div id="scoutCrossingRecent" class="scx-recent-list"></div></section>
+            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Histórico</p><h2>Últimas pontuações</h2></div><span>Scouts positivos por jogo</span></div><div id="scoutCrossingRecent" class="scx-recent-list"></div></section>
             <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Referência da posição</p><h2>Principais scouts</h2></div><span>Média por jogo</span></div><div id="scoutCrossingPositionScouts" class="scx-scout-list"></div></section>
         </div>
         <div class="scx-result-grid">
@@ -71,7 +66,6 @@
     </section>
 </main>
 {% endblock %}
-
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/scout-crossing.js') }}"></script>
 {% endblock %}

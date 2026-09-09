@@ -558,6 +558,7 @@ def dashboard():
         from models.teams import create_teams_table, get_team, get_all_user_teams
         from models.user_configurations import get_user_default_configuration, create_user_configurations_table
         from models.user_rankings import create_user_rankings_table
+        from models.player_availability import create_player_availability_table
         from api_cartola import fetch_team_info_by_team_id
         from utils.team_shields import get_team_shield
         
@@ -569,6 +570,7 @@ def dashboard():
         create_teams_table(conn)
         create_user_configurations_table(conn)
         create_user_rankings_table(conn)
+        create_player_availability_table(conn)
         
         # Verificar se há time selecionado
         team_id = session.get('selected_team_id')
@@ -637,29 +639,113 @@ def dashboard():
             'perfis_info': config if (tem_perfis and config) else {}
         }
         
-        # Dados da rodada atual (status do mercado)
-        rodada_info = {'rodada': None, 'status': 'indisponivel', 'fechamento': None}
+        # Dados reais da rodada atual usados exclusivamente pelo dashboard.
+        rodada_info = {
+            'rodada': None, 'status': 'indisponivel', 'fechamento': None,
+            'fechamento_iso': None, 'fechamento_str': None,
+            'confrontos': [], 'confrontos_validos': 0, 'atletas': {},
+            'disponibilidade': {'poupados': 0, 'cravados': 0},
+            'favorito': None, 'atualizado_em': None,
+        }
         try:
-            from api_cartola import fetch_status_data
+            from api_cartola import fetch_partidas_data, fetch_status_data
             mercado_status = fetch_status_data()
             if mercado_status:
                 rodada_info['rodada'] = mercado_status.get('rodada_atual')
-                rodada_info['status'] = 'aberto' if mercado_status.get('status_mercado') == 1 else 'fechado'
-                fechamento_ts = mercado_status.get('fechamento')
+                rodada_info['status'] = 'aberto' if int(mercado_status.get('status_mercado') or 0) == 1 else 'fechado'
+                fechamento = mercado_status.get('fechamento')
+                fechamento_ts = fechamento.get('timestamp') if isinstance(fechamento, dict) else fechamento
                 if fechamento_ts:
-                    from datetime import datetime, timezone
+                    fechamento_ts = float(fechamento_ts)
                     dt_fechamento = datetime.fromtimestamp(fechamento_ts, tz=timezone(timedelta(hours=-3)))
-                    rodada_info['fechamento_str'] = dt_fechamento.strftime('%d/%m %H:%M')
-                    agora = datetime.now(timezone(timedelta(hours=-3)))
-                    diff = dt_fechamento - agora
-                    if diff.total_seconds() > 0:
-                        horas = int(diff.total_seconds() // 3600)
-                        mins = int((diff.total_seconds() % 3600) // 60)
-                        rodada_info['prazo'] = f'{horas}h {mins}min' if horas > 0 else f'{mins}min'
-                    else:
-                        rodada_info['prazo'] = 'fechado'
+                    rodada_info['fechamento'] = int(fechamento_ts)
+                    rodada_info['fechamento_iso'] = dt_fechamento.isoformat()
+                    rodada_info['fechamento_str'] = dt_fechamento.strftime('%d/%m/%Y às %H:%M')
+
+                rodada_info['atualizado_em'] = datetime.now(
+                    timezone(timedelta(hours=-3))
+                ).strftime('%d/%m às %H:%M')
+
+                partidas_data = (
+                    fetch_partidas_data(rodada_info['rodada'])
+                    if rodada_info['rodada'] else None
+                )
+                if partidas_data:
+                    clubes = partidas_data.get('clubes') or {}
+
+                    def clube_api(clube_id):
+                        clube = clubes.get(str(clube_id), clubes.get(clube_id, {})) or {}
+                        escudos = clube.get('escudos') or {}
+                        return {
+                            'id': clube_id,
+                            'nome': clube.get('nome_fantasia') or clube.get('apelido') or clube.get('nome') or 'Clube',
+                            'abreviacao': clube.get('abreviacao') or clube.get('nome') or '---',
+                            'escudo': escudos.get('30x30') or escudos.get('45x45'),
+                        }
+
+                    for partida in partidas_data.get('partidas') or []:
+                        rodada_info['confrontos'].append({
+                            'casa': clube_api(partida.get('clube_casa_id')),
+                            'visitante': clube_api(partida.get('clube_visitante_id')),
+                            'data': partida.get('partida_data'),
+                            'local': partida.get('local'),
+                            'valida': bool(partida.get('valida')),
+                        })
+                    rodada_info['confrontos_validos'] = sum(
+                        1 for jogo in rodada_info['confrontos'] if jogo['valida']
+                    )
         except Exception as e:
             print(f"[DASHBOARD] Erro ao buscar status do mercado: {e}")
+
+        # Consultas somente leitura, limitadas ao contexto atual do usuário.
+        try:
+            temporada_atual = get_temporada_atual()
+            cursor.execute('''
+                SELECT COUNT(*),
+                       COUNT(*) FILTER (WHERE status_id = 7),
+                       COUNT(*) FILTER (WHERE status_id = 2),
+                       COUNT(*) FILTER (WHERE status_id IN (3, 5, 6))
+                FROM acf_atletas WHERE temporada = %s
+            ''', (temporada_atual,))
+            atletas_row = cursor.fetchone() or (0, 0, 0, 0)
+            rodada_info['atletas'] = {
+                'total': int(atletas_row[0] or 0),
+                'provaveis': int(atletas_row[1] or 0),
+                'duvidas': int(atletas_row[2] or 0),
+                'indisponiveis': int(atletas_row[3] or 0),
+            }
+
+            if rodada_info['rodada']:
+                cursor.execute('''
+                    SELECT rule, COUNT(*) FROM acw_player_availability
+                    WHERE user_id = %s AND team_id = %s
+                      AND season = %s AND round_number = %s
+                    GROUP BY rule
+                ''', (user['id'], team_id, temporada_atual, rodada_info['rodada']))
+                regras = {row[0]: int(row[1]) for row in cursor.fetchall()}
+                rodada_info['disponibilidade'] = {
+                    'poupados': regras.get('poupar', 0),
+                    'cravados': regras.get('cravado', 0),
+                }
+
+            cursor.execute('''
+                SELECT a.apelido, c.abreviacao, d.escalacoes, a.foto
+                FROM acf_destaques d
+                JOIN acf_atletas a ON a.atleta_id = d.atleta_id
+                JOIN acf_clubes c ON c.id = a.clube_id
+                WHERE a.temporada = %s
+                ORDER BY d.escalacoes DESC NULLS LAST LIMIT 1
+            ''', (temporada_atual,))
+            favorito_row = cursor.fetchone()
+            if favorito_row:
+                rodada_info['favorito'] = {
+                    'nome': favorito_row[0], 'clube': favorito_row[1],
+                    'escalacoes': int(favorito_row[2] or 0),
+                    'foto': favorito_row[3],
+                }
+        except Exception as e:
+            conn.rollback()
+            print(f"[DASHBOARD] Resumos da rodada indisponíveis: {e}")
         
         print("[DEBUG DASHBOARD] Dashboard processado com sucesso, renderizando template")
         
@@ -706,7 +792,10 @@ def pagina_inicial():
         cursor = conn.cursor()
         
         # Buscar rodada atual
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        cursor.execute(
+            'SELECT rodada_id FROM acf_partidas WHERE temporada = %s ORDER BY partida_data DESC NULLS LAST, rodada_id DESC LIMIT 1',
+            (get_temporada_atual(),),
+        )
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -714,8 +803,8 @@ def pagina_inicial():
         cursor.execute('''
             SELECT clube_casa_id, clube_visitante_id
             FROM acf_partidas
-            WHERE rodada_id = %s AND valida = TRUE
-        ''', (rodada_atual,))
+            WHERE rodada_id = %s AND temporada = %s AND valida = TRUE
+        ''', (rodada_atual, get_temporada_atual()))
         partidas = cursor.fetchall()
         
         # Criar dicionário de adversários: {clube_id: adversario_id}
@@ -1186,7 +1275,11 @@ def api_debug_time(team_id):
         debug_info = {}
         
         # Buscar rodada
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        cursor.execute(
+            'SELECT rodada_id FROM acf_partidas WHERE temporada = %s '
+            'ORDER BY partida_data DESC NULLS LAST, rodada_id DESC LIMIT 1',
+            (get_temporada_atual(),),
+        )
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result else 1
         debug_info['rodada_atual'] = rodada_atual
@@ -1319,7 +1412,11 @@ def api_perfis_verificar():
     cursor = conn.cursor()
     try:
         # Buscar rodada atual
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        cursor.execute(
+            'SELECT rodada_id FROM acf_partidas WHERE temporada = %s '
+            'ORDER BY partida_data DESC NULLS LAST, rodada_id DESC LIMIT 1',
+            (get_temporada_atual(),),
+        )
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else None
         
@@ -1391,7 +1488,11 @@ def api_modulos_status():
     cursor = conn.cursor()
     try:
         # Buscar rodada atual
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        cursor.execute(
+            'SELECT rodada_id FROM acf_partidas WHERE temporada = %s '
+            'ORDER BY partida_data DESC NULLS LAST, rodada_id DESC LIMIT 1',
+            (get_temporada_atual(),),
+        )
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -1457,7 +1558,11 @@ def modulo_individual(modulo):
     rodada_atual = 1
     try:
         cursor = conn.cursor()
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        cursor.execute(
+            'SELECT rodada_id FROM acf_partidas WHERE temporada = %s '
+            'ORDER BY partida_data DESC NULLS LAST, rodada_id DESC LIMIT 1',
+            (get_temporada_atual(),),
+        )
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
     finally:
@@ -1561,7 +1666,11 @@ def api_verificar_ranking(modulo):
         cursor = conn.cursor()
         
         # Buscar rodada atual
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        cursor.execute(
+            'SELECT rodada_id FROM acf_partidas WHERE temporada = %s '
+            'ORDER BY partida_data DESC NULLS LAST, rodada_id DESC LIMIT 1',
+            (get_temporada_atual(),),
+        )
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         
@@ -3402,9 +3511,12 @@ def api_modulo_dados(modulo):
                            AVG(scout_g) as avg_g,
                            AVG(scout_a) as avg_a
                     FROM acf_pontuados
-                    WHERE atleta_id IN ({placeholders}) AND rodada_id <= %s AND entrou_em_campo = TRUE
+                    WHERE atleta_id IN ({placeholders})
+                      AND rodada_id <= %s
+                      AND temporada = %s
+                      AND entrou_em_campo = TRUE
                     GROUP BY atleta_id
-                ''', atleta_ids + [rodada_atual - 1])
+                ''', atleta_ids + [rodada_atual - 1, temporada_atual])
                 
                 for row in cursor.fetchall():
                     if row and len(row) >= 7:
@@ -3431,12 +3543,15 @@ def api_modulo_dados(modulo):
                         SELECT p.clube_id, AVG(p.scout_ds) as avg_ds_cedidos
                         FROM acf_pontuados p
                         JOIN acf_partidas pt ON p.rodada_id = pt.rodada_id
+                                             AND p.temporada = pt.temporada
                         WHERE p.posicao_id = %s 
                           AND ((pt.clube_casa_id IN ({placeholders}) AND p.clube_id = pt.clube_visitante_id)
                                OR (pt.clube_visitante_id IN ({placeholders}) AND p.clube_id = pt.clube_casa_id))
+                          AND p.temporada = %s
+                          AND pt.temporada = %s
                           AND p.rodada_id <= %s AND p.entrou_em_campo = TRUE
                         GROUP BY p.clube_id
-                    ''', [posicao_id] + adversario_ids + adversario_ids + [rodada_atual - 1])
+                    ''', [posicao_id] + adversario_ids + adversario_ids + [temporada_atual, temporada_atual, rodada_atual - 1])
                     
                     for row in cursor.fetchall():
                         if row and len(row) >= 2:
@@ -3478,10 +3593,10 @@ def api_modulo_dados(modulo):
                             COUNT(*) as jogos
                         FROM acf_partidas
                         WHERE clube_casa_id IN ({placeholders})
-                          AND rodada_id < %s AND valida = TRUE 
+                          AND rodada_id < %s AND temporada = %s AND valida = TRUE
                           AND placar_oficial_mandante IS NOT NULL
-                        GROUP BY clube_casa_id
-                    ''', adversario_ids + [rodada_atual])
+                          GROUP BY clube_casa_id
+                    ''', adversario_ids + [rodada_atual, temporada_atual])
                     
                     for row in cursor.fetchall():
                         if row and len(row) >= 3:
@@ -3501,10 +3616,10 @@ def api_modulo_dados(modulo):
                             COUNT(*) as jogos
                         FROM acf_partidas
                         WHERE clube_visitante_id IN ({placeholders})
-                          AND rodada_id < %s AND valida = TRUE 
+                          AND rodada_id < %s AND temporada = %s AND valida = TRUE
                           AND placar_oficial_visitante IS NOT NULL
-                        GROUP BY clube_visitante_id
-                    ''', adversario_ids + [rodada_atual])
+                          GROUP BY clube_visitante_id
+                    ''', adversario_ids + [rodada_atual, temporada_atual])
                     
                     for row in cursor.fetchall():
                         if row and len(row) >= 3:
@@ -4144,9 +4259,13 @@ def api_escalacao_dados():
             else:
                 return jsonify({'error': 'Nenhum time cadastrado'}), 404
         
-        # Buscar rodada atual
+        # Buscar rodada atual dentro da temporada ativa.
         cursor = conn.cursor()
-        cursor.execute('SELECT rodada_id FROM acf_partidas ORDER BY partida_data DESC LIMIT 1')
+        cursor.execute(
+            'SELECT rodada_id FROM acf_partidas WHERE temporada = %s '
+            'ORDER BY partida_data DESC NULLS LAST, rodada_id DESC LIMIT 1',
+            (get_temporada_atual(),),
+        )
         rodada_result = cursor.fetchone()
         rodada_atual = rodada_result[0] if rodada_result and rodada_result[0] else 1
         availability = _get_player_availability_rules(
@@ -4288,6 +4407,51 @@ def api_escalacao_dados():
                     if ranking_normalizado:
                         sample = ranking_normalizado[0]
                         print(f"[DEBUG] Exemplo de jogador normalizado: atleta_id={sample.get('atleta_id')}, preco_num={sample.get('preco_num')}, preco={sample.get('preco')}")
+
+        # Atletas marcados como "cravado" precisam aparecer mesmo quando a
+        # fonte os classifica como dúvida/improvável. Não recriamos rankings:
+        # apenas completamos a coleção em memória para a escalação e os
+        # filtros manuais desta rodada.
+        if availability['forced_ids']:
+            forced_ids = sorted(availability['forced_ids'])
+            placeholders = ','.join(['%s'] * len(forced_ids))
+            cursor.execute(f'''
+                SELECT a.atleta_id, a.apelido, a.nome, a.clube_id,
+                       a.posicao_id, a.pontos_num, a.media_num,
+                       a.preco_num, a.jogos_num, a.status_id,
+                       COALESCE(a.foto_custom, a.foto) AS foto,
+                       c.nome AS clube_nome, c.abreviacao AS clube_abrev
+                FROM acf_atletas a
+                LEFT JOIN acf_clubes c ON c.id = a.clube_id
+                WHERE a.temporada = %s AND a.atleta_id IN ({placeholders})
+            ''', [get_temporada_atual()] + forced_ids)
+            singular_by_id = {1: 'goleiro', 2: 'lateral', 3: 'zagueiro', 4: 'meia', 5: 'atacante', 6: 'treinador'}
+            for row in cursor.fetchall():
+                position_name = singular_by_id.get(int(row[4] or 0))
+                if not position_name:
+                    continue
+                collection = rankings_por_posicao.setdefault(position_name, [])
+                if any(int(item.get('atleta_id') or 0) == int(row[0]) for item in collection):
+                    continue
+                collection.append({
+                    'atleta_id': row[0],
+                    'apelido': row[1] or row[2] or f'Atleta {row[0]}',
+                    'clube_id': row[3],
+                    'clube_nome': row[11] or 'Clube não informado',
+                    'clube_abrev': row[12] or '',
+                    'foto': row[10] or '',
+                    'pontos_num': float(row[5] or 0),
+                    'media_num': float(row[6] or 0),
+                    'preco_num': float(row[7] or 0),
+                    'preco': float(row[7] or 0),
+                    'jogos_num': int(row[8] or 0),
+                    'pontuacao_total': float(row[5] or row[6] or 0),
+                    'media': float(row[6] or 0),
+                    'jogos': int(row[8] or 0),
+                    'status_id': int(row[9] or 0),
+                    'availability_rule': 'cravado',
+                    'is_forced': True,
+                })
         
         # Buscar configuração de escalação
         from models.user_escalacao_config import get_user_escalacao_config
@@ -4497,8 +4661,8 @@ def api_escalacao_dados():
         cursor.execute('''
             SELECT clube_casa_id, clube_visitante_id
             FROM acf_partidas
-            WHERE rodada_id = %s AND valida = TRUE
-        ''', (rodada_atual,))
+            WHERE rodada_id = %s AND temporada = %s AND valida = TRUE
+        ''', (rodada_atual, get_temporada_atual()))
         partidas = cursor.fetchall()
         
         adversarios_dict = {}
@@ -4508,6 +4672,7 @@ def api_escalacao_dados():
 
         response_data = {
             'team_id': team_id,
+            'temporada_atual': get_temporada_atual(),
             'team_name': team_name,
             'team_shield_url': team_shield_url,
             'rodada_atual': rodada_atual,
@@ -4803,6 +4968,7 @@ def api_escalar_time():
             '3-5-2': 2,
             '3-4-3': 4,
             '4-5-1': 5,
+            '5-3-2': 7,
             '5-4-1': 6
         }
         formacao = data.get('formacao', '4-3-3')
