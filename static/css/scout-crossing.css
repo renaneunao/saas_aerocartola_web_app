@@ -59,3 +59,32 @@
 @media (max-width:1150px) { .scx-player-filters { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media (max-width:760px) { .scx-page { padding:.75rem .55rem 3rem; }.scx-header { align-items:flex-start; }.scx-context { font-size:.62rem; }.scx-selector { padding:.7rem; }.scx-selector-row { display:block; }.scx-section-label { margin-bottom:.55rem; }.scx-team-grid { grid-template-columns:repeat(5,minmax(0,1fr)); gap:.3rem; }.scx-team { min-height:2.2rem; }.scx-team img,.scx-team-fallback { width:1.25rem; height:1.25rem; }.scx-team b { font-size:.5rem; }.scx-filter-sticky { margin-top:.7rem; padding-bottom:.65rem; }.scx-filter-head { display:block; }.scx-status-filters { margin-top:.55rem; }.scx-player-filters { grid-template-columns:repeat(2,minmax(0,1fr)); }.scx-search-field { grid-column:1 / -1; }.scx-player-option { grid-template-columns:2rem minmax(0,1fr) repeat(2,minmax(62px,auto)); gap:.4rem; min-height:3rem; padding:.35rem .4rem; }.scx-player-option img,.scx-player-option-avatar { width:1.75rem; height:1.75rem; }.scx-player-option strong { font-size:.66rem; }.scx-player-option-stat { padding-left:.35rem; }.scx-player-option-stat b { font-size:.64rem; }.scx-player-option-price,.scx-player-option-games { display:none; }.scx-player-card { grid-template-columns:1fr; padding:.75rem; }.scx-summary { grid-template-columns:repeat(3,1fr); }.scx-analysis-toolbar { display:block; padding:.75rem; }.scx-compare-controls { margin-top:.7rem; }.scx-compare-controls label { min-width:0; flex:1; }.scx-result-grid { grid-template-columns:1fr; gap:.7rem; margin-top:.7rem; }.scx-card,.scx-confrontation { padding:.75rem; }.scx-conceded { grid-template-columns:repeat(2,1fr); }.scx-header h1 { font-size:1.55rem; }.scx-subtitle { font-size:.72rem; } }
 @media (max-width:420px) { .scx-context span:not(.scx-live-dot) { display:none; }.scx-header { gap:.4rem; }.scx-player-filters { gap:.3rem; }.scx-player-filters input,.scx-player-filters select { font-size:.62rem; }.scx-player-option { grid-template-columns:1.8rem minmax(0,1fr) repeat(2,minmax(54px,auto)); }.scx-player-option strong { font-size:.61rem; }.scx-summary { grid-template-columns:repeat(2,1fr); }.scx-recent-row { grid-template-columns:4rem minmax(0,1fr) auto; }.scx-points em { max-width:105px; overflow:hidden; text-overflow:ellipsis; } }
+
+/* Scouts do jogo ficam legíveis mesmo em listas compactas: positivos acima,
+   negativos abaixo, sempre como contagem inteira. */
+.scx-point-scouts {
+  display: grid;
+  justify-items: end;
+  gap: .08rem;
+  margin-top: .18rem;
+  white-space: normal;
+  font: 500 .52rem/1.25 Inter, sans-serif;
+}
+
+.scx-scouts-positive,
+.scx-scouts-negative {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .12rem .32rem;
+}
+
+.scx-scouts-positive { color: var(--scx-good); }
+.scx-scouts-negative { color: #e78b99; }
+.scx-scouts-positive span,
+.scx-scouts-negative span { white-space: nowrap; }
+.scx-scouts-positive b,
+.scx-scouts-negative b { font-weight: 800; }
+.scx-scouts-empty { color: var(--scx-muted); }
+.scx-conceded-item.is-positive strong { color: var(--scx-good); }
+.scx-conceded-item.is-negative strong { color: #e78b99; }

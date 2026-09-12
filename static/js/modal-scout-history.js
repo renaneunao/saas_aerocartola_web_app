@@ -5,6 +5,7 @@
         a: 'A', ca: 'CA', cv: 'CV', de: 'DE', ds: 'DS', fc: 'FC', fd: 'FD',
         ff: 'FF', fs: 'FS', g: 'G', gs: 'GS', i: 'I', sg: 'SG'
     };
+    const negativeScouts = new Set(['ca', 'cv', 'fc', 'gs', 'i']);
 
     function escapeHtml(value) {
         return String(value ?? '').replace(/[&<>'"]/g, (char) => ({
@@ -32,11 +33,23 @@
     };
 
     function scoutSummary(scouts) {
-        const entries = Object.entries(scouts || {}).filter(([, value]) => Number(value) > 0);
+        const entries = Object.entries(scouts || {})
+            .filter(([, value]) => Number.isFinite(Number(value)) && Number(value) !== 0)
+            .map(([code, value]) => {
+                const raw = Number(value) || 0;
+                const negative = negativeScouts.has(code) || raw < 0;
+                return {
+                    code,
+                    negative,
+                    label: labels[code] || code.toUpperCase(),
+                    value: `${negative ? '-' : ''}${Math.round(Math.abs(raw)).toLocaleString('pt-BR')}`
+                };
+            });
         if (!entries.length) return '';
-        return entries.map(([code, value]) =>
-            `<span><b>${escapeHtml(labels[code] || code.toUpperCase())}</b> ${escapeHtml(number(value))}</span>`
-        ).join('');
+        const markup = (negative) => entries.filter((entry) => entry.negative === negative)
+            .map((entry) => `<span title="${escapeHtml(entry.code)}"><b>${escapeHtml(entry.label)}</b> ${entry.value}</span>`)
+            .join('');
+        return `<span class="modal-scout-history-scouts-positive">${markup(false)}</span><span class="modal-scout-history-scouts-negative">${markup(true)}</span>`;
     }
 
     function fixtureMarkup(match) {
@@ -79,7 +92,7 @@
                 ${fixtureMarkup(match)}
                 <small>${escapeHtml(match.mando_label || 'Sem mando')} · adversário ${escapeHtml(match.adversario_nome || 'não informado')}</small>
             </div>
-            <div class="modal-scout-history-inline-scouts">${scouts || '<span class="is-muted">Sem scouts positivos</span>'}</div>
+            <div class="modal-scout-history-inline-scouts">${scouts || '<span class="is-muted">Sem scouts</span>'}</div>
         </article>`;
     }
 
@@ -104,7 +117,9 @@
             ].map(([label, value]) => `<div class="modal-scout-history-summary-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
         }
 
-        const currentRound = Math.max(1, Number(data.filtros?.rodada || 38));
+        // A rodada atual ainda não aconteceu; o histórico termina na rodada
+        // anterior e nunca cria cards para rodadas futuras.
+        const currentRound = Math.max(0, Number(data.filtros?.rodada || 38) - 1);
         const byRound = new Map(matches
             .filter((match) => Number(match.rodada) <= currentRound)
             .map((match) => [Number(match.rodada), match]));

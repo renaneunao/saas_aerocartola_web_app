@@ -27,6 +27,7 @@
     }
     const shortScouts = { a: 'A', ca: 'CA', cv: 'CV', de: 'DEF', ds: 'DS', fc: 'FC', fd: 'FD', ff: 'FF', fs: 'FS', g: 'G', gs: 'GS', i: 'IMP', sg: 'SG' };
     const scoutLabels = { a: 'Assistências', ca: 'Cartões amarelos', cv: 'Cartões vermelhos', de: 'Defesas', ds: 'Desarmes', fc: 'Faltas cometidas', fd: 'Finalizações defendidas', ff: 'Finalizações para fora', fs: 'Faltas sofridas', g: 'Gols', gs: 'Gols sofridos', i: 'Impedimentos', sg: 'Saldo de gols' };
+    const negativeScouts = new Set(['ca', 'cv', 'fc', 'gs', 'i']);
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[char]));
     const number = (value, digits = 2) => Number.isFinite(Number(value)) ? Number(value).toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits }) : '0,00';
     const integer = (value) => Number.isFinite(Number(value)) ? Math.round(Number(value)).toLocaleString('pt-BR') : '0';
@@ -162,7 +163,25 @@
         } catch (error) { setAlert(error.message, true); $('scoutCrossingSelectionHint').textContent = 'Não foi possível carregar os jogadores.'; }
     }
 
-    function scoutSummary(scouts) { const parts = Object.entries(scouts || {}).filter(([, value]) => Number(value) > 0).map(([code, value]) => `${shortScouts[code] || code} ${integer(value)}`); return parts.length ? parts.join(' · ') : 'sem scouts'; }
+    function scoutSummary(scouts) {
+        const entries = Object.entries(scouts || {})
+            .filter(([, value]) => Number.isFinite(Number(value)) && Number(value) !== 0)
+            .map(([code, value]) => {
+                const raw = Number(value) || 0;
+                const negative = negativeScouts.has(code) || raw < 0;
+                return {
+                    code,
+                    negative,
+                    label: shortScouts[code] || code.toUpperCase(),
+                    value: `${negative ? '-' : ''}${integer(Math.abs(raw))}`
+                };
+            });
+        if (!entries.length) return '<span class="scx-scouts-empty">sem scouts</span>';
+        const markup = (negative) => entries.filter((entry) => entry.negative === negative)
+            .map((entry) => `<span title="${escapeHtml(scoutLabels[entry.code] || entry.code)}"><b>${escapeHtml(entry.label)}</b> ${entry.value}</span>`)
+            .join('');
+        return `<span class="scx-scouts-positive">${markup(false)}</span><span class="scx-scouts-negative">${markup(true)}</span>`;
+    }
     function renderSummary(summary) { $('scoutCrossingSummary').innerHTML = [['Média', number(summary.media), true], ['Jogos', integer(summary.jogos)], ['Última', number(summary.ultima_pontuacao)], ['Maior', number(summary.maior_pontuacao)], ['Menor', number(summary.menor_pontuacao)]].map(([label, value, accent]) => `<div class="scx-summary-item${accent ? ' accent' : ''}"><span>${label}</span><strong>${value}</strong></div>`).join(''); }
     function fixtureMarkup(home, away, activeId) {
         const active = Number(activeId); const homeActive = Number(home?.id) === active; const awayActive = Number(away?.id) === active;
@@ -170,16 +189,30 @@
             const label = item?.abreviacao || item?.nome || '—';
             const initials = escapeHtml(String(label).slice(0, 3).toUpperCase());
             const image = item?.escudo
-                ? `<img src="${escapeHtml(item.escudo)}" alt="" onerror="this.outerHTML='<span class=\"scx-fixture-fallback\">${initials}</span>'">`
+                ? `<img src="${escapeHtml(item.escudo)}" alt="" data-scx-fixture-shield><span class="scx-fixture-fallback" hidden>${initials}</span>`
                 : `<span class="scx-fixture-fallback">${initials}</span>`;
-            return `<span class="scx-fixture-team ${side} ${isActive ? 'active' : 'dim'}">${image}<b>${escapeHtml(label)}</b></span>`;
+            return side === 'home'
+                ? `<span class="scx-fixture-team ${side} ${isActive ? 'active' : 'dim'}"><b>${escapeHtml(label)}</b>${image}</span>`
+                : `<span class="scx-fixture-team ${side} ${isActive ? 'active' : 'dim'}">${image}<b>${escapeHtml(label)}</b></span>`;
         };
         return `<span class="scx-fixture-pair">${team(home || {}, 'home', homeActive)}<b class="scx-fixture-vs">×</b>${team(away || {}, 'away', awayActive)}</span>`;
     }
+    function bindFixtureFallbacks(root) {
+        root?.querySelectorAll('img[data-scx-fixture-shield]').forEach((image) => {
+            image.addEventListener('error', () => {
+                image.hidden = true;
+                if (image.nextElementSibling?.classList.contains('scx-fixture-fallback')) image.nextElementSibling.hidden = false;
+            }, { once: true });
+        });
+    }
     function renderRecent(matches) {
-        const target = $('scoutCrossingRecent'); const played = (matches || []).filter((match) => match.entrou_em_campo === true); if (!played.length) { target.innerHTML = '<div class="scx-muted">Nenhuma pontuação encontrada.</div>'; return; }
+        const target = $('scoutCrossingRecent');
+        const currentRound = Number(state.rodada || 0);
+        const played = (matches || []).filter((match) => match.entrou_em_campo === true && (!currentRound || Number(match.rodada) < currentRound));
+        if (!played.length) { target.innerHTML = '<div class="scx-muted">Nenhuma pontuação encontrada.</div>'; return; }
         const visible = state.historyExpanded ? played : played.slice(0, 5);
-        target.innerHTML = visible.map((match) => `<article class="scx-recent-row"><span class="scx-round">Rodada ${match.rodada}</span><span class="scx-match-copy"><strong>${escapeHtml(match.adversario_nome)}</strong><small>${escapeHtml(match.mando_label)} · ${fixtureMarkup(match.casa, match.fora, match.clube_id)}</small></span><span class="scx-points">${number(match.pontuacao)} <em>(${escapeHtml(scoutSummary(match.scouts))})</em></span></article>`).join('');
+        target.innerHTML = visible.map((match) => `<article class="scx-recent-row"><span class="scx-round">Rodada ${match.rodada}</span><span class="scx-match-copy"><strong>${escapeHtml(match.adversario_nome)}</strong><small>${escapeHtml(match.mando_label)} · ${fixtureMarkup(match.casa, match.fora, match.clube_id)}</small></span><span class="scx-points">${number(match.pontuacao)}<span class="scx-point-scouts">${scoutSummary(match.scouts)}</span></span></article>`).join('');
+        bindFixtureFallbacks(target);
         if (played.length > 5) target.innerHTML += `<button type="button" class="scx-history-more" id="scoutCrossingHistoryMore">${state.historyExpanded ? 'Mostrar somente as 5 últimas' : `Mostrar histórico completo (${played.length})`}</button>`;
         $('scoutCrossingHistoryMore')?.addEventListener('click', () => { state.historyExpanded = !state.historyExpanded; renderRecent(played); });
     }
@@ -189,8 +222,9 @@
     function renderConfrontation(data) {
         const target = $('scoutCrossingConfrontation'); const match = data.confronto; const ceded = data.cedidos_adversario || {};
         if (!match) { target.hidden = true; target.innerHTML = ''; return; }
-        target.hidden = false; const scouts = Object.entries(ceded.scouts || {}).filter(([, value]) => Number(value) > 0);
-        target.innerHTML = `<div class="scx-confrontation-head"><div class="scx-confrontation-title">${fixtureMarkup(match.casa, match.fora, data.jogador.clube_id)}<div><strong>Cedidos do adversário no confronto</strong><small>${escapeHtml(match.mando_label)} · ${integer(ceded.jogos)} jogo(s) anteriores</small></div></div><strong class="scx-confrontation-score">${number(ceded.pontuacao)} pts</strong></div><div class="scx-conceded">${scouts.map(([code, value]) => `<div class="scx-conceded-item"><span>${escapeHtml(shortScouts[code] || code)} · ${escapeHtml(scoutLabels[code] || code)}</span><strong>${number(value)}</strong></div>`).join('') || '<span class="scx-muted">Sem scouts cedidos registrados.</span>'}</div>`;
+        target.hidden = false; const scouts = Object.entries(ceded.scouts || {}).filter(([, value]) => Number.isFinite(Number(value)) && Number(value) !== 0);
+        target.innerHTML = `<div class="scx-confrontation-head"><div class="scx-confrontation-title">${fixtureMarkup(match.casa, match.fora, data.jogador.clube_id)}<div><strong>Cedidos do adversário no confronto</strong><small>${escapeHtml(match.mando_label)} · ${integer(ceded.jogos)} jogo(s) anteriores</small></div></div><strong class="scx-confrontation-score">${number(ceded.pontuacao)} pts</strong></div><div class="scx-conceded">${scouts.map(([code, value]) => { const negative = negativeScouts.has(code) || Number(value) < 0; return `<div class="scx-conceded-item ${negative ? 'is-negative' : 'is-positive'}"><span>${escapeHtml(shortScouts[code] || code)} · ${escapeHtml(scoutLabels[code] || code)}</span><strong>${negative ? '-' : ''}${integer(Math.abs(value))}</strong></div>`; }).join('') || '<span class="scx-muted">Sem scouts cedidos registrados.</span>'}</div>`;
+        bindFixtureFallbacks(target);
     }
     function renderPrediction(player) {
         const value = predictionValue(player); $('scoutCrossingPrediction').textContent = `Previsão calculada: ${number(value)} pts`;

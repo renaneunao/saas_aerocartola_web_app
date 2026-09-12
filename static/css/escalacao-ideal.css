@@ -614,3 +614,110 @@
     grid-column: 1 / -1;
   }
 }
+
+/* O campo mantém a régua de espaçamento dos atletas; o ganho horizontal vem
+   da faixa compacta de reservas ao lado, e não de espalhar os jogadores. */
+@media (min-width: 1101px) {
+  .ideal-field-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(272px, 310px);
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .ideal-field {
+    width: 100%;
+    min-height: 700px;
+    margin: 0;
+  }
+
+  .ideal-bench {
+    width: 100%;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-content: start;
+    gap: 4px;
+  }
+
+  .ideal-bench-head {
+    grid-column: 1;
+  }
+
+  .ideal-bench-group {
+    padding: 7px 0;
+  }
+}
+
+.ideal-bench-player .ideal-special-action {
+  z-index: 5;
+  left: 4px;
+  top: 4px;
+  bottom: auto;
+  opacity: .82;
+  transform: none;
+}
+
+.ideal-bench-player:hover .ideal-special-action,
+.ideal-bench-player:focus-within .ideal-special-action {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.ideal-field-submit {
+  position: absolute;
+  left: 14px;
+  bottom: 14px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 6px 9px;
+  border: 1px solid rgba(92, 242, 165, .42);
+  border-radius: 7px;
+  color: #d9ffeb;
+  background: rgba(5, 42, 34, .92);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, .18);
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.ideal-field-submit:hover:not(:disabled) {
+  border-color: rgba(92, 242, 165, .78);
+  background: rgba(8, 63, 48, .96);
+}
+
+.ideal-field-submit:disabled {
+  cursor: not-allowed;
+  opacity: .48;
+}
+
+.ideal-field-submit-locked {
+  border-color: rgba(148, 163, 184, .24);
+  color: #94a3b8;
+  background: rgba(15, 23, 42, .72);
+}
+
+@media (max-width: 1100px) {
+  .ideal-field-layout {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 620px) {
+  .ideal-field-submit {
+    left: 7px;
+    bottom: 7px;
+    min-height: 25px;
+    padding: 4px 6px;
+    font-size: 7px;
+  }
+
+  .ideal-bench-player .ideal-special-action {
+    left: 3px;
+    top: 3px;
+    padding: 3px;
+  }
+}

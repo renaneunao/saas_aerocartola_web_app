@@ -286,6 +286,11 @@
     return `<div class="ideal-field-group ${className}"><div class="ideal-field-pos">${POSITIONS[position].label}</div><div class="ideal-field-players">${playerSlots(result, position)}</div></div>`;
   }
 
+  function fieldSubmitButton() {
+    if (!can('podeEscalar')) return '<button id="fieldSubmitBtn" type="button" class="ideal-field-submit ideal-field-submit-locked" disabled><i class="fas fa-lock"></i> Enviar escalação</button>';
+    return '<button id="fieldSubmitBtn" type="button" class="ideal-field-submit" data-submit-lineup><i class="fas fa-paper-plane"></i><span>Enviar escalação</span></button>';
+  }
+
   function defenseLayout(result) {
     const count = FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3'];
     const center = fieldGroup(result, 'zagueiros', 'ideal-field-group-center');
@@ -297,7 +302,7 @@
 
   function renderField(result) {
     const formation = $('formationSelect')?.value || '4-3-3';
-    return `<div class="ideal-field ideal-field--${formation.replace('-', '')}"><div class="ideal-field-line"></div><div class="ideal-field-circle"></div><div class="ideal-field-goal ideal-field-goal-top"><span></span></div><div class="ideal-field-goal ideal-field-goal-bottom"><span></span></div><div class="ideal-field-tag"><span>titulares</span><span>${escapeHtml(formation)}</span></div><div class="ideal-field-rows"><div class="ideal-field-row ideal-field-row-attack">${fieldGroup(result, 'atacantes')}</div><div class="ideal-field-row ideal-field-row-midfield">${fieldGroup(result, 'meias')}</div>${defenseLayout(result)}<div class="ideal-field-row ideal-field-row-goalkeeper">${fieldGroup(result, 'goleiros')}</div></div><div class="ideal-field-coach">${fieldGroup(result, 'treinadores', 'ideal-field-group-coach')}</div></div>`;
+    return `<div class="ideal-field ideal-field--${formation.replace('-', '')}"><div class="ideal-field-line"></div><div class="ideal-field-circle"></div><div class="ideal-field-goal ideal-field-goal-top"><span></span></div><div class="ideal-field-goal ideal-field-goal-bottom"><span></span></div><div class="ideal-field-tag"><span>titulares</span><span>${escapeHtml(formation)}</span></div><div class="ideal-field-rows"><div class="ideal-field-row ideal-field-row-attack">${fieldGroup(result, 'atacantes')}</div><div class="ideal-field-row ideal-field-row-midfield">${fieldGroup(result, 'meias')}</div>${defenseLayout(result)}<div class="ideal-field-row ideal-field-row-goalkeeper">${fieldGroup(result, 'goleiros')}</div></div><div class="ideal-field-coach">${fieldGroup(result, 'treinadores', 'ideal-field-group-coach')}</div>${fieldSubmitButton()}</div>`;
   }
 
   function renderBench(result) {
@@ -338,7 +343,10 @@
     const luxury = manualLuxury || result.reservas[luxuryPosition]?.[0];
     if (luxury && luxuryPosition !== 'treinadores') luxury.eh_reserva_luxo = true;
     result.custoTotal = POSITION_ORDER.flatMap(position => result.titulares[position] || []).reduce((total, player) => total + price(player), 0);
-    result.pontuacaoTotal = POSITION_ORDER.flatMap(position => result.titulares[position] || []).reduce((total, player) => total + points(player), 0);
+    // No Cartola, o capitão pontua em dobro. A base é recalculada para que a
+    // troca manual do capitão atualize imediatamente a projeção exibida.
+    const pontuacaoBase = POSITION_ORDER.flatMap(position => result.titulares[position] || []).reduce((total, player) => total + points(player), 0);
+    result.pontuacaoTotal = pontuacaoBase + (captain ? points(captain) : 0);
   }
 
   function renderManualEditor(result) {
@@ -372,11 +380,16 @@
   }
 
   function refreshSubmitButton() {
-    const button = $('escalarBtn');
-    if (!button || !can('podeEscalar')) return;
-    button.innerHTML = state.teamChanged
+    const buttons = [$('escalarBtn'), $('fieldSubmitBtn')].filter(Boolean);
+    if (!buttons.length || !can('podeEscalar')) return;
+    const label = state.teamChanged
       ? '<i class="fas fa-paper-plane"></i> Enviar time alterado'
       : '<i class="fas fa-paper-plane"></i> Enviar escalação';
+    buttons.forEach((button) => {
+      button.innerHTML = button.id === 'fieldSubmitBtn'
+        ? (state.teamChanged ? '<i class="fas fa-paper-plane"></i><span>Enviar time alterado</span>' : '<i class="fas fa-paper-plane"></i><span>Enviar escalação</span>')
+        : label;
+    });
   }
 
   function exibirResultado(result, clubesDict = {}) {
@@ -388,13 +401,15 @@
     const patrimonio = safeNumber(result.patrimonio || state.data?.patrimonio);
     const balance = patrimonio - safeNumber(result.custoTotal);
     const captain = POSITION_ORDER.flatMap(position => result.titulares?.[position] || []).find(player => player.eh_capitao);
-    content.innerHTML = `<div class="ideal-metrics"><div class="ideal-metric cost"><span>Investimento</span><strong>${money(result.custoTotal)}</strong><em>titulares</em></div><div class="ideal-metric balance"><span>Saldo disponível</span><strong>${money(balance)}</strong><em>patrimônio ${money(patrimonio)}</em></div><div class="ideal-metric points"><span>Projeção</span><strong>${safeNumber(result.pontuacaoTotal).toFixed(2)} pts</strong><em>${captain ? `capitão: ${escapeHtml(captain.apelido)}` : 'sem capitão definido'}</em></div></div><div class="ideal-field-layout">${renderField(result)}${renderBench(result)}</div><div id="manualEditor" class="ideal-manual-editor ${state.editing ? 'is-open' : ''}"></div>`;
+    content.innerHTML = `<div class="ideal-metrics"><div class="ideal-metric cost"><span>Investimento</span><strong>${money(result.custoTotal)}</strong><em>titulares</em></div><div class="ideal-metric balance"><span>Saldo disponível</span><strong>${money(balance)}</strong><em>patrimônio ${money(patrimonio)}</em></div><div class="ideal-metric points"><span>Projeção</span><strong>${safeNumber(result.pontuacaoTotal).toFixed(2)} pts</strong><em>${captain ? `capitão em dobro: ${escapeHtml(captain.apelido)}` : 'sem capitão definido'}</em></div></div><div class="ideal-field-layout">${renderField(result)}${renderBench(result)}</div><div id="manualEditor" class="ideal-manual-editor ${state.editing ? 'is-open' : ''}"></div>`;
     renderManualEditor(result);
     panel.classList.remove('hidden');
     refreshSubmitButton();
     const expected = Object.values(FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3']).reduce((sum, value) => sum + value, 0) + 1;
     const actual = POSITION_ORDER.flatMap(position => result.titulares?.[position] || []).length;
-    $('escalarBtn').disabled = actual !== expected;
+    const canSend = actual === expected;
+    $('escalarBtn').disabled = !canSend;
+    if ($('fieldSubmitBtn')) $('fieldSubmitBtn').disabled = !canSend;
   }
 
   async function calcularEscalacao(recarregarDados = true) {
@@ -439,9 +454,13 @@
     let confirmed = true;
     if (typeof showConfirm === 'function') confirmed = await showConfirm('Confirma escalar este time no Cartola FC?', 'Escalar time', { confirmText: 'Sim, escalar', cancelText: 'Cancelar' });
     if (!confirmed) return;
-    const button = $('escalarBtn');
-    button.disabled = true;
-    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    const buttons = [$('escalarBtn'), $('fieldSubmitBtn')].filter(Boolean);
+    buttons.forEach((button) => {
+      button.disabled = true;
+      button.innerHTML = button.id === 'fieldSubmitBtn'
+        ? '<i class="fas fa-spinner fa-spin"></i><span>Enviando...</span>'
+        : '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+    });
     showLoading('Escalando time no Cartola FC...');
     try {
       const response = await fetch('/api/escalacao-ideal/escalar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ escalacao: window.ultimaEscalacao, formacao: $('formationSelect').value }) });
@@ -455,7 +474,7 @@
       notify(error.message, 'error');
     } finally {
       hideLoading();
-      button.disabled = false;
+      buttons.forEach((button) => { button.disabled = false; });
       refreshSubmitButton();
     }
   }
@@ -760,6 +779,13 @@
     ['formationSelect', 'hackGoleiroToggle', 'fecharDefesaToggle', 'posicaoCapitao', 'posicaoReservaLuxo'].forEach(id => $(id)?.addEventListener('change', () => aoMudarConfiguracao()));
     $('manualEditBtn')?.addEventListener('click', toggleManualEdit);
     $('escalacaoContent')?.addEventListener('click', (event) => {
+      const submitButton = event.target.closest('[data-submit-lineup]');
+      if (submitButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        escalarTime();
+        return;
+      }
       const specialRole = event.target.closest('[data-special-role]');
       if (specialRole) {
         event.preventDefault();

@@ -934,7 +934,9 @@ def crossing():
         if not player:
             return _api_error("Jogador não encontrado para a temporada e posição informadas.", 404)
 
-        matches = _match_query(cursor, atleta_id, temporada, rodada)
+        # A rodada corrente ainda não tem pontuação histórica. O confronto
+        # atual continua sendo carregado separadamente abaixo.
+        matches = _match_query(cursor, atleta_id, temporada, max(0, rodada - 1))
         _attach_conceded_scouts(cursor, matches, posicao_id, temporada)
         summary = _aggregate_matches(matches)
         confronto = _current_fixture(cursor, player["clube_id"], temporada, rodada)

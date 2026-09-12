@@ -380,3 +380,26 @@
         margin-top: .12rem;
     }
 }
+
+/* No histórico, os scouts positivos e negativos ficam em linhas distintas
+   para facilitar a leitura do efeito de cada partida. */
+.modal-scout-history-inline-scouts {
+    display: grid;
+    gap: .12rem;
+    color: #94a3b8;
+}
+
+.modal-scout-history-scouts-positive,
+.modal-scout-history-scouts-negative {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .12rem .35rem;
+}
+
+.modal-scout-history-scouts-positive { color: #7bd88f; }
+.modal-scout-history-scouts-negative { color: #e78b99; }
+.modal-scout-history-scouts-positive span,
+.modal-scout-history-scouts-negative span { white-space: nowrap; }
+.modal-scout-history-scouts-positive b,
+.modal-scout-history-scouts-negative b { color: currentColor; font-weight: 800; }
+.modal-scout-history-inline-scouts .is-muted { color: #64748b; }
