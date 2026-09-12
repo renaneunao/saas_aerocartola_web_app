@@ -319,10 +319,9 @@ class EscalarTodosTimes {
             
             // 4. Processar cada time
             for (const time of times) {
-                this.timesProcessados++;
-                
                 const resultado = await this.escalarTime(time);
                 this.resultados.push(resultado);
+                this.timesProcessados++;
                 
                 // Pequena pausa entre times para não sobrecarregar
                 if (this.timesProcessados < this.timesTotal) {
@@ -451,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Criar botão
         const botaoItem = document.createElement('div');
-        botaoItem.className = 'px-3 py-2 text-sm rounded-l-lg cursor-pointer transition-all duration-200 text-green-300 hover:bg-green-600/20 hover:text-white mb-2';
+        botaoItem.className = 'aero-sidebar-action px-3 py-2 text-sm rounded-lg cursor-pointer transition-all duration-200 mb-2';
         botaoItem.innerHTML = `
             <div class="flex items-center">
                 <div class="w-8 h-8 rounded mr-2 flex items-center justify-center bg-green-500/20">
@@ -566,6 +565,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Criar modal de progresso
         const modal = document.createElement('div');
+        modal.className = 'batch-escalation-modal';
         Object.assign(modal.style, {
             position: 'fixed', inset: '0', zIndex: '50',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -573,32 +573,34 @@ document.addEventListener('DOMContentLoaded', function() {
             backdropFilter: 'blur(10px)', webkitBackdropFilter: 'blur(10px)'
         });
         modal.innerHTML = `
-            <div style="background:rgba(11,17,32,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(0,229,255,0.12);border-radius:20px;box-shadow:0 0 40px rgba(0,229,255,0.06),0 20px 60px rgba(0,0,0,0.5);max-width:640px;width:100%;padding:24px;max-height:90vh;overflow-y:auto">
+            <div class="batch-escalation-sheet" style="background:rgba(11,17,32,0.9);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(0,229,255,0.12);border-radius:20px;box-shadow:0 0 40px rgba(0,229,255,0.06),0 20px 60px rgba(0,0,0,0.5);max-width:640px;width:100%;padding:24px;max-height:90vh;overflow-y:auto">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
                     <h3 style="color:#EDF2FA;font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px">
                         <i class="fas fa-layer-group" style="color:#F59E0B"></i>
                         Escalar Todos os Times
                     </h3>
-                    <button id="fecharModalEscalarTodos" style="background:none;border:none;color:#64748B;cursor:pointer;font-size:18px;padding:4px">
+                    <button id="fecharModalEscalarTodos" class="batch-close" style="background:none;border:none;color:#64748B;cursor:pointer;font-size:18px;padding:4px">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
                 
-                <div style="margin-bottom:16px">
+                <div class="batch-progress" style="margin-bottom:16px">
                     <div style="display:flex;justify-content:space-between;font-size:13px;color:#94A3B8;margin-bottom:6px">
                         <span id="progressTextTodos">Iniciando...</span>
                         <span id="progressPercentTodos" style="font-family:'JetBrains Mono',monospace">0%</span>
                     </div>
-                    <div style="width:100%;background:rgba(17,27,46,0.6);border-radius:999px;height:8px;overflow:hidden">
-                        <div id="progressBarTodos" style="background:linear-gradient(90deg,#F59E0B,#00FF88);height:100%;width:0%;transition:width 0.3s ease;border-radius:999px;box-shadow:0 0 8px rgba(245,158,11,0.3)"></div>
+                    <div class="batch-progress-track" style="width:100%;background:rgba(17,27,46,0.6);border-radius:999px;height:8px;overflow:hidden">
+                        <div id="progressBarTodos" class="batch-progress-bar" style="background:linear-gradient(90deg,#F59E0B,#00FF88);height:100%;width:0%;transition:width 0.3s ease;border-radius:999px;box-shadow:0 0 8px rgba(245,158,11,0.3)"></div>
                     </div>
                 </div>
+                <div id="batchStageTodos" class="batch-stage">Preparando os times e as etapas da rodada.</div>
+                <div id="batchTeamsTodos" class="batch-teams" aria-live="polite"></div>
                 
-                <div id="logsContainerTodos" style="background:rgba(6,11,20,0.4);border:1px solid rgba(255,255,255,0.04);border-radius:12px;padding:12px;max-height:320px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6">
+                <div id="logsContainerTodos" class="batch-logs" style="background:rgba(6,11,20,0.4);border:1px solid rgba(255,255,255,0.04);border-radius:12px;padding:12px;max-height:320px;overflow-y:auto;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6">
                 </div>
                 
                 <div id="btnFecharContainerTodos" style="margin-top:16px;display:none">
-                    <button id="btnFecharEscalarTodos" style="width:100%;background:rgba(0,255,136,0.08);color:#00FF88;border:1px solid rgba(0,255,136,0.2);padding:10px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s">
+                    <button id="btnFecharEscalarTodos" class="batch-finish-button" style="width:100%;background:rgba(0,255,136,0.08);color:#00FF88;border:1px solid rgba(0,255,136,0.2);padding:10px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s">
                         Fechar
                     </button>
                 </div>
@@ -620,14 +622,37 @@ document.addEventListener('DOMContentLoaded', function() {
         const addLog = (mensagem, tipo = 'info') => {
             const logsContainer = document.getElementById('logsContainerTodos');
             if (!logsContainer) return;
+
+            const stage = document.getElementById('batchStageTodos');
+            if (stage) {
+                stage.textContent = tipo === 'error' ? 'Atenção: uma etapa falhou; os demais times continuam sendo processados.' :
+                    tipo === 'success' ? 'Última etapa concluída. Confira o resumo por time abaixo.' : mensagem.replace(/^\[[^\]]+\]\s*/, '').slice(0, 140);
+            }
+            const processing = mensagem.match(/Processando time:\s*(.+)$/i);
+            if (processing) {
+                const teams = document.getElementById('batchTeamsTodos');
+                if (teams && ![...teams.children].some((item) => item.dataset.teamName === processing[1])) {
+                    const row = document.createElement('div');
+                    row.className = 'batch-team pending'; row.dataset.teamName = processing[1];
+                    row.innerHTML = `<span class="batch-team-status"><i class="fas fa-spinner fa-spin"></i></span><strong>${processing[1]}</strong><small>processando</small>`;
+                    teams.appendChild(row);
+                }
+            }
+            const success = mensagem.match(/Time\s+(.+?)\s+escalado com sucesso/i);
+            const failure = mensagem.match(/Erro ao escalar time\s+(.+?):/i);
+            const teamName = success?.[1] || failure?.[1];
+            if (teamName) {
+                const row = [...(document.getElementById('batchTeamsTodos')?.children || [])].find((item) => item.dataset.teamName === teamName);
+                if (row) {
+                    row.className = `batch-team ${success ? 'success' : 'error'}`;
+                    row.querySelector('.batch-team-status').innerHTML = `<i class="fas ${success ? 'fa-check' : 'fa-xmark'}"></i>`;
+                    row.querySelector('small').textContent = success ? 'escalado' : 'com erro';
+                }
+            }
+            if (/PAYLOAD ENVIADO|ATLETAS CONFIRMADOS|^[═─]+$/.test(mensagem.trim())) return;
             
             const logEntry = document.createElement('div');
-            logEntry.className = `mb-1 ${
-                tipo === 'success' ? 'text-green-400' :
-                tipo === 'error' ? 'text-red-400' :
-                tipo === 'warning' ? 'text-yellow-400' :
-                'text-slate-300'
-            }`;
+            logEntry.className = `batch-log-entry ${tipo}`;
             logEntry.textContent = mensagem;
             logsContainer.appendChild(logEntry);
             logsContainer.scrollTop = logsContainer.scrollHeight;

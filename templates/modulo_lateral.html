@@ -773,7 +773,7 @@ async function renderizarTabelaLaterais(resultados) {
         const isBloqueado = !temRankingCompleto && jogador.rank <= 2;
         
         const tr = document.createElement('tr');
-        tr.className = `border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 ${jogador.rank <= 3 ? `bg-gradient-to-r ${jogador.rank == 1 ? 'from-yellow-900/20 to-yellow-800/20' : jogador.rank == 2 ? 'from-gray-800/20 to-gray-700/20' : 'from-orange-900/20 to-orange-800/20'}` : ''}`;
+        tr.className = 'border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200';
         if (isBloqueado) {
             tr.style.position = 'relative';
         }
@@ -783,15 +783,7 @@ async function renderizarTabelaLaterais(resultados) {
         
         tr.innerHTML = `
             <td class="py-2 px-1.5 ${isBloqueado ? 'relative z-50' : ''}">
-                ${jogador.rank <= 3 ? `
-                <div class="flex items-center justify-center w-6 h-6 rounded-full ${jogador.rank == 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' : jogador.rank == 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' : 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'}">
-                    ${jogador.rank == 1 ? '<i class="fas fa-crown text-sm"></i>' : jogador.rank == 2 ? '<i class="fas fa-medal text-sm"></i>' : '<i class="fas fa-award text-sm"></i>'}
-                </div>
-                ` : `
-                <div class="flex items-center justify-center w-6 h-6 rounded-full bg-dark-blue-700/50 text-dark-blue-200 font-bold text-sm">
-                    ${jogador.rank}
-                </div>
-                `}
+                <div class="position-rank-number ${jogador.rank <= 3 ? 'position-rank-top' : ''}">${jogador.rank}</div>
             </td>
             <td class="py-2 px-1.5 ${blurClass}" ${blurStyle}>
                 <div class="flex items-center space-x-1.5">

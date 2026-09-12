@@ -114,6 +114,7 @@ def player_availability_candidates():
         season = _value(request.args, "season", "temporada") or get_temporada_atual()
         round_number = _value(request.args, "round_number", "round", "rodada")
         position_id = _value(request.args, "position_id", "posicao_id")
+        clube_id = _value(request.args, "clube_id", "clube", "player_club_id")
         team_id = _value(request.args, "team_id", "time_id") or session.get("selected_team_id")
         if not team_id:
             return jsonify({"error": "Nenhum time selecionado"}), 400
@@ -151,17 +152,49 @@ def player_availability_candidates():
         if position_id not in (None, ""):
             position_clause = " AND a.posicao_id = %s"
             params.append(int(position_id))
+        if clube_id not in (None, ""):
+            position_clause += " AND a.clube_id = %s"
+            params.append(int(clube_id))
         cursor.execute(
             f"""
             SELECT a.atleta_id, a.apelido, a.nome, a.clube_id, a.posicao_id,
                    a.status_id, COALESCE(c.nome, 'Clube não informado'),
-                   COALESCE(c.abreviacao, ''), COALESCE(a.foto_custom, a.foto)
+                   COALESCE(c.abreviacao, ''), COALESCE(a.foto_custom, a.foto),
+                   COALESCE(a.pontos_num, 0), COALESCE(a.media_num, 0),
+                   COALESCE(a.preco_num, 0), COALESCE(a.jogos_num, 0),
+                   COALESCE(s.scout_ds, 0), COALESCE(s.scout_fs, 0),
+                   COALESCE(s.scout_ff, 0), COALESCE(s.scout_fd, 0),
+                   COALESCE(s.scout_g, 0), COALESCE(s.scout_a, 0),
+                   COALESCE(s.scout_sg, 0), COALESCE(s.scout_de, 0),
+                   COALESCE(s.scout_fc, 0), COALESCE(s.scout_gs, 0),
+                   COALESCE(s.scout_i, 0), COALESCE(s.scout_ca, 0),
+                   COALESCE(s.scout_cv, 0)
             FROM acf_atletas a
             LEFT JOIN acf_clubes c ON c.id = a.clube_id
+            LEFT JOIN LATERAL (
+                SELECT AVG(COALESCE(p.scout_ds, 0)) AS scout_ds,
+                       AVG(COALESCE(p.scout_fs, 0)) AS scout_fs,
+                       AVG(COALESCE(p.scout_ff, 0)) AS scout_ff,
+                       AVG(COALESCE(p.scout_fd, 0)) AS scout_fd,
+                       AVG(COALESCE(p.scout_g, 0)) AS scout_g,
+                       AVG(COALESCE(p.scout_a, 0)) AS scout_a,
+                       AVG(COALESCE(p.scout_sg, 0)) AS scout_sg,
+                       AVG(COALESCE(p.scout_de, 0)) AS scout_de,
+                       AVG(COALESCE(p.scout_fc, 0)) AS scout_fc,
+                       AVG(COALESCE(p.scout_gs, 0)) AS scout_gs,
+                       AVG(COALESCE(p.scout_i, 0)) AS scout_i,
+                       AVG(COALESCE(p.scout_ca, 0)) AS scout_ca,
+                       AVG(COALESCE(p.scout_cv, 0)) AS scout_cv
+                FROM acf_pontuados p
+                WHERE p.atleta_id = a.atleta_id
+                  AND (p.temporada = a.temporada OR p.temporada IS NULL)
+                  AND p.rodada_id <= %s
+                  AND p.entrou_em_campo = TRUE
+            ) s ON TRUE
             WHERE a.temporada = %s{position_clause}
             ORDER BY a.posicao_id, a.apelido NULLS LAST, a.nome
             """,
-            params,
+            [round_number] + params,
         )
         items = []
         for row in cursor.fetchall():
@@ -184,6 +217,19 @@ def player_availability_candidates():
                         7: "Provável",
                     }.get(int(row[5] or 0), "Desconhecido"),
                     "foto": row[8] or "",
+                    "pontos_num": float(row[9] or 0),
+                    "media_num": float(row[10] or 0),
+                    "preco_num": float(row[11] or 0),
+                    "jogos_num": int(row[12] or 0),
+                    "scouts": {
+                        "ds": float(row[13] or 0), "fs": float(row[14] or 0),
+                        "ff": float(row[15] or 0), "fd": float(row[16] or 0),
+                        "g": float(row[17] or 0), "a": float(row[18] or 0),
+                        "sg": float(row[19] or 0),
+                        "de": float(row[20] or 0), "fc": float(row[21] or 0),
+                        "gs": float(row[22] or 0), "i": float(row[23] or 0),
+                        "ca": float(row[24] or 0), "cv": float(row[25] or 0),
+                    },
                     "rule": rules_by_athlete.get(athlete_id),
                 }
             )

@@ -206,7 +206,7 @@
             <article class="dashboard-insight">
                 <span class="dashboard-insight-icon"><i class="fas fa-fire"></i></span>
                 <div><small>Favorito do mercado</small>
-                    {% if rodada.favorito %}<strong>{{ rodada.favorito.nome }} · {{ rodada.favorito.clube }}</strong><p><span data-locale-number="{{ rodada.favorito.escalacoes }}">{{ rodada.favorito.escalacoes }}</span> escalações</p>
+                    {% if rodada.favorito %}<div class="dashboard-favorite-line">{% if rodada.favorito.foto %}<img src="{{ rodada.favorito.foto }}" alt="{{ rodada.favorito.nome }}">{% endif %}<strong>{{ rodada.favorito.nome }} · {{ rodada.favorito.clube }}</strong></div><p><span data-locale-number="{{ rodada.favorito.escalacoes }}">{{ rodada.favorito.escalacoes }}</span> escalações</p>
                     {% else %}<strong>Sem destaque disponível</strong><p>Aguardando atualização do mercado</p>{% endif %}
                 </div>
             </article>
@@ -223,6 +223,7 @@
                 <div class="dashboard-fixture-team"><span>{{ jogo.casa.abreviacao }}</span>{% if jogo.casa.escudo %}<img src="{{ jogo.casa.escudo }}" alt="{{ jogo.casa.nome }}">{% endif %}</div>
                 <b>×</b>
                 <div class="dashboard-fixture-team is-away">{% if jogo.visitante.escudo %}<img src="{{ jogo.visitante.escudo }}" alt="{{ jogo.visitante.nome }}">{% endif %}<span>{{ jogo.visitante.abreviacao }}</span></div>
+                <div class="dashboard-fixture-indices"><span><b>Casa</b> F {{ '%.2f'|format(jogo.casa.favoritismo or 0) }} · SG {{ '%.2f'|format(jogo.casa.saldo or 0) }}</span><span><b>Fora</b> F {{ '%.2f'|format(jogo.visitante.favoritismo or 0) }} · SG {{ '%.2f'|format(jogo.visitante.saldo or 0) }}</span></div>
                 <small>{% if jogo.data %}{{ jogo.data[8:10] }}/{{ jogo.data[5:7] }} · {{ jogo.data[11:16] }}{% else %}Data a definir{% endif %}</small>
                 {% if not jogo.valida %}<em>não válida</em>{% endif %}
             </article>

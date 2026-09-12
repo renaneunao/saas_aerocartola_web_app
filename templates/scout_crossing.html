@@ -14,15 +14,15 @@
         <div>
             <p class="scx-overline"><i class="fas fa-crosshairs"></i> Análise de confronto</p>
             <h1>Cruzamento de scouts</h1>
-            <p class="scx-subtitle">Veja o histórico do jogador e o que o adversário cede no confronto da rodada atual.</p>
+            <p class="scx-subtitle">Compare os atletas prováveis, o histórico recente e o que o adversário cede na rodada atual.</p>
         </div>
-        <div class="scx-context"><span class="scx-live-dot"></span><span>Atual</span><strong>R{{ current_round }}</strong></div>
+        <div class="scx-context"><span class="scx-live-dot"></span><span>Dados atuais</span><strong>Rodada {{ current_round }}</strong></div>
     </header>
 
     <section class="scx-selector" aria-label="Filtros do cruzamento">
         <div class="scx-selector-row">
-            <div class="scx-section-label"><span>1</span><div><strong>Escolha o time</strong><small>Clubes da rodada atual</small></div></div>
-            <div class="scx-rail" id="scoutCrossingTeams" role="listbox" aria-label="Times"></div>
+            <div class="scx-section-label"><span>1</span><div><strong>Escolha o time</strong><small>20 clubes em duas linhas · filtro opcional</small></div></div>
+            <div class="scx-team-grid" id="scoutCrossingTeams" role="listbox" aria-label="Times"></div>
         </div>
         <div class="scx-selector-row scx-position-row">
             <div class="scx-section-label"><span>2</span><div><strong>Escolha a posição</strong><small>Scouts principais da posição</small></div></div>
@@ -34,17 +34,35 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="scx-player-line">
-            <label for="scoutCrossingPlayer"><span>Jogador analisado</span><select id="scoutCrossingPlayer" disabled><option>Selecione o time e a posição</option></select></label>
-            <span id="scoutCrossingSelectionHint" class="scx-selection-hint">Selecione um time para começar.</span>
+        <div class="scx-filter-head">
+            <div class="scx-section-label"><span>3</span><div><strong>Filtre os jogadores</strong><small>Prováveis já vêm selecionados; clique para analisar</small></div></div>
+            <div class="scx-status-filters" role="group" aria-label="Status do jogador">
+                <button type="button" class="scx-filter-chip is-selected" data-status-filter="provaveis">Prováveis</button>
+                <button type="button" class="scx-filter-chip" data-status-filter="todos">Todos</button>
+                <button type="button" class="scx-filter-chip" data-status-filter="cravados">Cravados</button>
+                <button type="button" class="scx-filter-chip" data-status-filter="duvidas">Dúvidas</button>
+            </div>
         </div>
+        <div class="scx-player-filters">
+            <label>Nome <input id="scoutCrossingSearch" type="search" placeholder="Buscar atleta"></label>
+            <label>Mín. média <input id="scoutCrossingMinAverage" type="number" step="0.01" min="0" placeholder="0,00"></label>
+            <label>Mín. expectativa <input id="scoutCrossingMinExpected" type="number" step="0.01" min="0" placeholder="0,00"></label>
+            <label>Máx. preço <input id="scoutCrossingMaxPrice" type="number" step="0.01" min="0" placeholder="Sem limite"></label>
+            <label>Scout <select id="scoutCrossingScout"><option value="">Qualquer scout</option></select></label>
+            <label>Mín. scout <input id="scoutCrossingMinScout" type="number" step="0.01" min="0" placeholder="0,00"></label>
+        </div>
+        <div class="scx-player-line">
+            <div id="scoutCrossingPlayers" class="scx-player-grid" aria-live="polite"></div>
+            <span id="scoutCrossingSelectionHint" class="scx-selection-hint">Carregando jogadores prováveis...</span>
+        </div>
+        <select id="scoutCrossingPlayer" class="scx-visually-hidden" aria-hidden="true" tabindex="-1"><option value="">Selecione o jogador</option></select>
     </section>
 
     <div id="scoutCrossingAlert" class="scx-alert" role="status" hidden></div>
     {% if database_error %}<div class="scx-alert scx-alert-error">{{ database_error }}</div>{% endif %}
 
     <section id="scoutCrossingEmpty" class="scx-empty">
-        <i class="fas fa-chart-simple"></i><h2>Monte seu cruzamento</h2><p>Selecione time, posição e jogador. O confronto da rodada atual será identificado automaticamente.</p>
+        <i class="fas fa-chart-simple"></i><h2>Escolha um jogador para abrir a análise</h2><p>A lista acima permanece comparável e filtrável. O detalhamento aparece abaixo quando você clicar em um atleta.</p>
     </section>
 
     <section id="scoutCrossingResults" class="scx-results" hidden>
@@ -52,11 +70,14 @@
             <div class="scx-player-identity"><div class="scx-avatar" id="scoutCrossingPlayerAvatar"><i class="fas fa-user"></i></div><div><p class="scx-overline">Jogador analisado</p><h2 id="scoutCrossingPlayerName">—</h2><p id="scoutCrossingPlayerMeta">—</p></div></div>
             <div class="scx-summary" id="scoutCrossingSummary"></div>
         </div>
-
+        <div class="scx-analysis-toolbar">
+            <div><span class="scx-overline">Análise detalhada</span><strong id="scoutCrossingPrediction">Previsão calculada: —</strong><small id="scoutCrossingPredictionNote">Usando o calculador específico da posição.</small></div>
+            <div class="scx-compare-controls"><label>Comparar com <select id="scoutCrossingComparePlayer"><option value="">Escolha outro atleta</option></select></label><button type="button" id="scoutCrossingCompareButton" class="scx-button">Comparar</button></div>
+        </div>
+        <div id="scoutCrossingComparison" class="scx-comparison" hidden></div>
         <section class="scx-confrontation" id="scoutCrossingConfrontation"></section>
-
         <div class="scx-result-grid">
-            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Histórico</p><h2>Últimas pontuações</h2></div><span>Scouts positivos por jogo</span></div><div id="scoutCrossingRecent" class="scx-recent-list"></div></section>
+            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Histórico</p><h2>Últimas pontuações</h2></div><span>5 rodadas inicialmente · scouts positivos por jogo</span></div><div id="scoutCrossingRecent" class="scx-recent-list"></div></section>
             <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Referência da posição</p><h2>Principais scouts</h2></div><span>Média por jogo</span></div><div id="scoutCrossingPositionScouts" class="scx-scout-list"></div></section>
         </div>
         <div class="scx-result-grid">
@@ -67,5 +88,11 @@
 </main>
 {% endblock %}
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/calculo_goleiro.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_lateral.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_zagueiro.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_meia.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_atacante.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_treinador.js') }}"></script>
 <script src="{{ url_for('static', filename='js/scout-crossing.js') }}"></script>
 {% endblock %}

@@ -126,11 +126,12 @@ def _current_context(cursor):
     return temporada, rodada
 
 
-def _club_payload(clube_id, nome=None):
+def _club_payload(clube_id, nome=None, abreviacao=None):
     clube_id = _json_int(clube_id)
     return {
         "id": clube_id,
         "nome": nome or "Clube não informado",
+        "abreviacao": abreviacao or nome or "---",
         "escudo": get_team_shield(clube_id, size="45x45") or "",
     }
 
@@ -160,6 +161,7 @@ def _match_options(cursor, clube_id, temporada, rodada):
         """
         SELECT p.partida_id, p.clube_casa_id, p.clube_visitante_id,
                casa.nome AS casa_nome, visitante.nome AS visitante_nome,
+               casa.abreviacao AS casa_abreviacao, visitante.abreviacao AS visitante_abreviacao,
                p.placar_oficial_mandante, p.placar_oficial_visitante,
                p.local, p.partida_data
         FROM acf_partidas p
@@ -174,8 +176,8 @@ def _match_options(cursor, clube_id, temporada, rodada):
     )
     matches = []
     for row in cursor.fetchall():
-        home = _club_payload(row["clube_casa_id"], row["casa_nome"])
-        away = _club_payload(row["clube_visitante_id"], row["visitante_nome"])
+        home = _club_payload(row["clube_casa_id"], row["casa_nome"], row["casa_abreviacao"])
+        away = _club_payload(row["clube_visitante_id"], row["visitante_nome"], row["visitante_abreviacao"])
         is_home = _json_int(clube_id) == home["id"]
         matches.append(
             {
@@ -233,7 +235,7 @@ def _round_options(cursor, temporada):
     return [_json_int(row["rodada_id"]) for row in cursor.fetchall()]
 
 
-def _player_options(cursor, temporada, posicao_id, clube_id=None):
+def _player_options(cursor, temporada, posicao_id, clube_id=None, rodada=None, availability=None):
     """Retorna atletas da temporada, com histórico como fallback para temporadas antigas."""
     cursor.execute(
         """
@@ -255,26 +257,98 @@ def _player_options(cursor, temporada, posicao_id, clube_id=None):
             ORDER BY atleta_id, rodada_id DESC NULLS LAST
         )
         SELECT l.atleta_id,
+               l.posicao_id,
                COALESCE(l.apelido, l.nome, 'Atleta ' || l.atleta_id::text) AS nome,
                l.clube_id,
                COALESCE(c.nome, 'Clube não informado') AS clube_nome,
-               l.foto
+               COALESCE(c.abreviacao, '') AS clube_abrev,
+               l.foto,
+               COALESCE(a.status_id, 0) AS status_id,
+               COALESCE(a.pontos_num, 0) AS pontos_num,
+               COALESCE(a.media_num, 0) AS media_num,
+               COALESCE(a.preco_num, 0) AS preco_num,
+               COALESCE(a.jogos_num, 0) AS jogos_num
         FROM latest l
         LEFT JOIN acf_clubes c ON c.id = l.clube_id
+        LEFT JOIN LATERAL (
+            SELECT status_id, pontos_num, media_num, preco_num, jogos_num
+            FROM acf_atletas current_atleta
+            WHERE current_atleta.atleta_id = l.atleta_id
+              AND current_atleta.temporada = %s
+            ORDER BY current_atleta.rodada_id DESC NULLS LAST
+            LIMIT 1
+        ) a ON TRUE
         ORDER BY nome
         """,
-        (temporada, posicao_id, clube_id, clube_id, temporada, posicao_id, clube_id, clube_id),
+        (temporada, posicao_id, clube_id, clube_id, temporada, posicao_id, clube_id, clube_id, temporada),
     )
-    return [
-        {
-            "id": _json_int(row["atleta_id"]),
-            "nome": row["nome"],
-            "clube_id": _json_int(row["clube_id"]),
-            "clube_nome": row["clube_nome"],
-            "foto": row["foto"] or "",
+    players = []
+    rows = cursor.fetchall()
+    ids = [_json_int(row["atleta_id"]) for row in rows]
+    scout_by_player = {}
+    if ids:
+        placeholders = ",".join(["%s"] * len(ids))
+        cursor.execute(
+            f"""
+            SELECT atleta_id,
+                   AVG(COALESCE(pontuacao, 0)) AS media_pontuacao,
+                   AVG(COALESCE(scout_ds, 0)) AS media_ds,
+                   AVG(COALESCE(scout_fs, 0)) AS media_fs,
+                   AVG(COALESCE(scout_ff, 0)) AS media_ff,
+                   AVG(COALESCE(scout_fd, 0)) AS media_fd,
+                   AVG(COALESCE(scout_g, 0)) AS media_g,
+                   AVG(COALESCE(scout_a, 0)) AS media_a,
+                   AVG(COALESCE(scout_sg, 0)) AS media_sg,
+                   COUNT(*) FILTER (WHERE entrou_em_campo = TRUE) AS jogos
+            FROM acf_pontuados
+            WHERE atleta_id IN ({placeholders})
+              AND (temporada = %s OR temporada IS NULL)
+              AND (%s IS NULL OR rodada_id <= %s)
+              AND entrou_em_campo = TRUE
+            GROUP BY atleta_id
+            """,
+            ids + [temporada, rodada, rodada],
+        )
+        scout_by_player = {
+            _json_int(row["atleta_id"]): {
+                "media_pontuacao": _json_number(row["media_pontuacao"]),
+                "media_ds": _json_number(row["media_ds"]),
+                "media_fs": _json_number(row["media_fs"]),
+                "media_ff": _json_number(row["media_ff"]),
+                "media_fd": _json_number(row["media_fd"]),
+                "media_g": _json_number(row["media_g"]),
+                "media_a": _json_number(row["media_a"]),
+                "media_sg": _json_number(row["media_sg"]),
+                "jogos": _json_int(row["jogos"]),
+            }
+            for row in cursor.fetchall()
         }
-        for row in cursor.fetchall()
-    ]
+
+    status_names = {2: "Dúvida", 3: "Improvável", 5: "Suspenso", 6: "Nulo", 7: "Provável"}
+    for row in rows:
+        athlete_id = _json_int(row["atleta_id"])
+        status_id = _json_int(row["status_id"])
+        scouts = scout_by_player.get(athlete_id, {})
+        players.append(
+            {
+                "id": athlete_id,
+                "nome": row["nome"],
+                "posicao_id": _json_int(row["posicao_id"]),
+                "clube_id": _json_int(row["clube_id"]),
+                "clube_nome": row["clube_nome"],
+                "clube_abrev": row["clube_abrev"] or row["clube_nome"],
+                "foto": row["foto"] or "",
+                "status_id": status_id,
+                "status_nome": status_names.get(status_id, "Desconhecido"),
+                "pontos_num": _json_number(row["pontos_num"]),
+                "media_num": _json_number(row["media_num"]),
+                "preco_num": _json_number(row["preco_num"]),
+                "jogos_num": _json_int(row["jogos_num"]),
+                "scouts": scouts,
+                "availability_rule": (availability or {}).get(athlete_id),
+            }
+        )
+    return players
 
 
 def _match_query(cursor, atleta_id, temporada, rodada_limite, adversario_id=None, rodada_exata=None):
@@ -306,7 +380,8 @@ def _match_query(cursor, atleta_id, temporada, rodada_limite, adversario_id=None
                partida.clube_casa_id, partida.clube_visitante_id,
                partida.placar_oficial_mandante, partida.placar_oficial_visitante,
                partida.local, partida.partida_data,
-               casa.nome AS casa_nome, visitante.nome AS visitante_nome
+               casa.nome AS casa_nome, visitante.nome AS visitante_nome,
+               casa.abreviacao AS casa_abreviacao, visitante.abreviacao AS visitante_abreviacao
         FROM acf_pontuados p
         LEFT JOIN acf_partidas partida
           ON partida.rodada_id = p.rodada_id
@@ -365,8 +440,8 @@ def _serialize_match(row):
         "adversario": _club_payload(adversario_id, adversario_nome),
         "casa_nome": row["casa_nome"] or "Casa",
         "visitante_nome": row["visitante_nome"] or "Visitante",
-        "casa": _club_payload(casa_id, row["casa_nome"]),
-        "fora": _club_payload(visitante_id, row["visitante_nome"]),
+        "casa": _club_payload(casa_id, row["casa_nome"], row["casa_abreviacao"]),
+        "fora": _club_payload(visitante_id, row["visitante_nome"], row["visitante_abreviacao"]),
         "placar_casa": row["placar_oficial_mandante"],
         "placar_fora": row["placar_oficial_visitante"],
         "local": row["local"] or "",
@@ -765,7 +840,34 @@ def options():
             clube_id = selected_player["clube_id"] if selected_player else None
         if clube_id and clube_id not in {team["id"] for team in teams}:
             clube_id = None
-        players = _player_options(cursor, temporada, posicao_id, clube_id) if posicao_id else []
+        availability_rules = {}
+        try:
+            from models.player_availability import create_player_availability_table, list_player_availability
+
+            create_player_availability_table(conn)
+            records = list_player_availability(
+                conn,
+                user_id=session["user_id"],
+                team_id=session.get("selected_team_id"),
+                season=temporada,
+                round_number=rodada,
+            )
+            availability_rules = {
+                _json_int(record.get("athlete_id")): record.get("rule")
+                for record in records
+            }
+        except Exception as availability_error:
+            # A tela continua disponível mesmo em instalações legadas que
+            # ainda não tenham inicializado a tabela de regras do usuário.
+            print(f"[SCOUT CROSSING] Disponibilidade não carregada: {availability_error}")
+        players = _player_options(
+            cursor,
+            temporada,
+            posicao_id,
+            clube_id,
+            rodada=rodada,
+            availability=availability_rules,
+        ) if posicao_id else []
         return jsonify(
             {
                 "temporada": temporada,
@@ -773,6 +875,7 @@ def options():
                 "clube_id": clube_id,
                 "times": teams,
                 "jogadores": players,
+                "regras_disponibilidade": availability_rules,
                 "confronto": _current_fixture(cursor, clube_id, temporada, rodada) if clube_id else None,
             }
         )

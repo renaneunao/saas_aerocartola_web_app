@@ -1,9 +1,10 @@
 (function () {
-  const state = { items: [], filter: 'all', season: null, round: null, teamId: null };
+  const state = { items: [], filter: 'provaveis', season: null, round: null, teamId: null };
   const positionNames = { 1: 'Goleiro', 2: 'Lateral', 3: 'Zagueiro', 4: 'Meia', 5: 'Atacante', 6: 'Técnico' };
   const statusColors = { 2: 'text-neon-amber', 3: 'text-neon-red', 5: 'text-neon-red', 6: 'text-neon-red', 7: 'text-neon-green' };
 
   const $ = (id) => document.getElementById(id);
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[char]));
   function feedback(message, kind = 'info') {
     const el = $('availabilityFeedback');
     el.className = `px-4 py-3 text-sm ${kind === 'error' ? 'text-neon-red bg-neon-red/5' : 'text-neon-cyan bg-neon-cyan/5'}`;
@@ -18,11 +19,29 @@
     if (position) params.set('position_id', position);
     if ($('availabilitySeason').value) params.set('temporada', $('availabilitySeason').value);
     if ($('availabilityRound').value) params.set('rodada', $('availabilityRound').value);
+    if ($('availabilityClub').value) params.set('clube_id', $('availabilityClub').value);
     return params;
   }
 
   function filteredItems() {
-    return state.items.filter((item) => state.filter === 'all' || item.rule === state.filter);
+    const search = ($('availabilitySearch')?.value || '').trim().toLocaleLowerCase();
+    const minAverage = Number($('availabilityMinAverage')?.value || 0);
+    const minExpected = Number($('availabilityMinExpected')?.value || 0);
+    const maxPriceValue = $('availabilityMaxPrice')?.value;
+    const maxPrice = maxPriceValue === '' || maxPriceValue == null ? Infinity : Number(maxPriceValue);
+    const scout = $('availabilityScout')?.value || '';
+    const minScout = Number($('availabilityMinScout')?.value || 0);
+    return state.items.filter((item) => {
+      const status = Number(item.status_id);
+      if (state.filter === 'provaveis' && status !== 7 && item.rule !== 'cravado') return false;
+      if (state.filter === 'poupar' && item.rule !== 'poupar') return false;
+      if (state.filter === 'cravado' && item.rule !== 'cravado') return false;
+      if ($('availabilityClub')?.value && String(item.clube_id) !== $('availabilityClub').value) return false;
+      if (search && !`${item.apelido || ''} ${item.nome || ''} ${item.clube_nome || ''}`.toLocaleLowerCase().includes(search)) return false;
+      if (Number(item.media_num || 0) < minAverage || Number(item.pontos_num || 0) < minExpected || Number(item.preco_num || 0) > maxPrice) return false;
+      if (scout && Number(item.scouts?.[scout] || 0) < minScout) return false;
+      return state.filter !== 'provaveis' || (status !== 6 && item.rule !== 'poupar');
+    });
   }
 
   function actionButton(item, rule, label, icon, tone, disabled = false) {
@@ -40,13 +59,16 @@
       const nonProbable = [2, 3, 5].includes(Number(item.status_id));
       const statusClass = statusColors[item.status_id] || 'text-text-secondary';
       return `<tr class="hover:bg-white/[0.025]">
-        <td class="px-4 py-3"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-white/5 overflow-hidden flex items-center justify-center">${item.foto ? `<img src="${item.foto}" alt="" class="w-full h-full object-cover">` : '<i class="fas fa-user text-text-muted text-xs"></i>'}</div><div><div class="font-semibold text-white">${item.apelido}</div><div class="text-[10px] text-text-muted">ID ${item.atleta_id}</div></div></div></td>
-        <td class="px-4 py-3 text-text-secondary">${positionNames[item.posicao_id] || '—'}</td>
-        <td class="px-4 py-3 text-text-secondary">${item.clube_abrev || item.clube_nome || '—'}</td>
-        <td class="px-4 py-3"><span class="${statusClass} text-xs font-medium">${item.status_nome || 'Desconhecido'}</span></td>
+        <td class="px-4 py-3"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-white/5 overflow-hidden flex items-center justify-center">${item.foto ? `<img src="${escapeHtml(item.foto)}" alt="" class="w-full h-full object-cover">` : '<i class="fas fa-user text-text-muted text-xs"></i>'}</div><div><div class="font-semibold text-white">${escapeHtml(item.apelido)}</div><div class="text-[10px] text-text-muted">ID ${item.atleta_id}</div></div></div></td>
+        <td class="px-4 py-3 text-text-secondary">${escapeHtml(positionNames[item.posicao_id] || '—')}</td>
+        <td class="px-4 py-3 text-text-secondary">${escapeHtml(item.clube_abrev || item.clube_nome || '—')}</td>
+        <td class="px-4 py-3 text-right text-white">${Number(item.media_num || 0).toFixed(2)}</td>
+        <td class="px-4 py-3 text-right text-neon-cyan">${Number(item.pontos_num || 0).toFixed(2)}</td>
+        <td class="px-4 py-3 text-right text-neon-green">C$ ${Number(item.preco_num || 0).toFixed(2)}</td>
+        <td class="px-4 py-3"><span class="${statusClass} text-xs font-medium">${escapeHtml(item.status_nome || 'Desconhecido')}</span></td>
         <td class="px-4 py-3"><div class="flex justify-end gap-2">${actionButton(item, 'poupar', 'Poupar', 'fa-ban', 'text-neon-red')}${actionButton(item, 'cravado', 'Cravar', 'fa-lock', 'text-neon-green', nullStatus || !nonProbable)}${item.rule ? `<button type="button" data-action="clear" data-athlete="${item.atleta_id}" class="rounded-lg px-2.5 py-1.5 text-[11px] border border-white/10 text-text-muted hover:text-white"><i class="fas fa-xmark mr-1"></i>Limpar</button>` : ''}</div></td>
       </tr>`;
-    }).join('') : '<tr><td colspan="5" class="px-4 py-12 text-center text-text-muted">Nenhum jogador encontrado para este filtro.</td></tr>';
+    }).join('') : '<tr><td colspan="8" class="px-4 py-12 text-center text-text-muted">Nenhum jogador encontrado para este filtro.</td></tr>';
   }
 
   async function load() {
@@ -59,6 +81,13 @@
     if (!$('availabilitySeason').value) $('availabilitySeason').value = data.season;
     if (!$('availabilityRound').value) $('availabilityRound').value = data.round_number;
     $('availabilityContext').textContent = `Temporada ${data.season} · Rodada ${data.round_number} · Time selecionado`;
+    const clubSelect = $('availabilityClub');
+    if (clubSelect) {
+      const previous = clubSelect.value;
+      const clubs = [...new Map(state.items.map((item) => [String(item.clube_id), item.clube_abrev || item.clube_nome || `Clube #${item.clube_id}`])).entries()].sort((a, b) => a[1].localeCompare(b[1]));
+      clubSelect.innerHTML = '<option value="">Todos os times</option>' + clubs.map(([id, name]) => `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`).join('');
+      if (clubs.some(([id]) => id === previous)) clubSelect.value = previous;
+    }
     render();
   }
 
@@ -80,6 +109,9 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     ['availabilityPosition', 'availabilitySeason', 'availabilityRound'].forEach((id) => $(id).addEventListener('change', () => load().catch((e) => feedback(e.message, 'error'))));
+    $('availabilityClub')?.addEventListener('change', () => render());
+    ['availabilitySearch', 'availabilityMinAverage', 'availabilityMinExpected', 'availabilityMaxPrice', 'availabilityMinScout'].forEach((id) => $(id)?.addEventListener('input', () => render()));
+    $('availabilityScout')?.addEventListener('change', () => render());
     $('availabilityReload').addEventListener('click', () => load().catch((e) => feedback(e.message, 'error')));
     document.querySelectorAll('.availability-tab').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.availability-tab').forEach((b) => b.classList.remove('active')); button.classList.add('active'); state.filter = button.dataset.filter; render(); }));
     $('availabilityRows').addEventListener('click', (event) => { const button = event.target.closest('button[data-action]'); if (!button) return; const action = button.dataset.action; const promise = action === 'clear' ? clear(button.dataset.athlete) : save(button.dataset.athlete, action); promise.catch((e) => feedback(e.message, 'error')); });

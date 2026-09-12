@@ -967,3 +967,61 @@ table.aero-responsive-table td { display: table-cell; }
 .stagger-3 { animation-delay: 0.15s; }
 .stagger-4 { animation-delay: 0.20s; }
 .stagger-5 { animation-delay: 0.25s; }
+/* Rankings: números simples no top 3, sem medalhas ou fundos chamativos. */
+.position-rank-number { display:inline-grid; place-items:center; width:1.5rem; height:1.5rem; border-radius:50%; color:#8da3ba; background:rgba(30,49,72,.42); font:700 .72rem 'JetBrains Mono',monospace; }
+.position-rank-number.position-rank-top { color:#dceefa; border:1px solid rgba(82,230,255,.32); background:rgba(82,230,255,.08); }
+
+/* Ações compartilhadas, inclusive elementos criados dinamicamente pela sidebar. */
+.aero-button-details,
+.aero-sidebar-action,
+button[class*="from-blue-500"] {
+  border:1px solid rgba(82,230,255,.28) !important;
+  border-radius:8px !important;
+  color:#d9f7ff !important;
+  background:rgba(82,230,255,.08) !important;
+  box-shadow:none !important;
+}
+.aero-button-details:hover,
+.aero-sidebar-action:hover,
+button[class*="from-blue-500"]:hover { border-color:rgba(82,230,255,.55) !important; background:rgba(82,230,255,.15) !important; }
+.aero-sidebar-action { display:block; color:#9ceff7 !important; }
+.aero-sidebar-action::before { content:'↗'; display:inline-grid; place-items:center; width:1.7rem; height:1.7rem; margin-right:.45rem; border:1px solid rgba(82,230,255,.2); border-radius:6px; color:#62e6f4; }
+
+.batch-escalation-modal { position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:1rem; background:rgba(3,8,17,.78); backdrop-filter:blur(9px); }
+.batch-escalation-sheet { width:min(680px,100%) !important; max-height:90vh !important; overflow:auto !important; padding:1.25rem !important; border:1px solid rgba(82,230,255,.2) !important; border-radius:16px !important; background:#0b1727 !important; box-shadow:0 22px 70px rgba(0,0,0,.5) !important; }
+.batch-close { width:2rem; height:2rem; border:1px solid rgba(148,163,184,.18) !important; border-radius:7px; color:#9db1c4 !important; background:rgba(148,163,184,.06) !important; }.batch-close:hover { color:#fff !important; border-color:rgba(82,230,255,.5) !important; }
+.batch-progress-track { height:6px !important; border-radius:99px !important; background:rgba(148,163,184,.12) !important; }.batch-progress-bar { background:linear-gradient(90deg,#52e6ff,#5cf2a5) !important; box-shadow:none !important; }
+.batch-stage { margin:.7rem 0; padding:.55rem .65rem; border-left:2px solid #52e6ff; color:#b9d4e3; background:rgba(82,230,255,.05); font-size:.7rem; }
+.batch-teams { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.4rem; max-height:170px; overflow:auto; margin-bottom:.7rem; }
+.batch-team { display:grid; grid-template-columns:1.2rem minmax(0,1fr) auto; align-items:center; gap:.35rem; padding:.45rem .5rem; border:1px solid rgba(148,163,184,.12); border-radius:7px; color:#9db1c4; background:rgba(3,13,25,.55); font-size:.65rem; }.batch-team strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.batch-team small { color:#718ba4; font-size:.55rem; }.batch-team-status { color:#52e6ff; }.batch-team.success { color:#b9f7d1; border-color:rgba(92,242,165,.26); }.batch-team.success .batch-team-status { color:#5cf2a5; }.batch-team.error { color:#ffc1c8; border-color:rgba(248,113,113,.3); }.batch-team.error .batch-team-status { color:#ff8f9d; }
+.batch-logs { max-height:220px !important; padding:.75rem !important; border:1px solid rgba(148,163,184,.12) !important; border-radius:9px !important; background:rgba(1,8,14,.72) !important; color:#91a9bc; font: .66rem/1.5 'JetBrains Mono',monospace !important; }
+.batch-log-entry { margin-bottom:.25rem; color:#9db1c4; }.batch-log-entry.success { color:#8effc1; }.batch-log-entry.error { color:#ff9aa5; }.batch-log-entry.warning { color:#ffd878; }
+.batch-finish-button { width:100%; margin-top:.8rem; min-height:2.2rem; border:1px solid rgba(92,242,165,.3) !important; border-radius:8px !important; color:#aaf4c4 !important; background:rgba(92,242,165,.08) !important; font-size:.72rem !important; }.batch-finish-button:hover { background:rgba(92,242,165,.15) !important; }
+
+@media (min-width: 1024px) {
+  body.app-authenticated main > .w-full { max-width:none; }
+  body.app-authenticated main > .w-full > .max-w-7xl,
+  body.app-authenticated main > .w-full > .max-w-6xl,
+  body.app-authenticated main > .w-full > .max-w-5xl { max-width:none !important; width:100%; margin-left:0 !important; margin-right:0 !important; }
+  body.app-authenticated main > .w-full > .animate-fade-in > .max-w-7xl,
+  body.app-authenticated main > .w-full > .animate-fade-in > .max-w-6xl,
+  body.app-authenticated main > .w-full > .animate-fade-in > .max-w-5xl,
+  body.app-authenticated main > .w-full > .animate-fade-in > .max-w-4xl { max-width:none !important; width:100%; margin-left:0 !important; margin-right:0 !important; }
+  body.app-authenticated .dashboard-page,
+  body.app-authenticated .scx-page,
+  body.app-authenticated #availabilityPage,
+  body.app-authenticated #escalacaoIdealPage { width:100%; max-width:none !important; }
+}
+
+/* Auditoria mobile: as páginas mantêm a estrutura de tabela e rolam somente
+   quando necessário, em vez de empilhar cada célula em uma coluna ilegível. */
+@media (max-width: 640px) {
+  body.aero-global-ui main > .w-full { padding-left:.55rem !important; padding-right:.55rem !important; }
+  body.aero-global-ui main > .w-full > .animate-fade-in > main,
+  body.aero-global-ui main > .w-full > .animate-fade-in > #availabilityPage { width:100%; max-width:none; padding-left:.55rem !important; padding-right:.55rem !important; }
+  body.aero-global-ui .aero-table-scroll { max-width:100%; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain; }
+  body.aero-global-ui table.aero-responsive-table { display:table; width:max-content; min-width:100%; font-size:.62rem; table-layout:auto; }
+  body.aero-global-ui table.aero-responsive-table th,
+  body.aero-global-ui table.aero-responsive-table td { white-space:nowrap; padding:.3rem .35rem !important; }
+  body.aero-global-ui .batch-teams { grid-template-columns:1fr; }
+}

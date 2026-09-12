@@ -74,6 +74,19 @@
     return state.clubes[player?.clube_id] || state.clubes[String(player?.clube_id)] || {};
   }
 
+  function teamIndicators(player, position) {
+    const club = clubFor(player);
+    const jogoMap = state.data?.peso_jogo_por_clube || {};
+    const sgMap = state.data?.peso_sg_por_clube || {};
+    const jogo = safeNumber(jogoMap[String(player?.clube_id)] ?? player?.peso_jogo);
+    const sg = safeNumber(sgMap[String(player?.clube_id)] ?? player?.peso_sg);
+    const sgPercent = Math.max(0, Math.min(100, sg <= 1 ? sg * 100 : sg));
+    const shield = club.escudo_url || club.escudo || club.clube_escudo_url || player?.clube_escudo_url || '';
+    const name = club.abreviacao || player?.clube_abrev || club.nome || player?.clube_nome || '—';
+    const defense = ['goleiros', 'laterais', 'zagueiros'].includes(position);
+    return `<span class="ideal-player-team-badge"><span>${shield ? `<img src="${escapeHtml(shield)}" alt="">` : '<i class="fas fa-shield-alt"></i>'}${escapeHtml(name)}</span><b>F ${jogo.toFixed(2)}</b></span>${defense ? `<span class="ideal-player-sg-badge"><i class="fas fa-shield-heart"></i> SG ${sgPercent.toFixed(0)}%</span>` : ''}`;
+  }
+
   function avatar(player, className = '') {
     const name = escapeHtml(player?.apelido || 'Jogador');
     const initials = escapeHtml((player?.apelido || '?').slice(0, 2).toUpperCase());
@@ -236,9 +249,8 @@
   }
 
   function playerCard(player, position, index) {
-    const club = clubFor(player);
     const badges = player?.eh_capitao ? '<span class="ideal-badge ideal-badge-captain">CAP</span>' : '';
-    return `<button type="button" class="ideal-player" title="Trocar ${escapeHtml(player?.apelido || 'jogador')}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}">${badges}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player?.apelido || 'N/A')}</span><span class="ideal-player-data">${money(price(player))} · ${points(player).toFixed(1)} pts</span><span class="ideal-player-action">editar</span></button>`;
+    return `<div class="ideal-player ideal-player-card" title="Trocar ${escapeHtml(player?.apelido || 'jogador')}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player?.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span>${teamIndicators(player, position)}<button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>`;
   }
 
   function emptySlot(position, index) {
@@ -249,7 +261,19 @@
     const count = FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3'];
     const players = (result.titulares?.[position] || []).filter(Boolean);
     const total = Math.max(count[position] || 0, players.length);
-    return Array.from({ length: total }, (_, index) => players[index] ? playerCard(players[index], position, index) : emptySlot(position, index)).join('');
+    return Array.from({ length: total }, (_, index) => playerSlot(result, position, index)).join('');
+  }
+
+  function playerSlot(result, position, index) {
+    const players = (result.titulares?.[position] || []).filter(Boolean);
+    return players[index] ? playerCard(players[index], position, index) : emptySlot(position, index);
+  }
+
+  function defenseLane(result, position, index, label) {
+    const count = FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3'];
+    const player = result.titulares?.[position]?.[index];
+    if (position === 'laterais' && !(count.laterais > index) && !player) return '';
+    return `<div class="ideal-field-defense-lane"><div class="ideal-field-pos">${label}</div><div class="ideal-field-players">${playerSlot(result, position, index)}</div></div>`;
   }
 
   function fieldGroup(result, position, className = '') {
@@ -260,7 +284,7 @@
 
   function renderField(result) {
     const formation = $('formationSelect')?.value || '4-3-3';
-    return `<div class="ideal-field ideal-field--${formation.replace('-', '')}"><div class="ideal-field-line"></div><div class="ideal-field-circle"></div><div class="ideal-field-goal ideal-field-goal-top"><span></span></div><div class="ideal-field-goal ideal-field-goal-bottom"><span></span></div><div class="ideal-field-tag"><span>titulares</span><span>${escapeHtml(formation)}</span></div><div class="ideal-field-rows"><div class="ideal-field-row ideal-field-row-attack">${fieldGroup(result, 'atacantes')}</div><div class="ideal-field-row ideal-field-row-midfield">${fieldGroup(result, 'meias')}</div><div class="ideal-field-row ideal-field-row-defense"><div class="ideal-field-defense-wide">${fieldGroup(result, 'laterais', 'ideal-field-group-wide')}</div><div class="ideal-field-defense-center">${fieldGroup(result, 'zagueiros', 'ideal-field-group-center')}</div></div><div class="ideal-field-row ideal-field-row-goalkeeper">${fieldGroup(result, 'goleiros')}</div></div><div class="ideal-field-coach">${fieldGroup(result, 'treinadores', 'ideal-field-group-coach')}</div></div>`;
+    return `<div class="ideal-field ideal-field--${formation.replace('-', '')}"><div class="ideal-field-line"></div><div class="ideal-field-circle"></div><div class="ideal-field-goal ideal-field-goal-top"><span></span></div><div class="ideal-field-goal ideal-field-goal-bottom"><span></span></div><div class="ideal-field-tag"><span>titulares</span><span>${escapeHtml(formation)}</span></div><div class="ideal-field-rows"><div class="ideal-field-row ideal-field-row-attack">${fieldGroup(result, 'atacantes')}</div><div class="ideal-field-row ideal-field-row-midfield">${fieldGroup(result, 'meias')}</div><div class="ideal-field-defense-layout">${defenseLane(result, 'laterais', 0, 'Lateral esquerdo')}<div class="ideal-field-defense-center">${fieldGroup(result, 'zagueiros', 'ideal-field-group-center')}</div>${defenseLane(result, 'laterais', 1, 'Lateral direito')}</div><div class="ideal-field-row ideal-field-row-goalkeeper">${fieldGroup(result, 'goleiros')}</div></div><div class="ideal-field-coach">${fieldGroup(result, 'treinadores', 'ideal-field-group-coach')}</div></div>`;
   }
 
   function renderBench(result) {
@@ -268,7 +292,7 @@
     const groups = positions.map(position => {
       const players = (result.reservas?.[position] || []).filter(Boolean);
       const player = players[0];
-      const card = player ? `<button type="button" class="ideal-bench-player" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0">${player.eh_reserva_luxo ? '<span class="ideal-badge ideal-badge-luxury">LUXO</span>' : ''}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player.apelido || 'N/A')}</span><span class="ideal-player-data">${money(price(player))}</span><span class="ideal-player-action">editar</span></button>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
+      const card = player ? `<div class="ideal-bench-player ideal-player-card" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? '<span class="ideal-badge ideal-badge-luxury">LUXO</span>' : ''}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span>${teamIndicators(player, position)}<button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
       return `<div class="ideal-bench-group"><div class="ideal-bench-label">${POSITIONS[position].label}<small>mais barata que o titular</small></div>${card}</div>`;
     }).join('');
     return `<aside class="ideal-bench"><div class="ideal-bench-head"><span class="ideal-bench-title"><i class="fas fa-exchange-alt"></i>Reservas</span><span class="ideal-bench-note">sem custo</span></div>${groups}</aside>`;
@@ -578,6 +602,25 @@
     }
   }
 
+  async function applyAvailabilityForAthlete(athleteId) {
+    if (!state.data?.team_id || !athleteId) return;
+    const athlete = state.availability.find((item) => String(item.atleta_id) === String(athleteId));
+    const label = athlete?.apelido || 'Jogador';
+    try {
+      const response = await fetch('/api/player-availability', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_id: state.data.team_id, season: state.data.temporada_atual, round_number: state.data.rodada_atual, athlete_id: Number(athleteId), rule: 'poupar' })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a disponibilidade.');
+      adicionarLog(`↘ ${label} marcado como não joga. Recalculando a rodada.`, 'warning');
+      await calcularEscalacao();
+      await loadAvailabilityCandidates();
+    } catch (error) {
+      notify(error.message, 'error');
+    }
+  }
+
   async function aoMudarConfiguracao(fromPriority = false) {
     if (!window.configCarregada) return;
     window.ultimaEscalacao = null;
@@ -596,8 +639,22 @@
     ['formationSelect', 'hackGoleiroToggle', 'fecharDefesaToggle', 'posicaoCapitao', 'posicaoReservaLuxo'].forEach(id => $(id)?.addEventListener('change', () => aoMudarConfiguracao()));
     $('manualEditBtn')?.addEventListener('click', toggleManualEdit);
     $('escalacaoContent')?.addEventListener('click', (event) => {
+      const availabilityButton = event.target.closest('[data-availability-action]');
+      if (availabilityButton) {
+        event.preventDefault();
+        event.stopPropagation();
+        applyAvailabilityForAthlete(availabilityButton.dataset.athleteId);
+        return;
+      }
       const target = event.target.closest('[data-picker-kind]');
       if (target) openPicker(target.dataset.pickerPosition, target.dataset.pickerKind, target.dataset.pickerIndex);
+    });
+    $('escalacaoContent')?.addEventListener('keydown', (event) => {
+      const target = event.target.closest('[data-picker-kind]');
+      if (target && (event.key === 'Enter' || event.key === ' ')) {
+        event.preventDefault();
+        openPicker(target.dataset.pickerPosition, target.dataset.pickerKind, target.dataset.pickerIndex);
+      }
     });
     document.querySelectorAll('[data-picker-close]').forEach(element => element.addEventListener('click', closePicker));
     $('removePlayerBtn')?.addEventListener('click', removePickerPlayer);

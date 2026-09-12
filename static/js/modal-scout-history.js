@@ -42,14 +42,14 @@
     function roundCard(round, match) {
         if (!match) {
             return `<article class="modal-scout-history-item is-empty" aria-label="Rodada ${round}, sem dados">
-                <span class="modal-scout-history-round">R${round}</span>
+                <span class="modal-scout-history-round">Rodada ${round}</span>
                 <span class="modal-scout-history-no-data">Sem dados</span>
             </article>`;
         }
         const scouts = scoutSummary(match.scouts);
         return `<article class="modal-scout-history-item" aria-label="Rodada ${round}, ${number(match.pontuacao)} pontos">
             <div class="modal-scout-history-card-head">
-                <span class="modal-scout-history-round">R${round}</span>
+                <span class="modal-scout-history-round">Rodada ${round}</span>
                 <strong class="modal-scout-history-point">${number(match.pontuacao)}</strong>
             </div>
             <div class="modal-scout-history-game">
@@ -88,7 +88,7 @@
                 return roundCard(round, byRound.get(round));
             }).join('');
             return `<section class="modal-scout-history-column" aria-label="Rodadas ${start} a ${end}">
-                <p class="modal-scout-history-range">R${start}–R${end}</p>${cards}
+                <p class="modal-scout-history-range">Rodada ${start}–${end}</p>${cards}
             </section>`;
         }).join('');
     }

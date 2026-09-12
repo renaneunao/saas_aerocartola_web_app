@@ -21,7 +21,7 @@
     </section>
 
     <section class="glass rounded-2xl border border-[rgba(0,229,255,0.09)] p-4 mb-5">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <label class="text-xs text-text-secondary">Posição
                 <select id="availabilityPosition" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2">
                     <option value="">Todas as posições</option>
@@ -36,9 +36,41 @@
             <label class="text-xs text-text-secondary">Rodada
                 <input id="availabilityRound" type="number" min="1" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="Atual">
             </label>
+            <label class="text-xs text-text-secondary">Time do jogador
+                <select id="availabilityClub" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2">
+                    <option value="">Todos os times</option>
+                </select>
+            </label>
+            <label class="text-xs text-text-secondary sm:col-span-2 lg:col-span-4">Buscar jogador
+                <input id="availabilitySearch" type="search" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="Nome ou clube">
+            </label>
+            <label class="text-xs text-text-secondary">Mín. média
+                <input id="availabilityMinAverage" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="0,00">
+            </label>
+            <label class="text-xs text-text-secondary">Mín. expectativa
+                <input id="availabilityMinExpected" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="0,00">
+            </label>
+            <label class="text-xs text-text-secondary">Máx. preço
+                <input id="availabilityMaxPrice" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="Sem limite">
+            </label>
+            <label class="text-xs text-text-secondary">Scout
+                <select id="availabilityScout" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2">
+                    <option value="">Qualquer scout</option>
+                    <option value="ds">DS · Desarmes</option><option value="fs">FS · Faltas sofridas</option>
+                    <option value="ff">FF · Finalizações para fora</option><option value="fd">FD · Finalizações defendidas</option>
+                    <option value="de">DEF · Defesas</option><option value="fc">FC · Faltas cometidas</option>
+                    <option value="g">G · Gols</option><option value="a">A · Assistências</option><option value="sg">SG · Saldo de gols</option>
+                    <option value="gs">GS · Gols sofridos</option><option value="i">IMP · Impedimentos</option>
+                    <option value="ca">CA · Cartões amarelos</option><option value="cv">CV · Cartões vermelhos</option>
+                </select>
+            </label>
+            <label class="text-xs text-text-secondary">Mín. scout
+                <input id="availabilityMinScout" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="0,00">
+            </label>
         </div>
         <div class="flex flex-wrap gap-2 mt-4" role="tablist" aria-label="Filtro de regras">
-            <button class="availability-tab active" data-filter="all" type="button">Todos</button>
+            <button class="availability-tab active" data-filter="provaveis" type="button">Prováveis</button>
+            <button class="availability-tab" data-filter="all" type="button">Todos</button>
             <button class="availability-tab" data-filter="poupar" type="button"><i class="fas fa-ban mr-1"></i>Poupados</button>
             <button class="availability-tab" data-filter="cravado" type="button"><i class="fas fa-lock mr-1"></i>Cravados</button>
             <button id="availabilityReload" type="button" class="ml-auto rounded-lg px-3 py-2 text-xs bg-white/5 hover:bg-white/10 text-text-secondary hover:text-white">
@@ -56,7 +88,7 @@
         <div class="overflow-x-auto">
             <table class="w-full text-sm min-w-[760px]">
                 <thead class="bg-bg-secondary/70 text-text-muted text-[10px] uppercase tracking-wider">
-                    <tr><th class="text-left px-4 py-3">Jogador</th><th class="text-left px-4 py-3">Posição</th><th class="text-left px-4 py-3">Clube</th><th class="text-left px-4 py-3">Status atual</th><th class="text-right px-4 py-3">Decisão</th></tr>
+                    <tr><th class="text-left px-4 py-3">Jogador</th><th class="text-left px-4 py-3">Posição</th><th class="text-left px-4 py-3">Clube</th><th class="text-right px-4 py-3">Média</th><th class="text-right px-4 py-3">Expectativa</th><th class="text-right px-4 py-3">Preço</th><th class="text-left px-4 py-3">Status atual</th><th class="text-right px-4 py-3">Decisão</th></tr>
                 </thead>
                 <tbody id="availabilityRows" class="divide-y divide-white/5"></tbody>
             </table>

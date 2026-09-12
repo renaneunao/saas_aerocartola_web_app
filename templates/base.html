@@ -97,7 +97,7 @@
         }
     </script>
   </head>
-<body data-user-id="{{ current_user.id if current_user and current_user.id else '' }}" class="h-full bg-grid text-text-primary overflow-x-hidden font-sans">
+<body data-user-id="{{ current_user.id if current_user and current_user.id else '' }}" class="h-full bg-grid text-text-primary overflow-x-hidden font-sans{% if current_user and current_user.id %} app-authenticated{% endif %}">
 
     <!-- Loader global (aparece imediatamente, antes de qualquer JS) -->
     <div id="globalLoader" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(6,11,20,0.75);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);opacity:0;pointer-events:none;transition:opacity 0.3s">
@@ -120,7 +120,6 @@
     <script src="{{ url_for('static', filename='js/escalar_todos_times.js') }}"></script>
     <script src="{{ url_for('static', filename='js/position-ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/global-ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/scout-crossing.js') }}"></script>
     <script src="{{ url_for('static', filename='js/modal-scout-history.js') }}"></script>
 
     <!-- ================================================================
@@ -306,7 +305,7 @@
          MAIN CONTENT
          ================================================================ -->
     <main class="lg:ml-64 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-8 pt-20 lg:pt-8">
+        <div class="w-full px-4 sm:px-6 lg:px-8 py-8 lg:py-8 pt-20 lg:pt-8">
 
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}

@@ -646,6 +646,7 @@ def dashboard():
             'confrontos': [], 'confrontos_validos': 0, 'atletas': {},
             'disponibilidade': {'poupados': 0, 'cravados': 0},
             'favorito': None, 'atualizado_em': None,
+            'indices_perfil': {'peso_jogo': {}, 'peso_sg': {}},
         }
         try:
             from api_cartola import fetch_partidas_data, fetch_status_data
@@ -728,8 +729,41 @@ def dashboard():
                     'cravados': regras.get('cravado', 0),
                 }
 
+                # Índices apresentados abaixo dos escudos usam exatamente os
+                # perfis selecionados pelo usuário para este time e rodada.
+                perfil_jogo = config.get('perfil_peso_jogo') if config else None
+                perfil_sg = config.get('perfil_peso_sg') if config else None
+                if perfil_jogo:
+                    cursor.execute('''
+                        SELECT clube_id, peso_jogo
+                        FROM acp_peso_jogo_perfis
+                        WHERE perfil_id = %s AND rodada_atual = %s
+                    ''', (perfil_jogo, rodada_info['rodada']))
+                    rodada_info['indices_perfil']['peso_jogo'] = {
+                        int(row[0]): float(row[1] or 0) for row in cursor.fetchall()
+                    }
+                if perfil_sg:
+                    cursor.execute('''
+                        SELECT clube_id, peso_sg
+                        FROM acp_peso_sg_perfis
+                        WHERE perfil_id = %s AND rodada_atual = %s
+                    ''', (perfil_sg, rodada_info['rodada']))
+                    rodada_info['indices_perfil']['peso_sg'] = {
+                        int(row[0]): float(row[1] or 0) for row in cursor.fetchall()
+                    }
+                for confronto in rodada_info['confrontos']:
+                    for lado in ('casa', 'visitante'):
+                        clube_id = confronto[lado]['id']
+                        try:
+                            clube_key = int(clube_id)
+                        except (TypeError, ValueError):
+                            clube_key = clube_id
+                        confronto[lado]['favoritismo'] = rodada_info['indices_perfil']['peso_jogo'].get(clube_key, 0)
+                        confronto[lado]['saldo'] = rodada_info['indices_perfil']['peso_sg'].get(clube_key, 0)
+
             cursor.execute('''
-                SELECT a.apelido, c.abreviacao, d.escalacoes, a.foto
+                SELECT a.apelido, c.abreviacao, d.escalacoes,
+                       COALESCE(a.foto_custom, a.foto) AS foto
                 FROM acf_destaques d
                 JOIN acf_atletas a ON a.atleta_id = d.atleta_id
                 JOIN acf_clubes c ON c.id = a.clube_id
@@ -3448,6 +3482,11 @@ def api_modulo_dados(modulo):
                 atleta_id, apelido, clube_id, pontos, media, preco, jogos, clube_nome, clube_abrev, foto = row
                 escudo_url = get_team_shield(clube_id, size='45x45')
                 adversario_id = adversarios_dict.get(clube_id)
+                partida_atual = partidas_por_clube.get(clube_id) or partidas_por_clube.get(str(clube_id)) or {}
+                casa_id = partida_atual.get('casa_id')
+                visitante_id = partida_atual.get('visitante_id')
+                casa_escudo_url = get_team_shield(casa_id, size='45x45') if casa_id else ''
+                visitante_escudo_url = get_team_shield(visitante_id, size='45x45') if visitante_id else ''
                 
                 atletas.append({
                     'atleta_id': atleta_id,
@@ -3457,6 +3496,11 @@ def api_modulo_dados(modulo):
                     'clube_abrev': clube_abrev,
                     'foto': foto or '',
                     'clube_escudo_url': escudo_url,
+                    'casa_id': casa_id,
+                    'visitante_id': visitante_id,
+                    'joga_em_casa': partida_atual.get('joga_em_casa'),
+                    'casa_escudo_url': casa_escudo_url,
+                    'visitante_escudo_url': visitante_escudo_url,
                     'pontos_num': float(pontos) if pontos else 0,
                     'media_num': float(media) if media else 0,
                     'preco_num': float(preco) if preco else 0,
@@ -3656,11 +3700,13 @@ def api_modulo_dados(modulo):
                 for row in cursor.fetchall():
                     clube_id, nome, abreviacao = row
                     escudo_url = get_team_shield(clube_id, size='45x45')
-                    clubes_dict[clube_id] = {
+                    clube_payload = {
                         'nome': nome,
                         'abreviacao': abreviacao,
                         'escudo_url': escudo_url
                     }
+                    clubes_dict[clube_id] = clube_payload
+                    clubes_dict[str(clube_id)] = clube_payload
         
         # Adicionar nome do adversário aos atletas
         for atleta in atletas:
@@ -4423,7 +4469,8 @@ def api_escalacao_dados():
                        c.nome AS clube_nome, c.abreviacao AS clube_abrev
                 FROM acf_atletas a
                 LEFT JOIN acf_clubes c ON c.id = a.clube_id
-                WHERE a.temporada = %s AND a.atleta_id IN ({placeholders})
+                 WHERE a.temporada = %s AND a.atleta_id IN ({placeholders})
+                   AND a.status_id <> 6
             ''', [get_temporada_atual()] + forced_ids)
             singular_by_id = {1: 'goleiro', 2: 'lateral', 3: 'zagueiro', 4: 'meia', 5: 'atacante', 6: 'treinador'}
             for row in cursor.fetchall():
@@ -4621,6 +4668,22 @@ def api_escalacao_dados():
             LIMIT 5
         ''', (perfil_peso_sg, rodada_atual))
         top5_peso_sg = [{'clube_id': row[0], 'peso_sg': float(row[1])} for row in cursor.fetchall()]
+
+        # O card da escalação precisa do índice do clube escolhido mesmo que
+        # ele não esteja no top 5. Mantemos os mapas somente na resposta em
+        # memória; nenhuma tabela ou ranking salvo é refeito.
+        cursor.execute('''
+            SELECT clube_id, peso_jogo
+            FROM acp_peso_jogo_perfis
+            WHERE perfil_id = %s AND rodada_atual = %s
+        ''', (perfil_peso_jogo, rodada_atual))
+        peso_jogo_por_clube = {str(row[0]): float(row[1] or 0) for row in cursor.fetchall()}
+        cursor.execute('''
+            SELECT clube_id, peso_sg
+            FROM acp_peso_sg_perfis
+            WHERE perfil_id = %s AND rodada_atual = %s
+        ''', (perfil_peso_sg, rodada_atual))
+        peso_sg_por_clube = {str(row[0]): float(row[1] or 0) for row in cursor.fetchall()}
         
         # Buscar dados de clubes com escudos para os cards
         from utils.team_shields import get_team_shield
@@ -4637,6 +4700,8 @@ def api_escalacao_dados():
             clube_ids_set.add(item['clube_id'])
         for item in top5_peso_sg:
             clube_ids_set.add(item['clube_id'])
+        clube_ids_set.update(int(clube_id) for clube_id in peso_jogo_por_clube if clube_id.isdigit())
+        clube_ids_set.update(int(clube_id) for clube_id in peso_sg_por_clube if clube_id.isdigit())
         
         # Buscar dados dos clubes
         clubes_dict = {}
@@ -4689,6 +4754,8 @@ def api_escalacao_dados():
             'clubes_sg': clubes_sg,
             'top5_peso_jogo': top5_peso_jogo,
             'top5_peso_sg': top5_peso_sg,
+            'peso_jogo_por_clube': peso_jogo_por_clube,
+            'peso_sg_por_clube': peso_sg_por_clube,
             'clubes_dict': clubes_dict
         }
         

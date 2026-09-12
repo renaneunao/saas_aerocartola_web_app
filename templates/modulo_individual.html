@@ -217,23 +217,9 @@ console.log('[DEBUG] Painel de pesos será exibido para:', '{{ modulo }}');
                 </thead>
                 <tbody>
                     {% for jogador in dados %}
-                    <tr class="border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 {% if jogador.rank <= 3 %}bg-gradient-to-r {% if jogador.rank == 1 %}from-yellow-900/20 to-yellow-800/20{% elif jogador.rank == 2 %}from-gray-800/20 to-gray-700/20{% elif jogador.rank == 3 %}from-orange-900/20 to-orange-800/20{% endif %}{% endif %} {% if not permissions.rankingCompleto and jogador.rank <= 2 %}relative{% endif %}" {% if not permissions.rankingCompleto and jogador.rank <= 2 %}style="position: relative;"{% endif %}>
+                    <tr class="border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 {% if not permissions.rankingCompleto and jogador.rank <= 2 %}relative{% endif %}" {% if not permissions.rankingCompleto and jogador.rank <= 2 %}style="position: relative;"{% endif %}>
                         <td class="py-3 px-1 {% if not permissions.rankingCompleto and jogador.rank <= 2 %}relative z-50{% endif %}">
-                            {% if jogador.rank <= 3 %}
-                            <div class="flex items-center justify-center w-6 h-6 rounded-full {% if jogador.rank == 1 %}bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900{% elif jogador.rank == 2 %}bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800{% elif jogador.rank == 3 %}bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900{% endif %} shadow-lg">
-                                {% if jogador.rank == 1 %}
-                                    <i class="fas fa-crown text-xs"></i>
-                                {% elif jogador.rank == 2 %}
-                                    <i class="fas fa-medal text-xs"></i>
-                                {% elif jogador.rank == 3 %}
-                                    <i class="fas fa-award text-xs"></i>
-                                {% endif %}
-                            </div>
-                            {% else %}
-                            <div class="flex items-center justify-center w-6 h-6 rounded-full bg-dark-blue-700/50 text-dark-blue-200 font-bold text-xs">
-                                {{ jogador.rank }}
-                            </div>
-                            {% endif %}
+                            <div class="position-rank-number {% if jogador.rank <= 3 %}position-rank-top{% endif %}">{{ jogador.rank }}</div>
                         </td>
                         <td class="py-3 px-1 {% if not permissions.rankingCompleto and jogador.rank <= 2 %}opacity-30{% endif %}" {% if not permissions.rankingCompleto and jogador.rank <= 2 %}style="filter: blur(8px);"{% endif %}>
                             <div class="flex items-center space-x-1">
@@ -352,23 +338,9 @@ console.log('[DEBUG] Painel de pesos será exibido para:', '{{ modulo }}');
                 </thead>
                 <tbody>
                     {% for jogador in dados %}
-                    <tr class="border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 {% if jogador.rank <= 3 %}bg-gradient-to-r {% if jogador.rank == 1 %}from-yellow-900/20 to-yellow-800/20{% elif jogador.rank == 2 %}from-gray-800/20 to-gray-700/20{% elif jogador.rank == 3 %}from-orange-900/20 to-orange-800/20{% endif %}{% endif %} {% if not permissions.rankingCompleto and jogador.rank <= 2 %}relative{% endif %}" {% if not permissions.rankingCompleto and jogador.rank <= 2 %}style="position: relative;"{% endif %}>
+                    <tr class="border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 {% if not permissions.rankingCompleto and jogador.rank <= 2 %}relative{% endif %}" {% if not permissions.rankingCompleto and jogador.rank <= 2 %}style="position: relative;"{% endif %}>
                         <td class="py-3 px-1 {% if not permissions.rankingCompleto and jogador.rank <= 2 %}relative z-50{% endif %}">
-                            {% if jogador.rank <= 3 %}
-                            <div class="flex items-center justify-center w-6 h-6 rounded-full {% if jogador.rank == 1 %}bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900{% elif jogador.rank == 2 %}bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800{% elif jogador.rank == 3 %}bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900{% endif %} shadow-lg">
-                                {% if jogador.rank == 1 %}
-                                    <i class="fas fa-crown text-xs"></i>
-                                {% elif jogador.rank == 2 %}
-                                    <i class="fas fa-medal text-xs"></i>
-                                {% elif jogador.rank == 3 %}
-                                    <i class="fas fa-award text-xs"></i>
-                                {% endif %}
-                            </div>
-                            {% else %}
-                            <div class="flex items-center justify-center w-6 h-6 rounded-full bg-dark-blue-700/50 text-dark-blue-200 font-bold text-xs">
-                                {{ jogador.rank }}
-                            </div>
-                            {% endif %}
+                            <div class="position-rank-number {% if jogador.rank <= 3 %}position-rank-top{% endif %}">{{ jogador.rank }}</div>
                         </td>
                         <td class="py-3 px-1 {% if not permissions.rankingCompleto and jogador.rank <= 2 %}opacity-30{% endif %}" {% if not permissions.rankingCompleto and jogador.rank <= 2 %}style="filter: blur(8px);"{% endif %}>
                             <div class="flex items-center space-x-1">
@@ -1196,19 +1168,11 @@ function renderizarTabelaGoleiros(resultados) {
     
     resultados.forEach((jogador) => {
         const tr = document.createElement('tr');
-        tr.className = `border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200 ${jogador.rank <= 3 ? `bg-gradient-to-r ${jogador.rank == 1 ? 'from-yellow-900/20 to-yellow-800/20' : jogador.rank == 2 ? 'from-gray-800/20 to-gray-700/20' : 'from-orange-900/20 to-orange-800/20'}` : ''}`;
+        tr.className = 'border-b border-dark-blue-700/30 hover:bg-dark-blue-800/30 transition-colors duration-200';
         
         tr.innerHTML = `
             <td class="py-4 px-2">
-                ${jogador.rank <= 3 ? `
-                <div class="flex items-center justify-center w-8 h-8 rounded-full ${jogador.rank == 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-yellow-900' : jogador.rank == 2 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' : 'bg-gradient-to-br from-orange-400 to-orange-500 text-orange-900'} shadow-lg">
-                    ${jogador.rank == 1 ? '<i class="fas fa-crown text-sm"></i>' : jogador.rank == 2 ? '<i class="fas fa-medal text-sm"></i>' : '<i class="fas fa-award text-sm"></i>'}
-                </div>
-                ` : `
-                <div class="flex items-center justify-center w-8 h-8 rounded-full bg-dark-blue-700/50 text-dark-blue-200 font-bold text-sm">
-                    ${jogador.rank}
-                </div>
-                `}
+                <div class="position-rank-number ${jogador.rank <= 3 ? 'position-rank-top' : ''}">${jogador.rank}</div>
             </td>
             <td class="py-4 px-2">
                 <div class="flex items-center space-x-2">
