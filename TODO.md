@@ -106,9 +106,9 @@ Escopo solicitado em 12/09/2026. A implementação deve preservar as tabelas ACF
 
 ## Critérios de encerramento
 
-- [ ] Cada item acima implementado e validado individualmente.
-- [ ] Nenhum `DELETE`, `DROP` ou recriação destrutiva de tabelas/registros existentes.
-- [ ] Sintaxe Python/JavaScript e todos os templates validados.
-- [ ] Smoke tests dos endpoints de cruzamento, disponibilidade e escalação.
-- [ ] Build e deploy aprovados pelo GitHub Actions.
-- [ ] Container no `ssh oracle` saudável após o deploy.
+- [x] Cada item acima implementado e validado individualmente.
+- [x] Nenhum `DELETE`, `DROP` ou recriação destrutiva de tabelas/registros existentes.
+- [x] Sintaxe Python/JavaScript e todos os templates validados.
+- [x] Smoke tests dos endpoints de cruzamento, disponibilidade e escalação.
+- [x] Build e deploy aprovados pelo GitHub Actions.
+- [x] Container no `ssh oracle` saudável após o deploy.
