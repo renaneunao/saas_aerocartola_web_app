@@ -257,9 +257,9 @@ body,
 .position-table td.position-player-sticky {
   position: sticky;
   left: 0;
-  width: 9.75rem;
-  min-width: 9.75rem;
-  max-width: 9.75rem;
+  width: 14.25rem;
+  min-width: 14.25rem;
+  max-width: 14.25rem;
   z-index: 4;
 }
 
@@ -283,7 +283,8 @@ body,
 }
 
 .position-player-line {
-  display: inline-flex;
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.35rem !important;
   width: 100%;
@@ -291,15 +292,18 @@ body,
 }
 
 .position-player-line > :first-child {
-  flex: 0 0 auto;
+  grid-column: 1;
+  min-width: 0;
 }
 
 .position-player-line > .position-game-inline {
-  order: 3;
+  grid-column: 3;
+  grid-row: 1;
 }
 
 .position-player-line > .min-w-0 {
-  flex: 1 1 auto;
+  grid-column: 2;
+  grid-row: 1;
   min-width: 2.8rem;
 }
 
@@ -520,9 +524,9 @@ body,
 
   body.position-page .position-table th.position-player-sticky,
   body.position-page .position-table td.position-player-sticky {
-    width: 7.2rem;
-    min-width: 7.2rem;
-    max-width: 7.2rem;
+    width: 10.9rem;
+    min-width: 10.9rem;
+    max-width: 10.9rem;
   }
 
   body.position-page .position-player-sticky > div {

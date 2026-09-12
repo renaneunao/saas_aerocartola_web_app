@@ -39,6 +39,29 @@
         ).join('');
     }
 
+    function fixtureMarkup(match) {
+        const home = match?.casa || {
+            nome: match?.casa_nome || 'Casa',
+            abreviacao: match?.casa_abreviacao || match?.casa_nome || 'CASA',
+            escudo: ''
+        };
+        const away = match?.fora || {
+            nome: match?.visitante_nome || 'Fora',
+            abreviacao: match?.visitante_abreviacao || match?.visitante_nome || 'FORA',
+            escudo: ''
+        };
+        const playerId = Number(match?.clube_id);
+        const team = (club, side) => {
+            const id = Number(club?.id);
+            const active = Number.isFinite(playerId) && playerId > 0 && id === playerId;
+            const label = club?.abreviacao || club?.nome || '—';
+            const initials = escapeHtml(String(label).replace(/[^A-Za-zÀ-ÿ0-9]/g, '').slice(0, 4).toUpperCase() || '—');
+            const image = imageUrl(club?.escudo);
+            return `<span class="modal-scout-history-fixture-team ${side} ${active ? 'active' : 'dim'}">${image ? `<img src="${escapeHtml(image)}" alt="" data-history-shield>` : ''}<span class="modal-scout-history-shield-fallback" ${image ? 'hidden' : ''}>${initials}</span><b>${escapeHtml(label)}</b></span>`;
+        };
+        return `<div class="modal-scout-history-fixture">${team(home, 'home')}<span class="modal-scout-history-fixture-vs" aria-hidden="true">×</span>${team(away, 'away')}</div>`;
+    }
+
     function roundCard(round, match) {
         if (!match) {
             return `<article class="modal-scout-history-item is-empty" aria-label="Rodada ${round}, sem dados">
@@ -53,8 +76,8 @@
                 <strong class="modal-scout-history-point">${number(match.pontuacao)}</strong>
             </div>
             <div class="modal-scout-history-game">
-                <strong>${escapeHtml(match.adversario_nome || 'Adversário não informado')}</strong>
-                <small>${escapeHtml(match.mando_label || 'Sem mando')} · ${escapeHtml(match.casa_nome || 'Casa')} x ${escapeHtml(match.visitante_nome || 'Fora')}</small>
+                ${fixtureMarkup(match)}
+                <small>${escapeHtml(match.mando_label || 'Sem mando')} · adversário ${escapeHtml(match.adversario_nome || 'não informado')}</small>
             </div>
             <div class="modal-scout-history-inline-scouts">${scouts || '<span class="is-muted">Sem scouts positivos</span>'}</div>
         </article>`;
@@ -100,6 +123,14 @@
                 <p class="modal-scout-history-range">Rodada ${start}–${end}</p>${cards}
             </section>`;
         }).join('');
+        list.querySelectorAll('img[data-history-shield]').forEach((image) => {
+            image.addEventListener('error', () => {
+                image.hidden = true;
+                if (image.nextElementSibling?.classList.contains('modal-scout-history-shield-fallback')) {
+                    image.nextElementSibling.hidden = false;
+                }
+            }, { once: true });
+        });
         if (crossingLink && data.jogador?.id) {
             crossingLink.href = `/cruzamento-scouts/?posicao_id=${encodeURIComponent(root.dataset.positionId || data.filtros?.posicao_id || '')}&atleta_id=${encodeURIComponent(data.jogador.id)}`;
         }

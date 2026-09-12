@@ -94,7 +94,8 @@
 
     function shieldMarkup(url, name, abbr, extraClass) {
         if (url) {
-            return `<img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" class="position-game-shield ${extraClass || ''}">`;
+            const fallback = escapeHtml(abbreviation(name, abbr));
+            return `<img src="${escapeHtml(url)}" alt="${escapeHtml(name)}" class="position-game-shield ${extraClass || ''}"><span class="position-game-shield-fallback ${extraClass || ''}" hidden aria-hidden="true">${fallback}</span>`;
         }
         return `<span class="position-game-shield-fallback ${extraClass || ''}" aria-hidden="true">${escapeHtml(abbreviation(name, abbr))}</span>`;
     }
@@ -143,6 +144,14 @@
                 ${shieldMarkup(awayUrl, awayName, awayAbbr, awayIsPlayer ? 'position-game-shield--player' : 'position-game-shield--opponent')}
                 <span class="position-game-label">${escapeHtml(abbreviation(awayName, awayAbbr))}</span>
             </span>`;
+        fixture.querySelectorAll('img.position-game-shield').forEach((image) => {
+            image.addEventListener('error', () => {
+                image.hidden = true;
+                if (image.nextElementSibling?.classList.contains('position-game-shield-fallback')) {
+                    image.nextElementSibling.hidden = false;
+                }
+            }, { once: true });
+        });
         return fixture;
     }
 

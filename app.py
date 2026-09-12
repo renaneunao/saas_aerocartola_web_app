@@ -3873,22 +3873,30 @@ def api_modulo_dados(modulo):
                     ranking_enriquecido.append(item)
                     continue
                 item = dict(item)
-                partida_info = partidas_por_clube.get(item.get('clube_id'))
+                partida_info = partidas_por_clube.get(item.get('clube_id')) or partidas_por_clube.get(str(item.get('clube_id')))
                 if partida_info:
-                    casa = clubes_dict.get(partida_info['casa_id'], {})
-                    visitante = clubes_dict.get(partida_info['visitante_id'], {})
+                    casa = clubes_dict.get(str(partida_info['casa_id']), {})
+                    visitante = clubes_dict.get(str(partida_info['visitante_id']), {})
                     em_casa = partida_info['joga_em_casa']
+                    clube = casa if em_casa else visitante
+                    adversario = visitante if em_casa else casa
                     item.update({
                         'casa_id': partida_info['casa_id'],
                         'visitante_id': partida_info['visitante_id'],
                         'joga_em_casa': em_casa,
                         'casa_nome': casa.get('nome') or 'Casa',
                         'visitante_nome': visitante.get('nome') or 'Fora',
+                        'casa_abreviacao': casa.get('abreviacao') or '',
+                        'visitante_abreviacao': visitante.get('abreviacao') or '',
                         'casa_escudo_url': casa.get('escudo_url') or '',
                         'visitante_escudo_url': visitante.get('escudo_url') or '',
                         'adversario_id': partida_info['visitante_id'] if em_casa else partida_info['casa_id'],
                         'adversario_nome': visitante.get('nome') if em_casa else casa.get('nome'),
+                        'adversario_abreviacao': adversario.get('abreviacao') or '',
                         'adversario_escudo_url': visitante.get('escudo_url', '') if em_casa else casa.get('escudo_url', ''),
+                        'clube_nome': item.get('clube_nome') or clube.get('nome') or 'Clube não informado',
+                        'clube_abrev': item.get('clube_abrev') or clube.get('abreviacao') or '',
+                        'clube_escudo_url': item.get('clube_escudo_url') or clube.get('escudo_url') or '',
                     })
                 ranking_enriquecido.append(item)
             ranking_para_json = ranking_enriquecido

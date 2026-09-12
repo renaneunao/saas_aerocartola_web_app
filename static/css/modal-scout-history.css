@@ -145,12 +145,11 @@
 }
 
 .modal-scout-history-game {
-    display: block;
+    display: grid;
     min-width: 0;
     margin-top: .25rem;
 }
 
-.modal-scout-history-game strong,
 .modal-scout-history-game small {
     display: block;
     overflow: hidden;
@@ -158,9 +157,69 @@
     white-space: nowrap;
 }
 
-.modal-scout-history-game strong {
+.modal-scout-history-fixture {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    align-items: center;
+    justify-content: start;
+    gap: .25rem;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.modal-scout-history-fixture-team {
+    display: inline-flex;
+    align-items: center;
+    gap: .16rem;
+    min-width: 0;
+    color: #94a3b8;
+    font: 700 .56rem/1 'JetBrains Mono', monospace;
+}
+
+.modal-scout-history-fixture-team.home {
+    align-self: start;
+}
+
+.modal-scout-history-fixture-team.away {
+    align-self: end;
+}
+
+.modal-scout-history-fixture-team.active {
     color: #f8fafc;
-    font-size: .67rem;
+}
+
+.modal-scout-history-fixture-team.dim {
+    opacity: .34;
+    filter: grayscale(1);
+}
+
+.modal-scout-history-fixture-team img,
+.modal-scout-history-shield-fallback {
+    display: inline-grid;
+    place-items: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: 0 0 1.1rem;
+    object-fit: contain;
+}
+
+.modal-scout-history-shield-fallback {
+    border: 1px solid rgba(148, 163, 184, .3);
+    border-radius: 50%;
+    color: #64748b;
+    font: 700 .36rem/1 'JetBrains Mono', monospace;
+}
+
+.modal-scout-history-fixture-team b {
+    overflow: hidden;
+    max-width: 2.5rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.modal-scout-history-fixture-vs {
+    color: #64748b;
+    font: 800 .58rem/1 'JetBrains Mono', monospace;
 }
 
 .modal-scout-history-game small {
@@ -285,15 +344,35 @@
         margin-top: .12rem;
     }
 
-    .modal-scout-history-game strong {
-        font-size: .48rem;
-    }
-
     .modal-scout-history-game small,
     .modal-scout-history-inline-scouts,
     .modal-scout-history-inline-scouts .is-muted,
     .modal-scout-history-no-data {
         font-size: .4rem;
+    }
+
+    .modal-scout-history-fixture {
+        gap: .12rem;
+    }
+
+    .modal-scout-history-fixture-team {
+        gap: .08rem;
+        font-size: .38rem;
+    }
+
+    .modal-scout-history-fixture-team img,
+    .modal-scout-history-shield-fallback {
+        width: .82rem;
+        height: .82rem;
+        flex-basis: .82rem;
+    }
+
+    .modal-scout-history-fixture-team b {
+        max-width: 1.8rem;
+    }
+
+    .modal-scout-history-fixture-vs {
+        font-size: .44rem;
     }
 
     .modal-scout-history-inline-scouts {

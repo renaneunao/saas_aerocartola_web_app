@@ -454,3 +454,163 @@
   .ideal-field-defense-layout { grid-template-columns:minmax(61px,1fr) minmax(0,2fr) minmax(61px,1fr); }
   .ideal-player { width:56px; }.ideal-player-avatar { width:27px; height:27px; }
 }
+
+/* Ajuste final do gramado: a área útil fica contida no painel e os laterais
+   ocupam faixas laterais próprias, alinhados com os zagueiros no centro. */
+.ideal-field {
+  width: min(100%, 1040px);
+  min-height: 700px;
+  margin-inline: auto;
+  padding-inline: 20px;
+}
+
+.ideal-field-rows {
+  min-height: 600px;
+}
+
+.ideal-field-defense-layout {
+  display: grid;
+  grid-template-columns: minmax(132px, .85fr) minmax(0, 2.1fr) minmax(132px, .85fr);
+  align-items: end;
+  gap: 8px;
+  width: 100%;
+}
+
+.ideal-field-defense-side,
+.ideal-field-defense-center {
+  min-width: 0;
+}
+
+.ideal-field-defense-side .ideal-field-defense-lane {
+  padding-inline: 4px;
+}
+
+.ideal-field-defense-side .ideal-field-players {
+  min-height: 112px;
+  justify-content: center;
+}
+
+.ideal-field-defense-center .ideal-field-group {
+  width: 100%;
+}
+
+.ideal-field-defense-center .ideal-field-players {
+  justify-content: center;
+}
+
+.ideal-picker-status-filter,
+.ideal-picker-price-limit {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  min-height: 34px;
+  padding: 7px 8px;
+  border: 1px solid rgba(127, 191, 255, .1);
+  border-radius: 8px;
+  background: rgba(3, 13, 25, .35);
+}
+
+.ideal-picker-status-filter {
+  grid-column: 1 / -1;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+
+.ideal-picker-status-filter > span,
+.ideal-picker-price-limit > span {
+  color: #7893aa;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.ideal-picker-status-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ideal-picker-status-options button {
+  min-height: 25px;
+  padding: 4px 7px;
+  border: 1px solid rgba(127, 191, 255, .14);
+  border-radius: 5px;
+  color: #8ea7bc;
+  background: rgba(127, 191, 255, .04);
+  font-size: 9px;
+  font-weight: 750;
+}
+
+.ideal-picker-status-options button.is-active {
+  border-color: rgba(82, 230, 255, .5);
+  color: #dcfbff;
+  background: rgba(82, 230, 255, .12);
+}
+
+.ideal-picker-price-limit {
+  grid-column: span 2;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.ideal-picker-price-limit strong {
+  overflow: hidden;
+  color: var(--ideal-green);
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .ideal-field {
+    min-height: 620px;
+    padding-inline: 12px;
+  }
+
+  .ideal-field-rows {
+    min-height: 530px;
+  }
+
+  .ideal-field-defense-layout {
+    grid-template-columns: minmax(104px, .8fr) minmax(0, 2fr) minmax(104px, .8fr);
+    gap: 5px;
+  }
+
+  .ideal-field-defense-side .ideal-field-players {
+    min-height: 94px;
+  }
+}
+
+@media (max-width: 620px) {
+  .ideal-field {
+    width: 100%;
+    min-height: 500px;
+    padding-inline: 5px;
+  }
+
+  .ideal-field-rows {
+    min-height: 420px;
+  }
+
+  .ideal-field-defense-layout {
+    grid-template-columns: minmax(72px, .9fr) minmax(0, 2fr) minmax(72px, .9fr);
+    gap: 2px;
+  }
+
+  .ideal-field-defense-side .ideal-field-defense-lane {
+    padding-inline: 0;
+  }
+
+  .ideal-field-defense-side .ideal-field-players {
+    min-height: 68px;
+  }
+
+  .ideal-picker-status-filter {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .ideal-picker-price-limit {
+    grid-column: 1 / -1;
+  }
+}

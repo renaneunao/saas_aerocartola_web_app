@@ -155,6 +155,16 @@
         <label><span>Time</span><select id="pickerClub" class="ideal-select"><option value="">Todos</option></select></label>
         <label><span>Ordenar por</span><select id="pickerSort" class="ideal-select"><option value="expected">Previsão de pontos</option><option value="average">Média</option><option value="price_asc">Preço: menor primeiro</option><option value="price_desc">Preço: maior primeiro</option><option value="scout">Scout selecionado</option><option value="name">Nome</option></select></label>
         <label><span>Scout para ordenar</span><select id="pickerScout" class="ideal-select"><option value="">Escolha o scout</option></select></label>
+        <div class="ideal-picker-status-filter" aria-label="Filtrar disponibilidade">
+          <span>Disponibilidade</span>
+          <div class="ideal-picker-status-options">
+            <button type="button" data-picker-status="provaveis" aria-pressed="true" class="is-active">Prováveis</button>
+            <button type="button" data-picker-status="todos" aria-pressed="false">Todos</button>
+            <button type="button" data-picker-status="cravados" aria-pressed="false">Cravados</button>
+            <button type="button" data-picker-status="duvidas" aria-pressed="false">Dúvidas</button>
+          </div>
+        </div>
+        <div id="playerPickerPriceLimit" class="ideal-picker-price-limit" aria-live="polite"><span>Preço máximo</span><strong>—</strong></div>
       </div>
       <div id="playerPickerRule" class="ideal-picker-rule"></div>
       <div id="playerPickerResults" class="ideal-picker-results"></div>
