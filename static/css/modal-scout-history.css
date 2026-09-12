@@ -11,6 +11,36 @@
     gap: .75rem;
 }
 
+.modal-scout-history-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .45rem;
+    flex-wrap: wrap;
+}
+
+.modal-scout-crossing-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .28rem;
+    min-height: 1.8rem;
+    padding: .32rem .5rem;
+    border: 1px solid rgba(82, 230, 255, .28);
+    border-radius: .45rem;
+    color: #bfeef5;
+    background: rgba(82, 230, 255, .07);
+    font-size: .58rem;
+    font-weight: 750;
+    text-decoration: none;
+    transition: border-color .18s, background .18s, color .18s;
+}
+
+.modal-scout-crossing-link:hover {
+    border-color: rgba(82, 230, 255, .58);
+    color: #fff;
+    background: rgba(82, 230, 255, .14);
+}
+
 .modal-scout-history-kicker {
     margin: 0 0 .2rem;
     color: #64748b;
@@ -185,6 +215,11 @@
         gap: .35rem;
     }
 
+    .modal-scout-history-actions {
+        align-items: flex-end;
+        gap: .22rem;
+    }
+
     .modal-scout-history h4 {
         font-size: .72rem;
     }
@@ -192,6 +227,12 @@
     .modal-scout-history-kicker,
     .modal-scout-history-status {
         font-size: .48rem;
+    }
+
+    .modal-scout-crossing-link {
+        min-height: 1.4rem;
+        padding: .22rem .3rem;
+        font-size: .44rem;
     }
 
     .modal-scout-history-summary {

@@ -66,6 +66,7 @@
         const status = root.querySelector(`#modal${prefix}ScoutHistoryStatus`);
         const summary = root.querySelector(`#modal${prefix}ScoutHistorySummary`);
         const list = root.querySelector(`#modal${prefix}ScoutHistoryList`);
+        const crossingLink = root.querySelector(`#modal${prefix}ScoutCrossingLink`);
         // Uma linha sem entrada em campo não é uma pontuação do jogador;
         // ela deve aparecer como rodada sem dados no calendário de 1 a 38.
         const matches = (data.ultimas_pontuacoes || []).filter((match) => match.entrou_em_campo === true);
@@ -80,17 +81,28 @@
             ].map(([label, value]) => `<div class="modal-scout-history-summary-card"><span>${label}</span><strong>${value}</strong></div>`).join('');
         }
 
-        const byRound = new Map(matches.map((match) => [Number(match.rodada), match]));
-        const ranges = [[1, 13], [14, 26], [27, 38]];
+        const currentRound = Math.max(1, Number(data.filtros?.rodada || 38));
+        const byRound = new Map(matches
+            .filter((match) => Number(match.rodada) <= currentRound)
+            .map((match) => [Number(match.rodada), match]));
+        // A coluna mais à esquerda sempre começa pela rodada mais recente.
+        // Rodadas futuras não ocupam espaço no histórico, mas lacunas passadas
+        // continuam opacas para preservar a leitura da temporada.
+        const ranges = [[27, 38], [14, 26], [1, 13]]
+            .map(([start, end]) => [start, Math.min(end, currentRound)])
+            .filter(([start, end]) => start <= end);
         list.innerHTML = ranges.map(([start, end]) => {
             const cards = Array.from({ length: end - start + 1 }, (_, index) => {
-                const round = start + index;
+                const round = end - index;
                 return roundCard(round, byRound.get(round));
             }).join('');
             return `<section class="modal-scout-history-column" aria-label="Rodadas ${start} a ${end}">
                 <p class="modal-scout-history-range">Rodada ${start}–${end}</p>${cards}
             </section>`;
         }).join('');
+        if (crossingLink && data.jogador?.id) {
+            crossingLink.href = `/cruzamento-scouts/?posicao_id=${encodeURIComponent(root.dataset.positionId || data.filtros?.posicao_id || '')}&atleta_id=${encodeURIComponent(data.jogador.id)}`;
+        }
     }
 
     async function load(prefix, atletaId, positionId, fallbackPhoto) {

@@ -33,7 +33,8 @@
     editing: true,
     draggedItem: null,
     availability: [],
-    picker: null
+    picker: null,
+    teamChanged: false
   };
 
   window.prioridadesOrdenadas = ['atacantes', 'laterais', 'meias', 'zagueiros', 'goleiros', 'treinadores'];
@@ -282,9 +283,21 @@
     return `<div class="ideal-field-group ${className}"><div class="ideal-field-pos">${POSITIONS[position].label}</div><div class="ideal-field-players">${playerSlots(result, position)}</div></div>`;
   }
 
+  function defenseLine(result) {
+    const count = FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3'];
+    const defenders = [];
+    if (count.laterais > 0) defenders.push(playerSlot(result, 'laterais', 0));
+    (result.titulares?.zagueiros || []).filter(Boolean).slice(0, count.zagueiros || 0).forEach((_, index) => {
+      defenders.push(playerSlot(result, 'zagueiros', index));
+    });
+    if (count.laterais > 1) defenders.push(playerSlot(result, 'laterais', 1));
+    if (!defenders.length) return '';
+    return `<div class="ideal-field-row ideal-field-row-defense"><div class="ideal-field-defense-line" style="--defender-count:${defenders.length}">${defenders.join('')}</div></div>`;
+  }
+
   function renderField(result) {
     const formation = $('formationSelect')?.value || '4-3-3';
-    return `<div class="ideal-field ideal-field--${formation.replace('-', '')}"><div class="ideal-field-line"></div><div class="ideal-field-circle"></div><div class="ideal-field-goal ideal-field-goal-top"><span></span></div><div class="ideal-field-goal ideal-field-goal-bottom"><span></span></div><div class="ideal-field-tag"><span>titulares</span><span>${escapeHtml(formation)}</span></div><div class="ideal-field-rows"><div class="ideal-field-row ideal-field-row-attack">${fieldGroup(result, 'atacantes')}</div><div class="ideal-field-row ideal-field-row-midfield">${fieldGroup(result, 'meias')}</div><div class="ideal-field-defense-layout">${defenseLane(result, 'laterais', 0, 'Lateral esquerdo')}<div class="ideal-field-defense-center">${fieldGroup(result, 'zagueiros', 'ideal-field-group-center')}</div>${defenseLane(result, 'laterais', 1, 'Lateral direito')}</div><div class="ideal-field-row ideal-field-row-goalkeeper">${fieldGroup(result, 'goleiros')}</div></div><div class="ideal-field-coach">${fieldGroup(result, 'treinadores', 'ideal-field-group-coach')}</div></div>`;
+    return `<div class="ideal-field ideal-field--${formation.replace('-', '')}"><div class="ideal-field-line"></div><div class="ideal-field-circle"></div><div class="ideal-field-goal ideal-field-goal-top"><span></span></div><div class="ideal-field-goal ideal-field-goal-bottom"><span></span></div><div class="ideal-field-tag"><span>titulares</span><span>${escapeHtml(formation)}</span></div><div class="ideal-field-rows"><div class="ideal-field-row ideal-field-row-attack">${fieldGroup(result, 'atacantes')}</div><div class="ideal-field-row ideal-field-row-midfield">${fieldGroup(result, 'meias')}</div>${defenseLine(result)}<div class="ideal-field-row ideal-field-row-goalkeeper">${fieldGroup(result, 'goleiros')}</div></div><div class="ideal-field-coach">${fieldGroup(result, 'treinadores', 'ideal-field-group-coach')}</div></div>`;
   }
 
   function renderBench(result) {
@@ -292,7 +305,7 @@
     const groups = positions.map(position => {
       const players = (result.reservas?.[position] || []).filter(Boolean);
       const player = players[0];
-      const card = player ? `<div class="ideal-bench-player ideal-player-card" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? '<span class="ideal-badge ideal-badge-luxury">LUXO</span>' : ''}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span>${teamIndicators(player, position)}<button type="button" class="ideal-special-action" data-special-role="luxury" title="Definir ${escapeHtml(player.apelido || 'jogador')} como reserva de luxo"><i class="fas fa-gem"></i><span>Luxo</span></button><button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
+      const card = player ? `<div class="ideal-bench-player ideal-player-card" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? '<span class="ideal-badge ideal-badge-luxury">LUXO</span>' : ''}${avatar(player)}<span class="ideal-bench-copy"><span class="ideal-player-name">${escapeHtml(player.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span></span><span class="ideal-bench-signals">${teamIndicators(player, position)}</span><button type="button" class="ideal-special-action" data-special-role="luxury" title="Definir ${escapeHtml(player.apelido || 'jogador')} como reserva de luxo"><i class="fas fa-gem"></i><span>Luxo</span></button><button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
       return `<div class="ideal-bench-group"><div class="ideal-bench-label">${POSITIONS[position].label}<small>mais barata que o titular</small></div>${card}</div>`;
     }).join('');
     return `<aside class="ideal-bench"><div class="ideal-bench-head"><span class="ideal-bench-title"><i class="fas fa-exchange-alt"></i>Reservas</span><span class="ideal-bench-note">sem custo</span></div>${groups}</aside>`;
@@ -335,6 +348,7 @@
 
   function setSpecialRole(role, target) {
     if (!window.ultimaEscalacao) return;
+    if (!target) return;
     const player = window.ultimaEscalacao[role === 'luxury' ? 'reservas' : 'titulares']?.[target.dataset.pickerPosition]?.[Number(target.dataset.pickerIndex)] || null;
     if (!player) return;
     if (role === 'captain') {
@@ -344,8 +358,17 @@
       window.ultimaEscalacao.manualLuxuryId = idOf(player);
       adicionarLog(`◆ Reserva de luxo alterada para ${player.apelido || player.nome || 'atleta'}.`, 'info');
     }
+    state.teamChanged = true;
     recomputeResult();
     exibirResultado(window.ultimaEscalacao, state.clubes);
+  }
+
+  function refreshSubmitButton() {
+    const button = $('escalarBtn');
+    if (!button || !can('podeEscalar')) return;
+    button.innerHTML = state.teamChanged
+      ? '<i class="fas fa-paper-plane"></i> Enviar time alterado'
+      : '<i class="fas fa-paper-plane"></i> Enviar escalação';
   }
 
   function exibirResultado(result, clubesDict = {}) {
@@ -360,6 +383,7 @@
     content.innerHTML = `<div class="ideal-metrics"><div class="ideal-metric cost"><span>Investimento</span><strong>${money(result.custoTotal)}</strong><em>titulares</em></div><div class="ideal-metric balance"><span>Saldo disponível</span><strong>${money(balance)}</strong><em>patrimônio ${money(patrimonio)}</em></div><div class="ideal-metric points"><span>Projeção</span><strong>${safeNumber(result.pontuacaoTotal).toFixed(2)} pts</strong><em>${captain ? `capitão: ${escapeHtml(captain.apelido)}` : 'sem capitão definido'}</em></div></div><div class="ideal-field-layout">${renderField(result)}${renderBench(result)}</div><div id="manualEditor" class="ideal-manual-editor ${state.editing ? 'is-open' : ''}"></div>`;
     renderManualEditor(result);
     panel.classList.remove('hidden');
+    refreshSubmitButton();
     const expected = Object.values(FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3']).reduce((sum, value) => sum + value, 0) + 1;
     const actual = POSITION_ORDER.flatMap(position => result.titulares?.[position] || []).length;
     $('escalarBtn').disabled = actual !== expected;
@@ -408,7 +432,6 @@
     if (typeof showConfirm === 'function') confirmed = await showConfirm('Confirma escalar este time no Cartola FC?', 'Escalar time', { confirmText: 'Sim, escalar', cancelText: 'Cancelar' });
     if (!confirmed) return;
     const button = $('escalarBtn');
-    const original = button.innerHTML;
     button.disabled = true;
     button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
     showLoading('Escalando time no Cartola FC...');
@@ -416,6 +439,7 @@
       const response = await fetch('/api/escalacao-ideal/escalar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ escalacao: window.ultimaEscalacao, formacao: $('formationSelect').value }) });
       const data = await response.json();
       if (!response.ok || !data.success) throw new Error(data.error || 'Não foi possível escalar o time.');
+      state.teamChanged = false;
       adicionarLog(`✓ ${data.mensagem || 'Time escalado com sucesso.'}`, 'success');
       notify('Time escalado com sucesso! Boa sorte na rodada.', 'success');
     } catch (error) {
@@ -424,7 +448,7 @@
     } finally {
       hideLoading();
       button.disabled = false;
-      button.innerHTML = original;
+      refreshSubmitButton();
     }
   }
 
@@ -448,6 +472,7 @@
     if (used.some(player => idOf(player) === idOf(candidate))) return notify('Este atleta já está em outra vaga.', 'warning');
     const replacement = { ...candidate };
     window.ultimaEscalacao.titulares[position][index] = replacement;
+    state.teamChanged = true;
     recomputeResult();
     exibirResultado(window.ultimaEscalacao, state.clubes);
     if (state.editing) $('manualEditor')?.classList.add('is-open');
@@ -562,6 +587,7 @@
     const group = state.picker.kind === 'reserve' ? window.ultimaEscalacao.reservas : window.ultimaEscalacao.titulares;
     group[state.picker.position] ||= [];
     group[state.picker.position][state.picker.index] = { ...candidate, eh_capitao: false, eh_reserva_luxo: false };
+    state.teamChanged = true;
     recomputeResult();
     const selectedPosition = state.picker.position;
     closePicker();
@@ -574,6 +600,7 @@
     const removedPosition = state.picker.position;
     const group = state.picker.kind === 'reserve' ? window.ultimaEscalacao.reservas : window.ultimaEscalacao.titulares;
     (group[removedPosition] || []).splice(state.picker.index, 1);
+    state.teamChanged = true;
     recomputeResult();
     closePicker();
     exibirResultado(window.ultimaEscalacao, state.clubes);
@@ -618,6 +645,7 @@
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a disponibilidade.');
+      state.teamChanged = true;
       if (hint) hint.textContent = `${athlete.apelido} marcado como ${rule === 'poupar' ? 'não joga' : 'joga'}. Recalculando...`;
       await calcularEscalacao();
       await loadAvailabilityCandidates();
@@ -638,6 +666,7 @@
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a disponibilidade.');
+      state.teamChanged = true;
       adicionarLog(`↘ ${label} marcado como não joga. Recalculando a rodada.`, 'warning');
       await calcularEscalacao();
       await loadAvailabilityCandidates();
@@ -648,6 +677,7 @@
 
   async function aoMudarConfiguracao(fromPriority = false) {
     if (!window.configCarregada) return;
+    state.teamChanged = true;
     window.ultimaEscalacao = null;
     $('escalarBtn').disabled = true;
     try {

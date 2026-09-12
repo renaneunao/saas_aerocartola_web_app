@@ -3725,15 +3725,19 @@ def api_modulo_dados(modulo):
                 visitante = clubes_dict.get(str(partida_info['visitante_id']), {})
                 atleta['casa_nome'] = casa.get('nome') or 'Casa'
                 atleta['visitante_nome'] = visitante.get('nome') or 'Fora'
+                atleta['casa_abreviacao'] = casa.get('abreviacao') or ''
+                atleta['visitante_abreviacao'] = visitante.get('abreviacao') or ''
                 atleta['casa_escudo_url'] = casa.get('escudo_url') or ''
                 atleta['visitante_escudo_url'] = visitante.get('escudo_url') or ''
 
             adversario = clubes_dict.get(str(atleta['adversario_id']), {}) if atleta['adversario_id'] else {}
             if adversario:
                 atleta['adversario_nome'] = adversario['nome']
+                atleta['adversario_abreviacao'] = adversario.get('abreviacao') or ''
                 atleta['adversario_escudo_url'] = adversario['escudo_url']
             else:
                 atleta['adversario_nome'] = 'N/A'
+                atleta['adversario_abreviacao'] = ''
                 atleta['adversario_escudo_url'] = ''
         
         # Buscar pesos do módulo

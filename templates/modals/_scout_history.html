@@ -4,7 +4,12 @@
             <p class="modal-scout-history-kicker">Leitura do confronto</p>
             <h4>Últimas pontuações e cedidos</h4>
         </div>
-        <span class="modal-scout-history-status" id="modal{{ scout_prefix }}ScoutHistoryStatus">Carregando…</span>
+        <div class="modal-scout-history-actions">
+            <span class="modal-scout-history-status" id="modal{{ scout_prefix }}ScoutHistoryStatus">Carregando…</span>
+            <a class="modal-scout-crossing-link" id="modal{{ scout_prefix }}ScoutCrossingLink" href="/cruzamento-scouts/?posicao_id={{ scout_position_id }}">
+                <i class="fas fa-crosshairs"></i> Cruzar scouts
+            </a>
+        </div>
     </div>
 
     <div class="modal-scout-history-summary" id="modal{{ scout_prefix }}ScoutHistorySummary"></div>

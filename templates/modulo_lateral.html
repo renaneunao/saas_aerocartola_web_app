@@ -800,6 +800,10 @@ async function renderizarTabelaLaterais(resultados) {
             </td>
             <td class="py-2 px-1.5 ${blurClass}" ${blurStyle}
                 data-position-club-id="${jogador.clube_id || ''}"
+                data-position-club-name="${jogador.clube_nome || ''}"
+                data-position-opponent-name="${jogador.adversario_nome || ''}"
+                data-position-club-abbr="${jogador.clube_abrev || ''}"
+                data-position-opponent-abbr="${jogador.adversario_abreviacao || ''}"
                 data-position-home-id="${jogador.casa_id || ''}"
                 data-position-away-id="${jogador.visitante_id || ''}"
                 data-position-home-shield="${jogador.casa_escudo_url || ''}"

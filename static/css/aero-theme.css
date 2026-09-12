@@ -240,7 +240,12 @@ body,
 .position-table th,
 .position-table td {
   white-space: nowrap;
+  border-right: 1px solid rgba(148, 163, 184, 0.08);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.08);
 }
+
+.position-table th:last-child,
+.position-table td:last-child { border-right: 0; }
 
 .position-table th:first-child,
 .position-table td:first-child {

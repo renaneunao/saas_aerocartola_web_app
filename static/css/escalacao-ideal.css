@@ -394,6 +394,27 @@
 .ideal-bench-player { min-width:0; padding:6px; }
 .ideal-bench-player .ideal-player-avatar { width:38px; height:38px; flex-basis:38px; }
 
+/* A linha defensiva usa a mesma régua de espaçamento para laterais e
+   zagueiros. Assim cada formação distribui a defesa por toda a largura do
+   campo sem deixar os laterais colados na borda. */
+.ideal-field-row-defense { align-items:flex-end; min-height:96px; }
+.ideal-field-defense-line { display:grid; grid-template-columns:repeat(var(--defender-count), minmax(0,1fr)); align-items:end; gap:clamp(4px,1.2vw,18px); width:100%; padding:0 clamp(8px,2vw,34px); }
+.ideal-field-defense-line .ideal-player { justify-self:center; }
+
+/* Reservas: foto, identificação e sinais ocupam áreas próprias. As badges
+   deixam de flutuar sobre preço/pontuação e passam a formar uma coluna legível. */
+.ideal-bench-player:not(.ideal-bench-empty) { display:grid; grid-template-columns:38px minmax(0,1fr) auto; align-items:center; gap:8px; }
+.ideal-bench-copy { min-width:0; display:grid; gap:4px; }
+.ideal-bench-copy .ideal-player-name { min-width:0; text-align:left; }
+.ideal-bench-copy .ideal-player-chips { justify-content:flex-start; margin:0; }
+.ideal-bench-signals { display:grid; justify-items:end; gap:4px; min-width:58px; }
+.ideal-bench-signals .ideal-player-team-badge,
+.ideal-bench-signals .ideal-player-sg-badge { position:static; left:auto; top:auto; right:auto; bottom:auto; transform:none; max-width:100%; }
+.ideal-bench-signals .ideal-player-team-badge { order:2; }
+.ideal-bench-signals .ideal-player-sg-badge { order:1; }
+.ideal-bench-signals .ideal-player-team-badge b { font-size:7px; }
+.ideal-bench-player .ideal-badge-luxury { top:-6px; right:7px; }
+
 @media (max-width:900px) {
   .ideal-field { min-height:620px; padding:18px 12px 14px; }
   .ideal-field-rows { min-height:530px; gap:15px; }
@@ -402,6 +423,9 @@
   .ideal-player { width:88px; padding:6px 4px 7px; }
   .ideal-player-avatar { width:44px; height:44px; border-radius:11px; }
   .ideal-bench { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .ideal-field-defense-line { gap:4px; padding-inline:4px; }
+  .ideal-bench-player:not(.ideal-bench-empty) { grid-template-columns:34px minmax(0,1fr) auto; gap:6px; }
+  .ideal-bench-signals { min-width:52px; }
 }
 @media (max-width:620px) {
   .ideal-field { min-height:500px; padding:14px 5px 10px; }
@@ -415,6 +439,15 @@
   .ideal-player-avatar { width:30px; height:30px; margin-bottom:3px; border-radius:8px; }
   .ideal-player-name { font-size:7px; }.ideal-player-chips { gap:2px; margin-top:3px; }.ideal-player-chips span { padding:2px; font-size:6px; }
   .ideal-bench { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; padding:10px; }
+  .ideal-field-row-defense { min-height:62px; }
+  .ideal-field-defense-line { gap:2px; padding-inline:2px; }
+  .ideal-bench-player:not(.ideal-bench-empty) { grid-template-columns:30px minmax(0,1fr) auto; gap:4px; padding:5px; }
+  .ideal-bench-player:not(.ideal-bench-empty) .ideal-player-avatar { width:30px; height:30px; flex-basis:30px; }
+  .ideal-bench-signals { min-width:45px; gap:2px; }
+  .ideal-bench-signals .ideal-player-team-badge, .ideal-bench-signals .ideal-player-sg-badge { padding:1px 2px; font-size:6px; }
+  .ideal-bench-signals .ideal-player-team-badge img { width:9px; height:9px; }
+  .ideal-bench-signals .ideal-player-team-badge b { font-size:6px; }
+  .ideal-bench-signals .ideal-player-sg-badge i { font-size:6px; }
 }
 @media (max-width:420px) {
   .ideal-field { min-height:470px; }.ideal-field-rows { min-height:390px; }
