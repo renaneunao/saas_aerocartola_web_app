@@ -449,15 +449,13 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('[DEBUG] ✅ Criando e adicionando botão...');
         
         // Criar botão
-        const botaoItem = document.createElement('div');
-        botaoItem.className = 'aero-sidebar-action px-3 py-2 text-sm rounded-lg cursor-pointer transition-all duration-200 mb-2';
+        const botaoItem = document.createElement('button');
+        botaoItem.type = 'button';
+        botaoItem.className = 'aero-sidebar-batch-action mb-2';
         botaoItem.innerHTML = `
-            <div class="flex items-center">
-                <div class="w-8 h-8 rounded mr-2 flex items-center justify-center bg-green-500/20">
-                    <i class="fas fa-bolt text-sm text-green-400"></i>
-                </div>
-                <span class="flex-1 truncate">Escalar Todos os Times</span>
-            </div>
+            <span class="aero-sidebar-batch-icon"><i class="fas fa-layer-group"></i></span>
+            <span class="aero-sidebar-batch-copy"><strong>Escalar todos</strong><small>Processar meus times</small></span>
+            <i class="fas fa-arrow-right aero-sidebar-batch-arrow"></i>
         `;
         botaoItem.id = 'escalarTodosTimesBtnSidebar';
         

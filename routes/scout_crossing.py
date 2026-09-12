@@ -139,18 +139,32 @@ def _club_payload(clube_id, nome=None, abreviacao=None):
 def _team_options(cursor, temporada, rodada):
     cursor.execute(
         """
-        SELECT DISTINCT c.id, c.nome, c.abreviacao
-        FROM acf_partidas p
-        JOIN acf_clubes c ON c.id IN (p.clube_casa_id, p.clube_visitante_id)
-        WHERE p.temporada = %s AND p.rodada_id = %s AND p.valida = TRUE
+        WITH round_clubs AS (
+            SELECT DISTINCT v.clube_id
+            FROM acf_partidas p
+            CROSS JOIN LATERAL (VALUES (p.clube_casa_id), (p.clube_visitante_id)) v(clube_id)
+            WHERE p.temporada = %s AND p.rodada_id = %s
+        )
+        SELECT c.id, c.nome, c.abreviacao,
+               EXISTS (
+                   SELECT 1
+                   FROM acf_partidas p
+                   WHERE p.temporada = %s
+                     AND p.rodada_id = %s
+                     AND p.valida = TRUE
+                     AND c.id IN (p.clube_casa_id, p.clube_visitante_id)
+               ) AS valido
+        FROM round_clubs r
+        JOIN acf_clubes c ON c.id = r.clube_id
         ORDER BY c.nome
         """,
-        (temporada, rodada),
+        (temporada, rodada, temporada, rodada),
     )
     return [
         {
             **_club_payload(row["id"], row["nome"]),
             "abreviacao": row["abreviacao"] or row["nome"],
+            "valido": bool(row["valido"]),
         }
         for row in cursor.fetchall()
     ]

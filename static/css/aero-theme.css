@@ -985,7 +985,12 @@ button[class*="from-blue-500"] {
 .aero-sidebar-action:hover,
 button[class*="from-blue-500"]:hover { border-color:rgba(82,230,255,.55) !important; background:rgba(82,230,255,.15) !important; }
 .aero-sidebar-action { display:block; color:#9ceff7 !important; }
-.aero-sidebar-action::before { content:'↗'; display:inline-grid; place-items:center; width:1.7rem; height:1.7rem; margin-right:.45rem; border:1px solid rgba(82,230,255,.2); border-radius:6px; color:#62e6f4; }
+.aero-sidebar-action::before { content:none; }
+.aero-sidebar-batch-action { display:grid; grid-template-columns:1.85rem minmax(0,1fr) auto; align-items:center; gap:.5rem; width:100%; padding:.55rem .5rem; border:1px solid rgba(82,230,255,.28); border-radius:9px; color:#d9f7ff; background:rgba(82,230,255,.08); text-align:left; transition:border-color .18s,background .18s,transform .18s; }
+.aero-sidebar-batch-action:hover:not(:disabled) { border-color:rgba(82,230,255,.6); background:rgba(82,230,255,.15); transform:translateY(-1px); }
+.aero-sidebar-batch-action:disabled { opacity:.55; cursor:not-allowed; }
+.aero-sidebar-batch-icon { display:grid; place-items:center; width:1.85rem; height:1.85rem; border:1px solid rgba(92,242,165,.25); border-radius:7px; color:#5cf2a5; background:rgba(92,242,165,.1); }
+.aero-sidebar-batch-copy { min-width:0; }.aero-sidebar-batch-copy strong,.aero-sidebar-batch-copy small { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.aero-sidebar-batch-copy strong { color:#e7fbff; font-size:.68rem; }.aero-sidebar-batch-copy small { margin-top:.12rem; color:#7994a9; font-size:.53rem; }.aero-sidebar-batch-arrow { color:#6c8da2; font-size:.62rem; }
 
 .batch-escalation-modal { position:fixed; inset:0; z-index:200; display:flex; align-items:center; justify-content:center; padding:1rem; background:rgba(3,8,17,.78); backdrop-filter:blur(9px); }
 .batch-escalation-sheet { width:min(680px,100%) !important; max-height:90vh !important; overflow:auto !important; padding:1.25rem !important; border:1px solid rgba(82,230,255,.2) !important; border-radius:16px !important; background:#0b1727 !important; box-shadow:0 22px 70px rgba(0,0,0,.5) !important; }
@@ -997,6 +1002,9 @@ button[class*="from-blue-500"]:hover { border-color:rgba(82,230,255,.55) !import
 .batch-logs { max-height:220px !important; padding:.75rem !important; border:1px solid rgba(148,163,184,.12) !important; border-radius:9px !important; background:rgba(1,8,14,.72) !important; color:#91a9bc; font: .66rem/1.5 'JetBrains Mono',monospace !important; }
 .batch-log-entry { margin-bottom:.25rem; color:#9db1c4; }.batch-log-entry.success { color:#8effc1; }.batch-log-entry.error { color:#ff9aa5; }.batch-log-entry.warning { color:#ffd878; }
 .batch-finish-button { width:100%; margin-top:.8rem; min-height:2.2rem; border:1px solid rgba(92,242,165,.3) !important; border-radius:8px !important; color:#aaf4c4 !important; background:rgba(92,242,165,.08) !important; font-size:.72rem !important; }.batch-finish-button:hover { background:rgba(92,242,165,.15) !important; }
+.availability-controls { position:sticky; top:0; z-index:24; background:rgba(11,17,32,.96) !important; backdrop-filter:blur(12px); }
+.availability-tab { min-height:2rem; padding:.42rem .7rem; border:1px solid rgba(148,163,184,.16); border-radius:7px; color:#9db1c4; background:rgba(148,163,184,.05); font-size:.7rem; transition:border-color .18s,background .18s,color .18s; }
+.availability-tab:hover { color:#e7faff; border-color:rgba(82,230,255,.42); }.availability-tab.active { color:#e7faff; border-color:rgba(82,230,255,.55); background:rgba(82,230,255,.11); }
 
 @media (min-width: 1024px) {
   body.app-authenticated main > .w-full { max-width:none; }
@@ -1024,4 +1032,5 @@ button[class*="from-blue-500"]:hover { border-color:rgba(82,230,255,.55) !import
   body.aero-global-ui table.aero-responsive-table th,
   body.aero-global-ui table.aero-responsive-table td { white-space:nowrap; padding:.3rem .35rem !important; }
   body.aero-global-ui .batch-teams { grid-template-columns:1fr; }
+  body.aero-global-ui .availability-controls { margin-inline:-.1rem; padding:.65rem !important; }
 }

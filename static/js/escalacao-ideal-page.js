@@ -250,7 +250,7 @@
 
   function playerCard(player, position, index) {
     const badges = player?.eh_capitao ? '<span class="ideal-badge ideal-badge-captain">CAP</span>' : '';
-    return `<div class="ideal-player ideal-player-card" title="Trocar ${escapeHtml(player?.apelido || 'jogador')}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player?.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span>${teamIndicators(player, position)}<button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>`;
+    return `<div class="ideal-player ideal-player-card" title="Trocar ${escapeHtml(player?.apelido || 'jogador')}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player?.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span>${teamIndicators(player, position)}<button type="button" class="ideal-special-action" data-special-role="captain" title="Definir ${escapeHtml(player?.apelido || 'jogador')} como capitão"><i class="fas fa-crown"></i><span>Capitão</span></button><button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>`;
   }
 
   function emptySlot(position, index) {
@@ -292,7 +292,7 @@
     const groups = positions.map(position => {
       const players = (result.reservas?.[position] || []).filter(Boolean);
       const player = players[0];
-      const card = player ? `<div class="ideal-bench-player ideal-player-card" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? '<span class="ideal-badge ideal-badge-luxury">LUXO</span>' : ''}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span>${teamIndicators(player, position)}<button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
+      const card = player ? `<div class="ideal-bench-player ideal-player-card" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? '<span class="ideal-badge ideal-badge-luxury">LUXO</span>' : ''}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span>${teamIndicators(player, position)}<button type="button" class="ideal-special-action" data-special-role="luxury" title="Definir ${escapeHtml(player.apelido || 'jogador')} como reserva de luxo"><i class="fas fa-gem"></i><span>Luxo</span></button><button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
       return `<div class="ideal-bench-group"><div class="ideal-bench-label">${POSITIONS[position].label}<small>mais barata que o titular</small></div>${card}</div>`;
     }).join('');
     return `<aside class="ideal-bench"><div class="ideal-bench-head"><span class="ideal-bench-title"><i class="fas fa-exchange-alt"></i>Reservas</span><span class="ideal-bench-note">sem custo</span></div>${groups}</aside>`;
@@ -315,9 +315,14 @@
     });
     const captainPosition = $('posicaoCapitao')?.value || 'atacantes';
     const captainPool = result.titulares[captainPosition] || [];
-    if (captainPool.length) captainPool.reduce((best, player) => points(player) > points(best) ? player : best).eh_capitao = true;
+    const allStarters = POSITION_ORDER.flatMap(position => result.titulares[position] || []);
+    const manualCaptain = allStarters.find(player => idOf(player) === String(result.manualCaptainId || ''));
+    const captain = manualCaptain || (captainPool.length ? captainPool.reduce((best, player) => points(player) > points(best) ? player : best) : null);
+    if (captain) captain.eh_capitao = true;
     const luxuryPosition = $('posicaoReservaLuxo')?.value || 'atacantes';
-    const luxury = result.reservas[luxuryPosition]?.[0];
+    const allReserves = POSITION_ORDER.flatMap(position => result.reservas[position] || []);
+    const manualLuxury = allReserves.find(player => idOf(player) === String(result.manualLuxuryId || ''));
+    const luxury = manualLuxury || result.reservas[luxuryPosition]?.[0];
     if (luxury && luxuryPosition !== 'treinadores') luxury.eh_reserva_luxo = true;
     result.custoTotal = POSITION_ORDER.flatMap(position => result.titulares[position] || []).reduce((total, player) => total + price(player), 0);
     result.pontuacaoTotal = POSITION_ORDER.flatMap(position => result.titulares[position] || []).reduce((total, player) => total + points(player), 0);
@@ -326,6 +331,21 @@
   function renderManualEditor(result) {
     const editor = $('manualEditor');
     if (editor) editor.innerHTML = `<p><i class="fas fa-circle-info"></i> Clique em qualquer atleta ou vaga no campo e nos reservas para trocar. O saldo, capitão e reserva de luxo são recalculados a cada alteração.</p>`;
+  }
+
+  function setSpecialRole(role, target) {
+    if (!window.ultimaEscalacao) return;
+    const player = window.ultimaEscalacao[role === 'luxury' ? 'reservas' : 'titulares']?.[target.dataset.pickerPosition]?.[Number(target.dataset.pickerIndex)] || null;
+    if (!player) return;
+    if (role === 'captain') {
+      window.ultimaEscalacao.manualCaptainId = idOf(player);
+      adicionarLog(`♛ Capitão alterado para ${player.apelido || player.nome || 'atleta'}.`, 'info');
+    } else {
+      window.ultimaEscalacao.manualLuxuryId = idOf(player);
+      adicionarLog(`◆ Reserva de luxo alterada para ${player.apelido || player.nome || 'atleta'}.`, 'info');
+    }
+    recomputeResult();
+    exibirResultado(window.ultimaEscalacao, state.clubes);
   }
 
   function exibirResultado(result, clubesDict = {}) {
@@ -345,14 +365,14 @@
     $('escalarBtn').disabled = actual !== expected;
   }
 
-  async function calcularEscalacao() {
+  async function calcularEscalacao(recarregarDados = true) {
     const button = $('calcularBtn');
     if (button) button.disabled = true;
     limparConsole();
     $('resultadoPanel')?.classList.add('hidden');
     showLoading('Calculando escalação ideal...');
     try {
-      const data = await loadData();
+      const data = recarregarDados || !state.data ? await loadData() : state.data;
       const escalador = new window.EscalacaoIdeal({
         rodada_atual: data.rodada_atual,
         patrimonio: data.patrimonio,
@@ -461,7 +481,7 @@
       const keys = new Set();
       pool.forEach(player => Object.keys(player || {}).forEach(key => { if (/^(media|avg|scout)_/.test(key)) keys.add(key.replace(/^(media|avg|scout)_/, '')); }));
       ['ds', 'fs', 'ff', 'fd', 'g', 'a', 'sg', 'de'].forEach(key => keys.add(key));
-      scout.innerHTML = '<option value="">Qualquer scout</option>' + [...keys].sort().map(key => `<option value="${escapeHtml(key)}">${escapeHtml(key.toUpperCase())}</option>`).join('');
+      scout.innerHTML = '<option value="">Escolha o scout</option>' + [...keys].sort().map(key => `<option value="${escapeHtml(key)}">${escapeHtml(key.toUpperCase())}</option>`).join('');
     }
   }
 
@@ -476,20 +496,23 @@
     ]).filter(Boolean).filter(player => idOf(player) !== idOf(current)).map(idOf));
     const name = ($('pickerName')?.value || '').trim().toLocaleLowerCase();
     const clubId = $('pickerClub')?.value || '';
-    const minPoints = safeNumber($('pickerPoints')?.value);
-    const maxPrice = $('pickerPrice')?.value === '' ? Infinity : safeNumber($('pickerPrice')?.value);
+    const sort = $('pickerSort')?.value || 'expected';
     const scout = $('pickerScout')?.value || '';
-    const minScout = safeNumber($('pickerScoutValue')?.value);
     const starterPool = window.ultimaEscalacao?.titulares?.[state.picker.position] || [];
     const reserveLimit = state.picker.kind === 'reserve' && starterPool.length ? Math.min(...starterPool.map(price)) : Infinity;
     const candidates = pickerPool().filter(player => {
       const playerName = `${player.apelido || ''} ${player.nome || ''}`.toLocaleLowerCase();
       if (name && !playerName.includes(name)) return false;
       if (clubId && String(player.clube_id) !== clubId) return false;
-      if (points(player) < minPoints || price(player) > maxPrice) return false;
-      if (scout && scoutValue(player, scout) < minScout) return false;
       if (state.picker.kind === 'reserve' && price(player) >= reserveLimit) return false;
       return !used.has(idOf(player));
+    }).sort((a, b) => {
+      if (sort === 'average') return safeNumber(b.media_num) - safeNumber(a.media_num);
+      if (sort === 'price_asc') return price(a) - price(b);
+      if (sort === 'price_desc') return price(b) - price(a);
+      if (sort === 'scout') return scoutValue(b, scout) - scoutValue(a, scout);
+      if (sort === 'name') return String(a.apelido || a.nome || '').localeCompare(String(b.apelido || b.nome || ''), 'pt-BR');
+      return points(b) - points(a);
     }).slice(0, 80);
     const rule = $('playerPickerRule');
     if (rule) rule.textContent = state.picker.kind === 'reserve' ? `Reserva: preço abaixo de ${reserveLimit === Infinity ? '—' : money(reserveLimit)} do titular mais barato.` : 'Titular: escolha um atleta da posição com os filtros abaixo.';
@@ -503,7 +526,9 @@
     const current = currentPickerPlayer();
     $('playerPickerContext').textContent = `${kind === 'reserve' ? 'Reserva' : 'Titular'} · ${POSITIONS[position].label}`;
     $('playerPickerTitle').textContent = current ? `Trocar ${current.apelido || 'atleta'}` : `Adicionar ${POSITIONS[position].singular}`;
-    ['pickerName', 'pickerPoints', 'pickerPrice', 'pickerScoutValue'].forEach(id => { if ($(id)) $(id).value = ''; });
+    ['pickerName'].forEach(id => { if ($(id)) $(id).value = ''; });
+    if ($('pickerSort')) $('pickerSort').value = 'expected';
+    if ($('pickerScout')) $('pickerScout').value = '';
     const pool = pickerPool();
     renderPickerFilters(pool);
     renderPickerResults();
@@ -639,6 +664,13 @@
     ['formationSelect', 'hackGoleiroToggle', 'fecharDefesaToggle', 'posicaoCapitao', 'posicaoReservaLuxo'].forEach(id => $(id)?.addEventListener('change', () => aoMudarConfiguracao()));
     $('manualEditBtn')?.addEventListener('click', toggleManualEdit);
     $('escalacaoContent')?.addEventListener('click', (event) => {
+      const specialRole = event.target.closest('[data-special-role]');
+      if (specialRole) {
+        event.preventDefault();
+        event.stopPropagation();
+        setSpecialRole(specialRole.dataset.specialRole, specialRole.closest('[data-picker-kind]'));
+        return;
+      }
       const availabilityButton = event.target.closest('[data-availability-action]');
       if (availabilityButton) {
         event.preventDefault();
@@ -658,8 +690,8 @@
     });
     document.querySelectorAll('[data-picker-close]').forEach(element => element.addEventListener('click', closePicker));
     $('removePlayerBtn')?.addEventListener('click', removePickerPlayer);
-    ['pickerName', 'pickerClub', 'pickerPoints', 'pickerPrice', 'pickerScout', 'pickerScoutValue'].forEach(id => $(id)?.addEventListener('input', renderPickerResults));
-    ['pickerClub', 'pickerScout'].forEach(id => $(id)?.addEventListener('change', renderPickerResults));
+    ['pickerName', 'pickerClub', 'pickerSort', 'pickerScout'].forEach(id => $(id)?.addEventListener('input', renderPickerResults));
+    ['pickerClub', 'pickerSort', 'pickerScout'].forEach(id => $(id)?.addEventListener('change', renderPickerResults));
     $('markUnavailableBtn')?.addEventListener('click', () => applyAvailability('poupar'));
     $('markAvailableBtn')?.addEventListener('click', () => applyAvailability('cravado'));
     $('availabilityRecalculateBtn')?.addEventListener('click', calcularEscalacao);
@@ -674,7 +706,8 @@
       await loadData();
       await loadAvailabilityCandidates();
       bindEvents();
-      adicionarLog('Dados da rodada carregados. Ajuste as opções e calcule quando estiver pronto.', 'info');
+      adicionarLog('Dados da rodada carregados. Calculando a escalação inicial...', 'info');
+      await calcularEscalacao(false);
     } catch (error) {
       adicionarLog(`ERRO ao carregar: ${error.message}`, 'error');
       notify(error.message, 'error');

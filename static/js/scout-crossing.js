@@ -6,7 +6,7 @@
     const state = {
         temporada: Number(page.dataset.currentSeason || 0), rodada: Number(page.dataset.currentRound || 0),
         teamId: null, posicaoId: null, atletaId: null, players: [], filteredPlayers: [],
-        statusFilter: 'provaveis', historyExpanded: false, selectedData: null, predictionContext: null,
+        statusFilter: 'provaveis', sortBy: 'expected', historyExpanded: false, selectedData: null, predictionContext: null,
         predictionById: {}
     };
     const positionSlug = { 1: 'goleiro', 2: 'lateral', 3: 'zagueiro', 4: 'meia', 5: 'atacante', 6: 'treinador' };
@@ -44,8 +44,9 @@
 
     function teamButton(team) {
         const selected = Number(state.teamId) === Number(team.id);
+        const valid = team.valido !== false;
         const image = team.escudo ? `<img src="${escapeHtml(team.escudo)}" alt="" loading="lazy">` : '<span class="scx-team-fallback"><i class="fas fa-shield-halved"></i></span>';
-        return `<button type="button" class="scx-team${selected ? ' is-selected' : ''}" data-team="${team.id}" role="option" aria-selected="${selected}">${image}<b>${escapeHtml(team.abreviacao || team.nome)}</b></button>`;
+        return `<button type="button" class="scx-team${selected ? ' is-selected' : ''}${valid ? '' : ' is-invalid'}" data-team="${team.id}" role="option" aria-selected="${selected}" aria-disabled="${!valid}" title="${escapeHtml(valid ? team.nome : `${team.nome} · sem confronto válido`)}"${valid ? '' : ' disabled'}>${image}<b>${escapeHtml(team.abreviacao || team.nome)}</b>${valid ? '' : '<small>sem jogo</small>'}</button>`;
     }
     function renderTeams(teams) {
         const target = $('scoutCrossingTeams'); if (!target) return;
@@ -67,19 +68,14 @@
     function playerOption(player) {
         const photo = normalizedPhoto(player.foto, player.id);
         const initials = escapeHtml((player.nome || '?').slice(0, 2).toUpperCase());
-        const avatar = photo ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=\"scx-player-option-avatar\">${initials}</span>'">` : `<span class="scx-player-option-avatar">${initials}</span>`;
+        const avatar = photo ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy" data-fallback="${initials}">` : `<span class="scx-player-option-avatar">${initials}</span>`;
         const selected = Number(state.atletaId) === Number(player.id);
-        return `<button type="button" class="scx-player-option${selected ? ' is-selected' : ''}" data-player="${player.id}">${avatar}<span><strong>${escapeHtml(player.nome)}</strong><small>${escapeHtml(player.clube_abrev || player.clube_nome || 'Clube')} · <span class="${statusClass(player)} scx-status">${escapeHtml(statusText(player))}</span></small></span><span class="scx-player-option-metrics"><b>${number(predictionValue(player))}</b><small>${number(player.media_num)} média</small></span></button>`;
+        return `<button type="button" class="scx-player-option${selected ? ' is-selected' : ''}" data-player="${player.id}">${avatar}<span class="scx-player-option-identity"><strong>${escapeHtml(player.nome)}</strong><small>${escapeHtml(player.clube_abrev || player.clube_nome || 'Clube')} · <span class="${statusClass(player)} scx-status">${escapeHtml(statusText(player))}</span></small></span><span class="scx-player-option-stat scx-player-option-expected"><small>Previsão</small><b>${number(predictionValue(player))}</b></span><span class="scx-player-option-stat"><small>Média</small><b>${number(player.media_num)}</b></span><span class="scx-player-option-stat scx-player-option-price"><small>Preço</small><b>C$ ${number(player.preco_num)}</b></span><span class="scx-player-option-stat scx-player-option-games"><small>Jogos</small><b>${integer(player.jogos_num)}</b></span></button>`;
     }
     function filterPlayers() {
         const text = ($('scoutCrossingSearch')?.value || '').trim().toLocaleLowerCase();
-        const minAverage = Number($('scoutCrossingMinAverage')?.value || 0);
-        const minExpected = Number($('scoutCrossingMinExpected')?.value || 0);
-        const maxPriceValue = $('scoutCrossingMaxPrice')?.value;
-        const maxPrice = maxPriceValue === '' || maxPriceValue == null ? Infinity : Number(maxPriceValue);
         const scout = $('scoutCrossingScout')?.value || '';
-        const minScout = Number($('scoutCrossingMinScout')?.value || 0);
-        state.filteredPlayers = (state.players || []).filter((player) => {
+        const filtered = (state.players || []).filter((player) => {
             if (state.teamId && Number(player.clube_id) !== Number(state.teamId)) return false;
             // Nulos nunca jogam e não entram na análise. Atletas poupados
             // permanecem visíveis em “Todos” para que a regra possa ser
@@ -89,22 +85,34 @@
             if (state.statusFilter === 'cravados' && player.availability_rule !== 'cravado') return false;
             if (state.statusFilter === 'duvidas' && ![2, 3, 5].includes(Number(player.status_id))) return false;
             if (text && !`${player.nome || ''} ${player.clube_nome || ''}`.toLocaleLowerCase().includes(text)) return false;
-            if (Number(player.media_num || 0) < minAverage || predictionValue(player) < minExpected || Number(player.preco_num || 0) > maxPrice) return false;
-            if (scout && Number(player.scouts?.[scout.replace(/^media_/, '')] || 0) < minScout) return false;
             return true;
-        }).sort((a, b) => predictionValue(b) - predictionValue(a));
+        });
+        const sortBy = $('scoutCrossingSort')?.value || state.sortBy || 'expected';
+        state.sortBy = sortBy;
+        state.filteredPlayers = filtered.sort((a, b) => {
+            if (sortBy === 'average') return Number(b.media_num || 0) - Number(a.media_num || 0);
+            if (sortBy === 'price_asc') return Number(a.preco_num || 0) - Number(b.preco_num || 0);
+            if (sortBy === 'price_desc') return Number(b.preco_num || 0) - Number(a.preco_num || 0);
+            if (sortBy === 'games') return Number(b.jogos_num || 0) - Number(a.jogos_num || 0);
+            if (sortBy === 'scout') return Number(b.scouts?.[scout] || 0) - Number(a.scouts?.[scout] || 0);
+            if (sortBy === 'name') return String(a.nome || '').localeCompare(String(b.nome || ''), 'pt-BR');
+            return predictionValue(b) - predictionValue(a);
+        });
     }
     function renderPlayers() {
         filterPlayers();
         const target = $('scoutCrossingPlayers'); if (!target) return;
         target.innerHTML = state.filteredPlayers.length ? state.filteredPlayers.map(playerOption).join('') : '<div class="scx-muted">Nenhum atleta atende aos filtros atuais.</div>';
+        target.querySelectorAll('img[data-fallback]').forEach((image) => image.addEventListener('error', () => {
+            const fallback = document.createElement('span'); fallback.className = 'scx-player-option-avatar'; fallback.textContent = image.dataset.fallback; image.replaceWith(fallback);
+        }, { once: true }));
         target.querySelectorAll('[data-player]').forEach((button) => button.addEventListener('click', () => { state.atletaId = Number(button.dataset.player); const select = $('scoutCrossingPlayer'); if (select) select.value = String(state.atletaId); state.historyExpanded = false; renderPlayers(); runCrossing(); }));
         $('scoutCrossingSelectionHint').textContent = `${state.filteredPlayers.length} atleta(s) no filtro · clique em um card para abrir o detalhamento.`;
     }
     function renderScoutFilter() {
         const select = $('scoutCrossingScout'); if (!select) return;
         const keys = new Set(); (state.players || []).forEach((player) => Object.keys(player.scouts || {}).forEach((key) => keys.add(key)));
-        select.innerHTML = '<option value="">Qualquer scout</option>' + [...keys].map((key) => `<option value="${escapeHtml(key)}">${escapeHtml(shortScouts[key] || key.toUpperCase())} · ${escapeHtml(scoutLabels[key] || key)}</option>`).join('');
+        select.innerHTML = '<option value="">Escolha o scout</option>' + [...keys].map((key) => `<option value="${escapeHtml(key)}">${escapeHtml(shortScouts[key] || key.toUpperCase())} · ${escapeHtml(scoutLabels[key] || key)}</option>`).join('');
     }
     function renderHiddenPlayerSelect() {
         const select = $('scoutCrossingPlayer'); if (!select) return;
@@ -217,8 +225,8 @@
     }
     document.querySelectorAll('.scx-position').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.scx-position').forEach((item) => { item.classList.remove('is-selected'); item.setAttribute('aria-selected', 'false'); }); button.classList.add('is-selected'); button.setAttribute('aria-selected', 'true'); state.posicaoId = Number(button.dataset.position); state.atletaId = null; state.historyExpanded = false; loadOptions(); }));
     document.querySelectorAll('[data-status-filter]').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('[data-status-filter]').forEach((item) => item.classList.remove('is-selected')); button.classList.add('is-selected'); state.statusFilter = button.dataset.statusFilter; renderPlayers(); }));
-    ['scoutCrossingSearch', 'scoutCrossingMinAverage', 'scoutCrossingMinExpected', 'scoutCrossingMaxPrice', 'scoutCrossingMinScout'].forEach((id) => $(id)?.addEventListener('input', renderPlayers));
-    $('scoutCrossingScout')?.addEventListener('change', renderPlayers); $('scoutCrossingCompareButton')?.addEventListener('click', comparePlayers);
+    ['scoutCrossingSearch'].forEach((id) => $(id)?.addEventListener('input', renderPlayers));
+    ['scoutCrossingSort', 'scoutCrossingScout'].forEach((id) => $(id)?.addEventListener('change', renderPlayers)); $('scoutCrossingCompareButton')?.addEventListener('click', comparePlayers);
     $('scoutCrossingPlayer')?.addEventListener('change', (event) => { state.atletaId = Number(event.target.value) || null; renderPlayers(); runCrossing(); });
     state.posicaoId = selectedPosition();
     if (page.dataset.selectedPlayer) state.atletaId = Number(page.dataset.selectedPlayer);

@@ -235,6 +235,8 @@
 .ideal-player-team-badge { bottom:-8px; z-index:2; }
 .ideal-player-team-badge span { display:flex; align-items:center; gap:2px; }.ideal-player-team-badge img { width:12px; height:12px; object-fit:contain; }.ideal-player-team-badge b { color:var(--ideal-amber); font-size:7px; font-weight:800; }
 .ideal-player-sg-badge { top:-8px; color:#9dffbd; border-color:rgba(92,242,165,.3); }.ideal-player-sg-badge i { font-size:7px; }
+.ideal-special-action { position:absolute; left:-7px; top:50%; display:flex; align-items:center; gap:3px; padding:4px 5px; border:1px solid rgba(255,200,87,.34); border-radius:5px; color:#ffd778; background:#241d12; font-size:7px; opacity:0; transform:translateY(-50%); cursor:pointer; transition:opacity .15s,transform .15s; }
+.ideal-special-action span { display:none; }.ideal-player:hover .ideal-special-action,.ideal-player:focus-within .ideal-special-action { opacity:1; transform:translateY(-50%) translateX(-1px); }.ideal-special-action:hover { color:#fff; border-color:rgba(255,200,87,.75); }
 .ideal-player-unavailable { position:absolute; right:-5px; top:18px; display:flex; align-items:center; gap:2px; padding:3px 4px; border:1px solid rgba(248,113,113,.3); border-radius:5px; color:#ffb0b7; background:#26151d; font-size:7px; opacity:0; cursor:pointer; transition:opacity .15s; }
 .ideal-player:hover .ideal-player-unavailable, .ideal-player:focus-within .ideal-player-unavailable { opacity:1; }.ideal-player-unavailable span { display:none; }
 .ideal-player-data { display: block; margin-top: 2px; color: #92d9bb; font-size: 9px; }
@@ -260,7 +262,7 @@
 .ideal-bench-player .ideal-player-data { margin: 0; text-align: right; }
 .ideal-bench-player .ideal-player-avatar { width:34px; height:34px; flex-basis:34px; border-radius:9px; }
 .ideal-bench-player .ideal-player-chips { margin:0; flex-wrap:wrap; justify-content:flex-start; }.ideal-bench-player .ideal-player-team-badge { left:auto; right:5px; bottom:3px; transform:none; }.ideal-bench-player .ideal-player-sg-badge { left:auto; right:5px; top:3px; transform:none; }
-.ideal-bench-player .ideal-player-unavailable { right:3px; top:50%; }
+.ideal-bench-player .ideal-special-action { left:5px; top:auto; bottom:4px; transform:none; }.ideal-bench-player:hover .ideal-special-action,.ideal-bench-player:focus-within .ideal-special-action { transform:translateY(-1px); }.ideal-bench-player .ideal-player-unavailable { right:3px; top:50%; }
 
 .ideal-manual-editor { display: none; margin-top: 13px; padding: 13px; border: 1px solid rgba(82,230,255,.18); border-radius: 12px; background: rgba(82,230,255,.045); }
 .ideal-manual-editor.is-open { display: block; }
@@ -368,4 +370,54 @@
   .ideal-rankings-grid, .ideal-manual-list { grid-template-columns: 1fr 1fr; }
   .ideal-result-head { align-items: flex-start; flex-direction: column; }
   .ideal-picker { padding: 7px; }.ideal-picker-sheet { max-height: 96vh; padding: 10px; border-radius: 11px; }.ideal-picker-filters { grid-template-columns: 1fr 1fr; gap: 5px; }.ideal-picker-head h3 { font-size: 13px; }.ideal-picker-footer { flex-wrap: wrap; }.ideal-picker-footer .ideal-btn { flex: 1 1 auto; }
+}
+
+/* Montagem ampla: o gramado é a área principal e as reservas ficam abaixo,
+   em uma faixa compacta. As linhas defensivas permanecem dentro do campo. */
+.ideal-field-layout { display:flex; flex-direction:column; gap:14px; }
+.ideal-field { min-height:760px; padding:24px 24px 18px; }
+.ideal-field-rows { min-height:660px; gap:24px; }
+.ideal-field-defense-layout { grid-template-columns:minmax(150px,1fr) minmax(0,2fr) minmax(150px,1fr); gap:10px; }
+.ideal-field-defense-lane { display:flex; min-width:0; flex-direction:column; align-items:center; padding-inline:16px; }
+.ideal-field-defense-lane .ideal-field-players,
+.ideal-field-defense-lane:first-child .ideal-field-players,
+.ideal-field-defense-lane:last-child .ideal-field-players { width:100%; min-height:96px; justify-content:center; }
+.ideal-player { width:116px; padding:9px 6px 10px; border-radius:11px; }
+.ideal-player-avatar { width:56px; height:56px; margin-bottom:6px; border-radius:14px; }
+.ideal-player-name { font-size:11px; }
+.ideal-player-chips { gap:4px; margin-top:6px; }.ideal-player-chips span { padding:3px 4px; font-size:8px; }
+.ideal-player-team-badge, .ideal-player-sg-badge { font-size:8px; }.ideal-player-team-badge b { font-size:8px; }
+.ideal-bench { width:min(100%,1100px); margin:0 auto; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; padding:12px 14px; }
+.ideal-bench-head { grid-column:1 / -1; margin-bottom:0; }
+.ideal-bench-group { min-width:0; padding:5px 0; border:0; }
+.ideal-bench-label { margin-bottom:4px; }
+.ideal-bench-player { min-width:0; padding:6px; }
+.ideal-bench-player .ideal-player-avatar { width:38px; height:38px; flex-basis:38px; }
+
+@media (max-width:900px) {
+  .ideal-field { min-height:620px; padding:18px 12px 14px; }
+  .ideal-field-rows { min-height:530px; gap:15px; }
+  .ideal-field-defense-layout { grid-template-columns:minmax(92px,1fr) minmax(0,2fr) minmax(92px,1fr); gap:5px; }
+  .ideal-field-defense-lane { padding-inline:5px; }
+  .ideal-player { width:88px; padding:6px 4px 7px; }
+  .ideal-player-avatar { width:44px; height:44px; border-radius:11px; }
+  .ideal-bench { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+@media (max-width:620px) {
+  .ideal-field { min-height:500px; padding:14px 5px 10px; }
+  .ideal-field-rows { min-height:420px; gap:9px; }
+  .ideal-field-defense-layout { grid-template-columns:minmax(67px,1fr) minmax(0,2fr) minmax(67px,1fr); gap:2px; }
+  .ideal-field-defense-lane { padding-inline:1px; }
+  .ideal-field-defense-lane .ideal-field-players,
+  .ideal-field-defense-lane:first-child .ideal-field-players,
+  .ideal-field-defense-lane:last-child .ideal-field-players { min-height:62px; }
+  .ideal-player { width:62px; padding:4px 2px 5px; }
+  .ideal-player-avatar { width:30px; height:30px; margin-bottom:3px; border-radius:8px; }
+  .ideal-player-name { font-size:7px; }.ideal-player-chips { gap:2px; margin-top:3px; }.ideal-player-chips span { padding:2px; font-size:6px; }
+  .ideal-bench { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; padding:10px; }
+}
+@media (max-width:420px) {
+  .ideal-field { min-height:470px; }.ideal-field-rows { min-height:390px; }
+  .ideal-field-defense-layout { grid-template-columns:minmax(61px,1fr) minmax(0,2fr) minmax(61px,1fr); }
+  .ideal-player { width:56px; }.ideal-player-avatar { width:27px; height:27px; }
 }

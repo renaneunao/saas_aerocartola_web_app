@@ -2,7 +2,7 @@
 {% block title %}Disponibilidade dos jogadores — Aero Cartola{% endblock %}
 
 {% block content %}
-<main class="max-w-7xl mx-auto px-4 py-6" id="availabilityPage">
+<main class="w-full px-4 py-6" id="availabilityPage">
     <section class="glass rounded-2xl border border-[rgba(0,229,255,0.12)] p-5 mb-5">
         <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
             <div>
@@ -10,7 +10,7 @@
                 <h1 class="text-2xl md:text-3xl font-bold text-white mt-1">Disponibilidade dos jogadores</h1>
                 <p class="text-text-secondary text-sm mt-2 max-w-2xl">
                     Marque quem deve ser poupado e quem você crava que joga. As regras valem somente para o time,
-                    temporada e rodada selecionados e afetam rankings e escalação ideal.
+                    temporada e rodada atuais e afetam rankings e escalação ideal.
                 </p>
             </div>
             <div class="flex items-center gap-2 text-xs text-text-secondary bg-bg-secondary/60 rounded-xl px-3 py-2">
@@ -20,7 +20,7 @@
         </div>
     </section>
 
-    <section class="glass rounded-2xl border border-[rgba(0,229,255,0.09)] p-4 mb-5">
+    <section class="availability-controls glass rounded-2xl border border-[rgba(0,229,255,0.09)] p-4 mb-5">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <label class="text-xs text-text-secondary">Posição
                 <select id="availabilityPosition" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2">
@@ -30,12 +30,6 @@
                     <option value="5">Atacantes</option><option value="6">Técnicos</option>
                 </select>
             </label>
-            <label class="text-xs text-text-secondary">Temporada
-                <input id="availabilitySeason" type="number" min="1" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="Atual">
-            </label>
-            <label class="text-xs text-text-secondary">Rodada
-                <input id="availabilityRound" type="number" min="1" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="Atual">
-            </label>
             <label class="text-xs text-text-secondary">Time do jogador
                 <select id="availabilityClub" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2">
                     <option value="">Todos os times</option>
@@ -44,16 +38,15 @@
             <label class="text-xs text-text-secondary sm:col-span-2 lg:col-span-4">Buscar jogador
                 <input id="availabilitySearch" type="search" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="Nome ou clube">
             </label>
-            <label class="text-xs text-text-secondary">Mín. média
-                <input id="availabilityMinAverage" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="0,00">
+            <label class="text-xs text-text-secondary">Ordenar por
+                <select id="availabilitySort" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2">
+                    <option value="expected">Expectativa de pontos</option><option value="average">Média</option>
+                    <option value="price_asc">Preço: menor primeiro</option><option value="price_desc">Preço: maior primeiro</option>
+                    <option value="games">Jogos com pontuação</option><option value="scout">Scout selecionado</option>
+                    <option value="name">Nome</option>
+                </select>
             </label>
-            <label class="text-xs text-text-secondary">Mín. expectativa
-                <input id="availabilityMinExpected" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="0,00">
-            </label>
-            <label class="text-xs text-text-secondary">Máx. preço
-                <input id="availabilityMaxPrice" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="Sem limite">
-            </label>
-            <label class="text-xs text-text-secondary">Scout
+            <label class="text-xs text-text-secondary">Scout para ordenar
                 <select id="availabilityScout" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2">
                     <option value="">Qualquer scout</option>
                     <option value="ds">DS · Desarmes</option><option value="fs">FS · Faltas sofridas</option>
@@ -63,9 +56,6 @@
                     <option value="gs">GS · Gols sofridos</option><option value="i">IMP · Impedimentos</option>
                     <option value="ca">CA · Cartões amarelos</option><option value="cv">CV · Cartões vermelhos</option>
                 </select>
-            </label>
-            <label class="text-xs text-text-secondary">Mín. scout
-                <input id="availabilityMinScout" type="number" min="0" step="0.01" class="mt-1 w-full rounded-lg bg-bg-tertiary border border-white/10 text-white px-3 py-2" placeholder="0,00">
             </label>
         </div>
         <div class="flex flex-wrap gap-2 mt-4" role="tablist" aria-label="Filtro de regras">

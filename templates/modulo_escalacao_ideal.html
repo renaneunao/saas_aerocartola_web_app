@@ -153,10 +153,8 @@
       <div class="ideal-picker-filters">
         <label><span>Nome</span><input id="pickerName" class="ideal-input" type="search" placeholder="Buscar"></label>
         <label><span>Time</span><select id="pickerClub" class="ideal-select"><option value="">Todos</option></select></label>
-        <label><span>Pontuação mín.</span><input id="pickerPoints" class="ideal-input" type="number" step="0.1" placeholder="0"></label>
-        <label><span>Preço máx.</span><input id="pickerPrice" class="ideal-input" type="number" step="0.01" placeholder="Sem limite"></label>
-        <label><span>Scout</span><select id="pickerScout" class="ideal-select"><option value="">Qualquer scout</option></select></label>
-        <label><span>Scout mín.</span><input id="pickerScoutValue" class="ideal-input" type="number" step="0.01" placeholder="0"></label>
+        <label><span>Ordenar por</span><select id="pickerSort" class="ideal-select"><option value="expected">Previsão de pontos</option><option value="average">Média</option><option value="price_asc">Preço: menor primeiro</option><option value="price_desc">Preço: maior primeiro</option><option value="scout">Scout selecionado</option><option value="name">Nome</option></select></label>
+        <label><span>Scout para ordenar</span><select id="pickerScout" class="ideal-select"><option value="">Escolha o scout</option></select></label>
       </div>
       <div id="playerPickerRule" class="ideal-picker-rule"></div>
       <div id="playerPickerResults" class="ideal-picker-results"></div>

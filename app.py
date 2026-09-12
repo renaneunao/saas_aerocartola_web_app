@@ -3705,7 +3705,10 @@ def api_modulo_dados(modulo):
                         'abreviacao': abreviacao,
                         'escudo_url': escudo_url
                     }
-                    clubes_dict[clube_id] = clube_payload
+                    # JSON não pode serializar chaves equivalentes em int e
+                    # str: o encoder do Flask tenta ordená-las e gera
+                    # TypeError entre os tipos. O acesso em JavaScript já
+                    # converte a chave numérica para texto naturalmente.
                     clubes_dict[str(clube_id)] = clube_payload
         
         # Adicionar nome do adversário aos atletas
@@ -3715,16 +3718,20 @@ def api_modulo_dados(modulo):
                 atleta['casa_id'] = partida_info['casa_id']
                 atleta['visitante_id'] = partida_info['visitante_id']
                 atleta['joga_em_casa'] = partida_info['joga_em_casa']
-                casa = clubes_dict.get(partida_info['casa_id'], {})
-                visitante = clubes_dict.get(partida_info['visitante_id'], {})
+                # As chaves do payload são strings para que o Flask consiga
+                # serializar o dicionário sem misturar int e str. Normalize o
+                # acesso aqui também para manter nomes e escudos no ranking.
+                casa = clubes_dict.get(str(partida_info['casa_id']), {})
+                visitante = clubes_dict.get(str(partida_info['visitante_id']), {})
                 atleta['casa_nome'] = casa.get('nome') or 'Casa'
                 atleta['visitante_nome'] = visitante.get('nome') or 'Fora'
                 atleta['casa_escudo_url'] = casa.get('escudo_url') or ''
                 atleta['visitante_escudo_url'] = visitante.get('escudo_url') or ''
 
-            if atleta['adversario_id'] and atleta['adversario_id'] in clubes_dict:
-                atleta['adversario_nome'] = clubes_dict[atleta['adversario_id']]['nome']
-                atleta['adversario_escudo_url'] = clubes_dict[atleta['adversario_id']]['escudo_url']
+            adversario = clubes_dict.get(str(atleta['adversario_id']), {}) if atleta['adversario_id'] else {}
+            if adversario:
+                atleta['adversario_nome'] = adversario['nome']
+                atleta['adversario_escudo_url'] = adversario['escudo_url']
             else:
                 atleta['adversario_nome'] = 'N/A'
                 atleta['adversario_escudo_url'] = ''

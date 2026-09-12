@@ -3,7 +3,7 @@
 
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-<div class="dashboard-page max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-4 lg:py-6 animate-fade-in-up">
+<div class="dashboard-page w-full px-3 sm:px-4 lg:px-6 py-4 lg:py-6 animate-fade-in-up">
 
     <!-- Cabeçalho: Time + Rodada -->
     <div class="glass rounded-2xl neon-border p-4 mb-4">
@@ -206,7 +206,7 @@
             <article class="dashboard-insight">
                 <span class="dashboard-insight-icon"><i class="fas fa-fire"></i></span>
                 <div><small>Favorito do mercado</small>
-                    {% if rodada.favorito %}<div class="dashboard-favorite-line">{% if rodada.favorito.foto %}<img src="{{ rodada.favorito.foto }}" alt="{{ rodada.favorito.nome }}">{% endif %}<strong>{{ rodada.favorito.nome }} · {{ rodada.favorito.clube }}</strong></div><p><span data-locale-number="{{ rodada.favorito.escalacoes }}">{{ rodada.favorito.escalacoes }}</span> escalações</p>
+                    {% if rodada.favorito %}<div class="dashboard-favorite-line">{% if rodada.favorito.foto %}<img src="{{ rodada.favorito.foto }}" alt="{{ rodada.favorito.nome }}">{% else %}<span class="dashboard-favorite-fallback"><i class="fas fa-user"></i></span>{% endif %}<strong>{{ rodada.favorito.nome }} · {{ rodada.favorito.clube }}</strong></div><p><span data-locale-number="{{ rodada.favorito.escalacoes }}">{{ rodada.favorito.escalacoes }}</span> escalações</p>
                     {% else %}<strong>Sem destaque disponível</strong><p>Aguardando atualização do mercado</p>{% endif %}
                 </div>
             </article>
@@ -223,7 +223,7 @@
                 <div class="dashboard-fixture-team"><span>{{ jogo.casa.abreviacao }}</span>{% if jogo.casa.escudo %}<img src="{{ jogo.casa.escudo }}" alt="{{ jogo.casa.nome }}">{% endif %}</div>
                 <b>×</b>
                 <div class="dashboard-fixture-team is-away">{% if jogo.visitante.escudo %}<img src="{{ jogo.visitante.escudo }}" alt="{{ jogo.visitante.nome }}">{% endif %}<span>{{ jogo.visitante.abreviacao }}</span></div>
-                <div class="dashboard-fixture-indices"><span><b>Casa</b> F {{ '%.2f'|format(jogo.casa.favoritismo or 0) }} · SG {{ '%.2f'|format(jogo.casa.saldo or 0) }}</span><span><b>Fora</b> F {{ '%.2f'|format(jogo.visitante.favoritismo or 0) }} · SG {{ '%.2f'|format(jogo.visitante.saldo or 0) }}</span></div>
+                <div class="dashboard-fixture-indices"><span><b>Casa</b><strong>Favoritismo {{ '%.2f'|format(jogo.casa.favoritismo or 0) }}</strong><small>Índice de saldo (SG) {{ '%.2f'|format(jogo.casa.saldo or 0) }}</small></span><span><b>Fora</b><strong>Favoritismo {{ '%.2f'|format(jogo.visitante.favoritismo or 0) }}</strong><small>Índice de saldo (SG) {{ '%.2f'|format(jogo.visitante.saldo or 0) }}</small></span></div>
                 <small>{% if jogo.data %}{{ jogo.data[8:10] }}/{{ jogo.data[5:7] }} · {{ jogo.data[11:16] }}{% else %}Data a definir{% endif %}</small>
                 {% if not jogo.valida %}<em>não válida</em>{% endif %}
             </article>

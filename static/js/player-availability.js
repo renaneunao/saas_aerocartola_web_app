@@ -1,5 +1,5 @@
 (function () {
-  const state = { items: [], filter: 'provaveis', season: null, round: null, teamId: null };
+  const state = { items: [], filter: 'provaveis', sort: 'expected', season: null, round: null, teamId: null };
   const positionNames = { 1: 'Goleiro', 2: 'Lateral', 3: 'Zagueiro', 4: 'Meia', 5: 'Atacante', 6: 'Técnico' };
   const statusColors = { 2: 'text-neon-amber', 3: 'text-neon-red', 5: 'text-neon-red', 6: 'text-neon-red', 7: 'text-neon-green' };
 
@@ -17,30 +17,32 @@
     const params = new URLSearchParams();
     const position = $('availabilityPosition').value;
     if (position) params.set('position_id', position);
-    if ($('availabilitySeason').value) params.set('temporada', $('availabilitySeason').value);
-    if ($('availabilityRound').value) params.set('rodada', $('availabilityRound').value);
     if ($('availabilityClub').value) params.set('clube_id', $('availabilityClub').value);
     return params;
   }
 
   function filteredItems() {
     const search = ($('availabilitySearch')?.value || '').trim().toLocaleLowerCase();
-    const minAverage = Number($('availabilityMinAverage')?.value || 0);
-    const minExpected = Number($('availabilityMinExpected')?.value || 0);
-    const maxPriceValue = $('availabilityMaxPrice')?.value;
-    const maxPrice = maxPriceValue === '' || maxPriceValue == null ? Infinity : Number(maxPriceValue);
     const scout = $('availabilityScout')?.value || '';
-    const minScout = Number($('availabilityMinScout')?.value || 0);
-    return state.items.filter((item) => {
+    const filtered = state.items.filter((item) => {
       const status = Number(item.status_id);
-      if (state.filter === 'provaveis' && status !== 7 && item.rule !== 'cravado') return false;
+      if (state.filter === 'provaveis' && (item.rule === 'poupar' || (status !== 7 && item.rule !== 'cravado'))) return false;
       if (state.filter === 'poupar' && item.rule !== 'poupar') return false;
       if (state.filter === 'cravado' && item.rule !== 'cravado') return false;
       if ($('availabilityClub')?.value && String(item.clube_id) !== $('availabilityClub').value) return false;
       if (search && !`${item.apelido || ''} ${item.nome || ''} ${item.clube_nome || ''}`.toLocaleLowerCase().includes(search)) return false;
-      if (Number(item.media_num || 0) < minAverage || Number(item.pontos_num || 0) < minExpected || Number(item.preco_num || 0) > maxPrice) return false;
-      if (scout && Number(item.scouts?.[scout] || 0) < minScout) return false;
       return state.filter !== 'provaveis' || (status !== 6 && item.rule !== 'poupar');
+    });
+    const sort = $('availabilitySort')?.value || state.sort || 'expected';
+    state.sort = sort;
+    return filtered.sort((a, b) => {
+      if (sort === 'average') return Number(b.media_num || 0) - Number(a.media_num || 0);
+      if (sort === 'price_asc') return Number(a.preco_num || 0) - Number(b.preco_num || 0);
+      if (sort === 'price_desc') return Number(b.preco_num || 0) - Number(a.preco_num || 0);
+      if (sort === 'games') return Number(b.jogos_num || 0) - Number(a.jogos_num || 0);
+      if (sort === 'scout') return Number(b.scouts?.[scout] || 0) - Number(a.scouts?.[scout] || 0);
+      if (sort === 'name') return String(a.apelido || a.nome || '').localeCompare(String(b.apelido || b.nome || ''), 'pt-BR');
+      return Number(b.pontos_num || 0) - Number(a.pontos_num || 0);
     });
   }
 
@@ -78,8 +80,6 @@
     state.items = data.items || [];
     state.season = data.season; state.round = data.round_number;
     state.teamId = data.team_id || state.teamId;
-    if (!$('availabilitySeason').value) $('availabilitySeason').value = data.season;
-    if (!$('availabilityRound').value) $('availabilityRound').value = data.round_number;
     $('availabilityContext').textContent = `Temporada ${data.season} · Rodada ${data.round_number} · Time selecionado`;
     const clubSelect = $('availabilityClub');
     if (clubSelect) {
@@ -92,7 +92,7 @@
   }
 
   async function save(athleteId, rule) {
-    const response = await fetch('/api/player-availability', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ team_id: state.teamId, athlete_id: athleteId, rule, temporada: Number($('availabilitySeason').value), rodada: Number($('availabilityRound').value) }) });
+    const response = await fetch('/api/player-availability', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ team_id: state.teamId, athlete_id: athleteId, rule, temporada: state.season, rodada: state.round }) });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a regra.');
     feedback(rule === 'poupar' ? 'Jogador marcado para ser poupado.' : 'Jogador cravado como provável para a escalação.', 'info');
@@ -100,7 +100,7 @@
   }
 
   async function clear(athleteId) {
-    const params = new URLSearchParams({ team_id: state.teamId, temporada: $('availabilitySeason').value, rodada: $('availabilityRound').value });
+    const params = new URLSearchParams({ team_id: state.teamId, temporada: state.season, rodada: state.round });
     const response = await fetch(`/api/player-availability/${athleteId}?${params}`, { method: 'DELETE' });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Não foi possível limpar a regra.');
@@ -108,10 +108,10 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    ['availabilityPosition', 'availabilitySeason', 'availabilityRound'].forEach((id) => $(id).addEventListener('change', () => load().catch((e) => feedback(e.message, 'error'))));
+    ['availabilityPosition'].forEach((id) => $(id).addEventListener('change', () => load().catch((e) => feedback(e.message, 'error'))));
     $('availabilityClub')?.addEventListener('change', () => render());
-    ['availabilitySearch', 'availabilityMinAverage', 'availabilityMinExpected', 'availabilityMaxPrice', 'availabilityMinScout'].forEach((id) => $(id)?.addEventListener('input', () => render()));
-    $('availabilityScout')?.addEventListener('change', () => render());
+    $('availabilitySearch')?.addEventListener('input', () => render());
+    ['availabilitySort', 'availabilityScout'].forEach((id) => $(id)?.addEventListener('change', () => render()));
     $('availabilityReload').addEventListener('click', () => load().catch((e) => feedback(e.message, 'error')));
     document.querySelectorAll('.availability-tab').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.availability-tab').forEach((b) => b.classList.remove('active')); button.classList.add('active'); state.filter = button.dataset.filter; render(); }));
     $('availabilityRows').addEventListener('click', (event) => { const button = event.target.closest('button[data-action]'); if (!button) return; const action = button.dataset.action; const promise = action === 'clear' ? clear(button.dataset.athlete) : save(button.dataset.athlete, action); promise.catch((e) => feedback(e.message, 'error')); });

@@ -34,22 +34,29 @@
                 {% endfor %}
             </div>
         </div>
-        <div class="scx-filter-head">
-            <div class="scx-section-label"><span>3</span><div><strong>Filtre os jogadores</strong><small>Prováveis já vêm selecionados; clique para analisar</small></div></div>
-            <div class="scx-status-filters" role="group" aria-label="Status do jogador">
-                <button type="button" class="scx-filter-chip is-selected" data-status-filter="provaveis">Prováveis</button>
-                <button type="button" class="scx-filter-chip" data-status-filter="todos">Todos</button>
-                <button type="button" class="scx-filter-chip" data-status-filter="cravados">Cravados</button>
-                <button type="button" class="scx-filter-chip" data-status-filter="duvidas">Dúvidas</button>
+        <div class="scx-filter-sticky">
+            <div class="scx-filter-head">
+                <div class="scx-section-label"><span>3</span><div><strong>Filtre os jogadores</strong><small>Comece pelos prováveis e refine por decisão ou perfil.</small></div></div>
+                <div class="scx-status-filters" role="group" aria-label="Status do jogador">
+                    <button type="button" class="scx-filter-chip is-selected" data-status-filter="provaveis">Prováveis</button>
+                    <button type="button" class="scx-filter-chip" data-status-filter="todos">Todos</button>
+                    <button type="button" class="scx-filter-chip" data-status-filter="cravados">Cravados</button>
+                    <button type="button" class="scx-filter-chip" data-status-filter="duvidas">Dúvidas</button>
+                </div>
             </div>
-        </div>
-        <div class="scx-player-filters">
-            <label>Nome <input id="scoutCrossingSearch" type="search" placeholder="Buscar atleta"></label>
-            <label>Mín. média <input id="scoutCrossingMinAverage" type="number" step="0.01" min="0" placeholder="0,00"></label>
-            <label>Mín. expectativa <input id="scoutCrossingMinExpected" type="number" step="0.01" min="0" placeholder="0,00"></label>
-            <label>Máx. preço <input id="scoutCrossingMaxPrice" type="number" step="0.01" min="0" placeholder="Sem limite"></label>
-            <label>Scout <select id="scoutCrossingScout"><option value="">Qualquer scout</option></select></label>
-            <label>Mín. scout <input id="scoutCrossingMinScout" type="number" step="0.01" min="0" placeholder="0,00"></label>
+            <div class="scx-player-filters">
+                <label class="scx-search-field">Buscar atleta <input id="scoutCrossingSearch" type="search" placeholder="Nome ou clube"></label>
+                <label>Ordenar por <select id="scoutCrossingSort">
+                    <option value="expected">Previsão de pontos</option>
+                    <option value="average">Média</option>
+                    <option value="price_asc">Preço: menor primeiro</option>
+                    <option value="price_desc">Preço: maior primeiro</option>
+                    <option value="games">Jogos com pontuação</option>
+                    <option value="scout">Scout selecionado</option>
+                    <option value="name">Nome</option>
+                </select></label>
+                <label>Scout para ordenar <select id="scoutCrossingScout"><option value="">Escolha o scout</option></select></label>
+            </div>
         </div>
         <div class="scx-player-line">
             <div id="scoutCrossingPlayers" class="scx-player-grid" aria-live="polite"></div>
