@@ -293,11 +293,14 @@
 
   function defenseLayout(result) {
     const count = FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3'];
-    const center = fieldGroup(result, 'zagueiros', 'ideal-field-group-center');
-    const left = count.laterais > 0 ? defenseLane(result, 'laterais', 0, 'Lateral esquerdo') : '';
-    const right = count.laterais > 1 ? defenseLane(result, 'laterais', 1, 'Lateral direito') : '';
-    if (!center && !left && !right) return '';
-    return `<div class="ideal-field-row ideal-field-row-defense"><div class="ideal-field-defense-layout"><div class="ideal-field-defense-side ideal-field-defense-side-left">${left}</div><div class="ideal-field-defense-center">${center}</div><div class="ideal-field-defense-side ideal-field-defense-side-right">${right}</div></div></div>`;
+    const slots = [];
+    if (count.laterais > 0) slots.push(defenseLane(result, 'laterais', 0, 'Lateral esquerdo'));
+    for (let index = 0; index < count.zagueiros; index += 1) {
+      slots.push(defenseLane(result, 'zagueiros', index, 'Zagueiro'));
+    }
+    if (count.laterais > 1) slots.push(defenseLane(result, 'laterais', 1, 'Lateral direito'));
+    if (!slots.length) return '';
+    return `<div class="ideal-field-row ideal-field-row-defense"><div class="ideal-field-defense-layout"><div class="ideal-field-defense-line" style="--defender-count:${slots.length}">${slots.join('')}</div></div></div>`;
   }
 
   function renderField(result) {
@@ -310,7 +313,8 @@
     const groups = positions.map(position => {
       const players = (result.reservas?.[position] || []).filter(Boolean);
       const player = players[0];
-      const card = player ? `<div class="ideal-bench-player ideal-player-card" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? '<span class="ideal-badge ideal-badge-luxury">LUXO</span>' : ''}${avatar(player)}<span class="ideal-bench-copy"><span class="ideal-player-name">${escapeHtml(player.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span></span><span class="ideal-bench-signals">${teamIndicators(player, position)}</span><button type="button" class="ideal-special-action" data-special-role="luxury" data-athlete-id="${escapeHtml(idOf(player))}" title="Definir ${escapeHtml(player.apelido || 'jogador')} como reserva de luxo"><i class="fas fa-gem"></i><span>Luxo</span></button><button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
+      const luxuryAction = player?.eh_reserva_luxo ? '' : `<button type="button" class="ideal-special-action" data-special-role="luxury" data-athlete-id="${escapeHtml(idOf(player))}" title="Definir ${escapeHtml(player?.apelido || 'jogador')} como reserva de luxo"><i class="fas fa-gem"></i><span>Luxo</span></button>`;
+      const card = player ? `<div class="ideal-bench-player ideal-player-card" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? '<span class="ideal-badge ideal-badge-luxury">LUXO</span>' : ''}${avatar(player)}<span class="ideal-bench-copy"><span class="ideal-player-name">${escapeHtml(player.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span></span><span class="ideal-bench-signals">${teamIndicators(player, position)}</span>${luxuryAction}<button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
       return `<div class="ideal-bench-group"><div class="ideal-bench-label">${POSITIONS[position].label}<small>mais barata que o titular</small></div>${card}</div>`;
     }).join('');
     return `<aside class="ideal-bench"><div class="ideal-bench-head"><span class="ideal-bench-title"><i class="fas fa-exchange-alt"></i>Reservas</span><span class="ideal-bench-note">sem custo</span></div>${groups}</aside>`;
@@ -379,9 +383,18 @@
     exibirResultado(window.ultimaEscalacao, state.clubes);
   }
 
+  function lineupIsComplete(result) {
+    if (!result) return false;
+    const count = FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3'];
+    const starters = result.titulares || {};
+    const positionsComplete = Object.entries(count).every(([position, expected]) => (starters[position] || []).filter(Boolean).length === expected);
+    return positionsComplete && (starters.treinadores || []).filter(Boolean).length === 1;
+  }
+
   function refreshSubmitButton() {
     const buttons = [$('escalarBtn'), $('fieldSubmitBtn')].filter(Boolean);
     if (!buttons.length || !can('podeEscalar')) return;
+    const canSend = lineupIsComplete(window.ultimaEscalacao);
     const label = state.teamChanged
       ? '<i class="fas fa-paper-plane"></i> Enviar time alterado'
       : '<i class="fas fa-paper-plane"></i> Enviar escalação';
@@ -389,6 +402,8 @@
       button.innerHTML = button.id === 'fieldSubmitBtn'
         ? (state.teamChanged ? '<i class="fas fa-paper-plane"></i><span>Enviar time alterado</span>' : '<i class="fas fa-paper-plane"></i><span>Enviar escalação</span>')
         : label;
+      button.disabled = !canSend;
+      button.title = canSend ? 'Enviar esta escalação para o Cartola FC' : 'Complete todas as posições antes de enviar';
     });
   }
 
@@ -405,11 +420,6 @@
     renderManualEditor(result);
     panel.classList.remove('hidden');
     refreshSubmitButton();
-    const expected = Object.values(FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3']).reduce((sum, value) => sum + value, 0) + 1;
-    const actual = POSITION_ORDER.flatMap(position => result.titulares?.[position] || []).length;
-    const canSend = actual === expected;
-    $('escalarBtn').disabled = !canSend;
-    if ($('fieldSubmitBtn')) $('fieldSubmitBtn').disabled = !canSend;
   }
 
   async function calcularEscalacao(recarregarDados = true) {

@@ -5207,30 +5207,103 @@ def admin_fotos():
     conn = get_db_connection()
     try:
         from utils.utilidades import get_temporada_atual
+        from urllib.parse import urlparse
+
         temporada = get_temporada_atual()
-        
+
         if request.method == 'POST':
-            atleta_id = request.form.get('atleta_id')
-            foto_url = request.form.get('foto_url', '').strip()
-            if atleta_id and foto_url:
-                cursor = conn.cursor()
-                cursor.execute("UPDATE acf_atletas SET foto_custom = %s WHERE atleta_id = %s", (foto_url, int(atleta_id)))
-                conn.commit()
-                flash('Foto atualizada!', 'success')
-        
+            payload = request.get_json(silent=True) if request.is_json else request.form
+            atleta_id = str((payload or {}).get('atleta_id') or '').strip()
+            foto_url = str((payload or {}).get('foto_url') or '').strip()
+
+            try:
+                atleta_id_int = int(atleta_id)
+            except (TypeError, ValueError):
+                message = 'Identificador de atleta inválido.'
+                if request.is_json:
+                    return jsonify({'success': False, 'error': message}), 400
+                flash(message, 'error')
+                return redirect(url_for('admin_fotos'))
+
+            parsed_url = urlparse(foto_url)
+            if not foto_url or parsed_url.scheme not in {'http', 'https'} or not parsed_url.netloc:
+                message = 'Informe uma URL válida começando com http:// ou https://.'
+                if request.is_json:
+                    return jsonify({'success': False, 'error': message}), 400
+                flash(message, 'error')
+                return redirect(url_for('admin_fotos'))
+
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                UPDATE acf_atletas
+                   SET foto_custom = %s
+                 WHERE atleta_id = %s
+                   AND temporada = %s
+                """,
+                (foto_url, atleta_id_int, temporada),
+            )
+            if cursor.rowcount != 1:
+                conn.rollback()
+                message = 'Atleta não encontrado na temporada atual.'
+                if request.is_json:
+                    return jsonify({'success': False, 'error': message}), 404
+                flash(message, 'error')
+                return redirect(url_for('admin_fotos'))
+            conn.commit()
+
+            if request.is_json:
+                return jsonify({'success': True, 'atleta_id': atleta_id_int, 'foto_url': foto_url})
+            flash('Foto atualizada!', 'success')
+            return redirect(url_for('admin_fotos'))
+
+        status_filter = request.args.get('status', 'all').strip().lower()
+        if status_filter not in {'all', 'missing'}:
+            status_filter = 'all'
+        clube_filter = request.args.get('clube_id', '').strip()
+        posicao_filter = request.args.get('posicao_id', '').strip()
+        search_filter = request.args.get('q', '').strip()
+
+        where = ['a.temporada = %s']
+        params = [temporada]
+        if status_filter == 'missing':
+            where.append("COALESCE(NULLIF(BTRIM(a.foto_custom), ''), '') = ''")
+        if clube_filter:
+            try:
+                where.append('a.clube_id = %s')
+                params.append(int(clube_filter))
+            except ValueError:
+                clube_filter = ''
+                where.pop()
+        if posicao_filter:
+            try:
+                where.append('a.posicao_id = %s')
+                params.append(int(posicao_filter))
+            except ValueError:
+                posicao_filter = ''
+                where.pop()
+        if search_filter:
+            where.append('(a.apelido ILIKE %s OR a.nome ILIKE %s)')
+            search_pattern = f'%{search_filter}%'
+            params.extend([search_pattern, search_pattern])
+
         cursor = conn.cursor()
-        cursor.execute("""
-            SELECT a.atleta_id, a.apelido, a.nome, a.posicao_id, COALESCE(a.foto_custom, a.foto) as foto,
-                   p.nome as posicao_nome, c.nome as clube_nome, c.abreviacao as clube_abrev,
-                   c.id as clube_id
+        cursor.execute(f"""
+            SELECT a.atleta_id, a.apelido, a.nome, a.posicao_id,
+                   a.foto_custom, COALESCE(a.foto_custom, a.foto) AS foto,
+                   p.nome AS posicao_nome, c.nome AS clube_nome, c.abreviacao AS clube_abrev,
+                   c.id AS clube_id
             FROM acf_atletas a
             JOIN acf_posicoes p ON a.posicao_id = p.id
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.temporada = %s
+            WHERE {' AND '.join(where)}
             ORDER BY a.posicao_id, a.apelido
-        """, (temporada,))
+        """, tuple(params))
         atletas = cursor.fetchall()
-        
+
+        cursor.execute("SELECT id, nome FROM acf_clubes ORDER BY nome")
+        clubes = cursor.fetchall()
+
         posicoes = {1: 'Goleiros', 2: 'Laterais', 3: 'Zagueiros', 4: 'Meias', 5: 'Atacantes', 6: 'Técnicos'}
         atletas_por_posicao = {}
         for a in atletas:
@@ -5240,7 +5313,18 @@ def admin_fotos():
                 atletas_por_posicao[nome_pos] = []
             atletas_por_posicao[nome_pos].append(a)
         
-        return render_template('admin_fotos.html', atletas_por_posicao=atletas_por_posicao)
+        return render_template(
+            'admin_fotos.html',
+            atletas_por_posicao=atletas_por_posicao,
+            clubes=clubes,
+            posicoes=posicoes,
+            filtros={
+                'status': status_filter,
+                'clube_id': clube_filter,
+                'posicao_id': posicao_filter,
+                'q': search_filter,
+            },
+        )
     finally:
         close_db_connection(conn)
 

@@ -721,3 +721,94 @@
     padding: 3px;
   }
 }
+
+/* Ajuste final do campo: a defesa usa uma única régua, mantendo laterais nas
+   pontas da linha e zagueiros próximos, sem ocupar duas faixas gigantes. */
+@media (min-width: 1101px) {
+  .ideal-field-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+    align-items: start;
+    gap: 12px;
+  }
+
+  .ideal-field {
+    width: 100%;
+    max-width: none;
+  }
+
+  .ideal-bench {
+    width: 100%;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
+.ideal-field-defense-layout {
+  display: block;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.ideal-field-defense-line {
+  display: grid;
+  grid-template-columns: repeat(var(--defender-count), minmax(0, 1fr));
+  align-items: end;
+  gap: clamp(6px, 1vw, 15px);
+  width: min(100%, 780px);
+  padding: 0;
+  margin-inline: auto;
+}
+
+.ideal-field-defense-line .ideal-field-defense-lane {
+  min-width: 0;
+  padding-inline: 0;
+}
+
+.ideal-field-defense-line .ideal-field-players {
+  width: 100%;
+  min-height: 112px;
+  justify-content: center;
+}
+
+/* O comando fica invisível até o mouse alcançar o card e permanece fora da
+   área da foto. O atleta que já é luxo não recebe o comando no HTML. */
+.ideal-bench-player .ideal-special-action {
+  left: auto;
+  right: 7px;
+  top: 7px;
+  bottom: auto;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-4px);
+}
+
+.ideal-bench-player:hover .ideal-special-action,
+.ideal-bench-player:focus-within .ideal-special-action {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+@media (max-width: 900px) {
+  .ideal-field-defense-line {
+    width: 100%;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 620px) {
+  .ideal-field-defense-line {
+    gap: 3px;
+  }
+
+  .ideal-bench-player .ideal-special-action {
+    right: 5px;
+    top: 5px;
+    padding: 3px 4px;
+  }
+}

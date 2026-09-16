@@ -1,67 +1,225 @@
 {% extends 'base.html' %}
-{% block title %}Gerenciar Fotos — Aero Cartola{% endblock %}
+{% block title %}Fotos dos jogadores — Aero Cartola{% endblock %}
 
 {% block content %}
-<div class="max-w-full mx-auto px-2 py-4 animate-fade-in-up">
-
-    <div class="glass rounded-2xl neon-border p-4 mb-4">
-        <h1 class="text-lg font-bold text-white mb-1">Gerenciar Fotos dos Jogadores</h1>
-        <p class="text-text-muted text-xs">Cole a URL da foto de cada jogador e salve. Use sites como imgur.com para hospedar as imagens.</p>
-    </div>
-
-    <div class="space-y-4">
-    {% for posicao, atletas in atletas_por_posicao.items() %}
-    <div class="glass rounded-2xl neon-border overflow-hidden">
-        <div class="bg-[rgba(0,229,255,0.06)] px-3 py-2 border-b border-[rgba(0,229,255,0.06)] flex items-center justify-between">
-            <h2 class="text-sm font-bold text-white">{{ posicao }} <span class="text-text-muted text-xs">({{ atletas|length }})</span></h2>
-            <span class="text-text-muted text-[10px]">Clique na foto para expandir</span>
+<main class="admin-photos-page aero-page-shell">
+    <section class="admin-photos-hero aero-surface">
+        <div>
+            <span class="aero-kicker"><i class="fas fa-images"></i> Biblioteca visual</span>
+            <h1>Fotos dos jogadores</h1>
+            <p>Atualize a foto customizada de cada atleta. Clique na imagem para informar uma URL e aplicar imediatamente.</p>
         </div>
-        <div class="p-2">
-            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-10 gap-1.5">
-            {% for a in atletas %}
-            {% set atleta_id = a[0] %}
-            {% set apelido = a[1] %}
-            {% set nome = a[2] or apelido %}
-            {% set foto = a[4] or '' %}
-            {% set clube_nome = a[6] or '' %}
-            {% set clube_id = a[8] or 0 %}
-            <div class="bg-[rgba(17,27,46,0.4)] rounded-xl border border-[rgba(255,255,255,0.04)] p-1.5 flex flex-col items-center group hover:border-[rgba(0,229,255,0.2)] transition-all duration-200">
-                <!-- Preview da foto -->
-                <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-[rgba(0,229,255,0.15)] mb-1 cursor-pointer flex-shrink-0" 
-                     title="ID: {{ atleta_id }} — {{ nome }}"
-                     onclick="document.getElementById('input-{{ atleta_id }}').focus()">
-                    {% if foto and foto != '' %}
-                    <img src="{{ foto }}" alt="{{ apelido }}" class="w-full h-full object-cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                    <div class="w-full h-full bg-[rgba(0,229,255,0.08)] flex items-center justify-center" style="display:none">
-                        <span class="text-neon-cyan font-bold text-lg">{{ apelido[:2].upper() }}</span>
-                    </div>
-                    {% else %}
-                    <div class="w-full h-full bg-[rgba(0,229,255,0.08)] flex items-center justify-center">
-                        <span class="text-neon-cyan font-bold text-lg">{{ apelido[:2].upper() }}</span>
-                    </div>
-                    {% endif %}
-                </div>
-                <!-- Nome + clube -->
-                <p class="text-white text-[11px] font-semibold text-center leading-tight truncate w-full" title="{{ nome }}">{{ apelido }}</p>
-                <p class="text-text-muted text-[9px] text-center leading-tight mb-1.5">{{ clube_nome }}</p>
-                <!-- Input URL -->
-                <form method="POST" class="w-full flex gap-1">
-                    <input type="hidden" name="atleta_id" value="{{ atleta_id }}">
-                    <input type="text" id="input-{{ atleta_id }}" name="foto_url" 
-                           value="{{ foto }}"
-                           placeholder="URL da foto..."
-                           class="flex-1 bg-[rgba(6,11,20,0.6)] border border-[rgba(255,255,255,0.06)] focus:border-[rgba(0,229,255,0.3)] text-white text-[10px] rounded-lg px-2 py-1 outline-none transition-all placeholder:text-text-muted">
-                    <button type="submit" class="bg-[rgba(0,229,255,0.08)] hover:bg-[rgba(0,229,255,0.16)] text-neon-cyan border border-[rgba(0,229,255,0.15)] rounded-lg px-2 py-1 text-[10px] font-medium transition-all flex-shrink-0">
-                        <i class="fas fa-save"></i>
+        <div class="admin-photos-count">
+            <strong>{{ atletas_por_posicao.values()|map('length')|sum }}</strong>
+            <span>atletas exibidos</span>
+        </div>
+    </section>
+
+    <form class="admin-photos-filters aero-surface" method="GET" action="{{ url_for('admin_fotos') }}">
+        <div class="admin-photos-filter-heading">
+            <div>
+                <span class="aero-kicker"><i class="fas fa-filter"></i> Filtros rápidos</span>
+                <strong>Encontre quem precisa de atenção</strong>
+            </div>
+            <a class="aero-button-neutral" href="{{ url_for('admin_fotos') }}"><i class="fas fa-rotate-left"></i> Limpar</a>
+        </div>
+        <div class="admin-photos-filter-grid">
+            <label class="admin-photos-field admin-photos-field-search">
+                <span>Jogador</span>
+                <div class="admin-photos-input-wrap"><i class="fas fa-search"></i><input name="q" value="{{ filtros.q }}" placeholder="Nome ou apelido"></div>
+            </label>
+            <label class="admin-photos-field">
+                <span>Situação da foto</span>
+                <select name="status">
+                    <option value="all" {% if filtros.status == 'all' %}selected{% endif %}>Todas</option>
+                    <option value="missing" {% if filtros.status == 'missing' %}selected{% endif %}>Somente sem foto customizada</option>
+                </select>
+            </label>
+            <label class="admin-photos-field">
+                <span>Time</span>
+                <select name="clube_id">
+                    <option value="">Todos os times</option>
+                    {% for clube in clubes %}
+                    <option value="{{ clube[0] }}" {% if filtros.clube_id == clube[0]|string %}selected{% endif %}>{{ clube[1] }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <label class="admin-photos-field">
+                <span>Posição</span>
+                <select name="posicao_id">
+                    <option value="">Todas as posições</option>
+                    {% for position_id, position_name in posicoes.items() %}
+                    <option value="{{ position_id }}" {% if filtros.posicao_id == position_id|string %}selected{% endif %}>{{ position_name }}</option>
+                    {% endfor %}
+                </select>
+            </label>
+            <button class="aero-button-primary admin-photos-submit" type="submit"><i class="fas fa-search"></i> Filtrar</button>
+        </div>
+    </form>
+
+    {% if atletas_por_posicao %}
+    <div class="admin-photos-sections">
+        {% for posicao, atletas in atletas_por_posicao.items() %}
+        <section class="admin-photos-section aero-surface" data-photo-section>
+            <header class="admin-photos-section-head">
+                <div><span class="admin-photos-section-index">{{ '%02d'|format(loop.index) }}</span><h2>{{ posicao }}</h2><span class="admin-photos-section-total" data-section-count>{{ atletas|length }}</span></div>
+                <span class="admin-photos-section-note">{{ 'foto customizada' if filtros.status == 'missing' else 'clique para editar' }}</span>
+            </header>
+            <div class="admin-photos-grid">
+                {% for a in atletas %}
+                {% set atleta_id = a[0] %}
+                {% set apelido = a[1] or a[2] or 'Jogador' %}
+                {% set nome = a[2] or apelido %}
+                {% set custom_foto = a[4] or '' %}
+                {% set foto = a[5] or '' %}
+                {% set clube_nome = a[7] or '' %}
+                {% set clube_abrev = a[8] or clube_nome %}
+                {% set clube_id = a[9] or 0 %}
+                <article class="admin-photo-card" data-player-card data-photo-loaded="{{ 'true' if custom_foto else 'false' }}" data-photo-url="{{ foto|e }}" data-player-name="{{ nome|e }}" data-athlete-id="{{ atleta_id }}">
+                    <button type="button" class="admin-photo-preview" data-photo-open aria-label="Atualizar foto de {{ nome }}">
+                        {% if foto %}<img src="{{ foto }}" alt="{{ apelido }}" data-photo-image onerror="this.hidden=true; this.nextElementSibling.hidden=false">{% endif %}
+                        <span class="admin-photo-fallback" {% if foto %}hidden{% endif %}>{{ apelido[:2].upper() }}</span>
+                        <span class="admin-photo-edit-hint"><i class="fas fa-link"></i></span>
                     </button>
-                </form>
+                    <div class="admin-photo-copy">
+                        <strong title="{{ nome }}">{{ apelido }}</strong>
+                        <span><b>{{ clube_abrev }}</b> · {{ clube_nome }}</span>
+                    </div>
+                    <button type="button" class="admin-photo-edit aero-button-neutral" data-photo-open><i class="fas fa-pen"></i><span>{{ 'Editar URL' if custom_foto else 'Adicionar URL' }}</span></button>
+                    <span class="admin-photo-status {{ 'is-loaded' if custom_foto else 'is-missing' }}" data-photo-status><i class="fas {{ 'fa-check' if custom_foto else 'fa-circle-exclamation' }}"></i>{{ 'customizada' if custom_foto else 'pendente' }}</span>
+                </article>
+                {% endfor %}
             </div>
-            {% endfor %}
-            </div>
-        </div>
+        </section>
+        {% endfor %}
     </div>
-    {% endfor %}
-    </div>
+    {% else %}
+    <section class="admin-photos-empty aero-surface"><i class="fas fa-image"></i><strong>Nenhum atleta encontrado</strong><span>Ajuste os filtros para continuar atualizando as fotos.</span></section>
+    {% endif %}
+</main>
 
+<div id="photoEditorModal" class="admin-photo-modal" hidden>
+    <button type="button" class="admin-photo-modal-backdrop" data-photo-close aria-label="Fechar"></button>
+    <section class="admin-photo-dialog aero-surface" role="dialog" aria-modal="true" aria-labelledby="photoEditorTitle">
+        <header class="admin-photo-dialog-head"><div><span class="aero-kicker"><i class="fas fa-camera"></i> Atualização rápida</span><h2 id="photoEditorTitle">Foto do jogador</h2></div><button type="button" class="aero-icon-button" data-photo-close aria-label="Fechar"><i class="fas fa-xmark"></i></button></header>
+        <div class="admin-photo-dialog-preview"><span id="photoEditorFallback">AT</span><img id="photoEditorPreview" alt="Prévia da foto" hidden></div>
+        <form id="photoEditorForm">
+            <input id="photoEditorAthleteId" type="hidden">
+            <label class="admin-photos-field"><span>URL direta da imagem</span><input id="photoEditorUrl" type="url" inputmode="url" placeholder="https://site.com/foto.jpg" autocomplete="off" required><small>A imagem é salva e carregada no card assim que você confirmar.</small></label>
+            <p id="photoEditorError" class="admin-photo-form-error" hidden></p>
+            <footer class="admin-photo-dialog-actions"><button type="button" class="aero-button-neutral" data-photo-close>Cancelar</button><button type="submit" class="aero-button-primary" id="photoEditorSave"><i class="fas fa-cloud-arrow-up"></i> Atualizar foto</button></footer>
+        </form>
+    </section>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+    'use strict';
+    const modal = document.getElementById('photoEditorModal');
+    const form = document.getElementById('photoEditorForm');
+    const urlInput = document.getElementById('photoEditorUrl');
+    const athleteInput = document.getElementById('photoEditorAthleteId');
+    const title = document.getElementById('photoEditorTitle');
+    const preview = document.getElementById('photoEditorPreview');
+    const fallback = document.getElementById('photoEditorFallback');
+    const errorBox = document.getElementById('photoEditorError');
+    let activeCard = null;
+
+    function setPreview(url, initials) {
+        fallback.textContent = initials || 'AT';
+        fallback.hidden = Boolean(url);
+        preview.hidden = !url;
+        preview.src = url || '';
+        preview.onerror = function () { preview.hidden = true; fallback.hidden = false; };
+    }
+
+    function openModal(card) {
+        if (!card) return;
+        activeCard = card;
+        const playerName = card.dataset.playerName || 'jogador';
+        title.textContent = `Foto de ${playerName}`;
+        athleteInput.value = card.dataset.athleteId || '';
+        urlInput.value = card.dataset.photoUrl || '';
+        errorBox.hidden = true;
+        setPreview(urlInput.value, playerName.slice(0, 2).toUpperCase());
+        modal.hidden = false;
+        document.body.classList.add('photo-modal-open');
+        window.setTimeout(() => urlInput.focus(), 30);
+    }
+
+    function closeModal() {
+        modal.hidden = true;
+        document.body.classList.remove('photo-modal-open');
+        activeCard = null;
+    }
+
+    function updateCard(card, url) {
+        const photoButton = card.querySelector('[data-photo-preview]');
+        const oldImage = photoButton.querySelector('[data-photo-image]');
+        if (oldImage) oldImage.remove();
+        const image = document.createElement('img');
+        image.src = url;
+        image.alt = card.dataset.playerName || 'Jogador';
+        image.dataset.photoImage = 'true';
+        const fallbackNode = photoButton.querySelector('.admin-photo-fallback');
+        image.addEventListener('error', () => { image.remove(); fallbackNode.hidden = false; });
+        fallbackNode.hidden = true;
+        photoButton.prepend(image);
+        card.dataset.photoUrl = url;
+        card.dataset.photoLoaded = 'true';
+        const status = card.querySelector('[data-photo-status]');
+        if (status) {
+            status.classList.remove('is-missing');
+            status.classList.add('is-loaded');
+            status.innerHTML = '<i class="fas fa-check"></i>customizada';
+        }
+        const editLabel = card.querySelector('.admin-photo-edit span');
+        if (editLabel) editLabel.textContent = 'Editar URL';
+    }
+
+    document.querySelectorAll('[data-photo-open]').forEach((button) => button.addEventListener('click', () => openModal(button.closest('[data-player-card]'))));
+    document.querySelectorAll('[data-photo-close]').forEach((button) => button.addEventListener('click', closeModal));
+    urlInput.addEventListener('input', () => setPreview(urlInput.value.trim(), (activeCard?.dataset.playerName || 'AT').slice(0, 2).toUpperCase()));
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !modal.hidden) closeModal(); });
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const url = urlInput.value.trim();
+        let parsed;
+        try { parsed = new URL(url); } catch (_) { parsed = null; }
+        if (!parsed || !['http:', 'https:'].includes(parsed.protocol)) {
+            errorBox.textContent = 'Informe uma URL válida começando com http:// ou https://.';
+            errorBox.hidden = false;
+            urlInput.focus();
+            return;
+        }
+        const saveButton = document.getElementById('photoEditorSave');
+        saveButton.disabled = true;
+        errorBox.hidden = true;
+        try {
+            const response = await fetch('{{ url_for('admin_fotos') }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ atleta_id: athleteInput.value, foto_url: url }) });
+            const data = await response.json();
+            if (!response.ok || !data.success) throw new Error(data.error || 'Não foi possível atualizar a foto.');
+            updateCard(activeCard, data.foto_url);
+            if (new URLSearchParams(window.location.search).get('status') === 'missing' && activeCard) {
+                const section = activeCard.closest('[data-photo-section]');
+                activeCard.remove();
+                const grid = section?.querySelector('.admin-photos-grid');
+                const count = section?.querySelector('[data-section-count]');
+                if (count && grid) count.textContent = grid.children.length;
+                if (section && grid && !grid.children.length) section.remove();
+            }
+            if (typeof showToast === 'function') showToast('Foto atualizada!', 'success', 2200);
+            closeModal();
+        } catch (requestError) {
+            errorBox.textContent = requestError.message || 'Erro ao atualizar a foto.';
+            errorBox.hidden = false;
+        } finally {
+            saveButton.disabled = false;
+        }
+    });
+}());
+</script>
 {% endblock %}
