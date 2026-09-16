@@ -44,8 +44,13 @@
   const $ = (id) => document.getElementById(id);
   const page = () => $('escalacaoIdealPage');
   const can = (name) => {
+    const element = page();
+    if (!element) return false;
     const key = name.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
-    return page()?.dataset[key] === 'true';
+    // DOMStringMap usa camelCase (dataset.podeEscalar), enquanto o HTML
+    // declara data-pode-escalar. O acesso anterior pelo nome com hífen
+    // retornava undefined e deixava todos os controles de envio bloqueados.
+    return element.dataset[name] === 'true' || element.getAttribute(`data-${key}`) === 'true';
   };
   const safeNumber = (value) => Number.isFinite(Number(value)) ? Number(value) : 0;
   const money = (value) => `R$ ${safeNumber(value).toFixed(2).replace('.', ',')}`;
@@ -379,26 +384,52 @@
       adicionarLog(`◆ Reserva de luxo alterada para ${player.apelido || player.nome || 'atleta'}.`, 'info');
     }
     state.teamChanged = true;
+    console.debug('[AERO][Escalação] alteração manual de papel especial', {
+      papel: role,
+      atletaId: playerId,
+      atleta: player.apelido || player.nome || 'atleta',
+      timeAlterado: state.teamChanged
+    });
     recomputeResult();
     exibirResultado(window.ultimaEscalacao, state.clubes);
   }
 
-  function lineupIsComplete(result) {
-    if (!result) return false;
+  function getSubmissionDiagnostics(result) {
     const count = FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3'];
-    const starters = result.titulares || {};
+    const starters = result?.titulares || {};
     const expected = Object.values(count).reduce((total, value) => total + value, 0) + 1;
-    const players = POSITION_ORDER.flatMap(position => (starters[position] || []).filter(Boolean));
-    // O endpoint de envio valida os 12 atletas pelo ID. Mantemos a mesma
-    // regra aqui para não bloquear uma escalação válida por diferenças de
-    // agrupamento vindas de rankings antigos ou do hack do goleiro.
-    return players.length === expected && players.every(player => Boolean(idOf(player)));
+    const byPosition = {};
+    const players = POSITION_ORDER.flatMap(position => {
+      const list = Array.isArray(starters[position]) ? starters[position].filter(Boolean) : [];
+      byPosition[position] = list.length;
+      return list;
+    });
+    const invalidIds = players.filter(player => !idOf(player)).map(player => player?.apelido || player?.nome || 'sem nome');
+    return {
+      permission: can('podeEscalar'),
+      formation: $('formationSelect')?.value || '4-3-3',
+      expected,
+      actual: players.length,
+      validIds: players.length - invalidIds.length,
+      invalidIds,
+      byPosition,
+      teamChanged: state.teamChanged,
+      complete: Boolean(result) && players.length === expected && invalidIds.length === 0
+    };
   }
 
   function refreshSubmitButton() {
     const buttons = [$('escalarBtn'), $('fieldSubmitBtn')].filter(Boolean);
-    if (!buttons.length || !can('podeEscalar')) return;
-    const canSend = lineupIsComplete(window.ultimaEscalacao);
+    const diagnostics = getSubmissionDiagnostics(window.ultimaEscalacao);
+    console.debug('[AERO][Escalação] estado do envio', {
+      ...diagnostics,
+      botoes: buttons.map(button => ({ id: button.id, disabled: button.disabled, classe: button.className }))
+    });
+    if (!buttons.length || !diagnostics.permission) {
+      console.warn('[AERO][Escalação] envio bloqueado por permissão ou botão ausente', diagnostics);
+      return;
+    }
+    const canSend = diagnostics.complete;
     const label = state.teamChanged
       ? '<i class="fas fa-paper-plane"></i> Enviar time alterado'
       : '<i class="fas fa-paper-plane"></i> Enviar escalação';
@@ -409,6 +440,7 @@
       button.disabled = !canSend;
       button.title = canSend ? 'Enviar esta escalação para o Cartola FC' : 'Complete todas as posições antes de enviar';
     });
+    console.debug('[AERO][Escalação] botões após atualização', buttons.map(button => ({ id: button.id, disabled: button.disabled, texto: button.textContent.trim() })));
   }
 
   function exibirResultado(result, clubesDict = {}) {
@@ -838,6 +870,12 @@
   async function init() {
     showLoading('Carregando painel de escalação...');
     try {
+      console.debug('[AERO][Escalação] permissões da página', {
+        podeEscalar: can('podeEscalar'),
+        atributoPodeEscalar: page()?.getAttribute('data-pode-escalar'),
+        verEscalacao: can('verEscalacaoIdealCompleta'),
+        atributoVerEscalacao: page()?.getAttribute('data-ver-escalacao')
+      });
       if (!(await verificarStatusModulos())) return;
       await carregarConfiguracoes();
       await loadData();

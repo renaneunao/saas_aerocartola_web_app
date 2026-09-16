@@ -4400,13 +4400,15 @@ def api_escalacao_dados():
                     # Buscar preços e status_id da tabela atletas
                     preco_dict = {}
                     status_dict = {}
+                    foto_dict = {}
                     
                     # Buscar para todos os atletas do ranking (para garantir status_id atualizado)
                     atleta_ids_ranking = [j['atleta_id'] for j in ranking_data if j.get('atleta_id')]
                     if atleta_ids_ranking:
                         placeholders = ','.join(['%s'] * len(atleta_ids_ranking))
                         cursor.execute(f'''
-                            SELECT atleta_id, preco_num, status_id
+                            SELECT atleta_id, preco_num, status_id,
+                                   COALESCE(NULLIF(BTRIM(foto_custom), ''), foto) AS foto
                             FROM acf_atletas
                             WHERE atleta_id IN ({placeholders}) AND temporada = %s
                         ''', atleta_ids_ranking + [get_temporada_atual()])
@@ -4417,8 +4419,9 @@ def api_escalacao_dados():
                             preco_val = float(row[1]) if row[1] else 0.0
                             status_val = int(row[2]) if row[2] else 0
                             
-                            preco_dict[atleta_id] = preco_val
-                            status_dict[atleta_id] = status_val
+                            preco_dict[str(atleta_id)] = preco_val
+                            status_dict[str(atleta_id)] = status_val
+                            foto_dict[str(atleta_id)] = row[3] or ''
                         
                         print(f"[DEBUG] Buscados preços e status para {len(rows_atletas)} atletas da posição {pos_nome}")
                     
@@ -4445,8 +4448,9 @@ def api_escalacao_dados():
                                 except (ValueError, TypeError):
                                     pass
                         
-                        if (preco_valor is None or preco_valor <= 0) and atleta_id and atleta_id in preco_dict:
-                            preco_valor = preco_dict[atleta_id]
+                        atleta_key = str(atleta_id) if atleta_id is not None else ''
+                        if (preco_valor is None or preco_valor <= 0) and atleta_key and atleta_key in preco_dict:
+                            preco_valor = preco_dict[atleta_key]
                         
                         # Garantir que preco_valor seja um número válido
                         if preco_valor is None or preco_valor <= 0:
@@ -4457,10 +4461,17 @@ def api_escalacao_dados():
                         jogador_norm['preco'] = preco_valor
                         
                         # Adicionar status_id atual da tabela (não do ranking salvo)
-                        if atleta_id and atleta_id in status_dict:
-                            jogador_norm['status_id'] = status_dict[atleta_id]
+                        if atleta_key and atleta_key in status_dict:
+                            jogador_norm['status_id'] = status_dict[atleta_key]
                         else:
                             jogador_norm['status_id'] = 0  # Status desconhecido
+
+                        # O ranking salvo é um snapshot. Foto customizada é
+                        # dado vivo da tabela de atletas e precisa prevalecer
+                        # sem obrigar o usuário a recalcular o ranking.
+                        if atleta_key in foto_dict and foto_dict[atleta_key]:
+                            jogador_norm['foto'] = foto_dict[atleta_key]
+                            jogador_norm['foto_url'] = foto_dict[atleta_key]
                         
                         ranking_normalizado.append(jogador_norm)
                     
@@ -4484,7 +4495,7 @@ def api_escalacao_dados():
                 SELECT a.atleta_id, a.apelido, a.nome, a.clube_id,
                        a.posicao_id, a.pontos_num, a.media_num,
                        a.preco_num, a.jogos_num, a.status_id,
-                       COALESCE(a.foto_custom, a.foto) AS foto,
+                       COALESCE(NULLIF(BTRIM(a.foto_custom), ''), a.foto) AS foto,
                        c.nome AS clube_nome, c.abreviacao AS clube_abrev
                 FROM acf_atletas a
                 LEFT JOIN acf_clubes c ON c.id = a.clube_id
