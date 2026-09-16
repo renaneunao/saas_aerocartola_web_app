@@ -2,7 +2,7 @@
 {% block title %}Escalação Ideal - Cartola Aero{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/escalacao-ideal.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/escalacao-ideal.css', v='2') }}">
 
 <div id="escalacaoIdealPage"
      class="ideal-page"
@@ -177,5 +177,5 @@
 </div>
 
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js') }}"></script>
-<script src="{{ url_for('static', filename='js/escalacao-ideal-page.js') }}"></script>
+<script src="{{ url_for('static', filename='js/escalacao-ideal-page.js', v='2') }}"></script>
 {% endblock %}

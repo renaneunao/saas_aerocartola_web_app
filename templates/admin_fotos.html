@@ -76,7 +76,7 @@
                 {% set clube_abrev = a[8] or clube_nome %}
                 {% set clube_id = a[9] or 0 %}
                 <article class="admin-photo-card" data-player-card data-photo-loaded="{{ 'true' if custom_foto else 'false' }}" data-photo-url="{{ foto|e }}" data-player-name="{{ nome|e }}" data-athlete-id="{{ atleta_id }}">
-                    <button type="button" class="admin-photo-preview" data-photo-open aria-label="Atualizar foto de {{ nome }}">
+                    <button type="button" class="admin-photo-preview" data-photo-open data-photo-preview aria-label="Atualizar foto de {{ nome }}">
                         {% if foto %}<img src="{{ foto }}" alt="{{ apelido }}" data-photo-image onerror="this.hidden=true; this.nextElementSibling.hidden=false">{% endif %}
                         <span class="admin-photo-fallback" {% if foto %}hidden{% endif %}>{{ apelido[:2].upper() }}</span>
                         <span class="admin-photo-edit-hint"><i class="fas fa-link"></i></span>
@@ -156,7 +156,8 @@
     }
 
     function updateCard(card, url) {
-        const photoButton = card.querySelector('[data-photo-preview]');
+        const photoButton = card?.querySelector('[data-photo-preview], .admin-photo-preview');
+        if (!photoButton) throw new Error('Card do jogador não encontrado. Recarregue a página e tente novamente.');
         const oldImage = photoButton.querySelector('[data-photo-image]');
         if (oldImage) oldImage.remove();
         const image = document.createElement('img');

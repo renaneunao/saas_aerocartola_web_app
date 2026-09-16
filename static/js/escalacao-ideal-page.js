@@ -387,8 +387,12 @@
     if (!result) return false;
     const count = FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3'];
     const starters = result.titulares || {};
-    const positionsComplete = Object.entries(count).every(([position, expected]) => (starters[position] || []).filter(Boolean).length === expected);
-    return positionsComplete && (starters.treinadores || []).filter(Boolean).length === 1;
+    const expected = Object.values(count).reduce((total, value) => total + value, 0) + 1;
+    const players = POSITION_ORDER.flatMap(position => (starters[position] || []).filter(Boolean));
+    // O endpoint de envio valida os 12 atletas pelo ID. Mantemos a mesma
+    // regra aqui para não bloquear uma escalação válida por diferenças de
+    // agrupamento vindas de rankings antigos ou do hack do goleiro.
+    return players.length === expected && players.every(player => Boolean(idOf(player)));
   }
 
   function refreshSubmitButton() {
