@@ -235,6 +235,18 @@
 .ideal-player-team-badge { bottom:-8px; z-index:2; }
 .ideal-player-team-badge span { display:flex; align-items:center; gap:2px; }.ideal-player-team-badge img { width:12px; height:12px; object-fit:contain; }.ideal-player-team-badge b { color:var(--ideal-amber); font-size:7px; font-weight:800; }
 .ideal-player-sg-badge { top:-8px; color:#9dffbd; border-color:rgba(92,242,165,.3); }.ideal-player-sg-badge i { font-size:7px; }
+.ideal-player-indicators { display:contents; }
+.ideal-player-fixture-badge { position:absolute; left:50%; bottom:-8px; z-index:3; display:flex; align-items:center; gap:2px; width:max-content; max-width:calc(100% + 34px); padding:2px 3px; border:1px solid rgba(127,191,255,.18); border-radius:99px; background:#0b1727; transform:translateX(-50%); }
+.ideal-player-fixture-badge .ideal-player-team-badge { position:static; left:auto; bottom:auto; transform:none; z-index:auto; width:auto; max-width:7rem; padding:0; border:0; background:transparent; }
+.ideal-player-fixture-badge .ideal-player-team-badge b { font-size:7px; }
+.ideal-player-fixture-badge .ideal-player-team-badge span { max-width:2.5rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ideal-fixture-team { display:inline-flex; align-items:center; gap:2px; min-width:0; color:#a9c2d2; font:700 7px/1 'JetBrains Mono',monospace; }
+.ideal-fixture-team.is-active { color:#f3fbff; }
+.ideal-fixture-team.is-opponent { color:#829caf; opacity:.68; }
+.ideal-fixture-team.home { align-self:flex-start; }.ideal-fixture-team.away { align-self:flex-end; }
+.ideal-fixture-team img,.ideal-fixture-team i { width:12px; height:12px; display:grid; place-items:center; object-fit:contain; font-size:7px; }
+.ideal-fixture-team b { max-width:2.5rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ideal-fixture-vs { color:#6f899f; font-size:7px; }
 .ideal-special-action { position:absolute; left:-7px; top:50%; display:flex; align-items:center; gap:3px; padding:4px 5px; border:1px solid rgba(255,200,87,.34); border-radius:5px; color:#ffd778; background:#241d12; font-size:7px; opacity:0; transform:translateY(-50%); cursor:pointer; transition:opacity .15s,transform .15s; }
 .ideal-special-action span { display:none; }.ideal-player:hover .ideal-special-action,.ideal-player:focus-within .ideal-special-action { opacity:1; transform:translateY(-50%) translateX(-1px); }.ideal-special-action:hover { color:#fff; border-color:rgba(255,200,87,.75); }
 .ideal-player-unavailable { position:absolute; right:-5px; top:18px; display:flex; align-items:center; gap:2px; padding:3px 4px; border:1px solid rgba(248,113,113,.3); border-radius:5px; color:#ffb0b7; background:#26151d; font-size:7px; opacity:0; cursor:pointer; transition:opacity .15s; }
@@ -410,6 +422,8 @@
 .ideal-bench-signals { display:grid; justify-items:end; gap:4px; min-width:58px; }
 .ideal-bench-signals .ideal-player-team-badge,
 .ideal-bench-signals .ideal-player-sg-badge { position:static; left:auto; top:auto; right:auto; bottom:auto; transform:none; max-width:100%; }
+.ideal-bench-signals .ideal-player-fixture-badge { position:static; left:auto; top:auto; right:auto; bottom:auto; transform:none; max-width:100%; }
+.ideal-bench-signals .ideal-player-fixture-badge .ideal-player-team-badge { position:static; }
 .ideal-bench-signals .ideal-player-team-badge { order:2; }
 .ideal-bench-signals .ideal-player-sg-badge { order:1; }
 .ideal-bench-signals .ideal-player-team-badge b { font-size:7px; }

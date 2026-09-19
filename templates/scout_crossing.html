@@ -73,24 +73,26 @@
     </section>
 
     <section id="scoutCrossingResults" class="scx-results" hidden>
-        <div class="scx-player-card">
-            <div class="scx-player-identity"><div class="scx-avatar" id="scoutCrossingPlayerAvatar"><i class="fas fa-user"></i></div><div><p class="scx-overline">Jogador analisado</p><h2 id="scoutCrossingPlayerName">—</h2><p id="scoutCrossingPlayerMeta">—</p></div></div>
-            <div class="scx-summary" id="scoutCrossingSummary"></div>
-        </div>
         <div class="scx-analysis-toolbar">
             <div><span class="scx-overline">Análise detalhada</span><strong id="scoutCrossingPrediction">Previsão calculada: —</strong><small id="scoutCrossingPredictionNote">Usando o calculador específico da posição.</small></div>
             <div class="scx-compare-controls"><label>Comparar com <select id="scoutCrossingComparePlayer"><option value="">Escolha outro atleta</option></select></label><button type="button" id="scoutCrossingCompareButton" class="scx-button">Comparar</button></div>
         </div>
+        <div id="scoutCrossingSingleAnalysis">
+            <div class="scx-player-card">
+                <div class="scx-player-identity"><div class="scx-avatar" id="scoutCrossingPlayerAvatar"><i class="fas fa-user"></i></div><div><p class="scx-overline">Jogador analisado</p><h2 id="scoutCrossingPlayerName">—</h2><p id="scoutCrossingPlayerMeta">—</p></div></div>
+                <div class="scx-summary" id="scoutCrossingSummary"></div>
+            </div>
+            <section class="scx-confrontation" id="scoutCrossingConfrontation"></section>
+            <div class="scx-result-grid">
+                <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Histórico</p><h2>Últimas pontuações</h2></div><span>5 rodadas inicialmente · scouts positivos por jogo</span></div><div id="scoutCrossingRecent" class="scx-recent-split"><section><h3>Em casa</h3><div id="scoutCrossingRecentHome" class="scx-recent-list"></div></section><section><h3>Fora</h3><div id="scoutCrossingRecentAway" class="scx-recent-list"></div></section></div></section>
+                <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Referência da posição</p><h2>Principais scouts</h2></div><span>Média por jogo</span></div><div id="scoutCrossingPositionScouts" class="scx-scout-list"></div></section>
+            </div>
+            <div class="scx-result-grid">
+                <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Desempenho</p><h2>Adversários</h2></div></div><div id="scoutCrossingOpponents" class="scx-opponent-list"></div></section>
+                <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Mando</p><h2>Casa / Fora</h2></div></div><div id="scoutCrossingHomeAway" class="scx-home-away"></div></section>
+            </div>
+        </div>
         <div id="scoutCrossingComparison" class="scx-comparison" hidden></div>
-        <section class="scx-confrontation" id="scoutCrossingConfrontation"></section>
-        <div class="scx-result-grid">
-            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Histórico</p><h2>Últimas pontuações</h2></div><span>5 rodadas inicialmente · scouts positivos por jogo</span></div><div id="scoutCrossingRecent" class="scx-recent-list"></div></section>
-            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Referência da posição</p><h2>Principais scouts</h2></div><span>Média por jogo</span></div><div id="scoutCrossingPositionScouts" class="scx-scout-list"></div></section>
-        </div>
-        <div class="scx-result-grid">
-            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Desempenho</p><h2>Adversários</h2></div></div><div id="scoutCrossingOpponents" class="scx-opponent-list"></div></section>
-            <section class="scx-card"><div class="scx-card-heading"><div><p class="scx-overline">Mando</p><h2>Casa / Fora</h2></div></div><div id="scoutCrossingHomeAway" class="scx-home-away"></div></section>
-        </div>
     </section>
 </main>
 {% endblock %}

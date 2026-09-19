@@ -2,6 +2,7 @@
 {% block title %}Módulos — Aero Cartola{% endblock %}
 
 {% block content %}
+<div id="modulesPage" class="modules-page">
 <!-- Page Header -->
 <div class="text-center mb-6">
     <h1 class="text-3xl font-bold text-white mb-2">Módulos de Análise</h1>
@@ -13,11 +14,11 @@
 </div>
 
 <!-- Módulos Grid -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+<div class="modules-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
 
     {% set modulos = [
         {'id': 'goleiro', 'nome': 'Goleiros', 'desc': 'Análise de goleiros com pesos de defesa, SG e scouts específicos', 'img': 'goleiro.jpg', 'color': 'neon-green', 'colorHex': 'rgba(0,255,136,0.08)', 'borderHex': 'rgba(0,255,136,0.15)'},
-        {'id': 'lateral', 'nome': 'Laterais', 'desc': 'Análise de laterais com ênfase em desarmes e assistências', 'img': 'lateral.webp', 'color': 'neon-cyan', 'colorHex': 'rgba(0,229,255,0.08)', 'borderHex': 'rgba(0,229,255,0.15)'},
+        {'id': 'lateral', 'nome': 'Laterais', 'desc': 'Análise de laterais com ênfase em desarmes e assistências', 'img': 'lateral.jpg', 'color': 'neon-cyan', 'colorHex': 'rgba(0,229,255,0.08)', 'borderHex': 'rgba(0,229,255,0.15)'},
         {'id': 'zagueiro', 'nome': 'Zagueiros', 'desc': 'Análise de zagueiros com foco em desarmes e saldo de gols', 'img': 'zagueiro.jpg', 'color': 'neon-red', 'colorHex': 'rgba(239,68,68,0.08)', 'borderHex': 'rgba(239,68,68,0.15)'},
         {'id': 'meia', 'nome': 'Meias', 'desc': 'Análise de meias priorizando assistências, gols e finalizações', 'img': 'meia.jpg', 'color': 'neon-purple', 'colorHex': 'rgba(168,85,247,0.08)', 'borderHex': 'rgba(168,85,247,0.15)'},
         {'id': 'atacante', 'nome': 'Atacantes', 'desc': 'Análise de atacantes com ênfase em gols e finalizações', 'img': 'atacante.webp', 'color': 'neon-amber', 'colorHex': 'rgba(245,158,11,0.08)', 'borderHex': 'rgba(245,158,11,0.15)'},
@@ -159,6 +160,8 @@
             </div>
         </div>
     </div>
+</div>
+
 </div>
 
 <script>

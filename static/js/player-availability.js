@@ -1,5 +1,15 @@
 (function () {
-  const state = { items: [], filter: 'provaveis', sort: 'expected', season: null, round: null, teamId: null };
+  const state = {
+    items: [],
+    filter: 'provaveis',
+    sort: 'expected',
+    season: null,
+    round: null,
+    teamId: null,
+    pending: new Set(),
+    requestController: null,
+    requestVersion: 0
+  };
   const positionNames = { 1: 'Goleiro', 2: 'Lateral', 3: 'Zagueiro', 4: 'Meia', 5: 'Atacante', 6: 'Técnico' };
   const statusColors = { 2: 'text-neon-amber', 3: 'text-neon-red', 5: 'text-neon-red', 6: 'text-neon-red', 7: 'text-neon-green' };
 
@@ -48,9 +58,10 @@
 
   function actionButton(item, rule, label, icon, tone, disabled = false) {
     const active = item.rule === rule;
-    return `<button type="button" data-action="${rule}" data-athlete="${item.atleta_id}" ${disabled ? 'disabled' : ''}
+    const pending = state.pending.has(String(item.atleta_id));
+    return `<button type="button" data-action="${rule}" data-athlete="${item.atleta_id}" ${disabled || pending ? 'disabled' : ''}
       class="rounded-lg px-2.5 py-1.5 text-[11px] border transition ${active ? `${tone} border-current bg-current/10` : 'border-white/10 text-text-secondary hover:text-white hover:border-white/30'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}">
-      <i class="fas ${icon} mr-1"></i>${active ? 'Marcado' : label}</button>`;
+      <i class="fas ${pending ? 'fa-spinner fa-spin' : icon} mr-1"></i>${pending ? 'Salvando…' : active ? 'Marcado' : label}</button>`;
   }
 
   function render() {
@@ -61,22 +72,26 @@
       const nonProbable = [2, 3, 5].includes(Number(item.status_id));
       const statusClass = statusColors[item.status_id] || 'text-text-secondary';
       return `<tr class="hover:bg-white/[0.025]">
-        <td class="px-4 py-3"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-white/5 overflow-hidden flex items-center justify-center">${item.foto ? `<img src="${escapeHtml(item.foto)}" alt="" class="w-full h-full object-cover">` : '<i class="fas fa-user text-text-muted text-xs"></i>'}</div><div><div class="font-semibold text-white">${escapeHtml(item.apelido)}</div><div class="text-[10px] text-text-muted">ID ${item.atleta_id}</div></div></div></td>
+        <td class="px-4 py-3"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-white/5 overflow-hidden flex items-center justify-center">${item.foto ? `<img src="${escapeHtml(item.foto)}" alt="" class="w-full h-full object-cover">` : '<i class="fas fa-user text-text-muted text-xs"></i>'}</div><div><div class="font-semibold text-white">${escapeHtml(item.apelido)}</div></div></div></td>
         <td class="px-4 py-3 text-text-secondary">${escapeHtml(positionNames[item.posicao_id] || '—')}</td>
         <td class="px-4 py-3 text-text-secondary">${escapeHtml(item.clube_abrev || item.clube_nome || '—')}</td>
         <td class="px-4 py-3 text-right text-white">${Number(item.media_num || 0).toFixed(2)}</td>
         <td class="px-4 py-3 text-right text-neon-cyan">${Number(item.pontos_num || 0).toFixed(2)}</td>
         <td class="px-4 py-3 text-right text-neon-green">C$ ${Number(item.preco_num || 0).toFixed(2)}</td>
         <td class="px-4 py-3"><span class="${statusClass} text-xs font-medium">${escapeHtml(item.status_nome || 'Desconhecido')}</span></td>
-        <td class="px-4 py-3"><div class="flex justify-end gap-2">${actionButton(item, 'poupar', 'Poupar', 'fa-ban', 'text-neon-red')}${actionButton(item, 'cravado', 'Cravar', 'fa-lock', 'text-neon-green', nullStatus || !nonProbable)}${item.rule ? `<button type="button" data-action="clear" data-athlete="${item.atleta_id}" class="rounded-lg px-2.5 py-1.5 text-[11px] border border-white/10 text-text-muted hover:text-white"><i class="fas fa-xmark mr-1"></i>Limpar</button>` : ''}</div></td>
+        <td class="px-4 py-3"><div class="flex justify-end gap-2">${actionButton(item, 'poupar', 'Poupar', 'fa-ban', 'text-neon-red')}${actionButton(item, 'cravado', 'Cravar', 'fa-lock', 'text-neon-green', nullStatus || !nonProbable)}${item.rule ? `<button type="button" data-action="clear" data-athlete="${item.atleta_id}" ${state.pending.has(String(item.atleta_id)) ? 'disabled' : ''} class="rounded-lg px-2.5 py-1.5 text-[11px] border border-white/10 text-text-muted hover:text-white disabled:opacity-30"><i class="fas fa-xmark mr-1"></i>Limpar</button>` : ''}</div></td>
       </tr>`;
     }).join('') : '<tr><td colspan="8" class="px-4 py-12 text-center text-text-muted">Nenhum jogador encontrado para este filtro.</td></tr>';
   }
 
   async function load() {
-    const response = await fetch(`/api/player-availability/candidates?${query()}`);
+    const version = ++state.requestVersion;
+    state.requestController?.abort();
+    state.requestController = new AbortController();
+    const response = await fetch(`/api/player-availability/candidates?${query()}`, { signal: state.requestController.signal });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Não foi possível carregar jogadores.');
+    if (version !== state.requestVersion) return;
     state.items = data.items || [];
     state.season = data.season; state.round = data.round_number;
     state.teamId = data.team_id || state.teamId;
@@ -91,30 +106,74 @@
     render();
   }
 
+  function loadQuietly() {
+    return load().catch((error) => {
+      if (error?.name !== 'AbortError') feedback(error.message, 'error');
+    });
+  }
+
   async function save(athleteId, rule) {
-    const response = await fetch('/api/player-availability', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ team_id: state.teamId, athlete_id: athleteId, rule, temporada: state.season, rodada: state.round }) });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a regra.');
-    feedback(rule === 'poupar' ? 'Jogador marcado para ser poupado.' : 'Jogador cravado como provável para a escalação.', 'info');
-    await load();
+    const key = String(athleteId);
+    if (state.pending.has(key)) return;
+    const item = state.items.find((candidate) => String(candidate.atleta_id) === key);
+    if (!item) throw new Error('Jogador não encontrado na lista atual. Atualize a rodada e tente novamente.');
+    const previousRule = item.rule;
+    state.pending.add(key);
+    item.rule = rule;
+    render();
+    try {
+      const response = await fetch('/api/player-availability', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ team_id: state.teamId, athlete_id: athleteId, rule, temporada: state.season, rodada: state.round }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a regra.');
+      feedback(rule === 'poupar' ? 'Jogador marcado para ser poupado.' : 'Jogador cravado como provável para a escalação.', 'info');
+    } catch (error) {
+      item.rule = previousRule;
+      throw error;
+    } finally {
+      state.pending.delete(key);
+      render();
+    }
   }
 
   async function clear(athleteId) {
+    const key = String(athleteId);
+    if (state.pending.has(key)) return;
+    const item = state.items.find((candidate) => String(candidate.atleta_id) === key);
+    if (!item) throw new Error('Jogador não encontrado na lista atual. Atualize a rodada e tente novamente.');
+    const previousRule = item.rule;
+    state.pending.add(key);
+    item.rule = null;
+    render();
     const params = new URLSearchParams({ team_id: state.teamId, temporada: state.season, rodada: state.round });
-    const response = await fetch(`/api/player-availability/${athleteId}?${params}`, { method: 'DELETE' });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Não foi possível limpar a regra.');
-    feedback('Regra removida.'); await load();
+    try {
+      const response = await fetch(`/api/player-availability/${athleteId}?${params}`, { method: 'DELETE' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Não foi possível limpar a regra.');
+      feedback('Regra removida.');
+    } catch (error) {
+      item.rule = previousRule;
+      throw error;
+    } finally {
+      state.pending.delete(key);
+      render();
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    ['availabilityPosition'].forEach((id) => $(id).addEventListener('change', () => load().catch((e) => feedback(e.message, 'error'))));
+    ['availabilityPosition'].forEach((id) => $(id).addEventListener('change', loadQuietly));
     $('availabilityClub')?.addEventListener('change', () => render());
     $('availabilitySearch')?.addEventListener('input', () => render());
     ['availabilitySort', 'availabilityScout'].forEach((id) => $(id)?.addEventListener('change', () => render()));
-    $('availabilityReload').addEventListener('click', () => load().catch((e) => feedback(e.message, 'error')));
+    $('availabilityReload').addEventListener('click', loadQuietly);
     document.querySelectorAll('.availability-tab').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.availability-tab').forEach((b) => b.classList.remove('active')); button.classList.add('active'); state.filter = button.dataset.filter; render(); }));
-    $('availabilityRows').addEventListener('click', (event) => { const button = event.target.closest('button[data-action]'); if (!button) return; const action = button.dataset.action; const promise = action === 'clear' ? clear(button.dataset.athlete) : save(button.dataset.athlete, action); promise.catch((e) => feedback(e.message, 'error')); });
-    load().catch((e) => feedback(e.message, 'error'));
+    $('availabilityRows').addEventListener('click', (event) => {
+      const button = event.target.closest('button[data-action]');
+      if (!button || button.disabled) return;
+      event.preventDefault();
+      const action = button.dataset.action;
+      const promise = action === 'clear' ? clear(button.dataset.athlete) : save(button.dataset.athlete, action);
+      promise.catch((e) => feedback(e.message, 'error'));
+    });
+    loadQuietly();
   });
 })();

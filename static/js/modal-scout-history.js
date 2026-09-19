@@ -92,8 +92,35 @@
                 ${fixtureMarkup(match)}
                 <small>${escapeHtml(match.mando_label || 'Sem mando')} · adversário ${escapeHtml(match.adversario_nome || 'não informado')}</small>
             </div>
-            <div class="modal-scout-history-inline-scouts">${scouts || '<span class="is-muted">Sem scouts</span>'}</div>
-        </article>`;
+             <div class="modal-scout-history-inline-scouts">${scouts || '<span class="is-muted">Sem scouts</span>'}</div>
+         </article>`;
+    }
+
+    function cededSummary(matches, mando) {
+        const relevant = matches.filter((match) => match.mando === mando && match.cedidos_adversario?.scouts);
+        if (!relevant.length) {
+            return '<div class="modal-scout-history-ceded-empty">Sem cedidos registrados.</div>';
+        }
+        const totals = {};
+        const counts = {};
+        relevant.forEach((match) => {
+            Object.entries(match.cedidos_adversario.scouts || {}).forEach(([code, value]) => {
+                const numeric = Number(value);
+                if (!Number.isFinite(numeric) || numeric === 0) return;
+                totals[code] = (totals[code] || 0) + numeric;
+                counts[code] = (counts[code] || 0) + 1;
+            });
+        });
+        const rows = Object.entries(totals)
+            .map(([code, value]) => {
+                const average = value / Math.max(1, counts[code] || relevant.length);
+                const negative = negativeScouts.has(code) || average < 0;
+                return { code, average, negative };
+            })
+            .filter((item) => Math.round(Math.abs(item.average)) > 0)
+            .sort((a, b) => Math.abs(b.average) - Math.abs(a.average));
+        if (!rows.length) return '<div class="modal-scout-history-ceded-empty">Sem scouts cedidos acima de zero.</div>';
+        return `<div class="modal-scout-history-ceded-games">${relevant.length} jogo(s) com dados</div>${rows.map((item) => `<div class="modal-scout-history-ceded-row ${item.negative ? 'is-negative' : 'is-positive'}"><span>${escapeHtml(labels[item.code] || item.code.toUpperCase())}</span><strong>${item.negative ? '-' : ''}${Math.round(Math.abs(item.average)).toLocaleString('pt-BR')}</strong></div>`).join('')}`;
     }
 
     function render(prefix, data, fallbackPhoto) {
@@ -102,10 +129,13 @@
         const status = root.querySelector(`#modal${prefix}ScoutHistoryStatus`);
         const summary = root.querySelector(`#modal${prefix}ScoutHistorySummary`);
         const list = root.querySelector(`#modal${prefix}ScoutHistoryList`);
+        const ceded = root.querySelector(`#modal${prefix}ScoutHistoryCeded`);
+        const cededHome = root.querySelector(`#modal${prefix}ScoutHistoryCededHome`);
+        const cededAway = root.querySelector(`#modal${prefix}ScoutHistoryCededAway`);
         const crossingLink = root.querySelector(`#modal${prefix}ScoutCrossingLink`);
-        // Uma linha sem entrada em campo não é uma pontuação do jogador;
-        // ela deve aparecer como rodada sem dados no calendário de 1 a 38.
-        const matches = (data.ultimas_pontuacoes || []).filter((match) => match.entrou_em_campo === true);
+        // Mantemos também as linhas sem entrada em campo para que a rodada
+        // apareça opaca, sem transformar ausência de pontuação em zero.
+        const matches = data.ultimas_pontuacoes || [];
         const photo = imageUrl(data.jogador?.foto) || imageUrl(fallbackPhoto);
 
         if (status) status.textContent = photo ? 'Dados atuais' : 'Dados atuais · foto indisponível';
@@ -120,24 +150,17 @@
         // A rodada atual ainda não aconteceu; o histórico termina na rodada
         // anterior e nunca cria cards para rodadas futuras.
         const currentRound = Math.max(0, Number(data.filtros?.rodada || 38) - 1);
-        const byRound = new Map(matches
-            .filter((match) => Number(match.rodada) <= currentRound)
-            .map((match) => [Number(match.rodada), match]));
-        // A coluna mais à esquerda sempre começa pela rodada mais recente.
-        // Rodadas futuras não ocupam espaço no histórico, mas lacunas passadas
-        // continuam opacas para preservar a leitura da temporada.
-        const ranges = [[27, 38], [14, 26], [1, 13]]
-            .map(([start, end]) => [start, Math.min(end, currentRound)])
-            .filter(([start, end]) => start <= end);
-        list.innerHTML = ranges.map(([start, end]) => {
-            const cards = Array.from({ length: end - start + 1 }, (_, index) => {
-                const round = end - index;
-                return roundCard(round, byRound.get(round));
-            }).join('');
-            return `<section class="modal-scout-history-column" aria-label="Rodadas ${start} a ${end}">
-                <p class="modal-scout-history-range">Rodada ${start}–${end}</p>${cards}
+        const homeMatches = matches.filter((match) => Number(match.rodada) <= currentRound && match.mando === 'casa');
+        const awayMatches = matches.filter((match) => Number(match.rodada) <= currentRound && match.mando === 'fora');
+        const historyColumn = (title, items) => {
+            const cards = items.length
+                ? items.sort((a, b) => Number(b.rodada) - Number(a.rodada)).map((match) => roundCard(match.rodada, match.entrou_em_campo === true ? match : null)).join('')
+                : '<div class="modal-scout-history-empty">Nenhum jogo deste tipo no histórico.</div>';
+            return `<section class="modal-scout-history-column" aria-label="Rodadas ${title.toLocaleLowerCase()}">
+                <p class="modal-scout-history-range">${title}</p>${cards}
             </section>`;
-        }).join('');
+        };
+        list.innerHTML = `${historyColumn('Em casa', homeMatches)}${historyColumn('Fora', awayMatches)}`;
         list.querySelectorAll('img[data-history-shield]').forEach((image) => {
             image.addEventListener('error', () => {
                 image.hidden = true;
@@ -148,6 +171,12 @@
         });
         if (crossingLink && data.jogador?.id) {
             crossingLink.href = `/cruzamento-scouts/?posicao_id=${encodeURIComponent(root.dataset.positionId || data.filtros?.posicao_id || '')}&atleta_id=${encodeURIComponent(data.jogador.id)}`;
+        }
+        if (ceded && cededHome && cededAway) {
+            const historical = matches.filter((match) => Number(match.rodada) <= currentRound && match.entrou_em_campo === true);
+            cededHome.innerHTML = cededSummary(historical, 'casa');
+            cededAway.innerHTML = cededSummary(historical, 'fora');
+            ceded.hidden = !historical.some((match) => match.cedidos_adversario?.scouts);
         }
     }
 

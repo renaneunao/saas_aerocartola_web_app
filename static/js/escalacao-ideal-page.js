@@ -34,7 +34,8 @@
     draggedItem: null,
     availability: [],
     picker: null,
-    teamChanged: false
+    teamChanged: false,
+    availabilityBusy: false
   };
 
   window.prioridadesOrdenadas = ['atacantes', 'laterais', 'meias', 'zagueiros', 'goleiros', 'treinadores'];
@@ -83,6 +84,31 @@
     return state.clubes[player?.clube_id] || state.clubes[String(player?.clube_id)] || {};
   }
 
+  function opponentFor(player) {
+    const clubId = String(player?.clube_id || '');
+    const opponentId = state.data?.adversarios_dict?.[clubId]
+      ?? state.data?.adversarios_dict?.[Number(clubId)]
+      ?? null;
+    if (!opponentId) return null;
+    return state.clubes[opponentId] || state.clubes[String(opponentId)] || { id: opponentId };
+  }
+
+  function fixtureTeamMarkup(club, active, side) {
+    const name = club?.abreviacao || club?.nome || '—';
+    const shield = club?.escudo_url || club?.escudo || club?.clube_escudo_url || '';
+    return `<span class="ideal-fixture-team ${active ? 'is-active' : 'is-opponent'} ${side}">${shield ? `<img src="${escapeHtml(shield)}" alt="">` : '<i class="fas fa-shield-alt"></i>'}<b>${escapeHtml(name)}</b></span>`;
+  }
+
+  function fixtureIndicators(player, ownMarkup) {
+    const own = clubFor(player);
+    const opponent = opponentFor(player);
+    if (!opponent) return '';
+    const ownId = String(player?.clube_id || '');
+    const side = state.data?.mando_por_clube?.[ownId] || state.data?.mando_por_clube?.[Number(ownId)] || '';
+    const opponentMarkup = fixtureTeamMarkup(opponent, false, side === 'fora' ? 'home' : 'away');
+    return `<span class="ideal-player-fixture-badge" title="${escapeHtml(side === 'fora' ? 'Joga fora' : 'Joga em casa')} contra ${escapeHtml(opponent.nome || opponent.abreviacao || 'adversário')}">${ownMarkup}<b class="ideal-fixture-vs">×</b>${opponentMarkup}</span>`;
+  }
+
   function teamIndicators(player, position) {
     const club = clubFor(player);
     const jogoMap = state.data?.peso_jogo_por_clube || {};
@@ -93,7 +119,8 @@
     const shield = club.escudo_url || club.escudo || club.clube_escudo_url || player?.clube_escudo_url || '';
     const name = club.abreviacao || player?.clube_abrev || club.nome || player?.clube_nome || '—';
     const defense = ['goleiros', 'laterais', 'zagueiros'].includes(position);
-    return `<span class="ideal-player-team-badge"><span>${shield ? `<img src="${escapeHtml(shield)}" alt="">` : '<i class="fas fa-shield-alt"></i>'}${escapeHtml(name)}</span><b>F ${jogo.toFixed(2)}</b></span>${defense ? `<span class="ideal-player-sg-badge"><i class="fas fa-shield-heart"></i> SG ${sgPercent.toFixed(0)}%</span>` : ''}`;
+    const ownMarkup = `<span class="ideal-player-team-badge"><span>${shield ? `<img src="${escapeHtml(shield)}" alt="">` : '<i class="fas fa-shield-alt"></i>'}${escapeHtml(name)}</span><b>F ${jogo.toFixed(2)}</b></span>`;
+    return `<span class="ideal-player-indicators">${opponentFor(player) ? fixtureIndicators(player, ownMarkup) : ownMarkup}${defense ? `<span class="ideal-player-sg-badge"><i class="fas fa-shield-heart"></i> SG ${sgPercent.toFixed(0)}%</span>` : ''}</span>`;
   }
 
   function avatar(player, className = '') {
@@ -761,13 +788,19 @@
   function selectedAvailabilityAthlete() {
     const value = ($('availabilityAthleteInput')?.value || '').trim().toLocaleLowerCase();
     if (!value) return null;
-    return state.availability.find(item => String(item.atleta_id) === value || String(item.apelido || '').toLocaleLowerCase() === value) || null;
+    const normalize = (candidate) => String(candidate || '').trim().toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const normalizedValue = normalize(value);
+    return state.availability.find(item => String(item.atleta_id) === value || normalize(item.apelido) === normalizedValue || normalize(item.nome) === normalizedValue) || null;
   }
 
   async function applyAvailability(rule) {
+    if (state.availabilityBusy) return;
     const athlete = selectedAvailabilityAthlete();
     if (!athlete || !state.data?.team_id) return notify('Escolha um atleta da lista de disponibilidade.', 'warning');
     const hint = $('availabilityHint');
+    const buttons = [$('markUnavailableBtn'), $('markAvailableBtn'), $('availabilityRecalculateBtn')].filter(Boolean);
+    state.availabilityBusy = true;
+    buttons.forEach((button) => { button.disabled = true; button.classList.add('opacity-60'); });
     if (hint) hint.textContent = 'Salvando regra e atualizando cálculos...';
     try {
       const response = await fetch('/api/player-availability', {
@@ -777,12 +810,16 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a disponibilidade.');
       state.teamChanged = true;
+      athlete.rule = rule;
       if (hint) hint.textContent = `${athlete.apelido} marcado como ${rule === 'poupar' ? 'não joga' : 'joga'}. Recalculando...`;
       await calcularEscalacao();
       await loadAvailabilityCandidates();
     } catch (error) {
       if (hint) hint.textContent = error.message;
       notify(error.message, 'error');
+    } finally {
+      state.availabilityBusy = false;
+      buttons.forEach((button) => { button.disabled = false; button.classList.remove('opacity-60'); });
     }
   }
 

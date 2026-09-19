@@ -4761,9 +4761,33 @@ def api_escalacao_dados():
         partidas = cursor.fetchall()
         
         adversarios_dict = {}
+        mando_por_clube = {}
         for casa_id, visitante_id in partidas:
             adversarios_dict[casa_id] = visitante_id
             adversarios_dict[visitante_id] = casa_id
+            mando_por_clube[str(casa_id)] = 'casa'
+            mando_por_clube[str(visitante_id)] = 'fora'
+
+        # Os cards da escalação precisam do escudo do adversário mesmo quando
+        # ele não aparece nos cinco primeiros rankings. O complemento é feito
+        # somente na resposta em memória; não altera rankings nem tabelas.
+        missing_club_ids = [clube_id for clube_id in clube_ids_set.union(
+            {int(clube_id) for clube_id in adversarios_dict.keys() if clube_id}
+        ) if clube_id not in clubes_dict]
+        if missing_club_ids:
+            placeholders = ','.join(['%s'] * len(missing_club_ids))
+            cursor.execute(f'''
+                SELECT id, nome, abreviacao
+                FROM acf_clubes
+                WHERE id IN ({placeholders})
+            ''', missing_club_ids)
+            for row in cursor.fetchall():
+                clube_id = row[0]
+                clubes_dict[clube_id] = {
+                    'nome': row[1],
+                    'abreviacao': row[2],
+                    'escudo_url': get_team_shield(clube_id, size='45x45')
+                }
 
         response_data = {
             'team_id': team_id,
@@ -4774,6 +4798,7 @@ def api_escalacao_dados():
             'rankings_por_posicao': rankings_por_posicao,
             'todos_goleiros': todos_goleiros,  # Lista completa de goleiros para hack
             'adversarios_dict': adversarios_dict,
+            'mando_por_clube': mando_por_clube,
             'config': {
                 'formation': escalacao_config['formation'] if escalacao_config else '4-3-3',
                 'hack_goleiro': escalacao_config['hack_goleiro'] if escalacao_config else False,

@@ -14,4 +14,24 @@
 
     <div class="modal-scout-history-summary" id="modal{{ scout_prefix }}ScoutHistorySummary"></div>
     <div class="modal-scout-history-columns" id="modal{{ scout_prefix }}ScoutHistoryList" aria-label="Histórico das 38 rodadas"></div>
+
+    <div class="modal-scout-history-ceded" id="modal{{ scout_prefix }}ScoutHistoryCeded" hidden>
+        <div class="modal-scout-history-ceded-heading">
+            <div>
+                <p class="modal-scout-history-kicker">Referência do adversário</p>
+                <h5>Scouts cedidos para esta posição</h5>
+            </div>
+            <span>média por jogo do confronto</span>
+        </div>
+        <div class="modal-scout-history-ceded-columns">
+            <section class="modal-scout-history-ceded-column">
+                <strong>Em casa</strong>
+                <div id="modal{{ scout_prefix }}ScoutHistoryCededHome"></div>
+            </section>
+            <section class="modal-scout-history-ceded-column">
+                <strong>Fora</strong>
+                <div id="modal{{ scout_prefix }}ScoutHistoryCededAway"></div>
+            </section>
+        </div>
+    </div>
 </section>

@@ -7,7 +7,7 @@
         temporada: Number(page.dataset.currentSeason || 0), rodada: Number(page.dataset.currentRound || 0),
         teamId: null, posicaoId: null, atletaId: null, players: [], filteredPlayers: [],
         statusFilter: 'provaveis', sortBy: 'expected', historyExpanded: false, selectedData: null, predictionContext: null,
-        predictionById: {}
+        predictionById: {}, filtersTouched: false, crossingVersion: 0
     };
     const positionSlug = { 1: 'goleiro', 2: 'lateral', 3: 'zagueiro', 4: 'meia', 5: 'atacante', 6: 'treinador' };
     const calculatorByPosition = { 1: 'CalculoGoleiro', 2: 'CalculoLateral', 3: 'CalculoZagueiro', 4: 'CalculoMeia', 5: 'CalculoAtacante', 6: 'CalculoTreinador' };
@@ -56,7 +56,7 @@
         target.querySelectorAll('[data-team]').forEach((button) => button.addEventListener('click', () => {
             const clicked = Number(button.dataset.team);
             state.teamId = Number(state.teamId) === clicked ? null : clicked;
-            state.atletaId = null; state.historyExpanded = false; loadOptions();
+            state.atletaId = null; state.historyExpanded = false; state.filtersTouched = true; resetAnalysis(); loadOptions();
         }));
     }
     function statusClass(player) {
@@ -103,11 +103,17 @@
     function renderPlayers() {
         filterPlayers();
         const target = $('scoutCrossingPlayers'); if (!target) return;
+        if (!state.filtersTouched && !state.atletaId) {
+            state.filteredPlayers = [];
+            target.innerHTML = '<div class="scx-filter-prompt"><i class="fas fa-filter"></i><strong>Refine a busca para escolher um atleta</strong><span>Selecione um time, pesquise pelo nome ou escolha outro filtro acima.</span></div>';
+            $('scoutCrossingSelectionHint').textContent = 'A lista aparece depois que você aplicar um filtro.';
+            return;
+        }
         target.innerHTML = state.filteredPlayers.length ? state.filteredPlayers.map(playerOption).join('') : '<div class="scx-muted">Nenhum atleta atende aos filtros atuais.</div>';
         target.querySelectorAll('img[data-fallback]').forEach((image) => image.addEventListener('error', () => {
             const fallback = document.createElement('span'); fallback.className = 'scx-player-option-avatar'; fallback.textContent = image.dataset.fallback; image.replaceWith(fallback);
         }, { once: true }));
-        target.querySelectorAll('[data-player]').forEach((button) => button.addEventListener('click', () => { state.atletaId = Number(button.dataset.player); const select = $('scoutCrossingPlayer'); if (select) select.value = String(state.atletaId); state.historyExpanded = false; renderPlayers(); runCrossing(); }));
+        target.querySelectorAll('[data-player]').forEach((button) => button.addEventListener('click', () => { state.atletaId = Number(button.dataset.player); const select = $('scoutCrossingPlayer'); if (select) select.value = String(state.atletaId); state.historyExpanded = false; resetAnalysis(); renderPlayers(); runCrossing(); }));
         $('scoutCrossingSelectionHint').textContent = `${state.filteredPlayers.length} atleta(s) no filtro · clique em um card para abrir o detalhamento.`;
     }
     function renderScoutFilter() {
@@ -209,11 +215,24 @@
         const target = $('scoutCrossingRecent');
         const currentRound = Number(state.rodada || 0);
         const played = (matches || []).filter((match) => match.entrou_em_campo === true && (!currentRound || Number(match.rodada) < currentRound));
-        if (!played.length) { target.innerHTML = '<div class="scx-muted">Nenhuma pontuação encontrada.</div>'; return; }
-        const visible = state.historyExpanded ? played : played.slice(0, 5);
-        target.innerHTML = visible.map((match) => `<article class="scx-recent-row"><span class="scx-round">Rodada ${match.rodada}</span><span class="scx-match-copy"><strong>${escapeHtml(match.adversario_nome)}</strong><small>${escapeHtml(match.mando_label)} · ${fixtureMarkup(match.casa, match.fora, match.clube_id)}</small></span><span class="scx-points">${number(match.pontuacao)}<span class="scx-point-scouts">${scoutSummary(match.scouts)}</span></span></article>`).join('');
+        const renderColumn = (mando) => {
+            const list = played.filter((match) => match.mando === mando).sort((a, b) => Number(b.rodada) - Number(a.rodada));
+            const visible = state.historyExpanded ? list : list.slice(0, 5);
+            return visible.length
+                ? visible.map((match) => `<article class="scx-recent-row"><span class="scx-round">Rodada ${match.rodada}</span><span class="scx-match-copy"><strong>${escapeHtml(match.adversario_nome)}</strong><small>${fixtureMarkup(match.casa, match.fora, match.clube_id)}</small></span><span class="scx-points">${number(match.pontuacao)}<span class="scx-point-scouts">${scoutSummary(match.scouts)}</span></span></article>`).join('')
+                : '<div class="scx-muted">Nenhuma pontuação encontrada.</div>';
+        };
+        const home = $('scoutCrossingRecentHome');
+        const away = $('scoutCrossingRecentAway');
+        if (home && away) {
+            home.innerHTML = renderColumn('casa');
+            away.innerHTML = renderColumn('fora');
+            bindFixtureFallbacks(target);
+        } else if (target) {
+            target.innerHTML = played.length ? renderColumn('casa') + renderColumn('fora') : '<div class="scx-muted">Nenhuma pontuação encontrada.</div>';
+        }
+        if (target && played.length > 5) target.insertAdjacentHTML('beforeend', `<button type="button" class="scx-history-more" id="scoutCrossingHistoryMore">${state.historyExpanded ? 'Mostrar somente as 5 últimas' : `Mostrar histórico completo (${played.length})`}</button>`);
         bindFixtureFallbacks(target);
-        if (played.length > 5) target.innerHTML += `<button type="button" class="scx-history-more" id="scoutCrossingHistoryMore">${state.historyExpanded ? 'Mostrar somente as 5 últimas' : `Mostrar histórico completo (${played.length})`}</button>`;
         $('scoutCrossingHistoryMore')?.addEventListener('click', () => { state.historyExpanded = !state.historyExpanded; renderRecent(played); });
     }
     function renderPositionScouts(scouts) { const target = $('scoutCrossingPositionScouts'); target.innerHTML = scouts?.length ? scouts.map((scout) => `<div class="scx-scout-row"><span><b>${escapeHtml(scout.codigo.toUpperCase())}</b> · ${escapeHtml(scout.nome)}</span><strong>${number(scout.media)}</strong></div>`).join('') : '<div class="scx-muted">Sem referência disponível.</div>'; }
@@ -234,8 +253,20 @@
         const select = $('scoutCrossingComparePlayer'); if (!select) return;
         select.innerHTML = '<option value="">Escolha outro atleta</option>' + state.players.filter((player) => Number(player.id) !== Number(state.atletaId) && Number(player.posicao_id || state.posicaoId) === Number(state.posicaoId) && player.availability_rule !== 'poupar' && Number(player.status_id) !== 6).sort((a, b) => predictionValue(b) - predictionValue(a)).map((player) => `<option value="${player.id}">${escapeHtml(player.nome)} · ${number(predictionValue(player))} pts</option>`).join('');
     }
+    function resetAnalysis() {
+        state.selectedData = null;
+        $('scoutCrossingEmpty')?.removeAttribute('hidden');
+        $('scoutCrossingResults')?.setAttribute('hidden', '');
+        const comparison = $('scoutCrossingComparison');
+        if (comparison) { comparison.hidden = true; comparison.innerHTML = ''; }
+        $('scoutCrossingSingleAnalysis')?.removeAttribute('hidden');
+    }
+
     function renderResult(data) {
         state.selectedData = data; $('scoutCrossingEmpty').hidden = true; $('scoutCrossingResults').hidden = false;
+        const comparison = $('scoutCrossingComparison');
+        if (comparison) { comparison.hidden = true; comparison.innerHTML = ''; }
+        $('scoutCrossingSingleAnalysis')?.removeAttribute('hidden');
         const player = data.jogador; $('scoutCrossingPlayerName').textContent = player.nome || 'Jogador';
         const stats = [`média ${number(player.media_num)}`, `${integer(player.jogos_num)} jogos`, `${number(player.pontos_num)} pts`];
         $('scoutCrossingPlayerMeta').textContent = `${player.posicao || 'Posição'} · ${player.clube_nome || 'Clube'} · Rodada ${data.filtros.rodada} · ${stats.join(' · ')}`;
@@ -244,24 +275,76 @@
         renderSummary(data.resumo); renderPrediction(state.players.find((item) => Number(item.id) === Number(player.id)) || player); renderCompareOptions(); renderConfrontation(data); renderRecent(data.ultimas_pontuacoes || []); renderPositionScouts(data.scouts_da_posicao || []); renderOpponents(data.resumo.adversarios || []); renderHomeAway(data.resumo.mando || []);
         document.getElementById('scoutCrossingResults').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+    function comparisonScoutRows(scouts) {
+        return (scouts || []).map((scout) => `<div class="scx-side-scout"><span><b>${escapeHtml(scout.codigo?.toUpperCase() || '')}</b> · ${escapeHtml(scout.nome || '')}</span><strong>${number(scout.media)}</strong></div>`).join('') || '<div class="scx-muted">Sem referência disponível.</div>';
+    }
+
+    function comparisonHistory(data, mando) {
+        const currentRound = Number(data.filtros?.rodada || state.rodada || 0);
+        const matches = (data.ultimas_pontuacoes || []).filter((match) => match.entrou_em_campo === true && Number(match.rodada) < currentRound && match.mando === mando).slice(0, 5);
+        if (!matches.length) return '<div class="scx-muted">Sem jogos registrados.</div>';
+        return matches.map((match) => `<article class="scx-side-history-row"><span>Rodada ${match.rodada}</span><div>${fixtureMarkup(match.casa, match.fora, match.clube_id)}<small>${escapeHtml(match.adversario_nome || '')}</small></div><strong>${number(match.pontuacao)}<em>${scoutSummary(match.scouts)}</em></strong></article>`).join('');
+    }
+
+    function comparisonCeded(data) {
+        const ceded = data.cedidos_adversario || {};
+        const scouts = Object.entries(ceded.scouts || {}).filter(([, value]) => Number(value) !== 0).map(([code, value]) => {
+            const negative = negativeScouts.has(code) || Number(value) < 0;
+            return `<span class="${negative ? 'is-negative' : 'is-positive'}"><b>${escapeHtml(shortScouts[code] || code.toUpperCase())}</b> ${negative ? '-' : ''}${integer(Math.abs(value))}</span>`;
+        }).join('');
+        return scouts || '<span class="scx-muted">Sem scouts cedidos registrados.</span>';
+    }
+
+    function comparisonSide(data, prediction, comparisonMetrics = {}) {
+        const player = data.jogador || {};
+        const photo = normalizedPhoto(player.foto, player.id);
+        const avatar = photo ? `<img src="${escapeHtml(photo)}" alt="${escapeHtml(player.nome || '')}" onerror="this.replaceWith(document.createTextNode(''))">` : '<i class="fas fa-user"></i>';
+        const summary = data.resumo || {};
+        const metric = (label, value, key, formatter = number) => {
+            const other = Number(comparisonMetrics[key]);
+            const current = Number(value);
+            const tone = Number.isFinite(other) && current !== other ? (current > other ? 'better' : 'worse') : '';
+            return `<div class="${tone}"><span>${label}</span><strong>${formatter(value)}</strong></div>`;
+        };
+        return `<article class="scx-comparison-side"><header class="scx-comparison-side-head"><div class="scx-avatar">${avatar}</div><div><p class="scx-overline">Jogador analisado</p><h3>${escapeHtml(player.nome || 'Jogador')}</h3><small>${escapeHtml(player.posicao || '')} · ${escapeHtml(player.clube_nome || '')}</small></div></header><div class="scx-side-metrics">${metric('Previsão', prediction, 'prediction')}${metric('Média', summary.media, 'average')}${metric('Jogos', summary.jogos, 'games', integer)}${metric('Maior', summary.maior_pontuacao, 'highest')}</div><div class="scx-side-section"><h4>Últimas pontuações</h4><div class="scx-side-history-columns"><div><span class="scx-side-column-label">Em casa</span>${comparisonHistory(data, 'casa')}</div><div><span class="scx-side-column-label">Fora</span>${comparisonHistory(data, 'fora')}</div></div></div><div class="scx-side-section"><h4>Cedidos no confronto atual</h4><div class="scx-side-ceded">${comparisonCeded(data)}</div></div><div class="scx-side-section"><h4>Principais scouts da posição</h4><div class="scx-side-scouts">${comparisonScoutRows(data.scouts_da_posicao)}</div></div></article>`;
+    }
+
+    function renderComparison(first, second) {
+        const comparison = $('scoutCrossingComparison');
+        if (!comparison) return;
+        const firstPlayer = state.players.find((player) => Number(player.id) === Number(first.jogador?.id)) || first.jogador;
+        const secondPlayer = state.players.find((player) => Number(player.id) === Number(second.jogador?.id)) || second.jogador;
+        const firstMetrics = { prediction: predictionValue(firstPlayer), average: first.resumo?.media, games: first.resumo?.jogos, highest: first.resumo?.maior_pontuacao };
+        const secondMetrics = { prediction: predictionValue(secondPlayer), average: second.resumo?.media, games: second.resumo?.jogos, highest: second.resumo?.maior_pontuacao };
+        comparison.hidden = false;
+        $('scoutCrossingSingleAnalysis')?.setAttribute('hidden', '');
+        comparison.innerHTML = `<div class="scx-comparison-head"><div><p class="scx-overline">Comparativo da posição</p><h2>Leitura lado a lado</h2><span>Verde indica o melhor indicador entre os dois atletas.</span></div><button type="button" class="scx-button" data-clear-comparison><i class="fas fa-arrow-left"></i> Voltar ao jogador</button></div><div class="scx-comparison-grid scx-comparison-sides">${comparisonSide(first, firstMetrics.prediction, secondMetrics)}${comparisonSide(second, secondMetrics.prediction, firstMetrics)}</div>`;
+        comparison.querySelector('[data-clear-comparison]')?.addEventListener('click', () => {
+            comparison.hidden = true;
+            $('scoutCrossingSingleAnalysis')?.removeAttribute('hidden');
+        });
+        comparison.querySelectorAll('img').forEach((image) => image.addEventListener('error', () => image.remove(), { once: true }));
+    }
+
     async function runCrossing() {
         if (!state.atletaId || !state.posicaoId) return;
+        const version = ++state.crossingVersion;
         const params = new URLSearchParams({ atleta_id: state.atletaId, posicao_id: state.posicaoId }); setAlert('Calculando o cruzamento...');
-        try { const response = await fetch(`${page.dataset.crossingUrl}?${params}`); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Não foi possível executar o cruzamento.'); state.temporada = Number(data.filtros.temporada); state.rodada = Number(data.filtros.rodada); renderResult(data); setAlert(''); } catch (error) { setAlert(error.message, true); }
+        try { const response = await fetch(`${page.dataset.crossingUrl}?${params}`); const data = await response.json(); if (version !== state.crossingVersion) return; if (!response.ok) throw new Error(data.error || 'Não foi possível executar o cruzamento.'); state.temporada = Number(data.filtros.temporada); state.rodada = Number(data.filtros.rodada); renderResult(data); setAlert(''); } catch (error) { if (version === state.crossingVersion) setAlert(error.message, true); }
     }
     async function comparePlayers() {
         const otherId = Number($('scoutCrossingComparePlayer')?.value || 0); if (!otherId || !state.selectedData) return;
         try { const response = await fetch(`${page.dataset.crossingUrl}?atleta_id=${otherId}&posicao_id=${state.posicaoId}`); const other = await response.json(); if (!response.ok) throw new Error(other.error || 'Comparação indisponível.');
             const first = state.selectedData.jogador; const second = other.jogador; const firstExpected = predictionValue(state.players.find((p) => Number(p.id) === Number(first.id)) || first); const secondExpected = predictionValue(state.players.find((p) => Number(p.id) === Number(second.id)) || second);
             const metrics = [['Previsão', firstExpected, secondExpected], ['Média', first.media_num, second.media_num], ['Pontos', first.pontos_num, second.pontos_num], ['Jogos', first.jogos_num, second.jogos_num], ['Maior nota', state.selectedData.resumo.maior_pontuacao, other.resumo.maior_pontuacao]];
-            $('scoutCrossingComparison').hidden = false; $('scoutCrossingComparison').innerHTML = `<div class="scx-comparison-head"><strong>${escapeHtml(first.nome)} × ${escapeHtml(second.nome)}</strong><span class="scx-muted">verde = melhor · vermelho = menor</span></div><div class="scx-comparison-grid">${metrics.map(([label, a, b]) => `<span class="scx-compare-value ${Number(a) >= Number(b) ? 'better' : 'worse'}">${number(a)}</span><span class="scx-compare-label">${label}</span><span class="scx-compare-value ${Number(b) >= Number(a) ? 'better' : 'worse'}">${number(b)}</span>`).join('')}</div>`;
+            renderComparison(state.selectedData, other);
         } catch (error) { setAlert(error.message, true); }
     }
-    document.querySelectorAll('.scx-position').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.scx-position').forEach((item) => { item.classList.remove('is-selected'); item.setAttribute('aria-selected', 'false'); }); button.classList.add('is-selected'); button.setAttribute('aria-selected', 'true'); state.posicaoId = Number(button.dataset.position); state.atletaId = null; state.historyExpanded = false; loadOptions(); }));
-    document.querySelectorAll('[data-status-filter]').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('[data-status-filter]').forEach((item) => item.classList.remove('is-selected')); button.classList.add('is-selected'); state.statusFilter = button.dataset.statusFilter; renderPlayers(); }));
-    ['scoutCrossingSearch'].forEach((id) => $(id)?.addEventListener('input', renderPlayers));
-    ['scoutCrossingSort', 'scoutCrossingScout'].forEach((id) => $(id)?.addEventListener('change', renderPlayers)); $('scoutCrossingCompareButton')?.addEventListener('click', comparePlayers);
-    $('scoutCrossingPlayer')?.addEventListener('change', (event) => { state.atletaId = Number(event.target.value) || null; renderPlayers(); runCrossing(); });
+    document.querySelectorAll('.scx-position').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.scx-position').forEach((item) => { item.classList.remove('is-selected'); item.setAttribute('aria-selected', 'false'); }); button.classList.add('is-selected'); button.setAttribute('aria-selected', 'true'); state.posicaoId = Number(button.dataset.position); state.atletaId = null; state.historyExpanded = false; state.filtersTouched = false; resetAnalysis(); loadOptions(); }));
+    document.querySelectorAll('[data-status-filter]').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('[data-status-filter]').forEach((item) => item.classList.remove('is-selected')); button.classList.add('is-selected'); state.statusFilter = button.dataset.statusFilter; state.filtersTouched = true; renderPlayers(); }));
+    ['scoutCrossingSearch'].forEach((id) => $(id)?.addEventListener('input', () => { state.filtersTouched = true; renderPlayers(); }));
+    ['scoutCrossingSort', 'scoutCrossingScout'].forEach((id) => $(id)?.addEventListener('change', () => { state.filtersTouched = true; renderPlayers(); })); $('scoutCrossingCompareButton')?.addEventListener('click', comparePlayers);
+    $('scoutCrossingPlayer')?.addEventListener('change', (event) => { state.atletaId = Number(event.target.value) || null; state.filtersTouched = true; resetAnalysis(); renderPlayers(); runCrossing(); });
     state.posicaoId = selectedPosition();
     if (page.dataset.selectedPlayer) state.atletaId = Number(page.dataset.selectedPlayer);
     loadOptions();
