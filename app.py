@@ -127,6 +127,60 @@ def _get_player_availability_rules(conn, user_id, team_id, season, round_number)
         'forced_ids': {athlete_id for athlete_id, rule in rules.items() if rule == RULE_LOCK_IN},
     }
 
+
+def _external_probables_available(conn):
+    """Retorna se a tabela da fonte externa já foi criada pelo fetcher."""
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT to_regclass('public.acf_provaveis_fontes'),
+                   to_regclass('public.acw_provaveis_mapeamentos')
+        """)
+        row = cursor.fetchone()
+        return bool(row and row[0] is not None and row[1] is not None)
+    except Exception:
+        return False
+    finally:
+        cursor.close()
+
+
+def _get_probables_source(conn, user_id, team_id):
+    """Obtém a fonte de prováveis salva na configuração do time.
+
+    Globo continua sendo o fallback seguro. A fonte externa só fica ativa
+    quando a tabela foi criada pelo data-fetcher; assim um deploy parcial não
+    quebra nenhuma tela existente.
+    """
+    try:
+        from models.user_escalacao_config import create_user_escalacao_config_table, get_user_escalacao_config
+        create_user_escalacao_config_table(conn)
+        config = get_user_escalacao_config(conn, user_id, team_id)
+        source = (config or {}).get('fonte_provaveis', 'globo')
+    except Exception:
+        source = 'globo'
+    if source == 'provaveisdocartola' and not _external_probables_available(conn):
+        return 'globo'
+    return source if source in {'globo', 'provaveisdocartola'} else 'globo'
+
+
+def _probable_status_filter(conn, user_id, team_id, season, round_number, alias='a'):
+    """Retorna (SQL, parâmetros, fonte) para o atleta provável da rodada."""
+    source = _get_probables_source(conn, user_id, team_id)
+    if source != 'provaveisdocartola':
+        return f'{alias}.status_id = %s', [7], source
+    return (
+        f"EXISTS (SELECT 1 FROM acf_provaveis_fontes pf "
+        f"JOIN LATERAL (SELECT pm.atleta_id FROM acw_provaveis_mapeamentos pm "
+        f"WHERE pm.temporada = pf.temporada AND pm.fonte = pf.fonte "
+        f"AND pm.atleta_externo_id = pf.atleta_externo_id "
+        f"AND pm.rodada_id <= pf.rodada_id ORDER BY pm.rodada_id DESC LIMIT 1) pm ON TRUE "
+        f"WHERE pf.temporada = %s AND pf.rodada_id = %s "
+        f"AND pf.fonte = %s AND pf.ativo = TRUE AND pf.status = 'provavel' "
+        f"AND pm.atleta_id = {alias}.atleta_id)",
+        [season, round_number, 'provaveisdocartola'],
+        source,
+    )
+
 # Timezone: Brasília (America/Sao_Paulo)
 try:
     from zoneinfo import ZoneInfo
@@ -1921,7 +1975,7 @@ def api_atacante_detalhes(atleta_id):
                    COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 5 AND a.status_id = 7 AND a.temporada = %s
+            WHERE a.atleta_id = %s AND a.posicao_id = 5 AND a.temporada = %s
         ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
@@ -2325,7 +2379,7 @@ def api_lateral_detalhes(atleta_id):
                    COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 2 AND a.status_id = 7 AND a.temporada = %s
+            WHERE a.atleta_id = %s AND a.posicao_id = 2 AND a.temporada = %s
         ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
@@ -2588,7 +2642,7 @@ def api_goleiro_detalhes(atleta_id):
                    COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 1 AND a.status_id = 7 AND a.temporada = %s
+            WHERE a.atleta_id = %s AND a.posicao_id = 1 AND a.temporada = %s
         ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
@@ -2845,7 +2899,7 @@ def api_zagueiro_detalhes(atleta_id):
                    COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 3 AND a.status_id = 7 AND a.temporada = %s
+            WHERE a.atleta_id = %s AND a.posicao_id = 3 AND a.temporada = %s
         ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
@@ -3077,7 +3131,7 @@ def api_meia_detalhes(atleta_id):
                    COALESCE(a.foto_custom, a.foto) as foto
             FROM acf_atletas a
             JOIN acf_clubes c ON a.clube_id = c.id
-            WHERE a.atleta_id = %s AND a.posicao_id = 4 AND a.status_id = 7 AND a.temporada = %s
+            WHERE a.atleta_id = %s AND a.posicao_id = 4 AND a.temporada = %s
         ''', (atleta_id, temporada_atual))
         
         atleta_row = cursor.fetchone()
@@ -3342,6 +3396,27 @@ def api_modulo_dados(modulo):
         availability = _get_player_availability_rules(
             conn, user['id'], team_id, get_temporada_atual(), rodada_atual
         )
+        probable_source = _get_probables_source(conn, user['id'], team_id)
+        source_status_dict = {}
+        if probable_source == 'provaveisdocartola':
+            cursor.execute('''
+                SELECT pm.atleta_id, pf.status
+                FROM acf_provaveis_fontes pf
+                JOIN LATERAL (
+                    SELECT pm.atleta_id
+                    FROM acw_provaveis_mapeamentos pm
+                    WHERE pm.temporada = pf.temporada AND pm.fonte = pf.fonte
+                      AND pm.atleta_externo_id = pf.atleta_externo_id
+                      AND pm.rodada_id <= pf.rodada_id
+                    ORDER BY pm.rodada_id DESC LIMIT 1
+                ) pm ON TRUE
+                WHERE pf.temporada = %s AND pf.rodada_id = %s AND pf.fonte = %s
+                  AND pf.ativo = TRUE AND pm.atleta_id IS NOT NULL
+            ''', (get_temporada_atual(), rodada_atual, 'provaveisdocartola'))
+            source_status_dict = {
+                str(row[0]): {'provavel': 7, 'duvida': 2, 'improvavel': 3, 'suspenso': 5, 'lesionado': 5, 'fora': 6}.get(str(row[1]), 2)
+                for row in cursor.fetchall()
+            }
         forced_ids = sorted(availability['forced_ids'])
         saved_ids = sorted(availability['saved_ids'])
         
@@ -3400,12 +3475,15 @@ def api_modulo_dados(modulo):
             return jsonify({'error': 'Módulo inválido'}), 400
         
         # Buscar atletas com dados necessários (sem peso_jogo e peso_sg, eles vêm das tabelas de perfis)
-        status_clauses = ['a.status_id = %s']
-        status_params = [7]
+        probable_clause, probable_params, probable_source = _probable_status_filter(
+            conn, user['id'], team_id, get_temporada_atual(), rodada_atual, alias='a'
+        )
+        status_clauses = [probable_clause]
+        status_params = list(probable_params)
         if forced_ids:
             forced_placeholders = ','.join(['%s'] * len(forced_ids))
             status_clauses.append(
-                f'(a.status_id IN (2, 3, 5) AND a.atleta_id IN ({forced_placeholders}))'
+                f'(a.status_id <> 6 AND a.atleta_id IN ({forced_placeholders}))'
             )
             status_params.extend(forced_ids)
 
@@ -3510,6 +3588,7 @@ def api_modulo_dados(modulo):
                     'adversario_id': adversario_id,
                     'availability_rule': availability['rules'].get(atleta_id),
                     'is_forced': atleta_id in availability['forced_ids'],
+                    'probables_source': probable_source,
                 })
             except Exception as e:
                 print(f"Erro ao processar atleta: {e}, row: {row}")
@@ -4262,7 +4341,8 @@ def api_escalacao_config():
                     'fechar_defesa': config['fechar_defesa'],
                     'posicao_capitao': config['posicao_capitao'],
                     'posicao_reserva_luxo': config.get('posicao_reserva_luxo', 'atacantes'),
-                    'prioridades': config.get('prioridades', 'atacantes,laterais,meias,zagueiros,goleiros,tecnicos')
+                    'prioridades': config.get('prioridades', 'atacantes,laterais,meias,zagueiros,goleiros,tecnicos'),
+                    'fonte_provaveis': config.get('fonte_provaveis', 'globo')
                 })
             else:
                 # Retornar valores padrão
@@ -4272,7 +4352,8 @@ def api_escalacao_config():
                     'fechar_defesa': False,
                     'posicao_capitao': 'atacantes',
                     'posicao_reserva_luxo': 'atacantes',
-                    'prioridades': 'atacantes,laterais,meias,zagueiros,goleiros,tecnicos'
+                    'prioridades': 'atacantes,laterais,meias,zagueiros,goleiros,tecnicos',
+                    'fonte_provaveis': 'globo'
                 })
         else:  # POST
             data = request.get_json()
@@ -4287,9 +4368,12 @@ def api_escalacao_config():
             posicao_capitao = data.get('posicao_capitao', 'atacantes')
             posicao_reserva_luxo = data.get('posicao_reserva_luxo', 'atacantes')
             prioridades = data.get('prioridades', 'atacantes,laterais,meias,zagueiros,goleiros,tecnicos')
+            fonte_provaveis = data.get('fonte_provaveis', 'globo')
+            if fonte_provaveis not in {'globo', 'provaveisdocartola'}:
+                return jsonify({'error': 'Fonte de prováveis inválida'}), 400
             
             upsert_user_escalacao_config(
-                conn, user['id'], team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, posicao_reserva_luxo, prioridades
+                conn, user['id'], team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, posicao_reserva_luxo, prioridades, fonte_provaveis
             )
             return jsonify({'success': True})
     except Exception as e:
@@ -4465,6 +4549,8 @@ def api_escalacao_dados():
                             jogador_norm['status_id'] = status_dict[atleta_key]
                         else:
                             jogador_norm['status_id'] = 0  # Status desconhecido
+                        jogador_norm['source_status_id'] = source_status_dict.get(atleta_key)
+                        jogador_norm['probables_source'] = probable_source
 
                         # O ranking salvo é um snapshot. Foto customizada é
                         # dado vivo da tabela de atletas e precisa prevalecer
@@ -5218,6 +5304,165 @@ def admin_planos():
         return redirect(url_for('index'))
     
     return render_template('admin_planos.html')
+
+
+@app.route('/admin/mapeamento-provaveis')
+@login_required
+def admin_mapeamento_provaveis():
+    """Tela administrativa para mapear manualmente a fonte externa."""
+    user = get_current_user()
+    if not user or not user.get('is_admin', False):
+        flash('Você precisa ser administrador para mapear fontes de prováveis.', 'error')
+        return redirect(url_for('index'))
+    return render_template('admin_mapeamento_provaveis.html')
+
+
+@app.route('/api/admin/provaveis-mapeamento', methods=['GET', 'POST'])
+@login_required
+def api_admin_mapeamento_provaveis():
+    """Lista e salva vínculos manuais por clube, posição, rodada e temporada."""
+    user = get_current_user()
+    if not user or not user.get('is_admin', False):
+        return jsonify({'error': 'Acesso restrito ao administrador.'}), 403
+
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Banco de dados indisponível.'}), 503
+    try:
+        from models.provaveis_mapeamento import create_provaveis_mapping_table, save_mapping
+        create_provaveis_mapping_table(conn)
+        cursor = conn.cursor()
+
+        temporada = int(request.values.get('temporada') or get_temporada_atual())
+        cursor.execute(
+            '''SELECT COALESCE(MAX(rodada_id), 1) FROM acf_partidas
+               WHERE temporada = %s AND valida = TRUE''',
+            (temporada,),
+        )
+        rodada = int(request.values.get('rodada_id') or (cursor.fetchone()[0] or 1))
+
+        if request.method == 'POST':
+            payload = request.get_json(silent=True) or request.form.to_dict()
+            external_id = str(payload.get('atleta_externo_id') or '').strip()
+            athlete_id = payload.get('atleta_id')
+            if not external_id:
+                return jsonify({'error': 'Registro externo não informado.'}), 400
+            athlete_id = int(athlete_id) if athlete_id not in (None, '', 'null') else None
+
+            cursor.execute(
+                '''SELECT clube_id, posicao_id FROM acf_provaveis_fontes
+                   WHERE temporada = %s AND rodada_id = %s AND fonte = %s
+                     AND atleta_externo_id = %s AND ativo = TRUE
+                   LIMIT 1''',
+                (temporada, rodada, 'provaveisdocartola', external_id),
+            )
+            external = cursor.fetchone()
+            if not external:
+                return jsonify({'error': 'Registro externo não encontrado na rodada atual.'}), 404
+
+            if athlete_id is not None:
+                cursor.execute(
+                    '''SELECT clube_id, posicao_id FROM acf_atletas
+                       WHERE atleta_id = %s AND temporada = %s LIMIT 1''',
+                    (athlete_id, temporada),
+                )
+                official = cursor.fetchone()
+                if not official:
+                    return jsonify({'error': 'Jogador oficial não encontrado na temporada.'}), 404
+                if external[0] is not None and official[0] != external[0]:
+                    return jsonify({'error': 'O jogador oficial precisa pertencer ao mesmo clube.'}), 400
+                if external[1] is not None and official[1] != external[1]:
+                    return jsonify({'error': 'A posição do jogador oficial não corresponde à posição externa.'}), 400
+                cursor.execute(
+                    '''SELECT 1 FROM acw_provaveis_mapeamentos
+                       WHERE temporada = %s AND rodada_id = %s AND fonte = %s
+                         AND atleta_id = %s AND atleta_externo_id <> %s
+                       LIMIT 1''',
+                    (temporada, rodada, 'provaveisdocartola', athlete_id, external_id),
+                )
+                if cursor.fetchone():
+                    return jsonify({'error': 'Este jogador oficial já está ligado a outro registro externo.'}), 409
+
+            saved = save_mapping(conn, temporada, rodada, external_id, athlete_id, user['id'])
+            return jsonify({'success': True, 'mapping': saved, 'temporada': temporada, 'rodada_id': rodada})
+
+        clube_id = request.args.get('clube_id')
+        posicao_id = request.args.get('posicao_id')
+        if not _external_probables_available(conn):
+            return jsonify({'available': False, 'temporada': temporada, 'rodada_id': rodada, 'times': [], 'message': 'Aguardando o primeiro snapshot da fonte externa.'})
+
+        filters = ['pf.temporada = %s', 'pf.rodada_id = %s', 'pf.fonte = %s', 'pf.ativo = TRUE']
+        params = [temporada, rodada, 'provaveisdocartola']
+        if clube_id:
+            filters.append('pf.clube_id = %s'); params.append(int(clube_id))
+        if posicao_id:
+            filters.append('pf.posicao_id = %s'); params.append(int(posicao_id))
+        cursor.execute(f'''
+            SELECT pf.atleta_externo_id, pf.nome_externo, pf.slug_externo,
+                   pf.clube_id, pf.clube_slug_externo, pf.posicao_id, pf.status,
+                   pm.atleta_id AS mapeado_atleta_id,
+                   c.nome AS clube_nome, c.abreviacao AS clube_abrev,
+                   COALESCE(a.apelido, a.nome) AS oficial_mapeado_nome
+            FROM acf_provaveis_fontes pf
+            LEFT JOIN LATERAL (
+                SELECT pm.atleta_id
+                FROM acw_provaveis_mapeamentos pm
+                WHERE pm.temporada = pf.temporada AND pm.fonte = pf.fonte
+                  AND pm.atleta_externo_id = pf.atleta_externo_id
+                  AND pm.rodada_id <= pf.rodada_id
+                ORDER BY pm.rodada_id DESC LIMIT 1
+            ) pm ON TRUE
+            LEFT JOIN acf_clubes c ON c.id = pf.clube_id
+            LEFT JOIN acf_atletas a ON a.atleta_id = pm.atleta_id AND a.temporada = pf.temporada
+            WHERE {' AND '.join(filters)}
+            ORDER BY COALESCE(c.nome, pf.clube_slug_externo), pf.nome_externo
+        ''', params)
+        external_rows = cursor.fetchall()
+
+        cursor.execute('''
+            SELECT atleta_id, apelido, nome, clube_id, posicao_id,
+                   COALESCE(foto_custom, foto) AS foto
+            FROM acf_atletas
+            WHERE temporada = %s
+            ORDER BY apelido NULLS LAST, nome
+        ''', (temporada,))
+        official_rows = cursor.fetchall()
+        official_by_club = {}
+        for row in official_rows:
+            official_by_club.setdefault(row[3], []).append({
+                'atleta_id': row[0], 'nome': row[1] or row[2] or 'Sem nome',
+                'nome_completo': row[2] or row[1] or '', 'posicao_id': row[4], 'foto': row[5] or ''
+            })
+
+        teams = {}
+        for row in external_rows:
+            club_key = row[3] if row[3] is not None else f'externo:{row[4] or "sem-clube"}'
+            team = teams.setdefault(club_key, {
+                'clube_id': row[3], 'nome': row[8] or row[4] or 'Clube não mapeado',
+                'abreviacao': row[9] or row[4] or '—', 'externos': [],
+                'oficiais': list(official_by_club.get(row[3], []))
+            })
+            team['externos'].append({
+                'id': row[0], 'nome': row[1] or 'Sem nome', 'slug': row[2] or '',
+                'posicao_id': row[5], 'status': row[6] or 'duvida',
+                'atleta_id': row[7], 'mapeado_nome': row[10] or ''
+            })
+        for team in teams.values():
+            team['externos'].sort(key=lambda item: item['nome'].casefold())
+            team['oficiais'].sort(key=lambda item: item['nome'].casefold())
+
+        return jsonify({
+            'available': True, 'temporada': temporada, 'rodada_id': rodada,
+            'fonte': 'provaveisdocartola', 'times': sorted(teams.values(), key=lambda item: item['nome'].casefold())
+        })
+    except (TypeError, ValueError) as exc:
+        return jsonify({'error': f'Filtro inválido: {exc}'}), 400
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(exc)}), 500
+    finally:
+        close_db_connection(conn)
 
 @app.route('/admin/classes')
 @login_required

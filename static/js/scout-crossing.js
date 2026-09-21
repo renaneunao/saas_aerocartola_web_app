@@ -28,6 +28,7 @@
     const shortScouts = { a: 'A', ca: 'CA', cv: 'CV', de: 'DEF', ds: 'DS', fc: 'FC', fd: 'FD', ff: 'FF', fs: 'FS', g: 'G', gs: 'GS', i: 'IMP', sg: 'SG' };
     const scoutLabels = { a: 'Assistências', ca: 'Cartões amarelos', cv: 'Cartões vermelhos', de: 'Defesas', ds: 'Desarmes', fc: 'Faltas cometidas', fd: 'Finalizações defendidas', ff: 'Finalizações para fora', fs: 'Faltas sofridas', g: 'Gols', gs: 'Gols sofridos', i: 'Impedimentos', sg: 'Saldo de gols' };
     const negativeScouts = new Set(['ca', 'cv', 'fc', 'gs', 'i']);
+    const statusOf = (player) => Number(player.source_status_id ?? player.status_id);
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[char]));
     const number = (value, digits = 2) => Number.isFinite(Number(value)) ? Number(value).toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits }) : '0,00';
     const integer = (value) => Number.isFinite(Number(value)) ? Math.round(Number(value)).toLocaleString('pt-BR') : '0';
@@ -61,8 +62,8 @@
     }
     function statusClass(player) {
         if (player.availability_rule === 'cravado') return 'scx-status-lock';
-        if (Number(player.status_id) === 7) return 'scx-status-probable';
-        if ([2, 3, 5].includes(Number(player.status_id))) return 'scx-status-doubt';
+        if (statusOf(player) === 7) return 'scx-status-probable';
+        if ([2, 3, 5].includes(statusOf(player))) return 'scx-status-doubt';
         return 'scx-status-out';
     }
     function statusText(player) { return player.availability_rule === 'cravado' ? 'Cravado' : player.status_nome || 'Status'; }
@@ -81,10 +82,10 @@
             // Nulos nunca jogam e não entram na análise. Atletas poupados
             // permanecem visíveis em “Todos” para que a regra possa ser
             // conferida, mas nunca aparecem no filtro inicial de prováveis.
-            if (Number(player.status_id) === 6) return false;
-            if (state.statusFilter === 'provaveis' && (player.availability_rule === 'poupar' || (Number(player.status_id) !== 7 && player.availability_rule !== 'cravado'))) return false;
+            if (statusOf(player) === 6) return false;
+            if (state.statusFilter === 'provaveis' && (player.availability_rule === 'poupar' || (statusOf(player) !== 7 && player.availability_rule !== 'cravado'))) return false;
             if (state.statusFilter === 'cravados' && player.availability_rule !== 'cravado') return false;
-            if (state.statusFilter === 'duvidas' && ![2, 3, 5].includes(Number(player.status_id))) return false;
+            if (state.statusFilter === 'duvidas' && ![2, 3, 5].includes(statusOf(player))) return false;
             if (text && !`${player.nome || ''} ${player.clube_nome || ''}`.toLocaleLowerCase().includes(text)) return false;
             return true;
         });
@@ -251,7 +252,7 @@
     }
     function renderCompareOptions() {
         const select = $('scoutCrossingComparePlayer'); if (!select) return;
-        select.innerHTML = '<option value="">Escolha outro atleta</option>' + state.players.filter((player) => Number(player.id) !== Number(state.atletaId) && Number(player.posicao_id || state.posicaoId) === Number(state.posicaoId) && player.availability_rule !== 'poupar' && Number(player.status_id) !== 6).sort((a, b) => predictionValue(b) - predictionValue(a)).map((player) => `<option value="${player.id}">${escapeHtml(player.nome)} · ${number(predictionValue(player))} pts</option>`).join('');
+        select.innerHTML = '<option value="">Escolha outro atleta</option>' + state.players.filter((player) => Number(player.id) !== Number(state.atletaId) && Number(player.posicao_id || state.posicaoId) === Number(state.posicaoId) && player.availability_rule !== 'poupar' && statusOf(player) !== 6).sort((a, b) => predictionValue(b) - predictionValue(a)).map((player) => `<option value="${player.id}">${escapeHtml(player.nome)} · ${number(predictionValue(player))} pts</option>`).join('');
     }
     function resetAnalysis() {
         state.selectedData = null;

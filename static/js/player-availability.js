@@ -14,6 +14,7 @@
   const statusColors = { 2: 'text-neon-amber', 3: 'text-neon-red', 5: 'text-neon-red', 6: 'text-neon-red', 7: 'text-neon-green' };
 
   const $ = (id) => document.getElementById(id);
+  const statusOf = (item) => Number(item.source_status_id ?? item.status_id);
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[char]));
   function feedback(message, kind = 'info') {
     const el = $('availabilityFeedback');
@@ -35,7 +36,7 @@
     const search = ($('availabilitySearch')?.value || '').trim().toLocaleLowerCase();
     const scout = $('availabilityScout')?.value || '';
     const filtered = state.items.filter((item) => {
-      const status = Number(item.status_id);
+      const status = statusOf(item);
       if (state.filter === 'provaveis' && (item.rule === 'poupar' || (status !== 7 && item.rule !== 'cravado'))) return false;
       if (state.filter === 'poupar' && item.rule !== 'poupar') return false;
       if (state.filter === 'cravado' && item.rule !== 'cravado') return false;
@@ -68,9 +69,10 @@
     const rows = filteredItems();
     $('availabilityCount').textContent = `${rows.length} jogador(es)`;
     $('availabilityRows').innerHTML = rows.length ? rows.map((item) => {
-      const nullStatus = Number(item.status_id) === 6;
-      const nonProbable = [2, 3, 5].includes(Number(item.status_id));
-      const statusClass = statusColors[item.status_id] || 'text-text-secondary';
+      const status = statusOf(item);
+      const nullStatus = status === 6;
+      const nonProbable = [2, 3, 5].includes(status);
+      const statusClass = statusColors[status] || 'text-text-secondary';
       return `<tr class="hover:bg-white/[0.025]">
         <td class="px-4 py-3"><div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-white/5 overflow-hidden flex items-center justify-center">${item.foto ? `<img src="${escapeHtml(item.foto)}" alt="" class="w-full h-full object-cover">` : '<i class="fas fa-user text-text-muted text-xs"></i>'}</div><div><div class="font-semibold text-white">${escapeHtml(item.apelido)}</div></div></div></td>
         <td class="px-4 py-3 text-text-secondary">${escapeHtml(positionNames[item.posicao_id] || '—')}</td>

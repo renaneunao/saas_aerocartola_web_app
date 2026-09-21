@@ -146,6 +146,43 @@ def player_availability_candidates():
         )
         rules_by_athlete = {int(item["athlete_id"]): item["rule"] for item in rules}
 
+        # A fonte externa é opt-in por time. O status oficial continua sendo
+        # preservado; aqui apenas enriquecemos a resposta para os filtros.
+        external_status = {}
+        probable_source = "globo"
+        try:
+            from models.user_escalacao_config import create_user_escalacao_config_table, get_user_escalacao_config
+            create_user_escalacao_config_table(conn)
+            config = get_user_escalacao_config(conn, int(session["user_id"]), team_id)
+            probable_source = (config or {}).get("fonte_provaveis", "globo")
+            cursor_source = conn.cursor()
+            cursor_source.execute("SELECT to_regclass('public.acf_provaveis_fontes')")
+            table_exists = cursor_source.fetchone()[0] is not None
+            cursor_source.close()
+            if probable_source == "provaveisdocartola" and table_exists:
+                cursor_source = conn.cursor()
+                cursor_source.execute(
+                    """
+                    SELECT pm.atleta_id, pf.status
+                    FROM acf_provaveis_fontes pf
+                    JOIN LATERAL (
+                        SELECT pm.atleta_id
+                        FROM acw_provaveis_mapeamentos pm
+                        WHERE pm.temporada = pf.temporada AND pm.fonte = pf.fonte
+                          AND pm.atleta_externo_id = pf.atleta_externo_id
+                          AND pm.rodada_id <= pf.rodada_id
+                        ORDER BY pm.rodada_id DESC LIMIT 1
+                    ) pm ON TRUE
+                    WHERE pf.temporada = %s AND pf.rodada_id = %s AND pf.fonte = %s
+                      AND pf.ativo = TRUE AND pm.atleta_id IS NOT NULL
+                    """,
+                    (season, round_number, "provaveisdocartola"),
+                )
+                external_status = {int(row[0]): str(row[1] or "duvida") for row in cursor_source.fetchall()}
+                cursor_source.close()
+        except Exception as source_error:
+            print(f"[PLAYER AVAILABILITY] Fonte externa não carregada: {source_error}")
+
         cursor = conn.cursor()
         params = [season]
         position_clause = ""
@@ -199,6 +236,8 @@ def player_availability_candidates():
         items = []
         for row in cursor.fetchall():
             athlete_id = int(row[0])
+            source_status = external_status.get(athlete_id)
+            source_status_id = {"provavel": 7, "duvida": 2, "improvavel": 3, "suspenso": 5, "lesionado": 5, "fora": 6}.get(source_status)
             items.append(
                 {
                     "atleta_id": athlete_id,
@@ -215,7 +254,9 @@ def player_availability_candidates():
                         5: "Suspenso",
                         6: "Nulo",
                         7: "Provável",
-                    }.get(int(row[5] or 0), "Desconhecido"),
+                    }.get(source_status_id if source_status_id is not None else int(row[5] or 0), "Desconhecido"),
+                    "source_status_id": source_status_id,
+                    "probables_source": probable_source,
                     "foto": row[8] or "",
                     "pontos_num": float(row[9] or 0),
                     "media_num": float(row[10] or 0),
@@ -325,7 +366,38 @@ def save_player_availability():
         if not athlete_row:
             return jsonify({"error": "Atleta não encontrado na temporada informada"}), 404
         if normalize_rule(rule) == RULE_LOCK_IN and int(athlete_row[0] or 0) == 6:
-            return jsonify({"error": "Jogador nulo não pode ser cravado como titular"}), 400
+            # Se a fonte externa marcou o atleta como provável, o status
+            # oficial antigo não deve impedir o cravamento manual.
+            external_probable = False
+            try:
+                from models.user_escalacao_config import get_user_escalacao_config
+                config = get_user_escalacao_config(conn, int(session["user_id"]), int(team_id))
+                if (config or {}).get("fonte_provaveis") == "provaveisdocartola":
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        """
+                        SELECT 1
+                        FROM acf_provaveis_fontes pf
+                        JOIN LATERAL (
+                            SELECT pm.atleta_id
+                            FROM acw_provaveis_mapeamentos pm
+                            WHERE pm.temporada = pf.temporada AND pm.fonte = pf.fonte
+                              AND pm.atleta_externo_id = pf.atleta_externo_id
+                              AND pm.rodada_id <= pf.rodada_id
+                            ORDER BY pm.rodada_id DESC LIMIT 1
+                        ) pm ON TRUE
+                        WHERE pf.temporada = %s AND pf.rodada_id = %s AND pf.fonte = %s
+                          AND pm.atleta_id = %s AND pf.status = 'provavel' AND pf.ativo = TRUE
+                        LIMIT 1
+                        """,
+                        (int(season), int(round_number), "provaveisdocartola", int(athlete_id)),
+                    )
+                    external_probable = cursor.fetchone() is not None
+                    cursor.close()
+            except Exception:
+                external_probable = False
+            if not external_probable:
+                return jsonify({"error": "Jogador nulo não pode ser cravado como titular"}), 400
 
         saved = upsert_player_availability(
             conn,

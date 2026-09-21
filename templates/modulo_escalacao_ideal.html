@@ -50,6 +50,15 @@
         </div>
 
         <div class="ideal-form-group">
+          <label class="ideal-label" for="fonteProvaveisSelect">Fonte de prováveis</label>
+          <select id="fonteProvaveisSelect" class="ideal-select">
+            <option value="globo">Globo / Cartola</option>
+            <option value="provaveisdocartola">Prováveis do Cartola</option>
+          </select>
+          <p class="ideal-panel-subtitle">A fonte externa só será usada quando o atleta estiver mapeado com segurança.</p>
+        </div>
+
+        <div class="ideal-form-group">
           <label class="ideal-label" for="posicaoCapitao">Capitão</label>
           <select id="posicaoCapitao" class="ideal-select">
             <option value="atacantes">Atacantes</option>
@@ -176,6 +185,14 @@
   </div>
 </div>
 
+<script src="{{ url_for('static', filename='js/calculo_goleiro.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_lateral.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_zagueiro.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_meia.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_atacante.js') }}"></script>
+<script src="{{ url_for('static', filename='js/calculo_treinador.js') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modulos-calculo-todos.js', v='1') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao-ideal-page.js', v='3') }}"></script>
 {% endblock %}

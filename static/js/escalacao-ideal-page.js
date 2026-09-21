@@ -192,19 +192,39 @@
   async function verificarStatusModulos() {
     const response = await fetch('/api/modulos/status');
     const data = await response.json();
+    if (!response.ok || data.error) {
+      throw new Error(data.error || 'Não foi possível verificar os módulos.');
+    }
     if (data.todos_calculados) return true;
     const names = { goleiro: 'Goleiros', lateral: 'Laterais', zagueiro: 'Zagueiros', meia: 'Meias', atacante: 'Atacantes', treinador: 'Técnicos' };
-    const pending = Object.keys(data.status || {}).filter(key => !data.status[key]).map(key => names[key] || key).join(', ');
-    const message = `Calcule os módulos de posição antes de montar a escalação. Pendentes: ${pending || 'verifique os módulos'}.`;
-    if (typeof showAlert === 'function') await showAlert('Módulos incompletos', `${message}\n\nVocê será redirecionado para a página de módulos.`);
-    window.location.href = '/modulos';
-    return false;
+    const pendingModules = Object.keys(data.status || {}).filter(key => !data.status[key]);
+    const pending = pendingModules.map(key => names[key] || key).join(', ');
+
+    if (typeof window.calcularModulosPendentes !== 'function') {
+      throw new Error(`Módulos pendentes: ${pending || 'verifique os módulos'}. O motor de cálculo não foi carregado.`);
+    }
+
+    adicionarLog(`Módulos pendentes detectados: ${pending || 'nenhum'}. Iniciando cálculo automático...`, 'info');
+    await window.calcularModulosPendentes(pendingModules, {
+      onProgress: ({ mensagem, concluido, erro }) => {
+        if (mensagem) adicionarLog(mensagem, erro ? 'error' : concluido ? 'success' : 'info');
+      }
+    });
+
+    const statusResponse = await fetch('/api/modulos/status');
+    const statusAtualizado = await statusResponse.json();
+    if (!statusResponse.ok || !statusAtualizado.todos_calculados) {
+      throw new Error('O cálculo terminou, mas ainda existem módulos sem ranking salvo.');
+    }
+    adicionarLog('Todos os módulos foram calculados. Carregando a escalação ideal...', 'success');
+    return true;
   }
 
   async function carregarConfiguracoes() {
     const response = await fetch('/api/escalacao-ideal/config');
     const config = await response.json();
     $('formationSelect').value = config.formation || '4-3-3';
+    if ($('fonteProvaveisSelect')) $('fonteProvaveisSelect').value = config.fonte_provaveis || 'globo';
     $('hackGoleiroToggle').checked = can('hackGoleiro') ? Boolean(config.hack_goleiro) : false;
     $('fecharDefesaToggle').checked = can('fecharDefesa') ? Boolean(config.fechar_defesa) : false;
     $('posicaoCapitao').value = config.posicao_capitao || 'atacantes';
@@ -242,6 +262,7 @@
   async function salvarConfiguracoes() {
     const payload = {
       formation: $('formationSelect').value,
+      fonte_provaveis: $('fonteProvaveisSelect')?.value || 'globo',
       hack_goleiro: $('hackGoleiroToggle').checked,
       fechar_defesa: $('fecharDefesaToggle').checked,
       posicao_capitao: $('posicaoCapitao').value,
@@ -859,7 +880,7 @@
   }
 
   function bindEvents() {
-    ['formationSelect', 'hackGoleiroToggle', 'fecharDefesaToggle', 'posicaoCapitao', 'posicaoReservaLuxo'].forEach(id => $(id)?.addEventListener('change', () => aoMudarConfiguracao()));
+    ['formationSelect', 'fonteProvaveisSelect', 'hackGoleiroToggle', 'fecharDefesaToggle', 'posicaoCapitao', 'posicaoReservaLuxo'].forEach(id => $(id)?.addEventListener('change', () => aoMudarConfiguracao()));
     $('manualEditBtn')?.addEventListener('click', toggleManualEdit);
     $('escalacaoContent')?.addEventListener('click', (event) => {
       const submitButton = event.target.closest('[data-submit-lineup]');

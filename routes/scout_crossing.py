@@ -339,9 +339,41 @@ def _player_options(cursor, temporada, posicao_id, clube_id=None, rodada=None, a
         }
 
     status_names = {2: "Dúvida", 3: "Improvável", 5: "Suspenso", 6: "Nulo", 7: "Provável"}
+    external_status = {}
+    probable_source = "globo"
+    try:
+        from models.user_escalacao_config import create_user_escalacao_config_table, get_user_escalacao_config
+        create_user_escalacao_config_table(cursor.connection)
+        config = get_user_escalacao_config(cursor.connection, int(session.get("user_id")), session.get("selected_team_id"))
+        probable_source = (config or {}).get("fonte_provaveis", "globo")
+        cursor.execute("SELECT to_regclass('public.acf_provaveis_fontes')")
+        table_exists = cursor.fetchone()[0] is not None
+        if probable_source == "provaveisdocartola" and table_exists:
+            cursor.execute(
+                """
+                SELECT pm.atleta_id, pf.status
+                FROM acf_provaveis_fontes pf
+                JOIN LATERAL (
+                    SELECT pm.atleta_id
+                    FROM acw_provaveis_mapeamentos pm
+                    WHERE pm.temporada = pf.temporada AND pm.fonte = pf.fonte
+                      AND pm.atleta_externo_id = pf.atleta_externo_id
+                      AND pm.rodada_id <= pf.rodada_id
+                    ORDER BY pm.rodada_id DESC LIMIT 1
+                ) pm ON TRUE
+                WHERE pf.temporada = %s AND pf.rodada_id = %s AND pf.fonte = %s
+                  AND pf.ativo = TRUE AND pm.atleta_id IS NOT NULL
+                """,
+                (temporada, rodada or 1, "provaveisdocartola"),
+            )
+            external_status = {int(row[0]): str(row[1] or "duvida") for row in cursor.fetchall()}
+    except Exception as source_error:
+        print(f"[SCOUT CROSSING] Fonte externa não carregada: {source_error}")
     for row in rows:
         athlete_id = _json_int(row["atleta_id"])
         status_id = _json_int(row["status_id"])
+        source_status = external_status.get(athlete_id)
+        source_status_id = {"provavel": 7, "duvida": 2, "improvavel": 3, "suspenso": 5, "lesionado": 5, "fora": 6}.get(source_status)
         scouts = scout_by_player.get(athlete_id, {})
         players.append(
             {
@@ -353,7 +385,9 @@ def _player_options(cursor, temporada, posicao_id, clube_id=None, rodada=None, a
                 "clube_abrev": row["clube_abrev"] or row["clube_nome"],
                 "foto": row["foto"] or "",
                 "status_id": status_id,
-                "status_nome": status_names.get(status_id, "Desconhecido"),
+                "source_status_id": source_status_id,
+                "probables_source": probable_source,
+                "status_nome": status_names.get(source_status_id if source_status_id is not None else status_id, "Desconhecido"),
                 "pontos_num": _json_number(row["pontos_num"]),
                 "media_num": _json_number(row["media_num"]),
                 "preco_num": _json_number(row["preco_num"]),

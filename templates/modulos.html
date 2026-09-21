@@ -11,6 +11,11 @@
         <i class="fas fa-info-circle text-neon-cyan mr-1.5"></i>
         <span id="statusGeral">Carregando status dos módulos...</span>
     </p>
+    <button id="calcularTodosModulosBtn" type="button"
+            class="hidden mt-3 inline-flex items-center gap-2 rounded-lg border border-neon-cyan/40 bg-neon-cyan/10 px-4 py-2 text-xs font-semibold text-neon-cyan transition hover:bg-neon-cyan/20 disabled:cursor-wait disabled:opacity-60">
+        <i class="fas fa-bolt"></i>
+        <span>Calcular módulos pendentes</span>
+    </button>
 </div>
 
 <!-- Módulos Grid -->
@@ -237,6 +242,12 @@
                 const faltam = modulosPendentes.map(m => nomes[m]).join(', ');
                 statusGeral.innerHTML = `<span class="text-neon-amber font-bold"><i class="fas fa-exclamation-triangle mr-1"></i>Calculados: ${modulosCalculados.length}/6 • Faltam: ${faltam}</span>`;
             }
+
+            const calcularTodosBtn = document.getElementById('calcularTodosModulosBtn');
+            if (calcularTodosBtn) {
+                calcularTodosBtn.classList.toggle('hidden', data.todos_calculados || modulosPendentes.length === 0);
+                calcularTodosBtn.dataset.modulos = JSON.stringify(modulosPendentes);
+            }
             
             const escalacaoCard = document.getElementById('modulo-escalacao-ideal');
             const escalacaoOverlay = document.getElementById('escalacao-overlay');
@@ -262,7 +273,9 @@
                 modulosPendentesText.innerHTML = `Pendentes (${modulosPendentes.length}): <span class="text-neon-amber font-bold">${faltam}</span>`;
                 escalacaoCard.addEventListener('click', function(e) {
                     e.preventDefault();
-                    showAlert('Módulos Pendentes', `Por favor, calcule todos os módulos de posição antes de acessar a escalação ideal.\n\nAinda faltam: ${faltam}`);
+                    const button = document.getElementById('calcularTodosModulosBtn');
+                    if (button) button.focus();
+                    showAlert('Módulos Pendentes', `Calcule todos os módulos antes de acessar a escalação ideal.\n\nAinda faltam: ${faltam}`);
                 });
             }
         } catch (error) {
@@ -282,4 +295,38 @@
 <script src="{{ url_for('static', filename='js/calculo_treinador.js') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modulos-calculo-todos.js', v='1') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const button = document.getElementById('calcularTodosModulosBtn');
+        if (!button) return;
+
+        button.addEventListener('click', async function () {
+            const modulos = JSON.parse(button.dataset.modulos || '[]');
+            if (!modulos.length || typeof window.calcularModulosPendentes !== 'function') return;
+
+            button.disabled = true;
+            const label = button.querySelector('span');
+            if (label) label.textContent = 'Calculando módulos...';
+            if (typeof showLoader === 'function') showLoader('Calculando módulos pendentes...');
+
+            try {
+                await window.calcularModulosPendentes(modulos, {
+                    onProgress: ({ mensagem }) => {
+                        if (label && mensagem) label.textContent = mensagem;
+                    }
+                });
+                if (typeof showToast === 'function') showToast('Todos os módulos pendentes foram calculados.', 'success');
+                window.setTimeout(() => window.location.reload(), 500);
+            } catch (error) {
+                console.error('[MÓDULOS] Falha no cálculo em lote:', error);
+                if (typeof showAlert === 'function') showAlert('Não foi possível concluir', error.message || 'Erro ao calcular os módulos.');
+                button.disabled = false;
+                if (label) label.textContent = 'Calcular módulos pendentes';
+            } finally {
+                if (typeof hideLoader === 'function') hideLoader();
+            }
+        });
+    });
+</script>
 {% endblock %}
