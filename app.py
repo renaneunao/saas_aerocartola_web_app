@@ -5504,8 +5504,6 @@ def api_admin_mapeamento_provaveis():
                     return jsonify({'error': 'Jogador oficial não encontrado na temporada.'}), 404
                 if official[0] != team_mapping[0]:
                     return jsonify({'error': 'O jogador oficial precisa pertencer ao time oficial que você vinculou.'}), 400
-                if external[1] is not None and official[1] != external[1]:
-                    return jsonify({'error': 'A posição do jogador oficial não corresponde à posição externa.'}), 400
                 cursor.execute(
                     '''SELECT 1
                        FROM (SELECT DISTINCT atleta_externo_id, clube_slug_externo

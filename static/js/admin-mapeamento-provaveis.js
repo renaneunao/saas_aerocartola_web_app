@@ -63,11 +63,15 @@
 
   function candidateOptions(team, external) {
     const currentId = Number(external.atleta_id || 0);
+    const alreadyChosen = new Set(state.teams.flatMap((item) => item.externos || [])
+      .filter((player) => Number(player.atleta_id) && Number(player.atleta_id) !== currentId)
+      .map((player) => String(player.atleta_id)));
     return (team.oficiais || []).slice().sort((left, right) => {
       const score = similarity(external.nome, left.nome);
       const other = similarity(external.nome, right.nome);
       return other - score || String(left.nome).localeCompare(String(right.nome), 'pt-BR');
-    }).map((player) => `<option value="${escapeHtml(player.atleta_id)}" ${Number(player.atleta_id) === currentId ? 'selected' : ''}>${escapeHtml(player.nome)} · ${escapeHtml(positions[player.posicao_id] || 'Posição')}</option>`).join('');
+    }).filter((player) => !alreadyChosen.has(String(player.atleta_id)) || Number(player.atleta_id) === currentId)
+      .map((player) => `<option value="${escapeHtml(player.atleta_id)}" ${Number(player.atleta_id) === currentId ? 'selected' : ''}>${escapeHtml(player.nome)} · ${escapeHtml(positions[player.posicao_id] || 'Posição')}</option>`).join('');
   }
 
   function officialClubOptions(team) {

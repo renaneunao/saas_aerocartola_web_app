@@ -55,7 +55,7 @@
     return element.dataset[name] === 'true' || element.getAttribute(`data-${key}`) === 'true';
   };
   const safeNumber = (value) => Number.isFinite(Number(value)) ? Number(value) : 0;
-  const money = (value) => `R$ ${safeNumber(value).toFixed(2).replace('.', ',')}`;
+  const money = (value) => `C$ ${safeNumber(value).toFixed(2).replace('.', ',')}`;
   const points = (player) => safeNumber(player?.pontuacao_total);
   const price = (player) => safeNumber(player?.preco_num || player?.preco);
   // Rankings antigos e respostas montadas manualmente podem usar nomes
@@ -100,7 +100,7 @@
     return `<span class="ideal-fixture-team ${active ? 'is-active' : 'is-opponent'} ${side}">${shield ? `<img src="${escapeHtml(shield)}" alt="">` : '<i class="fas fa-shield-alt"></i>'}<b>${escapeHtml(name)}</b>${active && favorite !== null ? `<small>F ${safeNumber(favorite).toFixed(2)}</small>` : ''}</span>`;
   }
 
-  function fixtureIndicators(player, ownMarkup) {
+  function fixtureIndicators(player) {
     const opponent = opponentFor(player);
     if (!opponent) return '';
     const own = clubFor(player);
