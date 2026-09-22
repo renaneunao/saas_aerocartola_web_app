@@ -1165,3 +1165,148 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Cartão do atleta: a leitura prioritária é foto + confronto. As métricas
+   ficam sempre em uma única linha, inclusive quando o campo é estreito. */
+.ideal-player-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 46px;
+  width: 100%;
+}
+
+.ideal-player-visual > .ideal-player-avatar {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.ideal-player-visual > .ideal-player-indicators {
+  position: static;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ideal-player-chips {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  gap: 2px;
+}
+
+.ideal-player-chips span {
+  min-width: 0;
+  flex: 1 1 0;
+  overflow: hidden;
+  padding: 2px 2px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ideal-player-fixture-badge {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: auto;
+  max-width: 3.7rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: none;
+}
+
+.ideal-fixture-team {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 2px;
+  width: 3.55rem;
+  min-width: 0;
+  color: #8aa0b1;
+  font: 700 6px/1 'JetBrains Mono', monospace;
+}
+
+.ideal-fixture-team.home { align-self: flex-start; }
+.ideal-fixture-team.away { align-self: flex-end; }
+.ideal-fixture-team.is-active { color: #f3fbff; }
+.ideal-fixture-team.is-opponent { opacity: .74; }
+.ideal-fixture-team img,
+.ideal-fixture-team i {
+  grid-row: 1 / 3;
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+  font-size: 8px;
+}
+.ideal-fixture-team b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ideal-fixture-team small {
+  color: var(--ideal-amber);
+  font: 700 6px/1 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+
+.ideal-player-visual .ideal-player-team-badge,
+.ideal-player-visual .ideal-player-sg-badge {
+  position: static;
+  transform: none;
+  width: auto;
+  max-width: 3.7rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.ideal-player-visual .ideal-player-team-badge {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 2px;
+  color: #f3fbff;
+  font-size: 6px;
+}
+.ideal-player-visual .ideal-player-team-badge > span { display: contents; }
+.ideal-player-visual .ideal-player-team-badge img,
+.ideal-player-visual .ideal-player-team-badge i { grid-row: 1 / 3; width: 12px; height: 12px; }
+.ideal-player-visual .ideal-player-team-badge b { color: var(--ideal-amber); font-size: 6px; }
+.ideal-player-visual .ideal-player-sg-badge { color: #9dffbd; font-size: 6px; }
+
+.ideal-bench-signals .ideal-player-indicators {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+.ideal-bench-signals .ideal-player-fixture-badge { align-items: flex-end; }
+
+@media (max-width: 620px) {
+  .ideal-player { width: clamp(56px, 15vw, 84px); }
+  .ideal-player-visual { gap: 3px; min-height: 35px; }
+  .ideal-player-visual > .ideal-player-avatar { width: clamp(21px, 7vw, 34px); }
+  .ideal-player-chips span { padding-inline: 1px; font-size: 5.5px; }
+  .ideal-fixture-team,
+  .ideal-player-visual .ideal-player-team-badge { width: 2.05rem; font-size: 5.5px; }
+  .ideal-fixture-team small,
+  .ideal-player-visual .ideal-player-team-badge b { font-size: 5.5px; }
+  .ideal-fixture-team img,
+  .ideal-fixture-team i,
+  .ideal-player-visual .ideal-player-team-badge img,
+  .ideal-player-visual .ideal-player-team-badge i { width: 10px; height: 10px; }
+}

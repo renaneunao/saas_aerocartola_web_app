@@ -94,20 +94,26 @@
     return state.clubes[opponentId] || state.clubes[String(opponentId)] || { id: opponentId };
   }
 
-  function fixtureTeamMarkup(club, active, side) {
+  function fixtureTeamMarkup(club, active, side, favorite = null) {
     const name = club?.abreviacao || club?.nome || '—';
     const shield = club?.escudo_url || club?.escudo || club?.clube_escudo_url || '';
-    return `<span class="ideal-fixture-team ${active ? 'is-active' : 'is-opponent'} ${side}">${shield ? `<img src="${escapeHtml(shield)}" alt="">` : '<i class="fas fa-shield-alt"></i>'}<b>${escapeHtml(name)}</b></span>`;
+    return `<span class="ideal-fixture-team ${active ? 'is-active' : 'is-opponent'} ${side}">${shield ? `<img src="${escapeHtml(shield)}" alt="">` : '<i class="fas fa-shield-alt"></i>'}<b>${escapeHtml(name)}</b>${active && favorite !== null ? `<small>F ${safeNumber(favorite).toFixed(2)}</small>` : ''}</span>`;
   }
 
   function fixtureIndicators(player, ownMarkup) {
-    const own = clubFor(player);
     const opponent = opponentFor(player);
     if (!opponent) return '';
+    const own = clubFor(player);
     const ownId = String(player?.clube_id || '');
     const side = state.data?.mando_por_clube?.[ownId] || state.data?.mando_por_clube?.[Number(ownId)] || '';
-    const opponentMarkup = fixtureTeamMarkup(opponent, false, side === 'fora' ? 'home' : 'away');
-    return `<span class="ideal-player-fixture-badge" title="${escapeHtml(side === 'fora' ? 'Joga fora' : 'Joga em casa')} contra ${escapeHtml(opponent.nome || opponent.abreviacao || 'adversário')}">${ownMarkup}<b class="ideal-fixture-vs">×</b>${opponentMarkup}</span>`;
+    const jogoMap = state.data?.peso_jogo_por_clube || {};
+    const favorite = safeNumber(jogoMap[ownId] ?? player?.peso_jogo);
+    const ownIsAway = side === 'fora';
+    const home = ownIsAway ? opponent : own;
+    const away = ownIsAway ? own : opponent;
+    const homeMarkup = fixtureTeamMarkup(home, !ownIsAway, 'home', !ownIsAway ? favorite : null);
+    const awayMarkup = fixtureTeamMarkup(away, ownIsAway, 'away', ownIsAway ? favorite : null);
+    return `<span class="ideal-player-fixture-badge" title="${escapeHtml(side === 'fora' ? 'Joga fora' : 'Joga em casa')} contra ${escapeHtml(opponent.nome || opponent.abreviacao || 'adversário')}">${homeMarkup}${awayMarkup}</span>`;
   }
 
   function teamIndicators(player, position) {
@@ -121,7 +127,7 @@
     const name = club.abreviacao || player?.clube_abrev || club.nome || player?.clube_nome || '—';
     const defense = ['goleiros', 'laterais', 'zagueiros'].includes(position);
     const ownMarkup = `<span class="ideal-player-team-badge"><span>${shield ? `<img src="${escapeHtml(shield)}" alt="">` : '<i class="fas fa-shield-alt"></i>'}${escapeHtml(name)}</span><b>F ${jogo.toFixed(2)}</b></span>`;
-    return `<span class="ideal-player-indicators">${opponentFor(player) ? fixtureIndicators(player, ownMarkup) : ownMarkup}${defense ? `<span class="ideal-player-sg-badge"><i class="fas fa-shield-heart"></i> SG ${sgPercent.toFixed(0)}%</span>` : ''}</span>`;
+    return `<span class="ideal-player-indicators">${opponentFor(player) ? fixtureIndicators(player) : ownMarkup}${defense ? `<span class="ideal-player-sg-badge"><i class="fas fa-shield-heart"></i> SG ${sgPercent.toFixed(0)}%</span>` : ''}</span>`;
   }
 
   function avatar(player, className = '') {
@@ -129,7 +135,7 @@
     const initials = escapeHtml((player?.apelido || '?').slice(0, 2).toUpperCase());
     const playerId = idOf(player);
     const goalie = (state.data?.todos_goleiros || []).find(candidate => idOf(candidate) === playerId);
-    const photo = player?.foto || player?.foto_url || goalie?.foto || goalie?.foto_url || '';
+    const photo = player?.foto_custom || player?.foto || player?.foto_url || goalie?.foto_custom || goalie?.foto || goalie?.foto_url || '';
     return `<div class="ideal-player-avatar ${className}">${photo ? `<img src="${escapeHtml(photo)}" alt="${name}" onerror="this.parentElement.innerHTML='${initials}'">` : initials}</div>`;
   }
 
@@ -328,7 +334,7 @@
 
   function playerCard(player, position, index) {
     const badges = player?.eh_capitao ? '<span class="ideal-badge ideal-badge-captain">CAP</span>' : '';
-    return `<div class="ideal-player ideal-player-card" title="Trocar ${escapeHtml(player?.apelido || 'jogador')}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}${avatar(player)}<span class="ideal-player-name">${escapeHtml(player?.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span>${teamIndicators(player, position)}<button type="button" class="ideal-special-action" data-special-role="captain" data-athlete-id="${escapeHtml(idOf(player))}" title="Definir ${escapeHtml(player?.apelido || 'jogador')} como capitão"><i class="fas fa-crown"></i><span>Capitão</span></button><button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>`;
+    return `<div class="ideal-player ideal-player-card" title="Trocar ${escapeHtml(player?.apelido || 'jogador')}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}<div class="ideal-player-visual">${avatar(player)}${teamIndicators(player, position)}</div><span class="ideal-player-name">${escapeHtml(player?.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span><button type="button" class="ideal-special-action" data-special-role="captain" data-athlete-id="${escapeHtml(idOf(player))}" title="Definir ${escapeHtml(player?.apelido || 'jogador')} como capitão"><i class="fas fa-crown"></i><span>Capitão</span></button><button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>`;
   }
 
   function emptySlot(position, index) {

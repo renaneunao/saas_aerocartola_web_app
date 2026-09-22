@@ -1272,3 +1272,54 @@ button[class*="from-blue-500"]:hover { border-color:rgba(82,230,255,.55) !import
   body.aero-global-ui #modulesPage .modules-grid .p-3 { padding:.45rem; }
   body.aero-global-ui #modulesPage .modules-grid h3 { font-size:.65rem; }
 }
+
+/* A navegação desktop ocupa sempre a altura disponível. O cabeçalho e o
+   rodapé não são comprimidos; somente o miolo rola, inclusive em notebooks
+   baixos ou quando a fonte do navegador está ampliada. */
+#sidebar {
+  display: flex !important;
+  width: clamp(220px, 18vw, 320px) !important;
+  max-height: 100dvh;
+  overflow: hidden;
+  flex-direction: column;
+}
+#sidebar > nav {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+}
+#sidebar > nav::-webkit-scrollbar { width: 5px; }
+#sidebar > nav::-webkit-scrollbar-track { background: rgba(2, 9, 18, .5); }
+#sidebar > nav::-webkit-scrollbar-thumb { border-radius: 99px; background: rgba(82, 230, 255, .28); }
+#sidebar > div:first-child img {
+  width: auto !important;
+  max-width: 100%;
+  max-height: clamp(72px, 15vh, 156px);
+  margin-inline: auto;
+}
+#sidebar > div:first-child { flex: 0 0 auto; }
+#sidebar > div:nth-of-type(2) { flex: 0 0 auto; }
+#sidebar > div:last-child { flex: 0 0 auto; }
+
+@media (min-width: 1024px) {
+  body.app-authenticated main.lg\:ml-64,
+  body.app-authenticated footer.lg\:ml-64,
+  body main[class~="lg:ml-64"],
+  body footer[class~="lg:ml-64"] { margin-left: clamp(220px, 18vw, 320px) !important; }
+}
+
+@media (max-width: 1023px) {
+  #sidebar { width: min(88vw, 320px) !important; }
+}
+
+@media (max-height: 760px) and (min-width: 1024px) {
+  #sidebar > div:first-child { padding-top: .45rem !important; padding-bottom: .35rem !important; }
+  #sidebar > div:first-child img { max-height: 82px; }
+  #sidebar > div:nth-of-type(2) { padding-top: .4rem !important; padding-bottom: .4rem !important; }
+  #sidebar > nav { padding-top: .45rem !important; padding-bottom: .45rem !important; }
+  #sidebar > nav > div { margin-bottom: .15rem; }
+  #sidebar .sidebar-link { padding-top: .3rem !important; padding-bottom: .3rem !important; }
+  #sidebar > div:last-child { padding-top: .35rem !important; padding-bottom: .35rem !important; }
+}

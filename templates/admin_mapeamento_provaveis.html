@@ -7,17 +7,21 @@
     <div>
       <span class="mapping-kicker"><i class="fas fa-link"></i> Fonte externa · vínculo manual</span>
       <h1>Mapeamento de prováveis</h1>
-      <p>Vincule manualmente os clubes e depois cada jogador externo ao atleta oficial. Tudo fica em ordem alfabética; nenhuma associação é presumida.</p>
+      <p>Confirme primeiro os clubes sugeridos e depois associe cada atleta externo ao oficial. A lista inclui prováveis, reservas, dúvidas, lesionados e nulos; nada é presumido para os jogadores.</p>
     </div>
     <div class="mapping-context"><span>Temporada atual</span><strong id="mappingRound">Carregando rodada…</strong></div>
   </header>
 
   <section class="mapping-toolbar">
     <label><span>Time</span><select id="mappingTeamFilter"><option value="">Todos os times</option></select></label>
-    <label><span>Posição</span><select id="mappingPositionFilter">
-      <option value="">Todas as posições</option><option value="1">Goleiros</option><option value="2">Laterais</option>
-      <option value="3">Zagueiros</option><option value="4">Meias</option><option value="5">Atacantes</option><option value="6">Técnicos</option>
+    <label class="mapping-search"><span>Buscar jogador ou time</span><input id="mappingNameFilter" type="search" placeholder="Nome externo ou oficial…" autocomplete="off"></label>
+    <label><span>Status</span><select id="mappingStatusFilter">
+      <option value="">Todos os status</option><option value="provavel">Prováveis</option><option value="duvida">Dúvidas</option>
+      <option value="improvavel">Improváveis</option><option value="lesionado">Lesionados</option><option value="suspenso">Suspensos</option>
+      <option value="fora">Fora</option><option value="nulo">Nulos</option>
     </select></label>
+    <label class="mapping-check"><input id="mappingHideMapped" type="checkbox" checked><span>Ocultar mapeados</span></label>
+    <button id="mappingConfirmSuggestions" class="mapping-button mapping-button-secondary" type="button"><i class="fas fa-wand-magic-sparkles"></i> Confirmar times sugeridos</button>
     <button id="mappingReload" class="mapping-button" type="button"><i class="fas fa-rotate"></i> Atualizar lista</button>
     <span id="mappingFeedback" class="mapping-feedback" role="status"></span>
   </section>
@@ -36,10 +40,15 @@
   .mapping-context span { display:block; color:#64748b; font-size:10px; text-transform:uppercase; letter-spacing:.08em; }
   .mapping-context strong { display:block; margin-top:4px; color:#dceaf8; font-size:13px; }
   .mapping-toolbar { position:sticky; top:0; z-index:15; display:flex; align-items:end; gap:12px; flex-wrap:wrap; padding:14px 0; background:linear-gradient(180deg,rgba(5,11,20,.98),rgba(5,11,20,.88)); backdrop-filter:blur(14px); }
-  .mapping-toolbar label { display:grid; gap:5px; min-width:190px; }
+  .mapping-toolbar label { display:grid; gap:5px; min-width:170px; }
+  .mapping-toolbar .mapping-search { min-width:250px; flex:1 1 250px; }
   .mapping-toolbar label span { color:#7f91a9; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; }
-  .mapping-toolbar select { min-height:38px; padding:0 11px; color:#e6eef8; background:#101d30; border:1px solid rgba(148,163,184,.2); border-radius:8px; outline:none; }
+  .mapping-toolbar select, .mapping-toolbar input { min-height:38px; padding:0 11px; color:#e6eef8; background:#101d30; border:1px solid rgba(148,163,184,.2); border-radius:8px; outline:none; }
+  .mapping-toolbar input::placeholder { color:#6f829a; }
+  .mapping-check { display:flex !important; align-items:center; align-self:center; gap:7px !important; min-width:0 !important; color:#b8c9d9; font-size:11px; white-space:nowrap; }
+  .mapping-check input { width:16px; min-height:16px; accent-color:#42d8b0; }
   .mapping-button { min-height:38px; padding:0 14px; color:#08121f; background:#42d8b0; border:0; border-radius:8px; font-weight:800; font-size:12px; cursor:pointer; }
+  .mapping-button-secondary { color:#dff7ff; background:rgba(82,230,255,.1); border:1px solid rgba(82,230,255,.27); }
   .mapping-button:disabled { opacity:.5; cursor:wait; }
   .mapping-feedback { min-height:18px; align-self:center; color:#86efac; font-size:12px; }
   .mapping-empty { padding:46px 18px; margin-top:12px; text-align:center; color:#94a3b8; border:1px dashed rgba(148,163,184,.22); border-radius:14px; background:rgba(15,23,42,.52); }
@@ -48,6 +57,9 @@
   .mapping-team-name { font-weight:800; font-size:15px; }
   .mapping-team-link { display:flex; align-items:center; gap:9px; color:#7f91a9; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
   .mapping-team-link select { min-height:34px; min-width:220px; padding:0 10px; color:#e6eef8; background:#101d30; border:1px solid rgba(148,163,184,.2); border-radius:8px; text-transform:none; letter-spacing:normal; }
+  .mapping-team-state { padding:3px 6px; border-radius:999px; font-size:9px; font-weight:800; text-transform:uppercase; }
+  .mapping-team-state.is-confirmed { color:#86efac; background:rgba(34,197,94,.12); }
+  .mapping-team-state.is-suggested { color:#7dd3fc; background:rgba(56,189,248,.1); }
   .mapping-team-link option { color:#e6eef8; background:#101d30; }
   .mapping-team-count { color:#7f91a9; font-size:11px; }
   .mapping-column-head, .mapping-row { display:grid; grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr); gap:12px; align-items:center; }
@@ -63,6 +75,8 @@
   .mapping-arrow { display:grid; place-items:center; color:#37d9e8; }
   .mapping-official select { width:100%; min-width:0; color:#e6eef8; background:transparent; border:0; outline:0; font-size:12px; font-weight:700; }
   .mapping-official select option { color:#e6eef8; background:#101d30; }
+  .mapping-confirm { display:grid; place-items:center; width:28px; height:28px; flex:none; border:1px solid rgba(66,216,176,.35); border-radius:7px; color:#86efac; background:rgba(66,216,176,.1); cursor:pointer; }
+  .mapping-confirm:disabled { opacity:.3; cursor:not-allowed; }
   .mapping-status { margin-left:auto; flex:none; padding:3px 6px; border-radius:999px; font-size:9px; font-weight:800; text-transform:uppercase; }
   .mapping-status.is-mapped { color:#86efac; background:rgba(34,197,94,.12); }
   .mapping-status.is-pending { color:#fbbf24; background:rgba(251,191,36,.12); }
@@ -73,6 +87,7 @@
     .mapping-team-link { width:100%; justify-content:space-between; }
     .mapping-team-link select { min-width:0; flex:1; max-width:70%; }
     .mapping-toolbar label { flex:1 1 140px; min-width:0; }
+    .mapping-toolbar .mapping-search { flex-basis:100%; }
     .mapping-button { width:100%; }
     .mapping-column-head, .mapping-row { grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr); gap:5px; padding-left:8px; padding-right:8px; }
     .mapping-column-head { font-size:8px; }
@@ -81,6 +96,7 @@
     .mapping-name, .mapping-official select { font-size:10px; }
     .mapping-meta { font-size:8px; }
     .mapping-status { display:none; }
+    .mapping-team-state { display:none; }
   }
 </style>
 <script src="{{ url_for('static', filename='js/admin-mapeamento-provaveis.js', v='1') }}"></script>

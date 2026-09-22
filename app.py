@@ -5537,7 +5537,10 @@ def api_admin_mapeamento_provaveis():
             return jsonify({'success': True, 'mapping': saved, 'temporada': temporada, 'rodada_id': rodada})
 
         clube_slug_externo = request.args.get('clube_slug_externo')
-        posicao_id = request.args.get('posicao_id')
+        # A posição continua sendo um dado informativo do snapshot, mas não
+        # restringe mais a lista de candidatos oficiais. O administrador
+        # precisa conseguir conferir reservas, lesionados, nulos e eventuais
+        # diferenças de posição antes de confirmar o vínculo.
         if not _external_probables_available(conn):
             return jsonify({'available': False, 'temporada': temporada, 'rodada_id': rodada, 'times': [], 'message': 'Aguardando o primeiro snapshot da fonte externa.'})
 
@@ -5545,8 +5548,6 @@ def api_admin_mapeamento_provaveis():
         params = [temporada, rodada, 'provaveisdocartola']
         if clube_slug_externo:
             filters.append('pf.clube_slug_externo = %s'); params.append(str(clube_slug_externo))
-        if posicao_id:
-            filters.append('pf.posicao_id = %s'); params.append(int(posicao_id))
         cursor.execute(f'''
             SELECT pf.atleta_externo_id, pf.nome_externo, pf.slug_externo,
                    pf.clube_slug_externo, pf.posicao_id, pf.status,
@@ -5601,7 +5602,8 @@ def api_admin_mapeamento_provaveis():
                 'nome_externo': external_slug.replace('-', ' ').title(),
                 'clube_id': row[7], 'nome': row[8] or 'Selecione o time oficial',
                 'abreviacao': row[9] or '—', 'externos': [],
-                'oficiais': list(official_by_club.get(row[7], []))
+                'oficiais': list(official_by_club.get(row[7], [])),
+                'clube_mapeado': row[7] is not None,
             })
             team['externos'].append({
                 'id': row[0], 'nome': row[1] or 'Sem nome', 'slug': row[2] or '',
@@ -5614,6 +5616,36 @@ def api_admin_mapeamento_provaveis():
 
         cursor.execute('SELECT id, nome, abreviacao FROM acf_clubes ORDER BY nome')
         official_clubs = [{'id': row[0], 'nome': row[1], 'abreviacao': row[2] or ''} for row in cursor.fetchall()]
+
+        # Estes vínculos de clubes são nomes oficiais conhecidos, não uma
+        # tentativa de adivinhar jogadores. Eles apenas preenchem a seleção
+        # para acelerar o trabalho manual; o vínculo só é persistido quando o
+        # administrador confirma um atleta ou salva o time sugerido.
+        external_club_aliases = {
+            'athletico-pr': 'CAP', 'atletico-mg': 'CAM', 'bahia': 'BAH',
+            'botafogo': 'BOT', 'bragantino': 'RBB', 'chapecoense': 'CHA',
+            'corinthians': 'COR', 'coritiba': 'CFC', 'cruzeiro': 'CRU',
+            'flamengo': 'FLA', 'fluminense': 'FLU', 'gremio': 'GRE',
+            'internacional': 'INT', 'mirassol': 'MIR', 'palmeiras': 'PAL',
+            'remo': 'REM', 'santos': 'SAN', 'sao-paulo': 'SAO',
+            'vasco': 'VAS', 'vitoria': 'VIT',
+        }
+        clubs_by_abbreviation = {
+            str(club['abreviacao']).strip().upper(): club
+            for club in official_clubs if club.get('abreviacao')
+        }
+        for team in teams.values():
+            alias = external_club_aliases.get(team['clube_slug_externo'])
+            suggested = clubs_by_abbreviation.get(alias) if alias else None
+            team['clube_id_sugerido'] = suggested['id'] if suggested else None
+            team['nome_sugerido'] = suggested['nome'] if suggested else ''
+            if not team.get('clube_mapeado') and suggested:
+                # Candidatos oficiais já aparecem para a conferência manual,
+                # mesmo antes de o administrador confirmar o clube.
+                team['clube_id'] = suggested['id']
+                team['nome'] = suggested['nome']
+                team['abreviacao'] = suggested['abreviacao'] or alias
+                team['oficiais'] = list(official_by_club.get(suggested['id'], []))
 
         return jsonify({
             'available': True, 'temporada': temporada, 'rodada_id': rodada,
