@@ -916,7 +916,9 @@
   inset: 7% 9% 9%;
   z-index: 2;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: .72fr 1.3fr 1.2fr .7fr;
+  justify-content: normal;
   min-height: 0;
   height: auto;
   gap: 0;
