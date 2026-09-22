@@ -127,7 +127,9 @@
   function avatar(player, className = '') {
     const name = escapeHtml(player?.apelido || 'Jogador');
     const initials = escapeHtml((player?.apelido || '?').slice(0, 2).toUpperCase());
-    const photo = player?.foto || player?.foto_url || '';
+    const playerId = idOf(player);
+    const goalie = (state.data?.todos_goleiros || []).find(candidate => idOf(candidate) === playerId);
+    const photo = player?.foto || player?.foto_url || goalie?.foto || goalie?.foto_url || '';
     return `<div class="ideal-player-avatar ${className}">${photo ? `<img src="${escapeHtml(photo)}" alt="${name}" onerror="this.parentElement.innerHTML='${initials}'">` : initials}</div>`;
   }
 
@@ -303,7 +305,24 @@
     const source = [...(state.data?.rankings_por_posicao?.[singular] || [])];
     if (position === 'goleiros') source.push(...(state.data?.todos_goleiros || []));
     if (current && !source.some(player => idOf(player) === idOf(current))) source.unshift(current);
-    const unique = new Map(source.filter(player => idOf(player)).map(player => [idOf(player), player]));
+    const unique = new Map();
+    source.filter(player => idOf(player)).forEach(player => {
+      const id = idOf(player);
+      const existing = unique.get(id);
+      if (!existing) {
+        unique.set(id, player);
+        return;
+      }
+      // A lista de goleiros para o hack é propositalmente enxuta. Mesclá-la
+      // sem prioridade apagava foto e projeção dos goleiros já ranqueados.
+      const photo = existing.foto || existing.foto_url || player.foto || player.foto_url || '';
+      unique.set(id, {
+        ...player,
+        ...existing,
+        foto: photo,
+        foto_url: existing.foto_url || photo
+      });
+    });
     return [...unique.values()];
   }
 

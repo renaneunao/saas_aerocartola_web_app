@@ -986,7 +986,7 @@
 
 .ideal-player {
   flex: 0 1 auto;
-  width: clamp(38px, 14vw, 88px);
+  width: clamp(40px, 15vw, 92px);
   max-width: 100%;
   padding: 4px 3px 5px;
   border-radius: 9px;
@@ -994,7 +994,7 @@
 }
 
 .ideal-player-avatar {
-  width: clamp(22px, 7vw, 44px);
+  width: clamp(23px, 7.6vw, 46px);
   height: auto;
   aspect-ratio: 1;
   margin-bottom: 3px;
@@ -1060,11 +1060,11 @@
 
 @supports (width: 1cqi) {
   .ideal-player {
-    width: clamp(38px, 14cqi, 88px);
+    width: clamp(40px, 15cqi, 92px);
   }
 
   .ideal-player-avatar {
-    width: clamp(22px, 7.2cqi, 44px);
+    width: clamp(23px, 7.8cqi, 46px);
   }
 
   .ideal-player-name {
@@ -1072,7 +1072,21 @@
   }
 
   .ideal-player-chips span {
-    font-size: clamp(5px, .95cqi, 6px);
+    font-size: clamp(6px, 1.1cqi, 7px);
+  }
+
+  .ideal-player-team-badge,
+  .ideal-player-sg-badge {
+    font-size: clamp(6px, 1.2cqi, 7px);
+  }
+
+  .ideal-player-team-badge img {
+    width: 13px;
+    height: 13px;
+  }
+
+  .ideal-player-sg-badge i {
+    font-size: 8px;
   }
 
   .ideal-field-defense-line {
@@ -1117,12 +1131,12 @@
   }
 
   .ideal-player {
-    width: clamp(36px, 13vw, 76px);
+    width: clamp(38px, 14vw, 80px);
     padding: 3px 2px 4px;
   }
 
   .ideal-player-avatar {
-    width: clamp(20px, 6.5vw, 38px);
+    width: clamp(21px, 7vw, 40px);
     border-radius: 7px;
   }
 
@@ -1131,7 +1145,12 @@
   }
 
   .ideal-player-chips span {
-    font-size: 5px;
+    font-size: 6px;
+  }
+
+  .ideal-player-team-badge,
+  .ideal-player-sg-badge {
+    font-size: 7px;
   }
 
   .ideal-field-submit {
