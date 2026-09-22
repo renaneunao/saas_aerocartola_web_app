@@ -827,62 +827,320 @@
   }
 }
 
-/* Campo vertical inspirado na proporção e nas marcações do campinho de
-   escalação do Prováveis do Cartola (631 × 892), redesenhado em CSS para não
-   depender de imagem hospedada por terceiros. */
+/* A imagem estática do campinho Biascore já traz gramado, linhas e moldura.
+   Os atletas ficam por cima, em uma grade que acompanha a proporção real. */
 .ideal-field-layout {
   display: grid;
-  grid-template-columns: minmax(0, 2.2fr) minmax(250px, .95fr);
+  grid-template-columns: minmax(0, 620px) minmax(260px, 300px);
+  justify-content: center;
   align-items: start;
-  justify-content: start;
   gap: 14px;
 }
 
 .ideal-field {
-  width: min(100%, 760px);
+  position: relative;
+  container-type: inline-size;
+  width: 100%;
+  max-width: 620px;
   min-height: 0;
-  aspect-ratio: 631 / 892;
-  margin-inline: auto;
+  aspect-ratio: 1;
+  margin: 0;
   padding: 0;
-  background:
-    repeating-linear-gradient(0deg, rgba(225,255,242,.018) 0 8%, rgba(0,0,0,.025) 8% 16%),
-    radial-gradient(ellipse at 50% 48%, rgba(31,142,109,.25), transparent 72%),
-    linear-gradient(180deg, #0c4038, #07312c);
+  overflow: visible;
+  isolation: isolate;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  box-shadow: none;
 }
 
-.ideal-field::before {
+.ideal-field::before,
+.ideal-field::after,
+.ideal-field-line,
+.ideal-field-circle,
+.ideal-field-goal {
+  display: none;
+}
+
+.ideal-field > .bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url("../img/campinho-biascore.png") center / 100% 100% no-repeat;
+}
+
+.ideal-field > .vignette {
+  position: absolute;
+  inset: 4%;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: 3%;
+  background: radial-gradient(120% 100% at 50% 50%,
+    rgba(0, 0, 0, 0) 50%,
+    rgba(0, 0, 0, .12) 80%,
+    rgba(0, 0, 0, .22) 100%);
+  mix-blend-mode: multiply;
+}
+
+.ideal-field > .ai-fx {
+  position: absolute;
+  inset: 12px;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.ideal-field > .pass-svg {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.ideal-field > .pass-svg .pl {
+  stroke: var(--ideal-cyan);
+  stroke-width: 2.4;
+  filter: url(#idealPassGlow);
+}
+
+.ideal-field-tag,
+.ideal-field-pos {
+  display: none;
+}
+
+.ideal-field-rows {
+  position: absolute;
+  inset: 7% 9% 9%;
+  z-index: 2;
+  display: grid;
+  grid-template-rows: .72fr 1.3fr 1.2fr .7fr;
+  min-height: 0;
+  height: auto;
+  gap: 0;
+}
+
+.ideal-field-row,
+.ideal-field-row-defense {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  gap: 0;
+}
+
+.ideal-field-row-goalkeeper {
+  z-index: 3;
+  padding-bottom: 0;
+}
+
+.ideal-field-defense-layout {
   display: block;
-  inset: 4.5%;
-  border-color: rgba(225,255,242,.26);
-  border-radius: 2px;
+  width: 100%;
+  margin-inline: auto;
 }
 
-.ideal-field::after { display: none; }
-.ideal-field-line { left: 4.5%; right: 4.5%; border-color: rgba(225,255,242,.26); }
-.ideal-field-circle { width: 14%; height: auto; aspect-ratio: 1; top: 43%; left: 43%; border-color: rgba(225,255,242,.26); }
-.ideal-field-goal { left: 25%; width: 50%; height: 14%; border-color: rgba(225,255,242,.26); }
-.ideal-field-goal-top { top: 4.5%; }
-.ideal-field-goal-bottom { bottom: 4.5%; }
-.ideal-field-goal span { left: 34%; right: 34%; height: 24%; border-color: rgba(225,255,242,.23); }
-.ideal-field-goal-top span { bottom: -1px; }
-.ideal-field-goal-bottom span { top: -1px; }
-.ideal-field-tag { position: absolute; top: 2%; left: 5%; right: 5%; margin: 0; }
-.ideal-field-rows { position: absolute; top: 9%; right: 5%; bottom: 5%; left: 5%; min-height: 0; height: auto; gap: 0; }
-.ideal-field-row { min-height: 0; align-items: center; }
-.ideal-field-row-defense { min-height: 0; }
-.ideal-field-defense-line { width: 100%; gap: clamp(3px, .8vw, 10px); }
-.ideal-field-defense-line .ideal-field-players { min-height: 0; }
-.ideal-field-coach { right: 2%; bottom: 2%; }
+.ideal-field-defense-line {
+  display: grid;
+  grid-template-columns: repeat(var(--defender-count), minmax(0, 1fr));
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  gap: clamp(2px, .7cqi, 7px);
+  padding: 0;
+  margin-inline: auto;
+}
 
-@media (max-width: 900px) {
-  .ideal-field-layout { display: flex; flex-direction: column; }
-  .ideal-field { width: min(100%, 680px); }
+.ideal-field-defense-line .ideal-field-defense-lane {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  padding: 0;
+}
+
+.ideal-field-defense-line .ideal-field-players,
+.ideal-field-players {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: nowrap;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  gap: clamp(2px, .6cqi, 5px);
+}
+
+.ideal-field-group {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  gap: 0;
+}
+
+.ideal-player {
+  flex: 0 1 auto;
+  width: clamp(38px, 14vw, 88px);
+  max-width: 100%;
+  padding: 4px 3px 5px;
+  border-radius: 9px;
+  background: rgba(4, 22, 27, .84);
+}
+
+.ideal-player-avatar {
+  width: clamp(22px, 7vw, 44px);
+  height: auto;
+  aspect-ratio: 1;
+  margin-bottom: 3px;
+  border-radius: 10px;
+}
+
+.ideal-player-name {
+  font-size: 9px;
+}
+
+.ideal-player-chips {
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-top: 3px;
+}
+
+.ideal-player-chips span {
+  padding: 1px 2px;
+  font-size: 6px;
+}
+
+.ideal-player-team-badge,
+.ideal-player-sg-badge {
+  font-size: 6px;
+}
+
+.ideal-field-coach {
+  right: 10%;
+  bottom: 9%;
+  z-index: 4;
+  width: max-content;
+}
+
+.ideal-field-coach .ideal-field-group {
+  display: block;
+  width: auto;
+}
+
+.ideal-field-coach .ideal-field-players {
+  width: auto;
+}
+
+.ideal-field-coach .ideal-player {
+  width: clamp(38px, 12vw, 76px);
+}
+
+.ideal-field-submit {
+  left: 9%;
+  bottom: 3%;
+  z-index: 5;
+}
+
+.ideal-bench {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: start;
+  gap: 4px;
+  width: 100%;
+  max-width: 300px;
+  margin: 0;
+  align-self: start;
+}
+
+@supports (width: 1cqi) {
+  .ideal-player {
+    width: clamp(38px, 14cqi, 88px);
+  }
+
+  .ideal-player-avatar {
+    width: clamp(22px, 7.2cqi, 44px);
+  }
+
+  .ideal-player-name {
+    font-size: clamp(6px, 1.45cqi, 9px);
+  }
+
+  .ideal-player-chips span {
+    font-size: clamp(5px, .95cqi, 6px);
+  }
+
+  .ideal-field-defense-line {
+    gap: clamp(2px, .7cqi, 7px);
+  }
+
+  .ideal-field-players {
+    gap: clamp(2px, .6cqi, 5px);
+  }
+
+  .ideal-field-coach .ideal-player {
+    width: clamp(38px, 12cqi, 76px);
+  }
+}
+
+@media (max-width: 1100px) {
+  .ideal-field-layout {
+    grid-template-columns: minmax(0, 620px);
+    justify-content: center;
+  }
+
+  .ideal-bench {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(100%, 620px);
+    max-width: 620px;
+    margin-inline: auto;
+  }
+
+  .ideal-bench-head {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 620px) {
-  .ideal-field { width: min(100%, 480px); min-height: 0; padding: 0; }
-  .ideal-field-circle { width: 14%; height: auto; top: 43%; left: 43%; }
-  .ideal-field-goal { height: 14%; }
-  .ideal-field-rows { top: 9%; right: 5%; bottom: 5%; left: 5%; min-height: 0; }
-  .ideal-field-row { min-height: 0; }
+  .ideal-field-layout {
+    gap: 10px;
+  }
+
+  .ideal-field-rows {
+    inset: 7% 8% 9%;
+  }
+
+  .ideal-player {
+    width: clamp(36px, 13vw, 76px);
+    padding: 3px 2px 4px;
+  }
+
+  .ideal-player-avatar {
+    width: clamp(20px, 6.5vw, 38px);
+    border-radius: 7px;
+  }
+
+  .ideal-player-name {
+    font-size: 7px;
+  }
+
+  .ideal-player-chips span {
+    font-size: 5px;
+  }
+
+  .ideal-field-submit {
+    left: 8%;
+    bottom: 3%;
+    min-height: 25px;
+    padding: 4px 6px;
+    font-size: 7px;
+  }
+
+  .ideal-bench {
+    grid-template-columns: 1fr;
+  }
 }

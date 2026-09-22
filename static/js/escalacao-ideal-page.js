@@ -360,7 +360,18 @@
 
   function renderField(result) {
     const formation = $('formationSelect')?.value || '4-3-3';
-    return `<div class="ideal-field ideal-field--${formation.replace('-', '')}"><div class="ideal-field-line"></div><div class="ideal-field-circle"></div><div class="ideal-field-goal ideal-field-goal-top"><span></span></div><div class="ideal-field-goal ideal-field-goal-bottom"><span></span></div><div class="ideal-field-tag"><span>titulares</span><span>${escapeHtml(formation)}</span></div><div class="ideal-field-rows"><div class="ideal-field-row ideal-field-row-attack">${fieldGroup(result, 'atacantes')}</div><div class="ideal-field-row ideal-field-row-midfield">${fieldGroup(result, 'meias')}</div>${defenseLayout(result)}<div class="ideal-field-row ideal-field-row-goalkeeper">${fieldGroup(result, 'goleiros')}</div></div><div class="ideal-field-coach">${fieldGroup(result, 'treinadores', 'ideal-field-group-coach')}</div>${fieldSubmitButton()}</div>`;
+    return '<div class="ideal-field ideal-field--' + formation.replace('-', '') + '" role="group" aria-label="Escalação no campo, formação ' + escapeHtml(formation) + '">' +
+      '<div class="bg" aria-hidden="true"></div><div class="vignette" aria-hidden="true"></div>' +
+      '<div class="ai-fx" aria-hidden="true"><div class="ai-grid"></div><div class="ai-scan"></div><div class="ai-radar"></div><div class="ai-dots"></div></div>' +
+      '<svg class="pass-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"><defs><filter id="idealPassGlow"><feGaussianBlur stdDeviation="2" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter></defs><line class="pl" x1="0" y1="0" x2="0" y2="0"></line><line class="pl" x1="0" y1="0" x2="0" y2="0"></line><line class="pl" x1="0" y1="0" x2="0" y2="0"></line></svg>' +
+      '<div class="ideal-field-tag"><span>titulares</span><span>' + escapeHtml(formation) + '</span></div>' +
+      '<div class="ideal-field-rows">' +
+        '<div class="ideal-field-row ideal-field-row-attack">' + fieldGroup(result, 'atacantes') + '</div>' +
+        '<div class="ideal-field-row ideal-field-row-midfield">' + fieldGroup(result, 'meias') + '</div>' +
+        defenseLayout(result) +
+        '<div class="ideal-field-row ideal-field-row-goalkeeper">' + fieldGroup(result, 'goleiros') + '</div>' +
+      '</div><div class="ideal-field-coach">' + fieldGroup(result, 'treinadores', 'ideal-field-group-coach') + '</div>' +
+      fieldSubmitButton() + '</div>';
   }
 
   function renderBench(result) {
