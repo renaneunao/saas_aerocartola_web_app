@@ -551,6 +551,7 @@ class EscalacaoIdeal {
                     this.log(`      Titular (nulo): ${goleiroNulo.apelido} (R$ ${precoNulo.toFixed(2)})`);
                     this.log(`      Reserva (joga): ${goleiroTitular.apelido} (R$ ${precoTitular.toFixed(2)}) - SEM CUSTO`);
                     
+                    goleiroNulo.eh_goleiro_hack = true;
                     escalacao.titulares.goleiros = [goleiroNulo];
                     escalacao.reservas.goleiros = [goleiroTitular];
                     escalacao.custoTotal += diferenca;

@@ -729,8 +729,12 @@
 
   function openPicker(position, kind, index) {
     if (!window.ultimaEscalacao) return notify('Calcule a escalação antes de editar.', 'warning');
+    const currentGroup = kind === 'reserve' ? window.ultimaEscalacao.reservas : window.ultimaEscalacao.titulares;
+    const current = currentGroup?.[position]?.[Number(index) || 0];
+    if (position === 'goleiros' && kind === 'starter' && current?.eh_goleiro_hack && $('hackGoleiroToggle')?.checked) {
+      return notify('Este goleiro foi escolhido pelo hack. Para trocá-lo, desabilite o hack do goleiro e recalcule a escalação.', 'warning');
+    }
     state.picker = { position, kind, index: Number(index) || 0, statusFilter: 'provaveis' };
-    const current = currentPickerPlayer();
     $('playerPickerContext').textContent = `${kind === 'reserve' ? 'Reserva' : 'Titular'} · ${POSITIONS[position].label}`;
     $('playerPickerTitle').textContent = current ? `Trocar ${current.apelido || 'atleta'}` : `Adicionar ${POSITIONS[position].singular}`;
     ['pickerName'].forEach(id => { if ($(id)) $(id).value = ''; });

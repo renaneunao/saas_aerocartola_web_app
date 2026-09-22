@@ -4783,18 +4783,13 @@ def api_escalacao_dados():
         print("[DEBUG] Buscando TODOS os goleiros da tabela acf_atletas...")
         cursor.execute('''
             SELECT a.atleta_id, a.apelido, a.clube_id, a.preco_num, a.status_id,
-                   CASE WHEN a.status_id IN (2, 7) THEN COALESCE((
-                       SELECT rp.pontuacao_total
-                       FROM ranking_por_posicao rp
-                       WHERE rp.atleta_id = a.atleta_id AND rp.rodada_atual = %s
-                   ), 0) ELSE 0 END AS pontuacao_total,
                    COALESCE(NULLIF(BTRIM(a.foto_custom), ''), a.foto) AS foto,
                    c.nome AS clube_nome, c.abreviacao AS clube_abrev
             FROM acf_atletas a
             LEFT JOIN acf_clubes c ON c.id = a.clube_id
             WHERE a.posicao_id = 1 AND a.temporada = %s
             ORDER BY a.preco_num DESC
-        ''', (rodada_atual, get_temporada_atual()))
+        ''', (get_temporada_atual(),))
         
         rows_goleiros = cursor.fetchall()
         print(f"[DEBUG] Query retornou {len(rows_goleiros)} goleiros da tabela acf_atletas")
@@ -4804,7 +4799,7 @@ def api_escalacao_dados():
         goleiros_provaveis_count = 0
         
         for row in rows_goleiros:
-            if row and len(row) >= 9:
+            if row and len(row) >= 8:
                 status_id = int(row[4]) if row[4] else 0
                 
                 # Contar por status
@@ -4820,11 +4815,11 @@ def api_escalacao_dados():
                     'preco_num': float(row[3]) if row[3] else 0,
                     'preco': float(row[3]) if row[3] else 0,
                     'status_id': status_id,
-                    'pontuacao_total': float(row[5] or 0),
-                    'foto': row[6] or '',
-                    'foto_url': row[6] or '',
-                    'clube_nome': row[7] or '',
-                    'clube_abrev': row[8] or ''
+                    'pontuacao_total': 0,
+                    'foto': row[5] or '',
+                    'foto_url': row[5] or '',
+                    'clube_nome': row[6] or '',
+                    'clube_abrev': row[7] or ''
                 }
                 if goleiro_data['atleta_id'] not in availability['saved_ids']:
                     todos_goleiros.append(goleiro_data)
