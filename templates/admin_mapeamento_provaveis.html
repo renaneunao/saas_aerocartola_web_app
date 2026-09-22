@@ -7,7 +7,7 @@
     <div>
       <span class="mapping-kicker"><i class="fas fa-link"></i> Fonte externa · vínculo manual</span>
       <h1>Mapeamento de prováveis</h1>
-      <p>Conecte cada jogador externo ao atleta oficial correspondente. Nenhum vínculo é aplicado por confiança automática.</p>
+      <p>Vincule manualmente os clubes e depois cada jogador externo ao atleta oficial. Tudo fica em ordem alfabética; nenhuma associação é presumida.</p>
     </div>
     <div class="mapping-context"><span>Temporada atual</span><strong id="mappingRound">Carregando rodada…</strong></div>
   </header>
@@ -18,7 +18,7 @@
       <option value="">Todas as posições</option><option value="1">Goleiros</option><option value="2">Laterais</option>
       <option value="3">Zagueiros</option><option value="4">Meias</option><option value="5">Atacantes</option><option value="6">Técnicos</option>
     </select></label>
-    <button id="mappingReload" class="mapping-button" type="button"><i class="fas fa-rotate"></i> Atualizar snapshot</button>
+    <button id="mappingReload" class="mapping-button" type="button"><i class="fas fa-rotate"></i> Atualizar lista</button>
     <span id="mappingFeedback" class="mapping-feedback" role="status"></span>
   </section>
 
@@ -46,6 +46,9 @@
   .mapping-team { margin-top:14px; overflow:hidden; border:1px solid rgba(148,163,184,.17); border-radius:14px; background:rgba(11,19,33,.78); }
   .mapping-team-head { display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid rgba(148,163,184,.14); background:rgba(21,35,57,.68); }
   .mapping-team-name { font-weight:800; font-size:15px; }
+  .mapping-team-link { display:flex; align-items:center; gap:9px; color:#7f91a9; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }
+  .mapping-team-link select { min-height:34px; min-width:220px; padding:0 10px; color:#e6eef8; background:#101d30; border:1px solid rgba(148,163,184,.2); border-radius:8px; text-transform:none; letter-spacing:normal; }
+  .mapping-team-link option { color:#e6eef8; background:#101d30; }
   .mapping-team-count { color:#7f91a9; font-size:11px; }
   .mapping-column-head, .mapping-row { display:grid; grid-template-columns:minmax(0,1fr) 42px minmax(0,1fr); gap:12px; align-items:center; }
   .mapping-column-head { padding:9px 16px; color:#71839a; font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
@@ -66,6 +69,9 @@
   @media (max-width:720px) {
     .mapping-hero { align-items:flex-start; flex-direction:column; }
     .mapping-context { width:100%; }
+    .mapping-team-head { align-items:flex-start; flex-direction:column; gap:9px; }
+    .mapping-team-link { width:100%; justify-content:space-between; }
+    .mapping-team-link select { min-width:0; flex:1; max-width:70%; }
     .mapping-toolbar label { flex:1 1 140px; min-width:0; }
     .mapping-button { width:100%; }
     .mapping-column-head, .mapping-row { grid-template-columns:minmax(0,1fr) 26px minmax(0,1fr); gap:5px; padding-left:8px; padding-right:8px; }

@@ -15,12 +15,13 @@
     return state.teams.map((item) => {
       const externos = position ? item.externos.filter((player) => String(player.posicao_id) === position) : item.externos;
       return { ...item, externos };
-    }).filter((item) => (!team || String(item.clube_id) === team) && item.externos.length);
+    }).filter((item) => (!team || item.clube_slug_externo === team) && item.externos.length);
   }
 
   function officialOptions(team, external) {
     const options = (team.oficiais || []).filter((player) => !external.posicao_id || Number(player.posicao_id) === Number(external.posicao_id));
-    return '<option value="">Não vincular</option>' + options.map((player) => `<option value="${player.atleta_id}" ${Number(player.atleta_id) === Number(external.atleta_id) ? 'selected' : ''}>${escapeHtml(player.nome)}${player.nome_completo && player.nome_completo !== player.nome ? ` · ${escapeHtml(player.nome_completo)}` : ''}</option>`).join('');
+    if (!team.clube_id) return '<option value="">Vincule o time acima primeiro</option>';
+    return '<option value="">Não vincular jogador</option>' + options.map((player) => `<option value="${player.atleta_id}" ${Number(player.atleta_id) === Number(external.atleta_id) ? 'selected' : ''}>${escapeHtml(player.nome)}${player.nome_completo && player.nome_completo !== player.nome ? ` · ${escapeHtml(player.nome_completo)}` : ''}</option>`).join('');
   }
 
   function render() {
@@ -35,7 +36,10 @@
     $('mappingEmpty').hidden = true;
     target.innerHTML = teams.map((team) => `
       <section class="mapping-team" data-club="${escapeHtml(team.clube_id)}">
-        <header class="mapping-team-head"><strong class="mapping-team-name">${escapeHtml(team.nome)} <span class="mapping-team-count">· ${team.externos.length} externo(s)</span></strong><span class="mapping-team-count">Externo → oficial</span></header>
+        <header class="mapping-team-head">
+          <strong class="mapping-team-name">${escapeHtml(team.nome_externo)} <span class="mapping-team-count">· ${team.externos.length} externo(s)</span></strong>
+          <label class="mapping-team-link"><span>Time oficial</span><select data-team-slug="${escapeHtml(team.clube_slug_externo)}" aria-label="Time oficial para ${escapeHtml(team.nome_externo)}">${officialClubOptions(team)}</select></label>
+        </header>
         <div class="mapping-column-head"><span>Provável externo</span><span></span><span>Jogador oficial</span></div>
         ${team.externos.map((external) => `
           <div class="mapping-row">
@@ -55,12 +59,20 @@
     target.querySelectorAll('select[data-external-id]').forEach((select) => {
       select.addEventListener('change', () => save(select.dataset.externalId, select.value || null));
     });
+    target.querySelectorAll('select[data-team-slug]').forEach((select) => {
+      select.addEventListener('change', () => saveTeam(select.dataset.teamSlug, select.value || null));
+    });
+  }
+
+  function officialClubOptions(team) {
+    const clubs = state.clubes || [];
+    return '<option value="">Escolha o time oficial</option>' + clubs.map((club) => `<option value="${club.id}" ${Number(club.id) === Number(team.clube_id) ? 'selected' : ''}>${escapeHtml(club.nome)}${club.abreviacao ? ` · ${escapeHtml(club.abreviacao)}` : ''}</option>`).join('');
   }
 
   function populateTeamFilter() {
     const select = $('mappingTeamFilter');
     const previous = select.value;
-    select.innerHTML = '<option value="">Todos os times</option>' + state.teams.map((team) => `<option value="${escapeHtml(team.clube_id)}">${escapeHtml(team.nome)}</option>`).join('');
+    select.innerHTML = '<option value="">Todos os times</option>' + state.teams.map((team) => `<option value="${escapeHtml(team.clube_slug_externo)}">${escapeHtml(team.nome_externo)}</option>`).join('');
     if ([...select.options].some((option) => option.value === previous)) select.value = previous;
   }
 
@@ -74,12 +86,20 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Não foi possível carregar o mapeamento.');
       state.teams = data.times || [];
+      state.clubes = data.clubes_oficiais || [];
       state.season = data.temporada;
       state.round = data.rodada_id;
       $('mappingRound').textContent = `Rodada ${data.rodada_id} · ${data.temporada}`;
       populateTeamFilter();
       render();
-      feedback(data.available === false ? data.message : `${state.teams.length} time(s) carregado(s).`);
+      if (data.available === false) {
+        feedback(data.message);
+      } else {
+        const clubCount = state.teams.filter((team) => team.clube_id).length;
+        const athleteCount = state.teams.flatMap((team) => team.externos).filter((player) => player.atleta_id).length;
+        const totalAthletes = state.teams.reduce((total, team) => total + team.externos.length, 0);
+        feedback(`${clubCount}/${state.teams.length} clubes vinculados · ${athleteCount}/${totalAthletes} jogadores vinculados.`);
+      }
     } catch (error) {
       feedback(error.message, true);
       $('mappingEmpty').hidden = false;
@@ -102,8 +122,25 @@
       feedback(athleteId ? 'Vínculo salvo.' : 'Vínculo removido.');
       await load();
     } catch (error) {
-      feedback(error.message, true);
       await load();
+      feedback(error.message, true);
+    }
+  }
+
+  async function saveTeam(externalSlug, clubId) {
+    try {
+      feedback('Salvando vínculo do time…');
+      const response = await fetch('/api/admin/provaveis-mapeamento', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: 'time', temporada: state.season, rodada_id: state.round, clube_slug_externo: externalSlug, clube_id: clubId })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Não foi possível salvar o vínculo do time.');
+      feedback(clubId ? 'Time vinculado. Agora associe os jogadores.' : 'Vínculo do time removido.');
+      await load();
+    } catch (error) {
+      await load();
+      feedback(error.message, true);
     }
   }
 

@@ -826,3 +826,63 @@
     padding: 3px 4px;
   }
 }
+
+/* Campo vertical inspirado na proporção e nas marcações do campinho de
+   escalação do Prováveis do Cartola (631 × 892), redesenhado em CSS para não
+   depender de imagem hospedada por terceiros. */
+.ideal-field-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(250px, .95fr);
+  align-items: start;
+  justify-content: start;
+  gap: 14px;
+}
+
+.ideal-field {
+  width: min(100%, 760px);
+  min-height: 0;
+  aspect-ratio: 631 / 892;
+  margin-inline: auto;
+  padding: 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(225,255,242,.018) 0 8%, rgba(0,0,0,.025) 8% 16%),
+    radial-gradient(ellipse at 50% 48%, rgba(31,142,109,.25), transparent 72%),
+    linear-gradient(180deg, #0c4038, #07312c);
+}
+
+.ideal-field::before {
+  display: block;
+  inset: 4.5%;
+  border-color: rgba(225,255,242,.26);
+  border-radius: 2px;
+}
+
+.ideal-field::after { display: none; }
+.ideal-field-line { left: 4.5%; right: 4.5%; border-color: rgba(225,255,242,.26); }
+.ideal-field-circle { width: 14%; height: auto; aspect-ratio: 1; top: 43%; left: 43%; border-color: rgba(225,255,242,.26); }
+.ideal-field-goal { left: 25%; width: 50%; height: 14%; border-color: rgba(225,255,242,.26); }
+.ideal-field-goal-top { top: 4.5%; }
+.ideal-field-goal-bottom { bottom: 4.5%; }
+.ideal-field-goal span { left: 34%; right: 34%; height: 24%; border-color: rgba(225,255,242,.23); }
+.ideal-field-goal-top span { bottom: -1px; }
+.ideal-field-goal-bottom span { top: -1px; }
+.ideal-field-tag { position: absolute; top: 2%; left: 5%; right: 5%; margin: 0; }
+.ideal-field-rows { position: absolute; top: 9%; right: 5%; bottom: 5%; left: 5%; min-height: 0; height: auto; gap: 0; }
+.ideal-field-row { min-height: 0; align-items: center; }
+.ideal-field-row-defense { min-height: 0; }
+.ideal-field-defense-line { width: 100%; gap: clamp(3px, .8vw, 10px); }
+.ideal-field-defense-line .ideal-field-players { min-height: 0; }
+.ideal-field-coach { right: 2%; bottom: 2%; }
+
+@media (max-width: 900px) {
+  .ideal-field-layout { display: flex; flex-direction: column; }
+  .ideal-field { width: min(100%, 680px); }
+}
+
+@media (max-width: 620px) {
+  .ideal-field { width: min(100%, 480px); min-height: 0; padding: 0; }
+  .ideal-field-circle { width: 14%; height: auto; top: 43%; left: 43%; }
+  .ideal-field-goal { height: 14%; }
+  .ideal-field-rows { top: 9%; right: 5%; bottom: 5%; left: 5%; min-height: 0; }
+  .ideal-field-row { min-height: 0; }
+}

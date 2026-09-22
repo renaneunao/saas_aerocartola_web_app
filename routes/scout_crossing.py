@@ -361,6 +361,16 @@ def _player_options(cursor, temporada, posicao_id, clube_id=None, rodada=None, a
                       AND pm.rodada_id <= pf.rodada_id
                     ORDER BY pm.rodada_id DESC LIMIT 1
                 ) pm ON TRUE
+                JOIN LATERAL (
+                    SELECT cm.clube_id FROM acw_provaveis_clubes_mapeamentos cm
+                    WHERE cm.temporada = pf.temporada AND cm.fonte = pf.fonte
+                      AND cm.clube_slug_externo = pf.clube_slug_externo
+                      AND cm.rodada_id <= pf.rodada_id
+                    ORDER BY cm.rodada_id DESC LIMIT 1
+                ) tm ON TRUE
+                JOIN acf_atletas live ON live.atleta_id = pm.atleta_id
+                  AND live.temporada = pf.temporada AND live.status_id <> 6
+                  AND live.clube_id = tm.clube_id
                 WHERE pf.temporada = %s AND pf.rodada_id = %s AND pf.fonte = %s
                   AND pf.ativo = TRUE AND pm.atleta_id IS NOT NULL
                 """,

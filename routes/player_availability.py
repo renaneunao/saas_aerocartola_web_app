@@ -156,8 +156,12 @@ def player_availability_candidates():
             config = get_user_escalacao_config(conn, int(session["user_id"]), team_id)
             probable_source = (config or {}).get("fonte_provaveis", "globo")
             cursor_source = conn.cursor()
-            cursor_source.execute("SELECT to_regclass('public.acf_provaveis_fontes')")
-            table_exists = cursor_source.fetchone()[0] is not None
+            cursor_source.execute("""
+                SELECT to_regclass('public.acf_provaveis_fontes'),
+                       to_regclass('public.acw_provaveis_mapeamentos'),
+                       to_regclass('public.acw_provaveis_clubes_mapeamentos')
+            """)
+            table_exists = all(value is not None for value in (cursor_source.fetchone() or (None, None, None)))
             cursor_source.close()
             if probable_source == "provaveisdocartola" and table_exists:
                 cursor_source = conn.cursor()
@@ -173,6 +177,16 @@ def player_availability_candidates():
                           AND pm.rodada_id <= pf.rodada_id
                         ORDER BY pm.rodada_id DESC LIMIT 1
                     ) pm ON TRUE
+                    JOIN LATERAL (
+                        SELECT cm.clube_id FROM acw_provaveis_clubes_mapeamentos cm
+                        WHERE cm.temporada = pf.temporada AND cm.fonte = pf.fonte
+                          AND cm.clube_slug_externo = pf.clube_slug_externo
+                          AND cm.rodada_id <= pf.rodada_id
+                        ORDER BY cm.rodada_id DESC LIMIT 1
+                    ) tm ON TRUE
+                    JOIN acf_atletas live ON live.atleta_id = pm.atleta_id
+                      AND live.temporada = pf.temporada AND live.status_id <> 6
+                      AND live.clube_id = tm.clube_id
                     WHERE pf.temporada = %s AND pf.rodada_id = %s AND pf.fonte = %s
                       AND pf.ativo = TRUE AND pm.atleta_id IS NOT NULL
                     """,
@@ -366,38 +380,7 @@ def save_player_availability():
         if not athlete_row:
             return jsonify({"error": "Atleta não encontrado na temporada informada"}), 404
         if normalize_rule(rule) == RULE_LOCK_IN and int(athlete_row[0] or 0) == 6:
-            # Se a fonte externa marcou o atleta como provável, o status
-            # oficial antigo não deve impedir o cravamento manual.
-            external_probable = False
-            try:
-                from models.user_escalacao_config import get_user_escalacao_config
-                config = get_user_escalacao_config(conn, int(session["user_id"]), int(team_id))
-                if (config or {}).get("fonte_provaveis") == "provaveisdocartola":
-                    cursor = conn.cursor()
-                    cursor.execute(
-                        """
-                        SELECT 1
-                        FROM acf_provaveis_fontes pf
-                        JOIN LATERAL (
-                            SELECT pm.atleta_id
-                            FROM acw_provaveis_mapeamentos pm
-                            WHERE pm.temporada = pf.temporada AND pm.fonte = pf.fonte
-                              AND pm.atleta_externo_id = pf.atleta_externo_id
-                              AND pm.rodada_id <= pf.rodada_id
-                            ORDER BY pm.rodada_id DESC LIMIT 1
-                        ) pm ON TRUE
-                        WHERE pf.temporada = %s AND pf.rodada_id = %s AND pf.fonte = %s
-                          AND pm.atleta_id = %s AND pf.status = 'provavel' AND pf.ativo = TRUE
-                        LIMIT 1
-                        """,
-                        (int(season), int(round_number), "provaveisdocartola", int(athlete_id)),
-                    )
-                    external_probable = cursor.fetchone() is not None
-                    cursor.close()
-            except Exception:
-                external_probable = False
-            if not external_probable:
-                return jsonify({"error": "Jogador nulo não pode ser cravado como titular"}), 400
+            return jsonify({"error": "Jogador nulo não pode ser cravado como titular"}), 400
 
         saved = upsert_player_availability(
             conn,
