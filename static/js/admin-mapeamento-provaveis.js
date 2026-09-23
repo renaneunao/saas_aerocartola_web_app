@@ -4,7 +4,7 @@
   const page = document.getElementById('probablesMappingPage');
   if (!page) return;
 
-  const state = { teams: [], clubes: [], season: null, round: null, busy: false };
+  const state = { teams: [], clubes: [], season: null, round: null, busy: false, saving: false };
   const positions = { 1: 'Goleiro', 2: 'Lateral', 3: 'Zagueiro', 4: 'Meia', 5: 'Atacante', 6: 'Técnico' };
   const statusLabels = {
     provavel: 'Provável', duvida: 'Dúvida', improvavel: 'Improvável',
@@ -106,14 +106,12 @@
     target.querySelectorAll('select[data-external-select]').forEach((select) => {
       select.addEventListener('change', () => {
         const button = select.closest('.mapping-official')?.querySelector('button[data-save-external]');
+        select.dataset.mappingDirty = select.value ? 'true' : 'false';
         if (button) button.disabled = !select.value;
       });
     });
     target.querySelectorAll('button[data-save-external]').forEach((button) => {
-      button.addEventListener('click', () => {
-        const select = button.closest('.mapping-official')?.querySelector('select[data-external-select]');
-        save(button.dataset.saveExternal, select?.value || null);
-      });
+      button.addEventListener('click', savePendingMappings);
     });
     target.querySelectorAll('select[data-team-slug]').forEach((select) => {
       select.addEventListener('change', () => saveTeam(select.dataset.teamSlug, select.value || null));
@@ -167,17 +165,45 @@
     }
   }
 
-  async function save(externalId, athleteId) {
-    const team = state.teams.find((item) => item.externos.some((player) => String(player.id) === String(externalId)));
-    if (!team || !athleteId) return;
+  async function savePendingMappings() {
+    if (state.saving) return;
+    const pending = [...document.querySelectorAll('select[data-external-select][data-mapping-dirty="true"]')]
+      .map((select) => ({
+        externalId: select.dataset.externalSelect,
+        athleteId: select.value,
+        team: state.teams.find((item) => item.externos.some((player) => String(player.id) === String(select.dataset.externalSelect)))
+      }))
+      .filter((item) => item.team && item.athleteId);
+    if (!pending.length) return feedback('Escolha pelo menos um jogador oficial antes de confirmar.', true);
+
+    const teamsWithoutOfficial = pending.find(({ team }) => !team.clube_id);
+    if (teamsWithoutOfficial) {
+      return feedback(`Selecione primeiro o time oficial de ${teamsWithoutOfficial.team.nome_externo}.`, true);
+    }
+
+    state.saving = true;
+    document.querySelectorAll('button[data-save-external]').forEach((button) => { button.disabled = true; });
     try {
-      feedback('Confirmando vínculo…');
-      if (!team.clube_mapeado && team.clube_id) await requestMapping({ tipo: 'time', temporada: state.season, rodada_id: state.round, clube_slug_externo: team.clube_slug_externo, clube_id: team.clube_id });
-      await requestMapping({ temporada: state.season, rodada_id: state.round, atleta_externo_id: externalId, atleta_id: athleteId });
+      feedback(`Confirmando ${pending.length} vínculo(s)…`);
+      const teamsToSave = [...new Map(pending.map(({ team }) => [team.clube_slug_externo, team])).values()];
+      for (const team of teamsToSave) {
+        if (!team.clube_mapeado) {
+          await requestMapping({ tipo: 'time', temporada: state.season, rodada_id: state.round, clube_slug_externo: team.clube_slug_externo, clube_id: team.clube_id });
+        }
+      }
+      for (const { externalId, athleteId } of pending) {
+        await requestMapping({ temporada: state.season, rodada_id: state.round, atleta_externo_id: externalId, atleta_id: athleteId });
+      }
       await load();
+      feedback(`${pending.length} mapeamento(s) confirmado(s).`);
     } catch (error) {
-      await load();
       feedback(error.message, true);
+      document.querySelectorAll('select[data-external-select][data-mapping-dirty="true"]').forEach((select) => {
+        const button = select.closest('.mapping-official')?.querySelector('button[data-save-external]');
+        if (button) button.disabled = !select.value;
+      });
+    } finally {
+      state.saving = false;
     }
   }
 

@@ -94,10 +94,10 @@
     return state.clubes[opponentId] || state.clubes[String(opponentId)] || { id: opponentId };
   }
 
-  function fixtureTeamMarkup(club, active, side, favorite = null) {
-    const name = club?.abreviacao || club?.nome || '—';
+  function fixtureTeamMarkup(club, active, side) {
+    const name = club?.abreviacao || club?.nome || 'Time';
     const shield = club?.escudo_url || club?.escudo || club?.clube_escudo_url || '';
-    return `<span class="ideal-fixture-team ${active ? 'is-active' : 'is-opponent'} ${side}">${shield ? `<img src="${escapeHtml(shield)}" alt="">` : '<i class="fas fa-shield-alt"></i>'}<b>${escapeHtml(name)}</b>${active && favorite !== null ? `<small>F ${safeNumber(favorite).toFixed(2)}</small>` : ''}</span>`;
+    return `<span class="ideal-fixture-team ${active ? 'is-active' : 'is-opponent'} ${side}" title="${escapeHtml(name)}">${shield ? `<img src="${escapeHtml(shield)}" alt="Escudo de ${escapeHtml(name)}">` : '<i class="fas fa-shield-alt"></i>'}</span>`;
   }
 
   function fixtureIndicators(player) {
@@ -106,14 +106,17 @@
     const own = clubFor(player);
     const ownId = String(player?.clube_id || '');
     const side = state.data?.mando_por_clube?.[ownId] || state.data?.mando_por_clube?.[Number(ownId)] || '';
-    const jogoMap = state.data?.peso_jogo_por_clube || {};
-    const favorite = safeNumber(jogoMap[ownId] ?? player?.peso_jogo);
     const ownIsAway = side === 'fora';
     const home = ownIsAway ? opponent : own;
     const away = ownIsAway ? own : opponent;
-    const homeMarkup = fixtureTeamMarkup(home, !ownIsAway, 'home', !ownIsAway ? favorite : null);
-    const awayMarkup = fixtureTeamMarkup(away, ownIsAway, 'away', ownIsAway ? favorite : null);
+    const homeMarkup = fixtureTeamMarkup(home, !ownIsAway, 'home');
+    const awayMarkup = fixtureTeamMarkup(away, ownIsAway, 'away');
     return `<span class="ideal-player-fixture-badge" title="${escapeHtml(side === 'fora' ? 'Joga fora' : 'Joga em casa')} contra ${escapeHtml(opponent.nome || opponent.abreviacao || 'adversário')}">${homeMarkup}${awayMarkup}</span>`;
+  }
+
+  function progressBar(label, percent, kind, title) {
+    const safePercent = Math.max(0, Math.min(100, safeNumber(percent)));
+    return `<span class="ideal-player-bar ideal-player-bar-${kind}" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}"><b>${label}</b><span class="ideal-player-bar-track"><span class="ideal-player-bar-fill" style="width:${safePercent.toFixed(0)}%"></span></span></span>`;
   }
 
   function teamIndicators(player, position) {
@@ -123,11 +126,15 @@
     const jogo = safeNumber(jogoMap[String(player?.clube_id)] ?? player?.peso_jogo);
     const sg = safeNumber(sgMap[String(player?.clube_id)] ?? player?.peso_sg);
     const sgPercent = Math.max(0, Math.min(100, sg <= 1 ? sg * 100 : sg));
+    const maxJogo = Math.max(1, ...Object.values(jogoMap).map(safeNumber));
     const shield = club.escudo_url || club.escudo || club.clube_escudo_url || player?.clube_escudo_url || '';
     const name = club.abreviacao || player?.clube_abrev || club.nome || player?.clube_nome || '—';
     const defense = ['goleiros', 'laterais', 'zagueiros'].includes(position);
-    const ownMarkup = `<span class="ideal-player-team-badge"><span>${shield ? `<img src="${escapeHtml(shield)}" alt="">` : '<i class="fas fa-shield-alt"></i>'}${escapeHtml(name)}</span><b>F ${jogo.toFixed(2)}</b></span>`;
-    return `<span class="ideal-player-indicators">${opponentFor(player) ? fixtureIndicators(player) : ownMarkup}${defense ? `<span class="ideal-player-sg-badge"><i class="fas fa-shield-heart"></i> SG ${sgPercent.toFixed(0)}%</span>` : ''}</span>`;
+    const ownMarkup = `<span class="ideal-fixture-team ideal-fixture-team-solo is-active" title="${escapeHtml(name)}">${shield ? `<img src="${escapeHtml(shield)}" alt="Escudo de ${escapeHtml(name)}">` : '<i class="fas fa-shield-alt"></i>'}</span>`;
+    const fixtureMarkup = opponentFor(player) ? fixtureIndicators(player) : ownMarkup;
+    const favoritePercent = jogo > 0 ? Math.min(100, (jogo / maxJogo) * 100) : 0;
+    const bars = `${progressBar('F', favoritePercent, 'favorite', `Favoritismo ${jogo.toFixed(2)}`)}${defense ? progressBar('SG', sgPercent, 'sg', `Saldo de gols ${sgPercent.toFixed(0)}%`) : ''}`;
+    return `<span class="ideal-player-indicators">${fixtureMarkup}<span class="ideal-player-bars">${bars}</span></span>`;
   }
 
   function avatar(player, className = '') {
@@ -282,7 +289,11 @@
     const response = await fetch('/api/escalacao-ideal/config', {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     });
-    if (!response.ok) throw new Error('Não foi possível salvar as configurações.');
+    const responseData = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      console.error('[AERO][Config] Falha ao salvar configuração', { status: response.status, response: responseData, payload });
+      throw new Error(responseData.error || `Não foi possível salvar as configurações (HTTP ${response.status}).`);
+    }
     adicionarLog('✓ Configurações salvas.', 'success');
   }
 

@@ -4396,9 +4396,9 @@ def api_escalacao_config():
                     ) pm ON TRUE
                     LEFT JOIN acf_atletas a ON a.atleta_id = pm.atleta_id
                       AND a.temporada = pf.temporada AND a.clube_id = tm.clube_id
-                      AND (pf.posicao_id IS NULL OR a.posicao_id = pf.posicao_id)
                     WHERE pf.temporada = %s AND pf.rodada_id = %s
                       AND pf.fonte = %s AND pf.ativo = TRUE
+                      AND pf.status = 'provavel'
                 ''', (temporada, rodada_atual, 'provaveisdocartola'))
                 mapping_counts = cursor.fetchone() or (0, 0, 0)
                 cursor.close()
