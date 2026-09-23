@@ -1590,3 +1590,304 @@
     width: clamp(27px, 7vw, 40px) !important;
   }
 }
+
+/* Ações do atleta: uma única paleta lateral aparece no hover do cartão,
+   sem exigir um segundo clique para revelar os comandos. */
+.ideal-field {
+  overflow: visible !important;
+}
+
+.ideal-player-card {
+  z-index: 2;
+}
+
+.ideal-player-card:hover,
+.ideal-player-card:focus-within {
+  z-index: 40;
+}
+
+.ideal-card-actions {
+  position: absolute;
+  right: calc(100% + 8px);
+  top: 50%;
+  z-index: 60;
+  display: grid;
+  width: 176px;
+  gap: 5px;
+  padding: 8px;
+  border: 1px solid rgba(82, 230, 255, .25);
+  border-radius: 11px;
+  background: linear-gradient(145deg, rgba(11, 29, 46, .98), rgba(4, 14, 27, .98));
+  box-shadow: 0 14px 30px rgba(0, 0, 0, .34), 0 0 0 1px rgba(255, 255, 255, .025);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-7px, -50%);
+  transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+}
+
+.ideal-card-actions::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -5px;
+  width: 9px;
+  height: 9px;
+  border-top: 1px solid rgba(82, 230, 255, .25);
+  border-right: 1px solid rgba(82, 230, 255, .25);
+  background: #081827;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+.ideal-player-card:hover > .ideal-card-actions,
+.ideal-player-card:focus-within > .ideal-card-actions {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(0, -50%);
+}
+
+.ideal-card-actions-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 2px 5px;
+  color: #b9e8f4;
+  border-bottom: 1px solid rgba(127, 191, 255, .13);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.ideal-card-actions-head i {
+  color: var(--ideal-cyan);
+}
+
+.ideal-card-action {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 6px;
+  width: 100%;
+  padding: 6px 7px;
+  border: 1px solid rgba(127, 191, 255, .13);
+  border-radius: 7px;
+  color: #d9eaf5;
+  background: rgba(127, 191, 255, .045);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ideal-card-action:hover,
+.ideal-card-action:focus-visible {
+  border-color: rgba(82, 230, 255, .48);
+  background: rgba(82, 230, 255, .1);
+  outline: none;
+}
+
+.ideal-card-action i {
+  grid-row: 1 / 3;
+  width: 18px;
+  color: var(--ideal-cyan);
+  text-align: center;
+}
+
+.ideal-card-action span {
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.ideal-card-action small {
+  margin-top: 2px;
+  color: #7894aa;
+  font-size: 7px;
+  line-height: 1.2;
+}
+
+.ideal-card-action-captain i { color: var(--ideal-amber); }
+.ideal-card-action-luxury i { color: var(--ideal-purple); }
+.ideal-card-action-unavailable i { color: #ff9ba7; }
+
+/* Os comandos principais seguem o mesmo aspecto escuro e contido do painel. */
+.ideal-actions #calcularBtn,
+.ideal-actions #escalarBtn,
+.ideal-field-submit {
+  min-height: 38px;
+  border: 1px solid rgba(82, 230, 255, .28);
+  border-radius: 9px;
+  color: #dff8ff;
+  background: linear-gradient(135deg, rgba(21, 64, 85, .92), rgba(7, 28, 47, .96));
+  box-shadow: 0 8px 18px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255, 255, 255, .045);
+  font-weight: 850;
+}
+
+.ideal-actions #calcularBtn:hover:not(:disabled),
+.ideal-field-submit:hover:not(:disabled) {
+  border-color: rgba(82, 230, 255, .68);
+  color: #fff;
+  background: linear-gradient(135deg, rgba(26, 92, 116, .98), rgba(8, 42, 64, .98));
+  filter: none;
+}
+
+.ideal-actions #escalarBtn {
+  border-color: rgba(92, 242, 165, .35);
+  color: #dcffeb;
+  background: linear-gradient(135deg, rgba(18, 79, 65, .95), rgba(7, 38, 34, .98));
+}
+
+.ideal-actions #escalarBtn:hover:not(:disabled) {
+  border-color: rgba(92, 242, 165, .72);
+  background: linear-gradient(135deg, rgba(25, 111, 83, .98), rgba(8, 55, 44, .98));
+  filter: none;
+}
+
+.ideal-field-submit {
+  padding: 7px 11px;
+  font-size: 9px;
+}
+
+.ideal-field-submit-locked {
+  border-color: rgba(148, 163, 184, .24) !important;
+  color: #94a3b8 !important;
+  background: rgba(15, 23, 42, .78) !important;
+}
+
+/* Candidato do modal: confronto, foto, preço e projeção ficam em blocos
+   separados para a troca ser comparável antes do clique. */
+.ideal-picker-player {
+  grid-template-columns: 78px minmax(0, 1fr) auto !important;
+  min-height: 68px;
+  padding: 8px !important;
+}
+
+.ideal-picker-player-visual {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.ideal-picker-player-visual .ideal-player-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  margin: 0 !important;
+  border-radius: 10px;
+}
+
+.ideal-picker-player-visual .ideal-player-indicators {
+  display: flex !important;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.ideal-picker-player-visual .ideal-player-fixture-badge {
+  display: flex !important;
+  width: max-content !important;
+  max-width: 100% !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.ideal-picker-player-visual .ideal-player-bars {
+  width: 100%;
+  max-width: 68px;
+}
+
+.ideal-picker-player-copy {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+  gap: 4px;
+  text-align: left;
+}
+
+.ideal-picker-player-copy strong {
+  font-size: 11px;
+}
+
+.ideal-picker-player-copy small {
+  overflow: hidden;
+  color: #7792a9;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ideal-picker-metrics {
+  display: flex;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.ideal-picker-metric {
+  display: grid;
+  min-width: 58px;
+  align-content: center;
+  gap: 2px;
+  padding: 5px 6px;
+  border: 1px solid rgba(127, 191, 255, .13);
+  border-radius: 6px;
+  background: rgba(2, 12, 23, .56);
+  text-align: center;
+}
+
+.ideal-picker-metric small {
+  color: #718ca3;
+  font-size: 7px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.ideal-picker-metric strong {
+  color: #c6e9f2;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+.ideal-picker-metric:nth-child(2) strong { color: var(--ideal-cyan); }
+.ideal-picker-scout strong { color: var(--ideal-green); }
+
+@media (max-width: 620px) {
+  .ideal-card-actions {
+    width: 148px;
+    right: calc(100% + 4px);
+    padding: 6px;
+  }
+
+  .ideal-card-action {
+    padding: 5px 6px;
+  }
+
+  .ideal-card-action span { font-size: 8px; }
+  .ideal-card-action small { font-size: 6.5px; }
+  .ideal-picker-player {
+    grid-template-columns: 58px minmax(0, 1fr) !important;
+  }
+
+  .ideal-picker-player-visual .ideal-player-avatar {
+    width: 31px !important;
+    height: 31px !important;
+  }
+
+  .ideal-picker-metrics {
+    grid-column: 2 / -1;
+    justify-content: flex-start;
+  }
+
+  .ideal-picker-metric {
+    min-width: 54px;
+    padding: 4px 5px;
+  }
+}
