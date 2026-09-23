@@ -20,7 +20,7 @@
     <section class="team-manager-grid" aria-label="Times associados">
         {% for time in all_times %}
         {% set selected = session.get('selected_team_id') == time.id %}
-        {% set display_name = time.team_name if time.team_name else 'Time #' ~ time.id|string %}
+        {% set display_name = time.team_name if time.team_name else 'Time do Cartola' %}
         <article class="team-manager-card aero-surface {{ 'is-selected' if selected else '' }} {{ 'is-locked' if time.get('bloqueado') else '' }}">
             <header class="team-manager-card-head">
                 <div class="team-manager-shield">
@@ -28,7 +28,7 @@
                     <img src="{{ time.team_shield_url.replace('/45x45.png', '').replace('/60x60.png', '') }}" alt="Escudo de {{ display_name }}">
                     {% else %}<i class="fas fa-futbol"></i>{% endif %}
                 </div>
-                <div class="team-manager-card-title"><h2 title="{{ display_name }}">{{ display_name }}</h2><p>ID {{ time.id }} · Cartola FC</p></div>
+                <div class="team-manager-card-title"><h2 title="{{ display_name }}">{{ display_name }}</h2><p>Conta Cartola</p></div>
                 {% if selected %}<span class="team-manager-status"><i class="fas fa-check"></i> ativo</span>
                 {% elif time.get('token_error') %}<span class="team-manager-status error"><i class="fas fa-triangle-exclamation"></i> atenção</span>
                 {% elif time.get('bloqueado') %}<span class="team-manager-status locked"><i class="fas fa-lock"></i> upgrade</span>
@@ -41,7 +41,7 @@
             </div>
 
             {% if time.get('token_error') %}
-            <div class="team-manager-error"><i class="fas fa-circle-exclamation"></i> A autenticação precisa de atenção. Renove o token ou edite as credenciais manualmente.</div>
+            <div class="team-manager-error"><i class="fas fa-circle-exclamation"></i> A autenticação precisa de atenção. Renove a autenticação do time.</div>
             {% endif %}
 
             <div class="team-manager-actions">
@@ -49,7 +49,6 @@
                     {% if selected %}<button type="button" class="aero-button-neutral" disabled><i class="fas fa-check"></i> Time selecionado</button>
                     {% else %}<button type="button" class="aero-button-neutral" onclick="selecionarTime({{ time.id }})"><i class="fas fa-arrow-right-arrow-left"></i> Usar este time</button>{% endif %}
                     <button type="button" class="aero-button-neutral" id="btn-atualizar-{{ time.id }}" onclick="atualizarTokens({{ time.id }})"><i class="fas fa-rotate"></i> Renovar token</button>
-                    <a class="aero-button-neutral" href="{{ url_for('editar_credenciais', time_id=time.id) }}"><i class="fas fa-pen"></i> Editar</a>
                 {% else %}
                     <a class="aero-button-neutral" href="{{ url_for('pagamento.index') }}"><i class="fas fa-arrow-up"></i> Fazer upgrade</a>
                 {% endif %}

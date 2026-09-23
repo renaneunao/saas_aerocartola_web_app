@@ -493,7 +493,6 @@ def associar_credenciais():
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         captcha = request.form.get('h-captcha-response', '').strip()
-        team_name = request.form.get('team_name', '').strip() or None
 
         if not email or not password or not captcha:
             flash('Informe email, senha e confirme o hCaptcha.', 'error')
@@ -515,7 +514,6 @@ def associar_credenciais():
                     'email': email,
                     'password': password,
                     'captcha': captcha,
-                    'team_name': team_name,
                 },
                 headers={
                     'Content-Type': 'application/json',
@@ -535,7 +533,7 @@ def associar_credenciais():
                 return render_template('associar_credenciais.html', current_user=user)
 
             session['selected_team_id'] = int(team_id)
-            display_name = data.get('team_name') or team_name or 'novo time'
+            display_name = data.get('team_name') or 'novo time'
             flash(f'Time {display_name} associado com sucesso!', 'success')
             return redirect(url_for('credenciais'))
         except requests.Timeout:
@@ -1248,79 +1246,9 @@ def credenciais():
 @app.route('/credenciais/editar/<int:time_id>', methods=['GET', 'POST'])
 @login_required
 def editar_credenciais(time_id):
-    """Editar credenciais de um time específico"""
-    user = get_current_user()
-    
-    from models.teams import get_all_user_teams, create_teams_table
-    conn = get_db_connection()
-    
-    try:
-        create_teams_table(conn)
-        
-        # Verificar se o time pertence ao usuário
-        all_times = get_all_user_teams(conn, user['id'])
-        time_to_edit = next((t for t in all_times if t['id'] == time_id), None)
-        
-        if not time_to_edit:
-            flash('Time não encontrado ou não pertence ao usuário', 'error')
-            return redirect(url_for('credenciais'))
-        
-        if request.method == 'POST':
-            json_payload = request.form.get('json_payload', '').strip()
-            access_token = request.form.get('access_token', '').strip()
-            refresh_token = request.form.get('refresh_token', '').strip()
-            id_token = request.form.get('id_token', '').strip() or None
-            team_name = request.form.get('team_name', '').strip() or None
-
-            # Tentar extrair do JSON se o usuário colou o payload em json_payload ou no campo access_token
-            import json
-            for candidate in [json_payload, access_token]:
-                if candidate and candidate.startswith('{') and candidate.endswith('}'):
-                    try:
-                        parsed = json.loads(candidate)
-                        if isinstance(parsed, dict):
-                            if parsed.get('access_token'): access_token = str(parsed['access_token']).strip()
-                            if parsed.get('refresh_token'): refresh_token = str(parsed['refresh_token']).strip()
-                            if parsed.get('id_token'): id_token = str(parsed['id_token']).strip()
-                    except Exception as e:
-                        print(f"[DEBUG EDITAR] Erro ao parsear JSON de credenciais: {e}")
-
-            if not access_token or not refresh_token:
-                flash('Access Token e Refresh Token são obrigatórios.', 'error')
-                return render_template('editar_credenciais.html', current_user=user, credenciais=time_to_edit)
-
-            # Atualizar credenciais
-            cursor = conn.cursor()
-            cursor.execute('''
-                UPDATE acw_teams
-                SET access_token = %s,
-                    refresh_token = %s,
-                    id_token = %s,
-                    team_name = %s,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE id = %s AND user_id = %s
-            ''', (access_token, refresh_token, id_token, team_name, time_id, user['id']))
-            conn.commit()
-
-            # Tentar buscar nome do time da API se não fornecido
-            if not team_name:
-                try:
-                    from api_cartola import fetch_team_info_by_team_id
-                    team_info = fetch_team_info_by_team_id(conn, time_id)
-                    if team_info and 'time' in team_info and isinstance(team_info['time'], dict):
-                        if 'nome' in team_info['time']:
-                            cursor.execute('UPDATE acw_teams SET team_name = %s WHERE id = %s', (team_info['time']['nome'], time_id))
-                            conn.commit()
-                except Exception as e:
-                    print(f"Erro ao buscar informações do time após editar: {e}")
-
-            flash('Credenciais e tokens atualizados com sucesso!', 'success')
-            return redirect(url_for('credenciais'))
-        
-        # GET - mostrar formulário
-        return render_template('editar_credenciais.html', current_user=user, credenciais=time_to_edit)
-    finally:
-        close_db_connection(conn)
+    """Edição manual desativada; a autenticação é renovada pelo gateway."""
+    flash('A edição manual de times foi desativada. Use Renovar token.', 'info')
+    return redirect(url_for('credenciais'))
 
 @app.route('/modulos')
 @login_required
@@ -4084,7 +4012,7 @@ def api_credenciais_lista():
             
             times_list.append({
                 'id': time['id'],
-                'team_name': time['team_name'] or f"Time {time['id']}",
+                'team_name': time['team_name'] or 'Time do Cartola',
                 'team_shield_url': team_shield_url,
                 'token_error': token_error,  # Indicador de erro de token
                 'created_at': time['created_at'].isoformat() if time['created_at'] else None,
