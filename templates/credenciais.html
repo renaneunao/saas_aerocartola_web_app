@@ -20,7 +20,7 @@
     <section class="team-manager-grid" aria-label="Times associados">
         {% for time in all_times %}
         {% set selected = session.get('selected_team_id') == time.id %}
-        {% set display_name = time.team_name if time.team_name else 'Time do Cartola' %}
+        {% set display_name = time.team_name if time.team_name and time.team_name|lower != 'none' else 'Time do Cartola' %}
         <article class="team-manager-card aero-surface {{ 'is-selected' if selected else '' }} {{ 'is-locked' if time.get('bloqueado') else '' }}">
             <header class="team-manager-card-head">
                 <div class="team-manager-shield">

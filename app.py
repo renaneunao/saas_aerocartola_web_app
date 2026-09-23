@@ -4012,7 +4012,7 @@ def api_credenciais_lista():
             
             times_list.append({
                 'id': time['id'],
-                'team_name': time['team_name'] or 'Time do Cartola',
+                'team_name': time['team_name'] if time['team_name'] and str(time['team_name']).lower() != 'none' else 'Time do Cartola',
                 'team_shield_url': team_shield_url,
                 'token_error': token_error,  # Indicador de erro de token
                 'created_at': time['created_at'].isoformat() if time['created_at'] else None,
