@@ -47,6 +47,11 @@ services:
       STRIPE_PRODUCT_PRO_PLUS: ${STRIPE_PRODUCT_PRO_PLUS}
       # Domínio da aplicação
       DOMAIN: ${DOMAIN:-http://localhost:5000}
+      # Gateway interno de associação de times
+      ASSOCIAR_TIME_GATEWAY_URL: ${ASSOCIAR_TIME_GATEWAY_URL:-http://cartola-aero-associar-gateway:5001}
+      ASSOCIAR_TIME_GATEWAY_SECRET: ${ASSOCIAR_TIME_GATEWAY_SECRET}
+      ASSOCIAR_TIME_GATEWAY_TIMEOUT: ${ASSOCIAR_TIME_GATEWAY_TIMEOUT:-180}
+      GLOBO_HCAPTCHA_SITEKEY: ${GLOBO_HCAPTCHA_SITEKEY}
     ports:
       - "5000:5000"
     volumes:

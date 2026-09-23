@@ -61,6 +61,13 @@ app.config.update(
     # sistema, inclusive em navegadores móveis que fazem limpeza agressiva
     # de cookies antigos.
     SESSION_REFRESH_EACH_REQUEST=True,
+    GLOBO_HCAPTCHA_SITEKEY=os.getenv('GLOBO_HCAPTCHA_SITEKEY', ''),
+    ASSOCIAR_TIME_GATEWAY_URL=os.getenv(
+        'ASSOCIAR_TIME_GATEWAY_URL',
+        'http://cartola-aero-associar-gateway:5001',
+    ).rstrip('/'),
+    ASSOCIAR_TIME_GATEWAY_SECRET=os.getenv('ASSOCIAR_TIME_GATEWAY_SECRET', ''),
+    ASSOCIAR_TIME_GATEWAY_TIMEOUT=int(os.getenv('ASSOCIAR_TIME_GATEWAY_TIMEOUT', '180')),
 )
 app.session_interface = ProxyAwareSessionInterface()
 
@@ -479,63 +486,69 @@ def register():
 @app.route('/associar-credenciais', methods=['GET', 'POST'])
 @login_required
 def associar_credenciais():
-    """Página para associar credenciais do Cartola ao usuário"""
+    """Página para associar um time usando o gateway interno."""
     user = get_current_user()
-    
-    from models.teams import create_teams_table
-    
+
     if request.method == 'POST':
-        access_token = request.form.get('access_token', '').strip()
-        refresh_token = request.form.get('refresh_token', '').strip()
-        id_token = request.form.get('id_token', '').strip() or None
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+        captcha = request.form.get('h-captcha-response', '').strip()
         team_name = request.form.get('team_name', '').strip() or None
-        
-        if not access_token or not refresh_token:
-            flash('Por favor, preencha pelo menos o Access Token e Refresh Token.', 'error')
+
+        if not email or not password or not captcha:
+            flash('Informe email, senha e confirme o hCaptcha.', 'error')
             return render_template('associar_credenciais.html', current_user=user)
-        
-        conn = get_db_connection()
+
+        gateway_url = app.config['ASSOCIAR_TIME_GATEWAY_URL']
+        gateway_secret = app.config['ASSOCIAR_TIME_GATEWAY_SECRET']
+        if not gateway_url or not gateway_secret:
+            flash('O gateway de associação ainda não está configurado.', 'error')
+            return render_template('associar_credenciais.html', current_user=user)
+
         try:
-            create_teams_table(conn)
-            
-            # Buscar dados do time da API do Cartola para obter nome
-            from api_cartola import fetch_team_info_by_team_id
-            final_team_name = team_name
-            
-            # Criar time temporário para buscar dados
-            temp_id = create_team(
-                conn, user['id'], access_token, refresh_token, id_token, team_name
+            import requests
+
+            response = requests.post(
+                f'{gateway_url}/internal/v1/teams/authenticate',
+                json={
+                    'user_id': int(user['id']),
+                    'email': email,
+                    'password': password,
+                    'captcha': captcha,
+                    'team_name': team_name,
+                },
+                headers={
+                    'Content-Type': 'application/json',
+                    'X-Gateway-Key': gateway_secret,
+                },
+                timeout=app.config['ASSOCIAR_TIME_GATEWAY_TIMEOUT'],
             )
-            
-            # Buscar informações do time (nome)
-            try:
-                team_info = fetch_team_info_by_team_id(conn, temp_id)
-                if team_info and 'time' in team_info and isinstance(team_info['time'], dict):
-                    time_data = team_info['time']
-                    if not final_team_name and 'nome' in time_data:
-                        final_team_name = time_data['nome']
-            except Exception as e:
-                print(f"Erro ao buscar informações do time da API: {e}")
-                # Continuar mesmo se não conseguir buscar dados
-            
-            # Atualizar time com nome
-            from models.teams import update_team
-            if final_team_name != team_name:
-                update_team(conn, temp_id, user['id'], team_name=final_team_name)
-            
-            # Se não houver time selecionado, selecionar o novo
-            if not session.get('selected_team_id'):
-                session['selected_team_id'] = temp_id
-            
-            flash('Time associado com sucesso!', 'success')
+            data = response.json() if response.content else {}
+            if not response.ok or not data.get('ok'):
+                message = data.get('error') or 'O gateway não conseguiu associar o time.'
+                flash(message, 'error')
+                return render_template('associar_credenciais.html', current_user=user)
+
+            team_id = data.get('team_id')
+            if not team_id:
+                flash('O gateway não retornou o identificador do time.', 'error')
+                return render_template('associar_credenciais.html', current_user=user)
+
+            session['selected_team_id'] = int(team_id)
+            display_name = data.get('team_name') or team_name or 'novo time'
+            flash(f'Time {display_name} associado com sucesso!', 'success')
             return redirect(url_for('credenciais'))
+        except requests.Timeout:
+            flash('O gateway demorou demais para concluir a associação.', 'error')
+        except requests.RequestException:
+            flash('Não foi possível alcançar o gateway de associação.', 'error')
+        except (TypeError, ValueError, json.JSONDecodeError):
+            flash('O gateway retornou uma resposta inválida.', 'error')
         except Exception as e:
-            flash(f'Erro ao associar credenciais: {str(e)}', 'error')
+            flash('Erro inesperado ao associar o time.', 'error')
             import traceback
             traceback.print_exc()
-        finally:
-            close_db_connection(conn)
-    
+
     return render_template('associar_credenciais.html', current_user=user)
 
 @app.route('/perfil', methods=['GET', 'POST'])
