@@ -4373,42 +4373,18 @@ def api_escalacao_config():
                 rodada_result = cursor.fetchone()
                 rodada_atual = int(rodada_result[0] or 1) if rodada_result else 1
                 cursor.execute('''
-                    SELECT COUNT(*) AS total,
-                           COUNT(DISTINCT pf.clube_slug_externo)
-                             FILTER (WHERE tm.clube_id IS NULL) AS clubes_pendentes,
-                           COUNT(*) FILTER (WHERE a.atleta_id IS NULL) AS atletas_pendentes
-                    FROM acf_provaveis_fontes pf
-                    LEFT JOIN LATERAL (
-                        SELECT cm.clube_id
-                        FROM acw_provaveis_clubes_mapeamentos cm
-                        WHERE cm.temporada = pf.temporada AND cm.fonte = pf.fonte
-                          AND cm.clube_slug_externo = pf.clube_slug_externo
-                          AND cm.rodada_id <= pf.rodada_id
-                        ORDER BY cm.rodada_id DESC LIMIT 1
-                    ) tm ON TRUE
-                    LEFT JOIN LATERAL (
-                        SELECT pm.atleta_id
-                        FROM acw_provaveis_mapeamentos pm
-                        WHERE pm.temporada = pf.temporada AND pm.fonte = pf.fonte
-                          AND pm.atleta_externo_id = pf.atleta_externo_id
-                          AND pm.rodada_id <= pf.rodada_id
-                        ORDER BY pm.rodada_id DESC LIMIT 1
-                    ) pm ON TRUE
-                    LEFT JOIN acf_atletas a ON a.atleta_id = pm.atleta_id
-                      AND a.temporada = pf.temporada AND a.clube_id = tm.clube_id
-                    WHERE pf.temporada = %s AND pf.rodada_id = %s
-                      AND pf.fonte = %s AND pf.ativo = TRUE
-                      AND pf.status = 'provavel'
+                    -- O mapeamento da fonte externa é progressivo: a fonte pode
+                    -- ser ativada com os vínculos já disponíveis e novos atletas
+                    -- podem ser associados depois, sem bloquear a configuração.
+                    SELECT COUNT(*)
+                    FROM acf_provaveis_fontes
+                    WHERE temporada = %s AND rodada_id = %s
+                      AND fonte = %s AND ativo = TRUE
                 ''', (temporada, rodada_atual, 'provaveisdocartola'))
-                mapping_counts = cursor.fetchone() or (0, 0, 0)
+                snapshot_total = int((cursor.fetchone() or (0,))[0] or 0)
                 cursor.close()
-                total, clubes_pendentes, atletas_pendentes = (int(value or 0) for value in mapping_counts)
-                if not total:
+                if not snapshot_total:
                     return jsonify({'error': 'Ainda não há um snapshot externo para a rodada atual.'}), 409
-                if clubes_pendentes or atletas_pendentes:
-                    return jsonify({
-                        'error': f'Mapeamento incompleto: {clubes_pendentes} clube(s) e {atletas_pendentes} jogador(es) pendente(s). Conclua os vínculos em Administração → Mapeamento de prováveis antes de ativar esta fonte.'
-                    }), 409
             
             upsert_user_escalacao_config(
                 conn, user['id'], team_id, formation, hack_goleiro, fechar_defesa, posicao_capitao, posicao_reserva_luxo, prioridades, fonte_provaveis

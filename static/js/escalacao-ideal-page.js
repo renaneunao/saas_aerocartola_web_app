@@ -143,7 +143,7 @@
     const playerId = idOf(player);
     const goalie = (state.data?.todos_goleiros || []).find(candidate => idOf(candidate) === playerId);
     const photo = player?.foto_custom || player?.foto || player?.foto_url || goalie?.foto_custom || goalie?.foto || goalie?.foto_url || '';
-    return `<div class="ideal-player-avatar ${className}">${photo ? `<img src="${escapeHtml(photo)}" alt="${name}" onerror="this.parentElement.innerHTML='${initials}'">` : initials}</div>`;
+    return `<div class="ideal-player-avatar ${className}" title="Foto de ${name}">${photo ? `<img src="${escapeHtml(photo)}" alt="${name}" onerror="this.parentElement.innerHTML='${initials}'">` : initials}</div>`;
   }
 
   function renderTeamSummary(data) {
@@ -344,12 +344,15 @@
   }
 
   function playerCard(player, position, index) {
-    const badges = player?.eh_capitao ? '<span class="ideal-badge ideal-badge-captain">CAP</span>' : '';
-    return `<div class="ideal-player ideal-player-card" title="Trocar ${escapeHtml(player?.apelido || 'jogador')}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}<div class="ideal-player-visual">${avatar(player)}${teamIndicators(player, position)}</div><span class="ideal-player-name">${escapeHtml(player?.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span><button type="button" class="ideal-special-action" data-special-role="captain" data-athlete-id="${escapeHtml(idOf(player))}" title="Definir ${escapeHtml(player?.apelido || 'jogador')} como capitão"><i class="fas fa-crown"></i><span>Capitão</span></button><button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>`;
+    const playerName = escapeHtml(player?.apelido || 'N/A');
+    const priceLabel = money(price(player));
+    const pointsLabel = `${points(player).toFixed(1)} pts`;
+    const badges = player?.eh_capitao ? `<span class="ideal-badge ideal-badge-captain" title="Capitão atual">CAP</span>` : '';
+    return `<div class="ideal-player ideal-player-card" title="Clique para trocar ${playerName}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}<div class="ideal-player-visual">${avatar(player)}${teamIndicators(player, position)}</div><span class="ideal-player-name" title="Jogador: ${playerName}">${playerName}</span><span class="ideal-player-chips"><span title="Preço do jogador: ${priceLabel}">${priceLabel}</span><span title="Pontuação prevista: ${pointsLabel}">${pointsLabel}</span></span><button type="button" class="ideal-special-action" data-special-role="captain" data-athlete-id="${escapeHtml(idOf(player))}" title="Definir ${playerName} como capitão"><i class="fas fa-crown"></i><span>Capitão</span></button><button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar ${playerName} como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>`;
   }
 
   function emptySlot(position, index) {
-    return `<button type="button" class="ideal-player ideal-player-empty" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}"><span class="ideal-empty-plus"><i class="fas fa-plus"></i></span><span class="ideal-player-name">Escolher</span><span class="ideal-player-action">adicionar</span></button>`;
+    return `<button type="button" class="ideal-player ideal-player-empty" title="Escolher jogador" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}"><span class="ideal-empty-plus"><i class="fas fa-plus"></i></span><span class="ideal-player-name">Escolher</span><span class="ideal-player-action">adicionar</span></button>`;
   }
 
   function playerSlots(result, position) {
@@ -416,7 +419,10 @@
       const players = (result.reservas?.[position] || []).filter(Boolean);
       const player = players[0];
       const luxuryAction = player?.eh_reserva_luxo ? '' : `<button type="button" class="ideal-special-action" data-special-role="luxury" data-athlete-id="${escapeHtml(idOf(player))}" title="Definir ${escapeHtml(player?.apelido || 'jogador')} como reserva de luxo"><i class="fas fa-gem"></i><span>Luxo</span></button>`;
-      const card = player ? `<div class="ideal-bench-player ideal-player-card" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? '<span class="ideal-badge ideal-badge-luxury">LUXO</span>' : ''}${avatar(player)}<span class="ideal-bench-copy"><span class="ideal-player-name">${escapeHtml(player.apelido || 'N/A')}</span><span class="ideal-player-chips"><span>${money(price(player))}</span><span>${points(player).toFixed(1)} pts</span></span></span><span class="ideal-bench-signals">${teamIndicators(player, position)}</span>${luxuryAction}<button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
+      const reserveName = escapeHtml(player?.apelido || 'N/A');
+      const reservePrice = player ? money(price(player)) : '';
+      const reservePoints = player ? `${points(player).toFixed(1)} pts` : '';
+      const card = player ? `<div class="ideal-bench-player ideal-player-card" title="Clique para trocar a reserva ${reserveName}" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? `<span class="ideal-badge ideal-badge-luxury" title="Reserva de luxo atual">LUXO</span>` : ''}${avatar(player)}<span class="ideal-bench-copy"><span class="ideal-player-name" title="Jogador: ${reserveName}">${reserveName}</span><span class="ideal-player-chips"><span title="Preço da reserva: ${reservePrice}">${reservePrice}</span><span title="Pontuação prevista da reserva: ${reservePoints}">${reservePoints}</span></span></span><span class="ideal-bench-signals">${teamIndicators(player, position)}</span>${luxuryAction}<button type="button" class="ideal-player-unavailable" data-availability-action="poupar" data-athlete-id="${escapeHtml(idOf(player))}" title="Marcar ${reserveName} como não joga"><i class="fas fa-ban"></i><span>não joga</span></button></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" title="Adicionar reserva" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
       return `<div class="ideal-bench-group"><div class="ideal-bench-label">${POSITIONS[position].label}<small>mais barata que o titular</small></div>${card}</div>`;
     }).join('');
     return `<aside class="ideal-bench"><div class="ideal-bench-head"><span class="ideal-bench-title"><i class="fas fa-exchange-alt"></i>Reservas</span><span class="ideal-bench-note">sem custo</span></div>${groups}</aside>`;

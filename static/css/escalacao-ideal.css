@@ -1542,3 +1542,51 @@
   .ideal-player-bar-track { height: 3px; }
   .ideal-player-chips span { font-size: clamp(7px, 1.8vw, 8px) !important; }
 }
+
+/* O treinador usa o mesmo cartão visual dos atletas do campo. */
+.ideal-field-coach .ideal-player {
+  width: clamp(68px, 16cqi, 108px) !important;
+  margin-inline: 2px;
+}
+
+.ideal-field-coach .ideal-player-avatar {
+  width: clamp(34px, 7.8cqi, 56px) !important;
+  height: auto !important;
+  aspect-ratio: 1;
+}
+
+/* O escudo adversário permanece legível, mas claramente secundário ao clube do atleta. */
+.ideal-fixture-team.is-opponent {
+  opacity: .34 !important;
+  filter: grayscale(.72) brightness(.78) !important;
+}
+
+/* Os cartões são autoexplicativos quando o cursor passa pelos dados compactados. */
+.ideal-player-avatar[title],
+.ideal-player-name[title],
+.ideal-player-chips span[title],
+.ideal-fixture-team[title],
+.ideal-fixture-team-solo[title],
+.ideal-player-bar[title],
+.ideal-badge[title] {
+  cursor: help;
+}
+
+.ideal-player-bar[title]:hover .ideal-player-bar-track {
+  border-color: rgba(82, 230, 255, .72);
+  box-shadow: 0 0 0 2px rgba(82, 230, 255, .08), 0 0 8px rgba(82, 230, 255, .2);
+}
+
+.ideal-player-bar[title]:hover .ideal-player-bar-fill {
+  filter: brightness(1.22);
+}
+
+@media (max-width: 620px) {
+  .ideal-field-coach .ideal-player {
+    width: clamp(64px, 17vw, 94px) !important;
+  }
+
+  .ideal-field-coach .ideal-player-avatar {
+    width: clamp(27px, 7vw, 40px) !important;
+  }
+}
