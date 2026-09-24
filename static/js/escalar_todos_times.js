@@ -474,6 +474,10 @@ document.addEventListener('DOMContentLoaded', function() {
         botaoItem.addEventListener('click', async function() {
             await executarEscalarTodosTimes();
         });
+
+        if (typeof ajustarDensidadeSidebar === 'function') {
+            setTimeout(ajustarDensidadeSidebar, 0);
+        }
     }
     
     // Observar mudanças na lista de times (com debounce para evitar múltiplas execuções)

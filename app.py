@@ -4020,10 +4020,17 @@ def api_credenciais_lista():
             })
             print(f"[DEBUG API] Time {time['id']} adicionado à lista com shield_url: {team_shield_url}, token_error: {token_error}")
         
-        return jsonify({
+        response = jsonify({
             'times': times_list,
             'selected_id': selected_id
         })
+        # A associação pode ocorrer em outra requisição imediatamente antes
+        # desta chamada. Impedir cache de navegador/proxy evita que a sidebar
+        # continue mostrando a lista anterior.
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
     except Exception as e:
         print(f"Erro ao listar credenciais: {e}")
         import traceback

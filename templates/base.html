@@ -448,317 +448,183 @@
             });
 
             carregarTimesSidebar();
+            setTimeout(ajustarDensidadeSidebar, 0);
         });
 
-        // Função para renderizar times na sidebar
+        // Comprime apenas a interface da sidebar quando a altura real da
+        // janela não comporta todos os links e times. Assim ela continua
+        // inteira visível, sem criar uma rolagem vertical independente.
+        function ajustarDensidadeSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+
+            sidebar.style.setProperty('--sidebar-density', '1');
+            requestAnimationFrame(() => {
+                const alturaDisponivel = sidebar.clientHeight;
+                const alturaNatural = sidebar.scrollHeight;
+                if (!alturaDisponivel || alturaNatural <= alturaDisponivel + 2) return;
+
+                const densidade = Math.max(.54, Math.min(1, (alturaDisponivel - 4) / alturaNatural));
+                sidebar.style.setProperty('--sidebar-density', densidade.toFixed(3));
+            });
+        }
+
+        let sidebarResizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(sidebarResizeTimer);
+            sidebarResizeTimer = setTimeout(ajustarDensidadeSidebar, 100);
+        });
+
+        // Renderiza sempre a lista completa retornada pelo servidor. A sidebar
+        // não usa mais um cache de sessão: depois de associar um time novo, a
+        // próxima página deve refletir o banco imediatamente.
         async function renderizarTimesSidebar(data) {
             const timesList = document.getElementById('timesList');
-
             if (!timesList) return;
 
             const botaoExistente = document.getElementById('escalarTodosTimesBtnSidebar');
-            if (botaoExistente) {
-                botaoExistente.remove();
-            }
+            if (botaoExistente) botaoExistente.remove();
+            if (window.escalarTodosTimesObserver) window.escalarTodosTimesObserver.disconnect();
 
             timesList.innerHTML = '';
-
             if (!data.times || data.times.length === 0) {
                 timesList.innerHTML = '<div class="px-3 py-2 text-xs text-text-muted">Nenhum time cadastrado</div>';
                 return;
             }
 
-            let maxTimes = 999999;
+            let maxTimes = null;
             try {
-                const permsResponse = await fetch('/api/user/permissions');
+                const permsResponse = await fetch(`/api/user/permissions?sidebar_refresh=${Date.now()}`, { cache: 'no-store' });
                 if (permsResponse.ok) {
                     const permsData = await permsResponse.json();
-                    const timesMaximos = permsData.permissions.timesMaximos;
-                    if (timesMaximos === 'infinite') {
-                        maxTimes = 999999;
-                    } else {
-                        maxTimes = parseInt(timesMaximos) || 1;
+                    const timesMaximos = permsData?.permissions?.timesMaximos;
+                    if (timesMaximos !== 'infinite' && Number.isFinite(Number(timesMaximos))) {
+                        maxTimes = Math.max(1, Number(timesMaximos));
                     }
                 }
             } catch (error) {
-                console.error('Erro ao buscar permissões:', error);
+                // Se a consulta de permissões falhar, não ocultar times já
+                // cadastrados. A autorização continua sendo do backend.
+                console.warn('Não foi possível atualizar o limite de times:', error);
             }
 
-            const timesLimitados = data.times.slice(0, maxTimes);
+            const timesLimitados = maxTimes === null ? data.times : data.times.slice(0, maxTimes);
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'sidebar-teams-grid';
 
-            if (window.escalarTodosTimesObserver) {
-                window.escalarTodosTimesObserver.disconnect();
-            }
+            const normalizarEscudo = (url) => {
+                if (!url || typeof url !== 'string') return '';
+                return url.replace('/45x45.png', '').replace('/60x60.png', '');
+            };
 
-            if (timesLimitados.length === 1) {
-                const time = timesLimitados[0];
+            const colocarImagem = (container, url, alt) => {
+                const highResUrl = normalizarEscudo(url);
+                if (!highResUrl) return false;
+                const img = document.createElement('img');
+                img.src = highResUrl;
+                img.alt = alt;
+                img.loading = 'lazy';
+                img.decoding = 'async';
+                img.className = 'sidebar-team-shield-image';
+                img.onerror = () => {
+                    container.innerHTML = '<i class="fas fa-futbol text-text-muted text-xs"></i>';
+                };
+                container.replaceChildren(img);
+                return true;
+            };
+
+            timesLimitados.forEach((time) => {
+                const teamName = (time.team_name && String(time.team_name).toLowerCase() !== 'none')
+                    ? String(time.team_name)
+                    : 'Time do Cartola';
                 const hasTokenError = time.token_error === true;
+                const timeItem = document.createElement('button');
+                timeItem.type = 'button';
+                timeItem.className = `sidebar-team-item ${time.selected ? 'is-selected' : ''}`;
+                timeItem.dataset.teamId = time.id;
+                timeItem.title = hasTokenError
+                    ? `${teamName} — autenticação precisa ser renovada`
+                    : `Usar ${teamName}`;
+                timeItem.setAttribute('aria-label', timeItem.title);
 
-                const timeItem = document.createElement('div');
-                timeItem.className = `px-3 py-2 text-sm rounded-lg cursor-pointer transition-all duration-200 ${
-                    time.selected
-                        ? 'bg-[rgba(0,229,255,0.08)] text-text-primary border-l-[3px] border-neon-cyan shadow-[inset_0_0_15px_rgba(0,229,255,0.03)]'
-                        : 'text-text-secondary hover:bg-[rgba(0,229,255,0.04)] hover:text-white'
-                }`;
-                timeItem.innerHTML = `
-                    <div class="flex items-center">
-                        <div class="w-8 h-8 rounded mr-2 flex items-center justify-center team-shield-sidebar" data-team-id="${time.id}">
-                            <i class="fas fa-futbol text-sm ${time.selected ? 'text-neon-cyan' : 'text-text-muted'}"></i>
-                        </div>
-                        <span class="flex-1 truncate">${time.team_name}</span>
-                        ${time.selected ? '<i class="fas fa-check text-neon-cyan ml-2"></i>' : ''}
-                    </div>
-                `;
+                const shieldContainer = document.createElement('span');
+                shieldContainer.className = 'team-shield-sidebar';
+                shieldContainer.setAttribute('aria-hidden', 'true');
+                shieldContainer.innerHTML = '<i class="fas fa-futbol text-text-muted text-xs"></i>';
 
-                const shieldContainer = timeItem.querySelector('.team-shield-sidebar');
-                if (shieldContainer) {
-                    if (hasTokenError) {
-                        shieldContainer.innerHTML = `
-                            <div class="w-8 h-8 rounded flex items-center justify-center bg-[rgba(239,68,68,0.12)] border-2 border-[rgba(239,68,68,0.4)]" title="Erro de autenticação. Clique para atualizar os tokens.">
-                                <i class="fas fa-times text-neon-red text-xs"></i>
-                            </div>
-                        `;
-                        timeItem.addEventListener('click', async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            window.location.href = `/credenciais`;
-                        }, true);
-                    } else if (time.team_shield_url) {
-                        shieldContainer.innerHTML = '';
-                        const img = document.createElement('img');
+                const nameElement = document.createElement('span');
+                nameElement.className = 'sidebar-team-name';
+                nameElement.textContent = teamName;
 
-                        let highResUrl = time.team_shield_url;
+                timeItem.append(shieldContainer, nameElement);
 
-                        if (highResUrl.includes('/45x45.png')) {
-                            highResUrl = highResUrl.replace('/45x45.png', '');
-                        } else if (highResUrl.includes('/60x60.png')) {
-                            highResUrl = highResUrl.replace('/60x60.png', '');
-                        }
-
-                        img.src = highResUrl;
-                        img.alt = 'Escudo';
-                        img.className = 'w-8 h-8 rounded border border-white/10';
-                        img.style.objectFit = 'contain';
-                        img.style.imageRendering = '-webkit-optimize-contrast';
-                        img.onerror = function() {
-                            shieldContainer.innerHTML = '<i class="fas fa-futbol text-sm text-text-muted"></i>';
-                        };
-                        shieldContainer.appendChild(img);
-                    } else {
-                        fetch(`/api/time/${time.id}/escudo`)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.token_error === true) {
-                                    shieldContainer.innerHTML = `
-                                        <div class="w-8 h-8 rounded flex items-center justify-center bg-[rgba(239,68,68,0.12)] border-2 border-[rgba(239,68,68,0.4)]" title="Erro de autenticação. Clique para atualizar os tokens.">
-                                            <i class="fas fa-times text-neon-red text-xs"></i>
-                                        </div>
-                                    `;
-                                    const newTimeItem = timeItem.cloneNode(true);
-                                    timeItem.parentNode.replaceChild(newTimeItem, timeItem);
-                                    newTimeItem.addEventListener('click', async (e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        window.location.href = `/credenciais`;
-                                    }, true);
-                                } else if (data.team_shield_url) {
-                                    const img = document.createElement('img');
-                                    let highResUrl = data.team_shield_url;
-                                    if (highResUrl.includes('/45x45.png')) {
-                                        highResUrl = highResUrl.replace('/45x45.png', '');
-                                    } else if (highResUrl.includes('/60x60.png')) {
-                                        highResUrl = highResUrl.replace('/60x60.png', '');
-                                    }
-                                    img.src = highResUrl;
-                                    img.alt = 'Escudo';
-                                    img.className = 'w-8 h-8 rounded border border-white/10';
-                                    img.style.objectFit = 'contain';
-                                    img.style.imageRendering = '-webkit-optimize-contrast';
-                                    shieldContainer.innerHTML = '';
-                                    shieldContainer.appendChild(img);
-                                }
-                            });
-                    }
+                if (time.selected) {
+                    const checkBadge = document.createElement('span');
+                    checkBadge.className = 'sidebar-team-check';
+                    checkBadge.innerHTML = '<i class="fas fa-check"></i>';
+                    timeItem.appendChild(checkBadge);
                 }
 
-                if (!hasTokenError) {
+                if (hasTokenError) {
+                    shieldContainer.innerHTML = '<span class="sidebar-team-error" title="Erro de autenticação. Clique para renovar."><i class="fas fa-exclamation"></i></span>';
+                    timeItem.addEventListener('click', () => { window.location.href = '/credenciais'; });
+                } else {
+                    const rendered = colocarImagem(shieldContainer, time.team_shield_url, teamName);
+                    if (!rendered) {
+                        fetch(`/api/time/${encodeURIComponent(time.id)}/escudo?sidebar_refresh=${Date.now()}`, { cache: 'no-store' })
+                            .then(response => response.ok ? response.json() : {})
+                            .then(shieldData => {
+                                if (shieldData.token_error === true) {
+                                    shieldContainer.innerHTML = '<span class="sidebar-team-error" title="Erro de autenticação. Clique para renovar."><i class="fas fa-exclamation"></i></span>';
+                                    timeItem.onclick = () => { window.location.href = '/credenciais'; };
+                                } else {
+                                    colocarImagem(shieldContainer, shieldData.team_shield_url, teamName);
+                                }
+                            })
+                            .catch(() => {});
+                    }
+
                     timeItem.addEventListener('click', async () => {
                         if (time.selected) return;
                         const confirmado = await showConfirm(
-                            `Deseja trocar para o time "${time.team_name}"?`,
+                            `Deseja trocar para o time "${teamName}"?`,
                             '🔄 Trocar de Time',
-                            {
-                                confirmText: 'Sim, trocar',
-                                cancelText: 'Cancelar'
-                            }
+                            { confirmText: 'Sim, trocar', cancelText: 'Cancelar' }
                         );
-                        if (confirmado) {
-                            await selecionarTime(time.id);
-                        }
+                        if (confirmado) await selecionarTime(time.id);
                     });
                 }
-                timesList.appendChild(timeItem);
-            } else {
-                const gridContainer = document.createElement('div');
-                gridContainer.className = 'grid grid-cols-4 gap-1.5 px-2';
 
-                timesLimitados.forEach((time, index) => {
-                    const timeItem = document.createElement('div');
-                    timeItem.className = `relative cursor-pointer transition-all duration-200 rounded-lg p-1 ${
-                        time.selected
-                            ? 'bg-[rgba(0,229,255,0.1)] border border-[rgba(0,229,255,0.3)] shadow-[0_0_10px_rgba(0,229,255,0.06)]'
-                            : 'bg-[rgba(17,27,46,0.4)] hover:bg-[rgba(0,229,255,0.06)] border border-transparent hover:border-[rgba(0,229,255,0.15)]'
-                    }`;
-                    timeItem.setAttribute('data-team-id', time.id);
-                    timeItem.setAttribute('title', time.team_name);
+                gridContainer.appendChild(timeItem);
+            });
 
-                    const shieldContainer = document.createElement('div');
-                    shieldContainer.className = 'w-full aspect-square rounded flex items-center justify-center team-shield-sidebar';
-                    shieldContainer.setAttribute('data-team-id', time.id);
-
-                    const hasTokenError = time.token_error === true;
-
-                    if (hasTokenError) {
-                        shieldContainer.innerHTML = `
-                            <div class="w-full h-full flex items-center justify-center bg-[rgba(239,68,68,0.12)] rounded border border-[rgba(239,68,68,0.4)]" title="Erro de autenticação. Clique para atualizar os tokens.">
-                                <i class="fas fa-times text-neon-red text-sm"></i>
-                            </div>
-                        `;
-                        timeItem.addEventListener('click', async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            window.location.href = `/credenciais`;
-                        }, true);
-                    } else if (time.team_shield_url && time.team_shield_url.trim() !== '') {
-                        const img = document.createElement('img');
-                        let highResUrl = time.team_shield_url;
-                        if (highResUrl.includes('/45x45.png')) {
-                            highResUrl = highResUrl.replace('/45x45.png', '');
-                        } else if (highResUrl.includes('/60x60.png')) {
-                            highResUrl = highResUrl.replace('/60x60.png', '');
-                        }
-                        img.src = highResUrl;
-                        img.alt = time.team_name;
-                        img.className = 'w-full h-full rounded object-contain';
-                        img.style.imageRendering = '-webkit-optimize-contrast';
-                        img.onerror = function() {
-                            shieldContainer.innerHTML = '<i class="fas fa-futbol text-text-muted text-xs"></i>';
-                        };
-                        shieldContainer.appendChild(img);
-                    } else {
-                        sessionStorage.removeItem('times_cache');
-                        sessionStorage.removeItem('times_cache_timestamp');
-
-                        fetch(`/api/time/${time.id}/escudo`)
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.token_error === true) {
-                                    shieldContainer.innerHTML = `
-                                        <div class="w-full h-full flex items-center justify-center bg-[rgba(239,68,68,0.12)] rounded border border-[rgba(239,68,68,0.4)]" title="Erro de autenticação. Clique para atualizar os tokens.">
-                                            <i class="fas fa-times text-neon-red text-sm"></i>
-                                        </div>
-                                    `;
-                                    const newTimeItem = timeItem.cloneNode(true);
-                                    timeItem.parentNode.replaceChild(newTimeItem, timeItem);
-                                    newTimeItem.addEventListener('click', async (e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        window.location.href = `/credenciais`;
-                                    }, true);
-                                } else if (data.team_shield_url) {
-                                    const img = document.createElement('img');
-                                    let highResUrl = data.team_shield_url;
-                                    if (highResUrl.includes('/45x45.png')) {
-                                        highResUrl = highResUrl.replace('/45x45.png', '');
-                                    } else if (highResUrl.includes('/60x60.png')) {
-                                        highResUrl = highResUrl.replace('/60x60.png', '');
-                                    }
-                                    img.src = highResUrl;
-                                    img.alt = time.team_name;
-                                    img.className = 'w-full h-full rounded object-contain';
-                                    img.style.imageRendering = '-webkit-optimize-contrast';
-                                    shieldContainer.innerHTML = '';
-                                    shieldContainer.appendChild(img);
-                                }
-                            })
-                            .catch(error => {
-                                shieldContainer.innerHTML = '<i class="fas fa-futbol text-text-muted text-xs"></i>';
-                            });
-                    }
-
-                    if (time.selected) {
-                        const checkBadge = document.createElement('div');
-                        checkBadge.className = 'absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-neon-cyan rounded-full flex items-center justify-center shadow-[0_0_4px_rgba(0,229,255,0.4)]';
-                        checkBadge.innerHTML = '<i class="fas fa-check text-white text-[7px]"></i>';
-                        timeItem.appendChild(checkBadge);
-                    }
-
-                    timeItem.appendChild(shieldContainer);
-
-                    if (!hasTokenError) {
-                        timeItem.addEventListener('click', async () => {
-                            if (time.selected) return;
-                            const confirmado = await showConfirm(
-                                `Deseja trocar para o time "${time.team_name}"?`,
-                                '🔄 Trocar de Time',
-                                {
-                                    confirmText: 'Sim, trocar',
-                                    cancelText: 'Cancelar'
-                                }
-                            );
-                            if (confirmado) {
-                                await selecionarTime(time.id);
-                            }
-                        });
-                    }
-
-                    gridContainer.appendChild(timeItem);
-                });
-
-                timesList.appendChild(gridContainer);
-            }
-
-            if (window.escalarTodosTimesObserver && timesList) {
+            timesList.appendChild(gridContainer);
+            if (window.escalarTodosTimesObserver) {
                 window.escalarTodosTimesObserver.observe(timesList, { childList: true, subtree: false });
             }
-
             if (timesLimitados.length > 1 && typeof verificarEAdicionarBotaoSidebar === 'function') {
                 setTimeout(() => {
                     verificarEAdicionarBotaoSidebar();
+                    ajustarDensidadeSidebar();
                 }, 100);
+            } else {
+                ajustarDensidadeSidebar();
             }
         }
 
-        async function carregarTimesSidebar(forcarRecarregar = false) {
-            if (!forcarRecarregar) {
-                const cachedData = sessionStorage.getItem('times_cache');
-                const cacheTimestamp = sessionStorage.getItem('times_cache_timestamp');
-
-                if (cachedData && cacheTimestamp) {
-                    const cacheAge = Date.now() - parseInt(cacheTimestamp);
-                    if (cacheAge < 300000) {
-                        const data = JSON.parse(cachedData);
-                        await renderizarTimesSidebar(data);
-                        return;
-                    }
-                }
-            }
-
+        async function carregarTimesSidebar() {
             try {
-                const response = await fetch('/api/credenciais/lista');
+                sessionStorage.removeItem('times_cache');
+                sessionStorage.removeItem('times_cache_timestamp');
+                const response = await fetch(`/api/credenciais/lista?sidebar_refresh=${Date.now()}`, { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 const data = await response.json();
-
-                sessionStorage.setItem('times_cache', JSON.stringify(data));
-                sessionStorage.setItem('times_cache_timestamp', Date.now().toString());
-
                 await renderizarTimesSidebar(data);
             } catch (error) {
                 console.error('Erro ao carregar times:', error);
                 showToast('Erro ao carregar times', 'error');
                 const timesList = document.getElementById('timesList');
-                if (timesList) {
-                    timesList.innerHTML = '<div class="px-3 py-2 text-xs text-neon-red">Erro ao carregar times</div>';
-                }
+                if (timesList) timesList.innerHTML = '<div class="px-3 py-2 text-xs text-neon-red">Erro ao carregar times</div>';
             }
         }
 
