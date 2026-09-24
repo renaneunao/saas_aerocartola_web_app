@@ -717,6 +717,7 @@ def dashboard():
             'confrontos': [], 'confrontos_validos': 0, 'atletas': {},
             'disponibilidade': {'poupados': 0, 'cravados': 0},
             'favorito': None, 'atualizado_em': None,
+            'favoritismo_maximo': 1.0,
             'indices_perfil': {'peso_jogo': {}, 'peso_sg': {}},
         }
         try:
@@ -831,6 +832,26 @@ def dashboard():
                             clube_key = clube_id
                         confronto[lado]['favoritismo'] = rodada_info['indices_perfil']['peso_jogo'].get(clube_key, 0)
                         confronto[lado]['saldo'] = rodada_info['indices_perfil']['peso_sg'].get(clube_key, 0)
+
+                # Todas as barras usam a mesma escala na rodada: o maior
+                # favoritismo ocupa 50% do trilho, partindo do centro. Assim
+                # valores positivos apontam para a direita e negativos para a
+                # esquerda, sem que cada card crie uma escala própria.
+                favoritismos = [
+                    abs(float(confronto[lado].get('favoritismo') or 0))
+                    for confronto in rodada_info['confrontos']
+                    for lado in ('casa', 'visitante')
+                ]
+                favoritismo_maximo = max(favoritismos, default=0.0) or 1.0
+                rodada_info['favoritismo_maximo'] = favoritismo_maximo
+                for confronto in rodada_info['confrontos']:
+                    for lado in ('casa', 'visitante'):
+                        valor = float(confronto[lado].get('favoritismo') or 0)
+                        confronto[lado]['favoritismo_bar_percent'] = round(
+                            min(50.0, abs(valor) / favoritismo_maximo * 50.0),
+                            2,
+                        )
+                        confronto[lado]['favoritismo_sentido'] = 'positivo' if valor >= 0 else 'negativo'
 
             cursor.execute('''
                 SELECT a.apelido, c.abreviacao, d.escalacoes,
