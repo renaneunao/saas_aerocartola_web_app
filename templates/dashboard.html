@@ -224,22 +224,15 @@
                 <b>×</b>
                 <div class="dashboard-fixture-team is-away">{% if jogo.visitante.escudo %}<img src="{{ jogo.visitante.escudo }}" alt="{{ jogo.visitante.nome }}">{% endif %}<span>{{ jogo.visitante.abreviacao }}</span></div>
                 <div class="dashboard-fixture-indices">
-                    <span>
-                        <b>Casa</b>
-                        <strong>Favoritismo {{ '%.2f'|format(jogo.casa.favoritismo or 0) }}</strong>
-                        <div class="dashboard-favoritism-meter {{ 'is-negative' if (jogo.casa.favoritismo or 0) < 0 else 'is-positive' }}" title="Escala comum da rodada: maior favoritismo = barra completa">
-                            <i style="--favoritismo-width: {{ jogo.casa.favoritismo_bar_percent or 0 }}%"></i>
-                        </div>
-                        <small>Índice de saldo (SG) {{ '%.2f'|format(jogo.casa.saldo or 0) }}</small>
-                    </span>
-                    <span>
-                        <b>Fora</b>
-                        <strong>Favoritismo {{ '%.2f'|format(jogo.visitante.favoritismo or 0) }}</strong>
-                        <div class="dashboard-favoritism-meter {{ 'is-negative' if (jogo.visitante.favoritismo or 0) < 0 else 'is-positive' }}" title="Escala comum da rodada: maior favoritismo = barra completa">
-                            <i style="--favoritismo-width: {{ jogo.visitante.favoritismo_bar_percent or 0 }}%"></i>
-                        </div>
-                        <small>Índice de saldo (SG) {{ '%.2f'|format(jogo.visitante.saldo or 0) }}</small>
-                    </span>
+                    <b>Favoritismo do confronto</b>
+                    <div class="dashboard-favoritism-meter is-{{ jogo.favoritismo_lado or 'equilibrado' }}" title="A barra usa a maior vantagem da rodada como escala máxima">
+                        <i style="--favoritismo-width: {{ jogo.favoritismo_bar_percent or 0 }}%"></i>
+                    </div>
+                    <div class="dashboard-favoritism-values">
+                        <span>Casa <strong>{{ '%.2f'|format(jogo.casa.favoritismo or 0) }}</strong></span>
+                        <span>Fora <strong>{{ '%.2f'|format(jogo.visitante.favoritismo or 0) }}</strong></span>
+                    </div>
+                    <small>SG: casa {{ '%.2f'|format(jogo.casa.saldo or 0) }} · fora {{ '%.2f'|format(jogo.visitante.saldo or 0) }}</small>
                 </div>
                 <small>{% if jogo.data %}{{ jogo.data[8:10] }}/{{ jogo.data[5:7] }} · {{ jogo.data[11:16] }}{% else %}Data a definir{% endif %}</small>
                 {% if not jogo.valida %}<em>não válida</em>{% endif %}

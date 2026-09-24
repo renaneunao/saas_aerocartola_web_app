@@ -833,25 +833,31 @@ def dashboard():
                         confronto[lado]['favoritismo'] = rodada_info['indices_perfil']['peso_jogo'].get(clube_key, 0)
                         confronto[lado]['saldo'] = rodada_info['indices_perfil']['peso_sg'].get(clube_key, 0)
 
-                # Todas as barras usam a mesma escala na rodada: o maior
-                # favoritismo ocupa 50% do trilho, partindo do centro. Assim
-                # valores positivos apontam para a direita e negativos para a
-                # esquerda, sem que cada card crie uma escala própria.
-                favoritismos = [
-                    abs(float(confronto[lado].get('favoritismo') or 0))
-                    for confronto in rodada_info['confrontos']
-                    for lado in ('casa', 'visitante')
-                ]
-                favoritismo_maximo = max(favoritismos, default=0.0) or 1.0
+                # Cada confronto terá uma única barra. O centro representa
+                # equilíbrio; ela se desloca para o lado do time com maior
+                # índice e usa uma escala comum baseada na maior vantagem da
+                # rodada inteira.
+                vantagens = []
+                for confronto in rodada_info['confrontos']:
+                    casa_valor = float(confronto['casa'].get('favoritismo') or 0)
+                    visitante_valor = float(confronto['visitante'].get('favoritismo') or 0)
+                    diferenca = casa_valor - visitante_valor
+                    confronto['_favoritismo_diferenca'] = diferenca
+                    confronto['_favoritismo_lado'] = (
+                        'casa' if diferenca > 0 else 'visitante' if diferenca < 0 else 'equilibrado'
+                    )
+                    vantagens.append(abs(diferenca))
+
+                favoritismo_maximo = max(vantagens, default=0.0) or 1.0
                 rodada_info['favoritismo_maximo'] = favoritismo_maximo
                 for confronto in rodada_info['confrontos']:
-                    for lado in ('casa', 'visitante'):
-                        valor = float(confronto[lado].get('favoritismo') or 0)
-                        confronto[lado]['favoritismo_bar_percent'] = round(
-                            min(50.0, abs(valor) / favoritismo_maximo * 50.0),
-                            2,
-                        )
-                        confronto[lado]['favoritismo_sentido'] = 'positivo' if valor >= 0 else 'negativo'
+                    confronto['favoritismo_bar_percent'] = round(
+                        min(50.0, abs(confronto['_favoritismo_diferenca']) / favoritismo_maximo * 50.0),
+                        2,
+                    )
+                    confronto['favoritismo_lado'] = confronto['_favoritismo_lado']
+                    confronto.pop('_favoritismo_diferenca', None)
+                    confronto.pop('_favoritismo_lado', None)
 
             cursor.execute('''
                 SELECT a.apelido, c.abreviacao, d.escalacoes,
