@@ -146,6 +146,37 @@
     return `<div class="ideal-player-avatar ${className}" title="Foto de ${name}">${photo ? `<img src="${escapeHtml(photo)}" alt="${name}" onerror="this.parentElement.innerHTML='${initials}'">` : initials}</div>`;
   }
 
+  function cardHoverDetails(player, position, kind) {
+    const name = player?.apelido || player?.nome || 'Atleta';
+    const role = kind === 'reserve' ? 'Reserva' : 'Titular';
+    const average = safeNumber(player?.media_num ?? player?.media);
+    const games = safeNumber(player?.jogos_num ?? player?.jogos);
+    const projection = points(player);
+    const status = player?.availability_rule === 'cravado'
+      ? 'Cravado para jogar'
+      : player?.availability_rule === 'poupar'
+        ? 'Marcado para não jogar'
+        : 'Disponibilidade da rodada';
+    return `
+      <div class="ideal-card-hover-detail ideal-card-hover-detail-top">
+        <div class="ideal-card-hover-identity">
+          ${avatar(player, 'ideal-card-hover-avatar')}
+          <span><strong>${escapeHtml(name)}</strong><small>${escapeHtml(POSITIONS[position]?.label || position)} · ${role}</small></span>
+        </div>
+        <div class="ideal-card-hover-match">${teamIndicators(player, position)}</div>
+      </div>
+      <div class="ideal-card-hover-stats">
+        <span><small>Preço</small><b>${money(price(player))}</b></span>
+        <span><small>Projeção</small><b>${projection.toFixed(2)} pts</b></span>
+        <span><small>Média</small><b>${average.toFixed(2)}</b></span>
+        <span><small>Jogos</small><b>${games.toFixed(0)}</b></span>
+      </div>
+      <div class="ideal-card-hover-detail ideal-card-hover-detail-bottom">
+        <span class="ideal-card-hover-status"><i class="fas fa-circle"></i>${status}</span>
+        <span class="ideal-card-hover-hint">Passe o mouse para manter as ações</span>
+      </div>`;
+  }
+
   function cardActionRail(player, position, kind) {
     const playerId = escapeHtml(idOf(player));
     const name = escapeHtml(player?.apelido || player?.nome || 'atleta');
@@ -157,7 +188,7 @@
       actions.push(`<button type="button" class="ideal-card-action ideal-card-action-luxury" data-special-role="luxury" data-athlete-id="${playerId}" title="Definir ${name} como reserva de luxo"><i class="fas fa-gem"></i><span>Reserva de luxo</span><small>entra como melhor reserva</small></button>`);
     }
     actions.push(`<button type="button" class="ideal-card-action ideal-card-action-unavailable" data-availability-action="poupar" data-athlete-id="${playerId}" title="Marcar ${name} como não joga"><i class="fas fa-ban"></i><span>Não joga</span><small>remove das próximas escolhas</small></button>`);
-    return `<div class="ideal-card-actions" aria-label="Ações de ${name}"><div class="ideal-card-actions-head"><i class="fas fa-sliders"></i><span>Ações rápidas</span></div>${actions.join('')}</div>`;
+    return `<div class="ideal-card-actions" aria-label="Detalhes e ações de ${name}">${cardHoverDetails(player, position, kind)}<div class="ideal-card-actions-head"><i class="fas fa-sliders"></i><span>Ações rápidas</span></div>${actions.join('')}<div class="ideal-card-hover-foot"><i class="fas fa-hand-pointer"></i><span>Detalhes do atleta e comandos rápidos</span></div></div>`;
   }
 
   function renderTeamSummary(data) {

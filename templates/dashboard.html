@@ -2,7 +2,7 @@
 {% block title %}Dashboard — Aero Cartola{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css', v='2') }}">
 <div class="dashboard-page w-full px-3 sm:px-4 lg:px-6 py-4 lg:py-6 animate-fade-in-up">
 
     <!-- Cabeçalho: Time + Rodada -->
@@ -232,7 +232,23 @@
                         <span>Casa <strong>{{ '%.2f'|format(jogo.casa.favoritismo or 0) }}</strong></span>
                         <span>Fora <strong>{{ '%.2f'|format(jogo.visitante.favoritismo or 0) }}</strong></span>
                     </div>
-                    <small>SG: casa {{ '%.2f'|format(jogo.casa.saldo or 0) }} · fora {{ '%.2f'|format(jogo.visitante.saldo or 0) }}</small>
+                    <div class="dashboard-sg-bars" aria-label="Chance de saldo de gols">
+                        <div class="dashboard-sg-bar" title="Chance de saldo de gols para {{ jogo.casa.nome }}">
+                            <div><span>SG casa</span><strong>{{ '%.0f'|format(jogo.casa.saldo_percent or 0) }}%</strong></div>
+                            <span class="dashboard-sg-bar-track"><i style="width: {{ jogo.casa.saldo_percent or 0 }}%"></i></span>
+                        </div>
+                        <div class="dashboard-sg-bar" title="Chance de saldo de gols para {{ jogo.visitante.nome }}">
+                            <div><span>SG fora</span><strong>{{ '%.0f'|format(jogo.visitante.saldo_percent or 0) }}%</strong></div>
+                            <span class="dashboard-sg-bar-track"><i style="width: {{ jogo.visitante.saldo_percent or 0 }}%"></i></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="dashboard-fixture-highlights" aria-label="Melhores projeções do confronto">
+                    {% for destaque in jogo.destaques or [] %}
+                    <span class="dashboard-player-highlight" title="{{ destaque.nome }} · projeção {{ '%.2f'|format(destaque.projecao or 0) }} pontos">
+                        {% if destaque.foto %}<img src="{{ destaque.foto }}" alt="{{ destaque.nome }}" loading="eager">{% else %}<span>{{ destaque.nome[:2]|upper }}</span>{% endif %}
+                    </span>
+                    {% endfor %}
                 </div>
                 <small>{% if jogo.data %}{{ jogo.data[8:10] }}/{{ jogo.data[5:7] }} · {{ jogo.data[11:16] }}{% else %}Data a definir{% endif %}</small>
                 {% if not jogo.valida %}<em>não válida</em>{% endif %}

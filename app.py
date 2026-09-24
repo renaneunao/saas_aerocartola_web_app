@@ -763,6 +763,7 @@ def dashboard():
                             'data': partida.get('partida_data'),
                             'local': partida.get('local'),
                             'valida': bool(partida.get('valida')),
+                            'destaques': [],
                         })
                     rodada_info['confrontos_validos'] = sum(
                         1 for jogo in rodada_info['confrontos'] if jogo['valida']
@@ -832,6 +833,10 @@ def dashboard():
                             clube_key = clube_id
                         confronto[lado]['favoritismo'] = rodada_info['indices_perfil']['peso_jogo'].get(clube_key, 0)
                         confronto[lado]['saldo'] = rodada_info['indices_perfil']['peso_sg'].get(clube_key, 0)
+                        saldo = float(confronto[lado]['saldo'] or 0)
+                        if saldo <= 1:
+                            saldo *= 100
+                        confronto[lado]['saldo_percent'] = round(max(0.0, min(100.0, saldo)), 1)
 
                 # Cada confronto terá uma única barra. O centro representa
                 # equilíbrio; ela se desloca para o lado do time com maior
@@ -858,6 +863,108 @@ def dashboard():
                     confronto['favoritismo_lado'] = confronto['_favoritismo_lado']
                     confronto.pop('_favoritismo_diferenca', None)
                     confronto.pop('_favoritismo_lado', None)
+
+                # Os três destaques de cada confronto vêm dos rankings já
+                # calculados para o time/configuração atual. Isso mantém o
+                # dashboard coerente com a mesma projeção usada na escalação.
+                try:
+                    ranking_items = []
+                    configuration_id = config.get('id') if config else None
+                    if configuration_id and rodada_info['rodada']:
+                        cursor.execute('''
+                            SELECT ranking_data
+                            FROM acw_rankings_teams
+                            WHERE user_id = %s
+                              AND team_id = %s
+                              AND configuration_id = %s
+                              AND rodada_atual = %s
+                              AND posicao_id IN (1, 2, 3, 4, 5, 6)
+                        ''', (user['id'], team_id, configuration_id, rodada_info['rodada']))
+                        for row in cursor.fetchall():
+                            payload = row[0]
+                            if isinstance(payload, str):
+                                try:
+                                    payload = json.loads(payload)
+                                except (TypeError, ValueError):
+                                    payload = []
+                            if isinstance(payload, list):
+                                ranking_items.extend(payload)
+
+                    athlete_ids = []
+                    for item in ranking_items:
+                        if not isinstance(item, dict):
+                            continue
+                        athlete_id = item.get('atleta_id') or item.get('id')
+                        if athlete_id is not None:
+                            try:
+                                athlete_ids.append(int(athlete_id))
+                            except (TypeError, ValueError):
+                                pass
+                    athlete_ids = list(dict.fromkeys(athlete_ids))
+                    photo_by_id = {}
+                    if athlete_ids:
+                        placeholders = ','.join(['%s'] * len(athlete_ids))
+                        cursor.execute(f'''
+                            SELECT atleta_id,
+                                   COALESCE(NULLIF(BTRIM(foto_custom), ''), foto) AS foto
+                            FROM acf_atletas
+                            WHERE temporada = %s
+                              AND rodada_id = %s
+                              AND atleta_id IN ({placeholders})
+                        ''', [temporada_atual, rodada_info['rodada'], *athlete_ids])
+                        photo_by_id = {
+                            int(row[0]): row[1]
+                            for row in cursor.fetchall()
+                            if row[0] is not None and row[1]
+                        }
+
+                    for confronto in rodada_info['confrontos']:
+                        try:
+                            club_ids = {
+                                int(confronto['casa']['id']),
+                                int(confronto['visitante']['id']),
+                            }
+                        except (TypeError, ValueError):
+                            confronto['destaques'] = []
+                            continue
+                        candidates = {}
+                        for item in ranking_items:
+                            if not isinstance(item, dict):
+                                continue
+                            try:
+                                athlete_id = int(item.get('atleta_id') or item.get('id'))
+                                club_id = int(item.get('clube_id'))
+                            except (TypeError, ValueError):
+                                continue
+                            if club_id not in club_ids:
+                                continue
+                            try:
+                                status_id = int(item.get('status_id') or 0)
+                            except (TypeError, ValueError):
+                                status_id = 0
+                            if item.get('availability_rule') == 'poupar' or status_id == 6:
+                                continue
+                            projection = item.get('pontuacao_total')
+                            if projection is None:
+                                projection = item.get('previsao', item.get('pontos_num', item.get('media_num', 0)))
+                            try:
+                                projection = float(projection or 0)
+                            except (TypeError, ValueError):
+                                projection = 0.0
+                            candidate = {
+                                'id': athlete_id,
+                                'nome': item.get('apelido') or item.get('nome') or f'Atleta {athlete_id}',
+                                'foto': photo_by_id.get(athlete_id) or item.get('foto') or item.get('foto_custom'),
+                                'projecao': projection,
+                            }
+                            previous = candidates.get(athlete_id)
+                            if previous is None or candidate['projecao'] > previous['projecao']:
+                                candidates[athlete_id] = candidate
+                        confronto['destaques'] = sorted(
+                            candidates.values(), key=lambda item: item['projecao'], reverse=True
+                        )[:3]
+                except Exception as exc:
+                    print(f"[DASHBOARD] Destaques dos confrontos indisponíveis: {exc}")
 
             cursor.execute('''
                 SELECT a.apelido, c.abreviacao, d.escalacoes,

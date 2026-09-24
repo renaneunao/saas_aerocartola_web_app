@@ -1608,11 +1608,11 @@
 
 .ideal-card-actions {
   position: absolute;
-  right: calc(100% + 8px);
+  right: calc(100% + 2px);
   top: 50%;
   z-index: 60;
   display: grid;
-  width: 176px;
+  width: min(236px, calc(100vw - 28px));
   gap: 5px;
   padding: 8px;
   border: 1px solid rgba(82, 230, 255, .25);
@@ -1624,6 +1624,17 @@
   pointer-events: none;
   transform: translate(-7px, -50%);
   transition: opacity .16s ease, transform .16s ease, visibility .16s ease;
+}
+
+/* A ponte transparente elimina o intervalo entre o cartão e o painel: o
+   mouse pode subir até os detalhes sem que o hover seja desmontado. */
+.ideal-card-actions::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -10px;
+  bottom: 0;
+  width: 12px;
 }
 
 .ideal-card-actions::after {
@@ -1661,6 +1672,166 @@
 }
 
 .ideal-card-actions-head i {
+  color: var(--ideal-cyan);
+}
+
+.ideal-result,
+.ideal-field {
+  overflow: visible !important;
+}
+
+.ideal-card-hover-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  min-width: 0;
+}
+
+.ideal-card-hover-detail-top {
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(127, 191, 255, .13);
+}
+
+.ideal-card-hover-identity {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.ideal-card-hover-identity > span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.ideal-card-hover-identity strong {
+  overflow: hidden;
+  color: #f3fbff;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ideal-card-hover-identity small,
+.ideal-card-hover-hint {
+  overflow: hidden;
+  color: #7894aa;
+  font-size: 7px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ideal-card-hover-avatar {
+  width: 34px !important;
+  height: 34px !important;
+  flex: 0 0 34px;
+  margin: 0 !important;
+  border-radius: 9px;
+}
+
+.ideal-card-hover-match {
+  flex: 0 0 auto;
+  min-width: 58px;
+}
+
+.ideal-card-hover-match .ideal-player-indicators {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.ideal-card-hover-match .ideal-player-fixture-badge {
+  position: static !important;
+  display: flex !important;
+  width: max-content !important;
+  max-width: none !important;
+  flex-direction: row !important;
+  gap: 5px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  transform: none !important;
+}
+
+.ideal-card-hover-match .ideal-fixture-team,
+.ideal-card-hover-match .ideal-fixture-team-solo,
+.ideal-card-hover-match .ideal-fixture-team img,
+.ideal-card-hover-match .ideal-fixture-team i,
+.ideal-card-hover-match .ideal-fixture-team-solo img,
+.ideal-card-hover-match .ideal-fixture-team-solo i {
+  width: 16px !important;
+  min-width: 16px !important;
+  height: 16px !important;
+  min-height: 16px !important;
+}
+
+.ideal-card-hover-match .ideal-player-bars {
+  width: 68px;
+  max-width: 68px;
+}
+
+.ideal-card-hover-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 4px;
+  padding: 6px 0;
+}
+
+.ideal-card-hover-stats span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  padding: 4px 3px;
+  border: 1px solid rgba(127, 191, 255, .1);
+  border-radius: 5px;
+  background: rgba(127, 191, 255, .035);
+  text-align: center;
+}
+
+.ideal-card-hover-stats small {
+  color: #7894aa;
+  font-size: 6px;
+  text-transform: uppercase;
+}
+
+.ideal-card-hover-stats b {
+  overflow: hidden;
+  color: #dff8ff;
+  font: 800 8px 'JetBrains Mono', monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ideal-card-hover-detail-bottom {
+  padding-top: 5px;
+  border-top: 1px solid rgba(127, 191, 255, .1);
+}
+
+.ideal-card-hover-status {
+  color: #9ff5c5;
+  font-size: 7px;
+  font-weight: 800;
+}
+
+.ideal-card-hover-status i {
+  margin-right: 4px;
+  color: #5cf2a5;
+  font-size: 5px;
+}
+
+.ideal-card-hover-foot {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-top: 2px;
+  color: #7894aa;
+  font-size: 7px;
+}
+
+.ideal-card-hover-foot i {
   color: var(--ideal-cyan);
 }
 
@@ -1861,8 +2032,8 @@
 
 @media (max-width: 620px) {
   .ideal-card-actions {
-    width: 148px;
-    right: calc(100% + 4px);
+    width: min(214px, calc(100vw - 20px));
+    right: calc(100% + 2px);
     padding: 6px;
   }
 

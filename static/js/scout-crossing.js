@@ -38,7 +38,12 @@
     const normalizedPhoto = (value, athleteId) => {
         let photo = value || (typeof window.getPlayerImage === 'function' ? window.getPlayerImage(Number(athleteId)) : '') || '';
         if (photo.startsWith('//')) photo = `https:${photo}`;
-        photo = photo.replace(/FORMATO/gi, '220x220');
+        // FORMATO.png é uma silhueta válida do Cartola. Só converta o
+        // marcador em URLs de foto que realmente usam o padrão de tamanho;
+        // transformar a silhueta em 220x220 gera um endereço inexistente.
+        if (!/\/silhuetas\/[^/]+\/FORMATO\.png(?:\?|$)/i.test(photo)) {
+            photo = photo.replace(/FORMATO/gi, '220x220');
+        }
         return photo.startsWith('http://') ? `https://${photo.slice(7)}` : photo;
     };
     function setAlert(message, error = false) { const alert = $('scoutCrossingAlert'); if (!alert) return; alert.hidden = !message; alert.textContent = message || ''; alert.classList.toggle('scx-alert-error', error); }
@@ -70,7 +75,7 @@
     function playerOption(player) {
         const photo = normalizedPhoto(player.foto, player.id);
         const initials = escapeHtml((player.nome || '?').slice(0, 2).toUpperCase());
-        const avatar = photo ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy" data-fallback="${initials}">` : `<span class="scx-player-option-avatar">${initials}</span>`;
+        const avatar = photo ? `<img src="${escapeHtml(photo)}" alt="" loading="eager" decoding="async" data-fallback="${initials}">` : `<span class="scx-player-option-avatar">${initials}</span>`;
         const selected = Number(state.atletaId) === Number(player.id);
         return `<button type="button" class="scx-player-option${selected ? ' is-selected' : ''}" data-player="${player.id}">${avatar}<span class="scx-player-option-identity"><strong>${escapeHtml(player.nome)}</strong><small>${escapeHtml(player.clube_abrev || player.clube_nome || 'Clube')} · <span class="${statusClass(player)} scx-status">${escapeHtml(statusText(player))}</span></small></span><span class="scx-player-option-stat scx-player-option-expected"><small>Previsão</small><b>${number(predictionValue(player))}</b></span><span class="scx-player-option-stat"><small>Média</small><b>${number(player.media_num)}</b></span><span class="scx-player-option-stat scx-player-option-price"><small>Preço</small><b>C$ ${number(player.preco_num)}</b></span><span class="scx-player-option-stat scx-player-option-games"><small>Jogos</small><b>${integer(player.jogos_num)}</b></span></button>`;
     }

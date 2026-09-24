@@ -276,7 +276,7 @@ def _player_options(cursor, temporada, posicao_id, clube_id=None, rodada=None, a
                l.clube_id,
                COALESCE(c.nome, 'Clube não informado') AS clube_nome,
                COALESCE(c.abreviacao, '') AS clube_abrev,
-               l.foto,
+               COALESCE(a.foto, l.foto) AS foto,
                COALESCE(a.status_id, 0) AS status_id,
                COALESCE(a.pontos_num, 0) AS pontos_num,
                COALESCE(a.media_num, 0) AS media_num,
@@ -285,7 +285,8 @@ def _player_options(cursor, temporada, posicao_id, clube_id=None, rodada=None, a
         FROM latest l
         LEFT JOIN acf_clubes c ON c.id = l.clube_id
         LEFT JOIN LATERAL (
-            SELECT status_id, pontos_num, media_num, preco_num, jogos_num
+            SELECT status_id, pontos_num, media_num, preco_num, jogos_num,
+                   COALESCE(NULLIF(BTRIM(foto_custom), ''), foto) AS foto
             FROM acf_atletas current_atleta
             WHERE current_atleta.atleta_id = l.atleta_id
               AND current_atleta.temporada = %s
