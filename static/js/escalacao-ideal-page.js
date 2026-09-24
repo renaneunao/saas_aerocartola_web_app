@@ -197,12 +197,12 @@
     const name = escapeHtml(player?.apelido || player?.nome || 'atleta');
     const actions = [];
     if (kind === 'starter') {
-      actions.push(`<button type="button" class="ideal-card-action ideal-card-action-captain" data-special-role="captain" data-athlete-id="${playerId}" title="Definir ${name} como capitão"><i class="fas fa-crown"></i><span>Capitão</span><small>assume a pontuação em dobro</small></button>`);
+      actions.push(`<button type="button" class="ideal-card-action ideal-card-action-captain" data-special-role="captain" data-athlete-id="${playerId}" title="Definir ${name} como capitão"><span class="ideal-card-action-icon"><i class="fas fa-crown"></i></span><span>Capitão</span><small>assume a pontuação em dobro</small></button>`);
     }
     if (kind === 'reserve' && !player?.eh_reserva_luxo) {
-      actions.push(`<button type="button" class="ideal-card-action ideal-card-action-luxury" data-special-role="luxury" data-athlete-id="${playerId}" title="Definir ${name} como reserva de luxo"><i class="fas fa-gem"></i><span>Reserva de luxo</span><small>entra como melhor reserva</small></button>`);
+      actions.push(`<button type="button" class="ideal-card-action ideal-card-action-luxury" data-special-role="luxury" data-athlete-id="${playerId}" title="Definir ${name} como reserva de luxo"><span class="ideal-card-action-icon"><i class="fas fa-gem"></i></span><span>Reserva de luxo</span><small>entra como melhor reserva</small></button>`);
     }
-    actions.push(`<button type="button" class="ideal-card-action ideal-card-action-unavailable" data-availability-action="poupar" data-athlete-id="${playerId}" title="Marcar ${name} como não joga"><i class="fas fa-ban"></i><span>Não joga</span><small>remove das próximas escolhas</small></button>`);
+    actions.push(`<button type="button" class="ideal-card-action ideal-card-action-unavailable" data-availability-action="poupar" data-athlete-id="${playerId}" title="Marcar ${name} como não joga"><span class="ideal-card-action-icon"><i class="fas fa-ban"></i></span><span>Não joga</span><small>remove das próximas escolhas</small></button>`);
     return `<div class="ideal-card-actions" aria-label="Detalhes e ações de ${name}">${cardHoverDetails(player, position, kind)}<div class="ideal-card-actions-head"><i class="fas fa-sliders"></i><span>Ações rápidas</span></div>${actions.join('')}<div class="ideal-card-hover-foot"><i class="fas fa-hand-pointer"></i><span>Detalhes do atleta e comandos rápidos</span></div></div>`;
   }
 

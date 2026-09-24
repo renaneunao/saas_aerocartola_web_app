@@ -1316,9 +1316,10 @@ button[class*="from-blue-500"]:hover { border-color:rgba(82,230,255,.55) !import
   padding-bottom: calc(.5rem * var(--sidebar-density)) !important;
 }
 #sidebar > div:first-child img {
-  width: auto !important;
-  max-width: 100%;
-  max-height: clamp(58px, calc(14vh * var(--sidebar-density)), 138px);
+  width: 100% !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: clamp(110px, calc(19vh * var(--sidebar-density)), 190px);
   margin-inline: auto;
 }
 #sidebar > div:nth-of-type(2) {
