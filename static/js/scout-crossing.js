@@ -5,7 +5,7 @@
     if (!page) return;
     const state = {
         temporada: Number(page.dataset.currentSeason || 0), rodada: Number(page.dataset.currentRound || 0),
-        teamId: null, posicaoId: null, atletaId: null, players: [], filteredPlayers: [],
+        teamIds: [], posicaoId: null, atletaId: null, selectedPlayerIds: [], players: [], filteredPlayers: [],
         statusFilter: 'provaveis', sortBy: 'expected', historyExpanded: false, selectedData: null, predictionContext: null,
         predictionById: {}, filtersTouched: false, crossingVersion: 0
     };
@@ -50,7 +50,7 @@
     function currentClub(id) { const teams = state.lastTeams || []; return teams.find((team) => Number(team.id) === Number(id)) || {}; }
 
     function teamButton(team) {
-        const selected = Number(state.teamId) === Number(team.id);
+        const selected = state.teamIds.includes(Number(team.id));
         const valid = team.valido !== false;
         const image = team.escudo ? `<img src="${escapeHtml(team.escudo)}" alt="" loading="lazy">` : '<span class="scx-team-fallback"><i class="fas fa-shield-halved"></i></span>';
         return `<button type="button" class="scx-team${selected ? ' is-selected' : ''}${valid ? '' : ' is-invalid'}" data-team="${team.id}" role="option" aria-selected="${selected}" aria-disabled="${!valid}" title="${escapeHtml(valid ? team.nome : `${team.nome} · sem confronto válido`)}"${valid ? '' : ' disabled'}>${image}<b>${escapeHtml(team.abreviacao || team.nome)}</b>${valid ? '' : '<small>sem jogo</small>'}</button>`;
@@ -61,8 +61,19 @@
         target.innerHTML = teams?.length ? teams.map(teamButton).join('') : '<span class="scx-muted">Nenhum time encontrado na rodada atual.</span>';
         target.querySelectorAll('[data-team]').forEach((button) => button.addEventListener('click', () => {
             const clicked = Number(button.dataset.team);
-            state.teamId = Number(state.teamId) === clicked ? null : clicked;
-            state.atletaId = null; state.historyExpanded = false; state.filtersTouched = true; resetAnalysis(); loadOptions();
+            state.teamIds = state.teamIds.includes(clicked)
+                ? state.teamIds.filter((id) => id !== clicked)
+                : [...state.teamIds, clicked];
+            // Mantém o primeiro atleta como referência para que seja possível
+            // selecionar o segundo depois de adicionar outro clube ao filtro.
+            if (state.selectedPlayerIds.length > 1) {
+                state.selectedPlayerIds = [state.selectedPlayerIds[0]];
+                state.atletaId = state.selectedPlayerIds[0];
+            }
+            state.historyExpanded = false;
+            state.filtersTouched = true;
+            resetAnalysis();
+            loadOptions();
         }));
     }
     function statusClass(player) {
@@ -76,14 +87,17 @@
         const photo = normalizedPhoto(player.foto, player.id);
         const initials = escapeHtml((player.nome || '?').slice(0, 2).toUpperCase());
         const avatar = photo ? `<img src="${escapeHtml(photo)}" alt="" loading="eager" decoding="async" data-fallback="${initials}">` : `<span class="scx-player-option-avatar">${initials}</span>`;
-        const selected = Number(state.atletaId) === Number(player.id);
-        return `<button type="button" class="scx-player-option${selected ? ' is-selected' : ''}" data-player="${player.id}">${avatar}<span class="scx-player-option-identity"><strong>${escapeHtml(player.nome)}</strong><small>${escapeHtml(player.clube_abrev || player.clube_nome || 'Clube')} · <span class="${statusClass(player)} scx-status">${escapeHtml(statusText(player))}</span></small></span><span class="scx-player-option-stat scx-player-option-expected"><small>Previsão</small><b>${number(predictionValue(player))}</b></span><span class="scx-player-option-stat"><small>Média</small><b>${number(player.media_num)}</b></span><span class="scx-player-option-stat scx-player-option-price"><small>Preço</small><b>C$ ${number(player.preco_num)}</b></span><span class="scx-player-option-stat scx-player-option-games"><small>Jogos</small><b>${integer(player.jogos_num)}</b></span></button>`;
+        const selectedIndex = state.selectedPlayerIds.indexOf(Number(player.id));
+        const selected = selectedIndex >= 0;
+        const selectionClass = selected ? (selectedIndex === 0 ? ' is-selected is-primary' : ' is-selected is-secondary') : '';
+        const selectionLabel = selectedIndex === 0 ? '1º jogador selecionado' : selectedIndex === 1 ? '2º jogador selecionado' : '';
+        return `<button type="button" class="scx-player-option${selectionClass}" data-player="${player.id}" title="${selectionLabel || 'Selecionar para o comparativo'}">${avatar}<span class="scx-player-option-identity"><strong>${escapeHtml(player.nome)}</strong><small>${escapeHtml(player.clube_abrev || player.clube_nome || 'Clube')} · <span class="${statusClass(player)} scx-status">${escapeHtml(statusText(player))}</span></small></span><span class="scx-player-option-stat scx-player-option-expected"><small>Previsão</small><b>${number(predictionValue(player))}</b></span><span class="scx-player-option-stat"><small>Média</small><b>${number(player.media_num)}</b></span><span class="scx-player-option-stat scx-player-option-price"><small>Preço</small><b>C$ ${number(player.preco_num)}</b></span><span class="scx-player-option-stat scx-player-option-games"><small>Jogos</small><b>${integer(player.jogos_num)}</b></span></button>`;
     }
     function filterPlayers() {
         const text = ($('scoutCrossingSearch')?.value || '').trim().toLocaleLowerCase();
         const scout = $('scoutCrossingScout')?.value || '';
         const filtered = (state.players || []).filter((player) => {
-            if (state.teamId && Number(player.clube_id) !== Number(state.teamId)) return false;
+            if (state.teamIds.length && !state.teamIds.includes(Number(player.clube_id))) return false;
             // Nulos nunca jogam e não entram na análise. Atletas poupados
             // permanecem visíveis em “Todos” para que a regra possa ser
             // conferida, mas nunca aparecem no filtro inicial de prováveis.
@@ -106,21 +120,68 @@
             return predictionValue(b) - predictionValue(a);
         });
     }
+
+    function renderSelectionTray() {
+        const target = $('scoutCrossingSelectionTray');
+        if (!target) return;
+        const selected = state.selectedPlayerIds
+            .map((id) => state.players.find((player) => Number(player.id) === Number(id)))
+            .filter(Boolean);
+        if (!selected.length) {
+            target.hidden = true;
+            target.innerHTML = '';
+            return;
+        }
+        target.hidden = false;
+        target.innerHTML = `<div class="scx-selection-tray-copy"><strong>${selected.length}/2 jogadores selecionados</strong><small>${selected.length === 1 ? 'Escolha outro atleta, inclusive de outro time, para iniciar o comparativo.' : 'O comparativo é atualizado automaticamente.'}</small></div><div class="scx-selection-tray-players">${selected.map((player, index) => {
+            const photo = normalizedPhoto(player.foto, player.id);
+            const initials = escapeHtml((player.nome || '?').slice(0, 2).toUpperCase());
+            const avatar = photo ? `<img src="${escapeHtml(photo)}" alt="" loading="eager">` : `<span>${initials}</span>`;
+            return `<span class="scx-selection-tray-player"><span class="scx-selection-tray-number">${index + 1}</span><span class="scx-selection-tray-avatar">${avatar}</span><strong>${escapeHtml(player.nome)}</strong><small>${escapeHtml(player.clube_abrev || player.clube_nome || '')}</small></span>`;
+        }).join('')}</div>`;
+    }
+
+    function selectPlayer(playerId) {
+        const alreadySelected = state.selectedPlayerIds.includes(Number(playerId));
+        if (alreadySelected) {
+            // Ao tocar em um dos dois selecionados, ele vira o primeiro e o
+            // usuário pode escolher imediatamente um novo adversário.
+            state.selectedPlayerIds = [Number(playerId)];
+        } else if (state.selectedPlayerIds.length === 0) {
+            state.selectedPlayerIds = [Number(playerId)];
+        } else if (state.selectedPlayerIds.length === 1) {
+            state.selectedPlayerIds = [...state.selectedPlayerIds, Number(playerId)];
+        } else {
+            state.selectedPlayerIds = [state.selectedPlayerIds[0], Number(playerId)];
+        }
+        state.atletaId = state.selectedPlayerIds[0] || null;
+        state.historyExpanded = false;
+        resetAnalysis();
+        renderPlayers();
+        if (state.selectedPlayerIds.length === 2) runSelectedComparison();
+    }
+
     function renderPlayers() {
         filterPlayers();
         const target = $('scoutCrossingPlayers'); if (!target) return;
-        if (!state.filtersTouched && !state.atletaId) {
+        if (!state.filtersTouched && !state.selectedPlayerIds.length) {
             state.filteredPlayers = [];
             target.innerHTML = '<div class="scx-filter-prompt"><i class="fas fa-filter"></i><strong>Refine a busca para escolher um atleta</strong><span>Selecione um time, pesquise pelo nome ou escolha outro filtro acima.</span></div>';
             $('scoutCrossingSelectionHint').textContent = 'A lista aparece depois que você aplicar um filtro.';
+            renderSelectionTray();
             return;
         }
         target.innerHTML = state.filteredPlayers.length ? state.filteredPlayers.map(playerOption).join('') : '<div class="scx-muted">Nenhum atleta atende aos filtros atuais.</div>';
         target.querySelectorAll('img[data-fallback]').forEach((image) => image.addEventListener('error', () => {
             const fallback = document.createElement('span'); fallback.className = 'scx-player-option-avatar'; fallback.textContent = image.dataset.fallback; image.replaceWith(fallback);
         }, { once: true }));
-        target.querySelectorAll('[data-player]').forEach((button) => button.addEventListener('click', () => { state.atletaId = Number(button.dataset.player); const select = $('scoutCrossingPlayer'); if (select) select.value = String(state.atletaId); state.historyExpanded = false; resetAnalysis(); renderPlayers(); runCrossing(); }));
-        $('scoutCrossingSelectionHint').textContent = `${state.filteredPlayers.length} atleta(s) no filtro · clique em um card para abrir o detalhamento.`;
+        target.querySelectorAll('[data-player]').forEach((button) => button.addEventListener('click', () => selectPlayer(Number(button.dataset.player))));
+        $('scoutCrossingSelectionHint').textContent = state.selectedPlayerIds.length === 1
+            ? `${state.filteredPlayers.length} atleta(s) no filtro · agora selecione o segundo jogador para comparar.`
+            : state.selectedPlayerIds.length >= 2
+                ? 'Dois atletas selecionados · comparativo atualizado automaticamente abaixo.'
+                : `${state.filteredPlayers.length} atleta(s) no filtro · selecione dois jogadores para comparar.`;
+        renderSelectionTray();
     }
     function renderScoutFilter() {
         const select = $('scoutCrossingScout'); if (!select) return;
@@ -160,18 +221,18 @@
     async function loadOptions() {
         state.posicaoId = selectedPosition();
         const params = new URLSearchParams({ posicao_id: state.posicaoId });
-        if (state.teamId) params.set('clube_id', state.teamId);
-        if (page.dataset.selectedPlayer && !state.atletaId) params.set('atleta_id', page.dataset.selectedPlayer);
         setAlert('Carregando atletas da rodada...');
         try {
             const response = await fetch(`${page.dataset.optionsUrl}?${params}`); const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'Não foi possível carregar as opções.');
             state.temporada = Number(data.temporada); state.rodada = Number(data.rodada); state.lastTeams = data.times || [];
-            if (page.dataset.selectedPlayer && !state.atletaId && data.jogadores?.some((player) => Number(player.id) === Number(page.dataset.selectedPlayer))) state.atletaId = Number(page.dataset.selectedPlayer);
+            if (page.dataset.selectedPlayer && !state.selectedPlayerIds.length && data.jogadores?.some((player) => Number(player.id) === Number(page.dataset.selectedPlayer))) {
+                state.selectedPlayerIds = [Number(page.dataset.selectedPlayer)];
+                state.atletaId = Number(page.dataset.selectedPlayer);
+            }
             renderTeams(data.times || []); state.players = data.jogadores || []; state.predictionById = {};
             renderScoutFilter(); renderHiddenPlayerSelect(); renderPlayers(); setAlert('');
             await loadPredictionContext();
-            if (state.atletaId && state.players.some((player) => Number(player.id) === Number(state.atletaId))) runCrossing();
         } catch (error) { setAlert(error.message, true); $('scoutCrossingSelectionHint').textContent = 'Não foi possível carregar os jogadores.'; }
     }
 
@@ -260,12 +321,13 @@
         select.innerHTML = '<option value="">Escolha outro atleta</option>' + state.players.filter((player) => Number(player.id) !== Number(state.atletaId) && Number(player.posicao_id || state.posicaoId) === Number(state.posicaoId) && player.availability_rule !== 'poupar' && statusOf(player) !== 6).sort((a, b) => predictionValue(b) - predictionValue(a)).map((player) => `<option value="${player.id}">${escapeHtml(player.nome)} · ${number(predictionValue(player))} pts</option>`).join('');
     }
     function resetAnalysis() {
+        state.crossingVersion += 1;
         state.selectedData = null;
-        $('scoutCrossingEmpty')?.removeAttribute('hidden');
+        $('scoutCrossingEmpty')?.setAttribute('hidden', '');
         $('scoutCrossingResults')?.setAttribute('hidden', '');
         const comparison = $('scoutCrossingComparison');
         if (comparison) { comparison.hidden = true; comparison.innerHTML = ''; }
-        $('scoutCrossingSingleAnalysis')?.removeAttribute('hidden');
+        $('scoutCrossingSingleAnalysis')?.setAttribute('hidden', '');
     }
 
     function renderResult(data) {
@@ -322,12 +384,19 @@
         const secondPlayer = state.players.find((player) => Number(player.id) === Number(second.jogador?.id)) || second.jogador;
         const firstMetrics = { prediction: predictionValue(firstPlayer), average: first.resumo?.media, games: first.resumo?.jogos, highest: first.resumo?.maior_pontuacao };
         const secondMetrics = { prediction: predictionValue(secondPlayer), average: second.resumo?.media, games: second.resumo?.jogos, highest: second.resumo?.maior_pontuacao };
+        $('scoutCrossingEmpty')?.setAttribute('hidden', '');
+        $('scoutCrossingResults')?.removeAttribute('hidden');
+        $('scoutCrossingPrediction').textContent = 'Comparativo pronto';
+        $('scoutCrossingPredictionNote').textContent = `${firstPlayer.nome || 'Jogador'} × ${secondPlayer.nome || 'Jogador'} · dados da rodada atual`;
         comparison.hidden = false;
         $('scoutCrossingSingleAnalysis')?.setAttribute('hidden', '');
-        comparison.innerHTML = `<div class="scx-comparison-head"><div><p class="scx-overline">Comparativo da posição</p><h2>Leitura lado a lado</h2><span>Verde indica o melhor indicador entre os dois atletas.</span></div><button type="button" class="scx-button" data-clear-comparison><i class="fas fa-arrow-left"></i> Voltar ao jogador</button></div><div class="scx-comparison-grid scx-comparison-sides">${comparisonSide(first, firstMetrics.prediction, secondMetrics)}${comparisonSide(second, secondMetrics.prediction, firstMetrics)}</div>`;
+        comparison.innerHTML = `<div class="scx-comparison-head"><div><p class="scx-overline">Comparativo da posição</p><h2>Leitura lado a lado</h2><span>Verde indica o melhor indicador entre os dois atletas.</span></div><button type="button" class="scx-button" data-clear-comparison><i class="fas fa-arrows-rotate"></i> Trocar seleção</button></div><div class="scx-comparison-grid scx-comparison-sides">${comparisonSide(first, firstMetrics.prediction, secondMetrics)}${comparisonSide(second, secondMetrics.prediction, firstMetrics)}</div>`;
         comparison.querySelector('[data-clear-comparison]')?.addEventListener('click', () => {
-            comparison.hidden = true;
-            $('scoutCrossingSingleAnalysis')?.removeAttribute('hidden');
+            state.selectedPlayerIds = state.selectedPlayerIds.length ? [state.selectedPlayerIds[0]] : [];
+            state.atletaId = state.selectedPlayerIds[0] || null;
+            state.historyExpanded = false;
+            resetAnalysis();
+            renderPlayers();
         });
         comparison.querySelectorAll('img').forEach((image) => image.addEventListener('error', () => image.remove(), { once: true }));
     }
@@ -338,6 +407,31 @@
         const params = new URLSearchParams({ atleta_id: state.atletaId, posicao_id: state.posicaoId }); setAlert('Calculando o cruzamento...');
         try { const response = await fetch(`${page.dataset.crossingUrl}?${params}`); const data = await response.json(); if (version !== state.crossingVersion) return; if (!response.ok) throw new Error(data.error || 'Não foi possível executar o cruzamento.'); state.temporada = Number(data.filtros.temporada); state.rodada = Number(data.filtros.rodada); renderResult(data); setAlert(''); } catch (error) { if (version === state.crossingVersion) setAlert(error.message, true); }
     }
+    async function runSelectedComparison() {
+        if (state.selectedPlayerIds.length !== 2 || !state.posicaoId) return;
+        const version = ++state.crossingVersion;
+        setAlert('Comparando os dois atletas...');
+        try {
+            const responses = await Promise.all(state.selectedPlayerIds.map(async (playerId) => {
+                const params = new URLSearchParams({ atleta_id: playerId, posicao_id: state.posicaoId });
+                const response = await fetch(`${page.dataset.crossingUrl}?${params}`);
+                const data = await response.json();
+                return { response, data };
+            }));
+            if (version !== state.crossingVersion) return;
+            const failed = responses.find(({ response }) => !response.ok);
+            if (failed) throw new Error(failed.data.error || 'Não foi possível executar o comparativo.');
+            const [first, second] = responses.map(({ data }) => data);
+            state.selectedData = first;
+            state.temporada = Number(first.filtros?.temporada || state.temporada);
+            state.rodada = Number(first.filtros?.rodada || state.rodada);
+            renderComparison(first, second);
+            setAlert('');
+            $('scoutCrossingResults')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch (error) {
+            if (version === state.crossingVersion) setAlert(error.message, true);
+        }
+    }
     async function comparePlayers() {
         const otherId = Number($('scoutCrossingComparePlayer')?.value || 0); if (!otherId || !state.selectedData) return;
         try { const response = await fetch(`${page.dataset.crossingUrl}?atleta_id=${otherId}&posicao_id=${state.posicaoId}`); const other = await response.json(); if (!response.ok) throw new Error(other.error || 'Comparação indisponível.');
@@ -346,11 +440,18 @@
             renderComparison(state.selectedData, other);
         } catch (error) { setAlert(error.message, true); }
     }
-    document.querySelectorAll('.scx-position').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.scx-position').forEach((item) => { item.classList.remove('is-selected'); item.setAttribute('aria-selected', 'false'); }); button.classList.add('is-selected'); button.setAttribute('aria-selected', 'true'); state.posicaoId = Number(button.dataset.position); state.atletaId = null; state.historyExpanded = false; state.filtersTouched = false; resetAnalysis(); loadOptions(); }));
+    document.querySelectorAll('.scx-position').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('.scx-position').forEach((item) => { item.classList.remove('is-selected'); item.setAttribute('aria-selected', 'false'); }); button.classList.add('is-selected'); button.setAttribute('aria-selected', 'true'); state.posicaoId = Number(button.dataset.position); state.atletaId = null; state.selectedPlayerIds = []; state.historyExpanded = false; state.filtersTouched = false; resetAnalysis(); loadOptions(); }));
     document.querySelectorAll('[data-status-filter]').forEach((button) => button.addEventListener('click', () => { document.querySelectorAll('[data-status-filter]').forEach((item) => item.classList.remove('is-selected')); button.classList.add('is-selected'); state.statusFilter = button.dataset.statusFilter; state.filtersTouched = true; renderPlayers(); }));
     ['scoutCrossingSearch'].forEach((id) => $(id)?.addEventListener('input', () => { state.filtersTouched = true; renderPlayers(); }));
-    ['scoutCrossingSort', 'scoutCrossingScout'].forEach((id) => $(id)?.addEventListener('change', () => { state.filtersTouched = true; renderPlayers(); })); $('scoutCrossingCompareButton')?.addEventListener('click', comparePlayers);
-    $('scoutCrossingPlayer')?.addEventListener('change', (event) => { state.atletaId = Number(event.target.value) || null; state.filtersTouched = true; resetAnalysis(); renderPlayers(); runCrossing(); });
+    ['scoutCrossingSort', 'scoutCrossingScout'].forEach((id) => $(id)?.addEventListener('change', () => { state.filtersTouched = true; renderPlayers(); }));
+    $('scoutCrossingPlayer')?.addEventListener('change', (event) => {
+        const playerId = Number(event.target.value) || null;
+        state.selectedPlayerIds = playerId ? [playerId] : [];
+        state.atletaId = playerId;
+        state.filtersTouched = true;
+        resetAnalysis();
+        renderPlayers();
+    });
     state.posicaoId = selectedPosition();
     if (page.dataset.selectedPlayer) state.atletaId = Number(page.dataset.selectedPlayer);
     loadOptions();

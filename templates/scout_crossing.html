@@ -3,7 +3,7 @@
 {% block title %}Cruzamento de Scouts{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/scout-crossing.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/scout-crossing.css', v='2') }}">
 <main class="scx-page" id="scoutCrossingPage"
       data-options-url="{{ url_for('scout_crossing.options') }}"
       data-crossing-url="{{ url_for('scout_crossing.crossing') }}"
@@ -21,7 +21,7 @@
 
     <section class="scx-selector" aria-label="Filtros do cruzamento">
         <div class="scx-selector-row">
-            <div class="scx-section-label"><span>1</span><div><strong>Escolha o time</strong><small>20 clubes em duas linhas · filtro opcional</small></div></div>
+            <div class="scx-section-label"><span>1</span><div><strong>Escolha os times</strong><small>Selecione um ou mais clubes · filtro opcional</small></div></div>
             <div class="scx-team-grid" id="scoutCrossingTeams" role="listbox" aria-label="Times"></div>
         </div>
         <div class="scx-selector-row scx-position-row">
@@ -60,6 +60,7 @@
         </div>
         <div class="scx-player-line">
             <div id="scoutCrossingPlayers" class="scx-player-grid" aria-live="polite"></div>
+            <div id="scoutCrossingSelectionTray" class="scx-selection-tray" hidden aria-live="polite"></div>
             <span id="scoutCrossingSelectionHint" class="scx-selection-hint">Carregando jogadores prováveis...</span>
         </div>
         <select id="scoutCrossingPlayer" class="scx-visually-hidden" aria-hidden="true" tabindex="-1"><option value="">Selecione o jogador</option></select>
@@ -68,14 +69,14 @@
     <div id="scoutCrossingAlert" class="scx-alert" role="status" hidden></div>
     {% if database_error %}<div class="scx-alert scx-alert-error">{{ database_error }}</div>{% endif %}
 
-    <section id="scoutCrossingEmpty" class="scx-empty">
-        <i class="fas fa-chart-simple"></i><h2>Escolha um jogador para abrir a análise</h2><p>A lista acima permanece comparável e filtrável. O detalhamento aparece abaixo quando você clicar em um atleta.</p>
+    <section id="scoutCrossingEmpty" class="scx-empty" hidden>
+        <i class="fas fa-chart-simple"></i><h2>Escolha dois jogadores para abrir o comparativo</h2><p>Selecione o primeiro atleta e depois o segundo, inclusive de outro clube. A análise lado a lado será carregada automaticamente.</p>
     </section>
 
     <section id="scoutCrossingResults" class="scx-results" hidden>
         <div class="scx-analysis-toolbar">
             <div><span class="scx-overline">Análise detalhada</span><strong id="scoutCrossingPrediction">Previsão calculada: —</strong><small id="scoutCrossingPredictionNote">Usando o calculador específico da posição.</small></div>
-            <div class="scx-compare-controls"><label>Comparar com <select id="scoutCrossingComparePlayer"><option value="">Escolha outro atleta</option></select></label><button type="button" id="scoutCrossingCompareButton" class="scx-button">Comparar</button></div>
+            <div class="scx-compare-controls scx-auto-compare-note"><i class="fas fa-bolt"></i><span>Comparação automática após selecionar dois atletas</span></div>
         </div>
         <div id="scoutCrossingSingleAnalysis">
             <div class="scx-player-card">
@@ -103,5 +104,5 @@
 <script src="{{ url_for('static', filename='js/calculo_meia.js') }}"></script>
 <script src="{{ url_for('static', filename='js/calculo_atacante.js') }}"></script>
 <script src="{{ url_for('static', filename='js/calculo_treinador.js') }}"></script>
-<script src="{{ url_for('static', filename='js/scout-crossing.js', v='2') }}"></script>
+<script src="{{ url_for('static', filename='js/scout-crossing.js', v='3') }}"></script>
 {% endblock %}
