@@ -2012,14 +2012,34 @@ def get_atleta_medias_mando(cursor, atleta_id, rodada_atual, temporada_atual):
     try:
         cursor.execute('''
             SELECT 
-                AVG(pontuacao - (COALESCE(scout_g, 0)*8.0 + COALESCE(scout_a, 0)*5.0 + COALESCE(scout_sg, 0)*5.0)) as media_basica,
-                AVG(CASE WHEN jogou_em_casa = TRUE THEN pontuacao END) as media_casa,
-                AVG(CASE WHEN jogou_em_casa = FALSE THEN pontuacao END) as media_fora,
-                AVG(CASE WHEN jogou_em_casa = TRUE THEN (pontuacao - (COALESCE(scout_g, 0)*8.0 + COALESCE(scout_a, 0)*5.0 + COALESCE(scout_sg, 0)*5.0)) END) as media_basica_casa,
-                AVG(CASE WHEN jogou_em_casa = FALSE THEN (pontuacao - (COALESCE(scout_g, 0)*8.0 + COALESCE(scout_a, 0)*5.0 + COALESCE(scout_sg, 0)*5.0)) END) as media_basica_fora
-            FROM acf_pontuados
-            WHERE atleta_id = %s AND rodada_id < %s AND temporada = %s AND entrou_em_campo = TRUE
-        ''', (atleta_id, rodada_atual, temporada_atual))
+                AVG(p.pontuacao - (COALESCE(p.scout_g, 0)*8.0 + COALESCE(p.scout_a, 0)*5.0 + COALESCE(p.scout_sg, 0)*5.0)) as media_basica,
+                AVG(CASE WHEN (CASE WHEN partida.clube_casa_id = p.clube_id THEN TRUE
+                                    WHEN partida.clube_visitante_id = p.clube_id THEN FALSE
+                                    ELSE p.jogou_em_casa END) = TRUE
+                         THEN p.pontuacao END) as media_casa,
+                AVG(CASE WHEN (CASE WHEN partida.clube_casa_id = p.clube_id THEN TRUE
+                                    WHEN partida.clube_visitante_id = p.clube_id THEN FALSE
+                                    ELSE p.jogou_em_casa END) = FALSE
+                         THEN p.pontuacao END) as media_fora,
+                AVG(CASE WHEN (CASE WHEN partida.clube_casa_id = p.clube_id THEN TRUE
+                                    WHEN partida.clube_visitante_id = p.clube_id THEN FALSE
+                                    ELSE p.jogou_em_casa END) = TRUE
+                         THEN (p.pontuacao - (COALESCE(p.scout_g, 0)*8.0 + COALESCE(p.scout_a, 0)*5.0 + COALESCE(p.scout_sg, 0)*5.0)) END) as media_basica_casa,
+                AVG(CASE WHEN (CASE WHEN partida.clube_casa_id = p.clube_id THEN TRUE
+                                    WHEN partida.clube_visitante_id = p.clube_id THEN FALSE
+                                    ELSE p.jogou_em_casa END) = FALSE
+                         THEN (p.pontuacao - (COALESCE(p.scout_g, 0)*8.0 + COALESCE(p.scout_a, 0)*5.0 + COALESCE(p.scout_sg, 0)*5.0)) END) as media_basica_fora
+            FROM acf_pontuados p
+            LEFT JOIN acf_partidas partida
+              ON partida.temporada = %s
+             AND partida.rodada_id = p.rodada_id
+             AND partida.valida = TRUE
+             AND p.clube_id IN (partida.clube_casa_id, partida.clube_visitante_id)
+            WHERE p.atleta_id = %s
+              AND p.rodada_id < %s
+              AND (p.temporada = %s OR p.temporada IS NULL)
+              AND p.entrou_em_campo = TRUE
+        ''', (temporada_atual, atleta_id, rodada_atual, temporada_atual))
         row = cursor.fetchone()
         if row:
             stats['media_basica'] = float(row[0]) if row[0] is not None else 0.0

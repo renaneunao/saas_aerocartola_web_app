@@ -2330,3 +2330,57 @@
 .ideal-card-action-luxury .ideal-card-action-icon { border-color: rgba(185, 155, 255, .28); color: #d3c0ff; }
 .ideal-card-action-unavailable .ideal-card-action-icon { border-color: rgba(248, 113, 113, .25); color: #f0a1aa; }
 .ideal-card-action:hover, .ideal-card-action:focus-visible { border-color: rgba(82, 230, 255, .42); background: rgba(82, 230, 255, .08); }
+
+/* Override final do hover e dos emblemas. */
+.ideal-card-actions {
+  width: min(342px, calc(100vw - 24px));
+  gap: 8px;
+  padding: 13px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, rgba(13, 34, 52, .99), rgba(4, 14, 27, .99));
+  box-shadow: 0 20px 42px rgba(0, 0, 0, .42), 0 0 0 1px rgba(255, 255, 255, .035);
+}
+.ideal-card-actions-head { gap: 7px; padding: 2px 3px 7px; font-size: 10px; }
+.ideal-card-hover-detail-top { padding-bottom: 9px; }
+.ideal-card-hover-identity { gap: 9px; }
+.ideal-card-hover-identity strong { font-size: 13px; }
+.ideal-card-hover-identity small, .ideal-card-hover-hint { font-size: 8px; }
+.ideal-card-hover-avatar { width: 46px !important; height: 46px !important; border-radius: 12px; }
+.ideal-card-hover-match { min-width: 78px; }
+.ideal-card-hover-match .ideal-fixture-team,
+.ideal-card-hover-match .ideal-fixture-team-solo,
+.ideal-card-hover-match .ideal-fixture-team img,
+.ideal-card-hover-match .ideal-fixture-team i,
+.ideal-card-hover-match .ideal-fixture-team-solo img,
+.ideal-card-hover-match .ideal-fixture-team-solo i { width: 21px !important; min-width: 21px !important; height: 21px !important; min-height: 21px !important; }
+.ideal-card-hover-match .ideal-player-bars { width: 84px; max-width: 84px; }
+.ideal-card-hover-stats { gap: 6px; padding: 9px 0; }
+.ideal-card-hover-stats span { gap: 3px; padding: 7px 5px; border-radius: 7px; }
+.ideal-card-hover-stats small { font-size: 7px; }
+.ideal-card-hover-stats b { font-size: 10px; }
+.ideal-card-hover-indices { gap: 6px; padding-bottom: 9px; }
+.ideal-card-hover-indices span { padding: 6px 7px; border-radius: 7px; }
+.ideal-card-hover-indices small { font-size: 7px; }
+.ideal-card-hover-indices b { font-size: 10px; }
+.ideal-card-hover-detail-bottom { padding-top: 7px; }
+.ideal-card-hover-status { font-size: 8px; }
+.ideal-card-hover-foot { gap: 6px; padding-top: 3px; font-size: 8px; }
+.ideal-badge { gap: 4px; min-height: 23px; padding: 3px 7px 3px 5px; border-radius: 8px 8px 5px 5px; letter-spacing: .06em; box-shadow: 0 7px 14px rgba(0, 0, 0, .3); }
+.ideal-badge::after { content: ''; position: absolute; right: 8px; bottom: -5px; width: 0; height: 0; border-top: 5px solid currentColor; border-left: 4px solid transparent; border-right: 4px solid transparent; opacity: .65; }
+.ideal-badge i { font-size: 10px; line-height: 1; }
+.ideal-badge b { font-size: 8px; font-weight: 900; }
+.ideal-badge-captain { border-color: rgba(255, 210, 92, .58); color: #fff0b0; background: linear-gradient(135deg, rgba(128, 83, 17, .98), rgba(58, 40, 12, .98)); }
+.ideal-badge-luxury { border-color: rgba(208, 183, 255, .58); color: #f0e7ff; background: linear-gradient(135deg, rgba(91, 61, 145, .98), rgba(42, 27, 75, .98)); }
+.ideal-card-action-icon { width: 30px; height: 30px; border-radius: 9px; }
+.ideal-card-action-icon i { font-size: 12px; }
+.ideal-card-action-captain .ideal-card-action-icon { border-color: rgba(255, 210, 92, .34); color: #ffe28a; background: rgba(118, 78, 16, .2); }
+.ideal-card-action-luxury .ideal-card-action-icon { border-color: rgba(208, 183, 255, .34); color: #e1ceff; background: rgba(91, 61, 145, .2); }
+.ideal-card-action-unavailable .ideal-card-action-icon { border-color: rgba(248, 113, 113, .3); color: #ffabb4; background: rgba(127, 29, 44, .2); }
+
+@media (max-width: 620px) {
+  .ideal-card-actions { width: min(310px, calc(100vw - 18px)); padding: 10px; }
+  .ideal-card-hover-avatar { width: 40px !important; height: 40px !important; }
+  .ideal-card-hover-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ideal-card-hover-stats b, .ideal-card-hover-indices b { font-size: 9px; }
+  .ideal-card-action { min-height: 43px; }
+}

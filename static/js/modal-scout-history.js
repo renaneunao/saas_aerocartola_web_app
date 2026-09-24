@@ -75,6 +75,17 @@
         return `<div class="modal-scout-history-fixture">${team(home, 'home')}<span class="modal-scout-history-fixture-vs" aria-hidden="true">×</span>${team(away, 'away')}</div>`;
     }
 
+    function scoreLabel(match) {
+        const rawHome = match?.placar_casa;
+        const rawAway = match?.placar_fora;
+        const home = Number(rawHome);
+        const away = Number(rawAway);
+        const validHome = rawHome !== null && rawHome !== undefined && rawHome !== '' && Number.isFinite(home);
+        const validAway = rawAway !== null && rawAway !== undefined && rawAway !== '' && Number.isFinite(away);
+        if (!validHome && !validAway) return 'Placar não informado';
+        return `Placar ${validHome ? Math.round(home) : '—'} × ${validAway ? Math.round(away) : '—'}`;
+    }
+
     function roundCard(round, match) {
         if (!match) {
             return `<article class="modal-scout-history-item is-empty" aria-label="Rodada ${round}, sem dados">
@@ -91,6 +102,7 @@
             <div class="modal-scout-history-game">
                 ${fixtureMarkup(match)}
                 <small>${escapeHtml(match.mando_label || 'Sem mando')} · adversário ${escapeHtml(match.adversario_nome || 'não informado')}</small>
+                <span class="modal-scout-history-score">${escapeHtml(scoreLabel(match))}</span>
             </div>
              <div class="modal-scout-history-inline-scouts">${scouts || '<span class="is-muted">Sem scouts</span>'}</div>
          </article>`;
@@ -120,7 +132,11 @@
             .filter((item) => Math.round(Math.abs(item.average)) > 0)
             .sort((a, b) => Math.abs(b.average) - Math.abs(a.average));
         if (!rows.length) return '<div class="modal-scout-history-ceded-empty">Sem scouts cedidos acima de zero.</div>';
-        return `<div class="modal-scout-history-ceded-games">${relevant.length} jogo(s) com dados</div>${rows.map((item) => `<div class="modal-scout-history-ceded-row ${item.negative ? 'is-negative' : 'is-positive'}"><span>${escapeHtml(labels[item.code] || item.code.toUpperCase())}</span><strong>${item.negative ? '-' : ''}${Math.round(Math.abs(item.average)).toLocaleString('pt-BR')}</strong></div>`).join('')}`;
+        const scores = relevant
+            .sort((a, b) => Number(b.rodada) - Number(a.rodada))
+            .map((match) => `Rodada ${match.rodada}: ${scoreLabel(match).replace(/^Placar\s*/, '')}`)
+            .join(' · ');
+        return `<div class="modal-scout-history-ceded-games">${relevant.length} jogo(s) com dados</div><div class="modal-scout-history-ceded-scores">${escapeHtml(scores)}</div>${rows.map((item) => `<div class="modal-scout-history-ceded-row ${item.negative ? 'is-negative' : 'is-positive'}"><span>${escapeHtml(labels[item.code] || item.code.toUpperCase())}</span><strong>${item.negative ? '-' : ''}${Math.round(Math.abs(item.average)).toLocaleString('pt-BR')}</strong></div>`).join('')}`;
     }
 
     function render(prefix, data, fallbackPhoto) {

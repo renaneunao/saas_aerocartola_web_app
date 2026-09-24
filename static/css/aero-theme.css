@@ -1428,3 +1428,26 @@ button[class*="from-blue-500"]:hover { border-color:rgba(82,230,255,.55) !import
   #sidebar { --sidebar-density: .63; }
   #sidebar > div:first-child img { max-height: 62px; }
 }
+
+/* A marca ocupa toda a área reservada do cabeçalho. A arte tem fundo próprio,
+   então o encaixe intencionalmente preenche largura e altura sem preservar a
+   caixa quadrada original. */
+#sidebar > div:first-child {
+  height: clamp(138px, 22vh, 220px);
+  padding: 0 !important;
+  overflow: hidden;
+}
+#sidebar > div:first-child > a {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+#sidebar > div:first-child img {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  border-radius: 0 !important;
+  object-fit: fill !important;
+}

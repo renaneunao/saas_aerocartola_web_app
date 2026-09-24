@@ -197,12 +197,12 @@
     const name = escapeHtml(player?.apelido || player?.nome || 'atleta');
     const actions = [];
     if (kind === 'starter') {
-      actions.push(`<button type="button" class="ideal-card-action ideal-card-action-captain" data-special-role="captain" data-athlete-id="${playerId}" title="Definir ${name} como capitão"><span class="ideal-card-action-icon"><i class="fas fa-crown"></i></span><span>Capitão</span><small>assume a pontuação em dobro</small></button>`);
+      actions.push(`<button type="button" class="ideal-card-action ideal-card-action-captain" data-special-role="captain" data-athlete-id="${playerId}" title="Definir ${name} como capitão"><span class="ideal-card-action-icon"><i class="fas fa-award"></i></span><span>Capitão</span><small>assume a pontuação em dobro</small></button>`);
     }
     if (kind === 'reserve' && !player?.eh_reserva_luxo) {
-      actions.push(`<button type="button" class="ideal-card-action ideal-card-action-luxury" data-special-role="luxury" data-athlete-id="${playerId}" title="Definir ${name} como reserva de luxo"><span class="ideal-card-action-icon"><i class="fas fa-gem"></i></span><span>Reserva de luxo</span><small>entra como melhor reserva</small></button>`);
+      actions.push(`<button type="button" class="ideal-card-action ideal-card-action-luxury" data-special-role="luxury" data-athlete-id="${playerId}" title="Definir ${name} como reserva de luxo"><span class="ideal-card-action-icon"><i class="fas fa-diamond"></i></span><span>Reserva de luxo</span><small>entra como melhor reserva</small></button>`);
     }
-    actions.push(`<button type="button" class="ideal-card-action ideal-card-action-unavailable" data-availability-action="poupar" data-athlete-id="${playerId}" title="Marcar ${name} como não joga"><span class="ideal-card-action-icon"><i class="fas fa-ban"></i></span><span>Não joga</span><small>remove das próximas escolhas</small></button>`);
+    actions.push(`<button type="button" class="ideal-card-action ideal-card-action-unavailable" data-availability-action="poupar" data-athlete-id="${playerId}" title="Marcar ${name} como não joga"><span class="ideal-card-action-icon"><i class="fas fa-user-slash"></i></span><span>Não joga</span><small>remove das próximas escolhas</small></button>`);
     return `<div class="ideal-card-actions" aria-label="Detalhes e ações de ${name}">${cardHoverDetails(player, position, kind)}<div class="ideal-card-actions-head"><i class="fas fa-sliders"></i><span>Ações rápidas</span></div>${actions.join('')}<div class="ideal-card-hover-foot"><i class="fas fa-hand-pointer"></i><span>Detalhes do atleta e comandos rápidos</span></div></div>`;
   }
 
@@ -407,7 +407,7 @@
     const playerName = escapeHtml(player?.apelido || 'N/A');
     const priceLabel = money(price(player));
     const pointsLabel = `${points(player).toFixed(1)} pts`;
-    const badges = player?.eh_capitao ? `<span class="ideal-badge ideal-badge-captain" title="Capitão atual">CAP</span>` : '';
+    const badges = player?.eh_capitao ? `<span class="ideal-badge ideal-badge-captain" title="Capitão atual"><i class="fas fa-award" aria-hidden="true"></i><b>CAP</b></span>` : '';
     return `<div class="ideal-player ideal-player-card" title="Clique para trocar ${playerName}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}${cardActionRail(player, position, 'starter')}<div class="ideal-player-visual">${avatar(player)}${teamIndicators(player, position)}</div><span class="ideal-player-name" title="Jogador: ${playerName}">${playerName}</span><span class="ideal-player-chips"><span title="Preço do jogador: ${priceLabel}">${priceLabel}</span><span title="Pontuação prevista: ${pointsLabel}">${pointsLabel}</span></span></div>`;
   }
 
@@ -481,7 +481,7 @@
       const reserveName = escapeHtml(player?.apelido || 'N/A');
       const reservePrice = player ? money(price(player)) : '';
       const reservePoints = player ? `${points(player).toFixed(1)} pts` : '';
-      const card = player ? `<div class="ideal-bench-player ideal-player-card" title="Clique para trocar a reserva ${reserveName}" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? `<span class="ideal-badge ideal-badge-luxury" title="Reserva de luxo atual">LUXO</span>` : ''}${cardActionRail(player, position, 'reserve')}${avatar(player)}<span class="ideal-bench-copy"><span class="ideal-player-name" title="Jogador: ${reserveName}">${reserveName}</span><span class="ideal-player-chips"><span title="Preço da reserva: ${reservePrice}">${reservePrice}</span><span title="Pontuação prevista da reserva: ${reservePoints}">${reservePoints}</span></span></span><span class="ideal-bench-signals">${teamIndicators(player, position)}</span></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" title="Adicionar reserva" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
+      const card = player ? `<div class="ideal-bench-player ideal-player-card" title="Clique para trocar a reserva ${reserveName}" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? `<span class="ideal-badge ideal-badge-luxury" title="Reserva de luxo atual"><i class="fas fa-diamond" aria-hidden="true"></i><b>LUXO</b></span>` : ''}${cardActionRail(player, position, 'reserve')}${avatar(player)}<span class="ideal-bench-copy"><span class="ideal-player-name" title="Jogador: ${reserveName}">${reserveName}</span><span class="ideal-player-chips"><span title="Preço da reserva: ${reservePrice}">${reservePrice}</span><span title="Pontuação prevista da reserva: ${reservePoints}">${reservePoints}</span></span></span><span class="ideal-bench-signals">${teamIndicators(player, position)}</span></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" title="Adicionar reserva" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
       return `<div class="ideal-bench-group"><div class="ideal-bench-label">${POSITIONS[position].label}<small>mais barata que o titular</small></div>${card}</div>`;
     }).join('');
     return `<aside class="ideal-bench"><div class="ideal-bench-head"><span class="ideal-bench-title"><i class="fas fa-exchange-alt"></i>Reservas</span><span class="ideal-bench-note">sem custo</span></div>${groups}</aside>`;

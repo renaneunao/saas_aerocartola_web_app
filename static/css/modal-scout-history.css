@@ -101,6 +101,15 @@
     display: grid;
     gap: .35rem;
     min-width: 0;
+    padding: .65rem;
+    border: 1px solid rgba(82, 230, 255, .12);
+    border-radius: .75rem;
+    background: linear-gradient(180deg, rgba(28, 76, 92, .16), rgba(15, 23, 42, .2));
+}
+
+.modal-scout-history-column:nth-child(2) {
+    border-color: rgba(151, 126, 255, .14);
+    background: linear-gradient(180deg, rgba(63, 50, 105, .16), rgba(15, 23, 42, .2));
 }
 
 .modal-scout-history-range {
@@ -230,6 +239,14 @@
     font-size: .55rem;
 }
 
+.modal-scout-history-score {
+    display: block;
+    margin-top: .13rem;
+    color: #dbeafe;
+    font: 700 .53rem/1.2 'JetBrains Mono', monospace;
+    letter-spacing: .01em;
+}
+
 .modal-scout-history-point {
     color: #a7f3d0;
     font-size: .78rem;
@@ -305,6 +322,16 @@
     background: rgba(15, 23, 42, .32);
 }
 
+.modal-scout-history-ceded-column:first-child {
+    border-color: rgba(82, 230, 255, .14);
+    background: rgba(28, 76, 92, .12);
+}
+
+.modal-scout-history-ceded-column:last-child {
+    border-color: rgba(151, 126, 255, .16);
+    background: rgba(63, 50, 105, .12);
+}
+
 .modal-scout-history-ceded-column > strong {
     display: block;
     margin-bottom: .35rem;
@@ -319,6 +346,12 @@
     margin-bottom: .3rem;
     color: #64748b;
     font-size: .52rem;
+}
+
+.modal-scout-history-ceded-scores {
+    margin: -.05rem 0 .35rem;
+    color: #a5b4fc;
+    font: 600 .5rem/1.35 'JetBrains Mono', monospace;
 }
 
 .modal-scout-history-ceded-row {
@@ -415,6 +448,8 @@
 
     .modal-scout-history-column {
         gap: .18rem;
+        padding: .32rem;
+        border-radius: .45rem;
     }
 
     .modal-scout-history-range {
@@ -441,6 +476,7 @@
     }
 
     .modal-scout-history-game small,
+    .modal-scout-history-score,
     .modal-scout-history-inline-scouts,
     .modal-scout-history-inline-scouts .is-muted,
     .modal-scout-history-no-data {
@@ -474,6 +510,10 @@
     .modal-scout-history-inline-scouts {
         gap: .06rem .16rem;
         margin-top: .12rem;
+    }
+
+    .modal-scout-history-ceded-scores {
+        font-size: .38rem;
     }
 }
 
