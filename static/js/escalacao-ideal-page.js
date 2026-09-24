@@ -119,21 +119,31 @@
     return `<span class="ideal-player-bar ideal-player-bar-${kind}" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}"><b>${label}</b><span class="ideal-player-bar-track"><span class="ideal-player-bar-fill" style="width:${safePercent.toFixed(0)}%"></span></span></span>`;
   }
 
-  function teamIndicators(player, position) {
-    const club = clubFor(player);
+  function playerIndicatorValues(player, position) {
     const jogoMap = state.data?.peso_jogo_por_clube || {};
     const sgMap = state.data?.peso_sg_por_clube || {};
     const jogo = safeNumber(jogoMap[String(player?.clube_id)] ?? player?.peso_jogo);
     const sg = safeNumber(sgMap[String(player?.clube_id)] ?? player?.peso_sg);
     const sgPercent = Math.max(0, Math.min(100, sg <= 1 ? sg * 100 : sg));
     const maxJogo = Math.max(1, ...Object.values(jogoMap).map(safeNumber));
+    const defense = ['goleiros', 'laterais', 'zagueiros'].includes(position);
+    return {
+      jogo,
+      sg,
+      sgPercent,
+      defense,
+      favoritePercent: jogo > 0 ? Math.min(100, (jogo / maxJogo) * 100) : 0,
+    };
+  }
+
+  function teamIndicators(player, position) {
+    const club = clubFor(player);
+    const indicators = playerIndicatorValues(player, position);
     const shield = club.escudo_url || club.escudo || club.clube_escudo_url || player?.clube_escudo_url || '';
     const name = club.abreviacao || player?.clube_abrev || club.nome || player?.clube_nome || '—';
-    const defense = ['goleiros', 'laterais', 'zagueiros'].includes(position);
     const ownMarkup = `<span class="ideal-fixture-team ideal-fixture-team-solo is-active" title="${escapeHtml(name)}">${shield ? `<img src="${escapeHtml(shield)}" alt="Escudo de ${escapeHtml(name)}">` : '<i class="fas fa-shield-alt"></i>'}</span>`;
     const fixtureMarkup = opponentFor(player) ? fixtureIndicators(player) : ownMarkup;
-    const favoritePercent = jogo > 0 ? Math.min(100, (jogo / maxJogo) * 100) : 0;
-    const bars = `${progressBar('F', favoritePercent, 'favorite', `Favoritismo ${jogo.toFixed(2)}`)}${defense ? progressBar('SG', sgPercent, 'sg', `Saldo de gols ${sgPercent.toFixed(0)}%`) : ''}`;
+    const bars = `${progressBar('F', indicators.favoritePercent, 'favorite', `Favoritismo ${indicators.jogo.toFixed(2)}`)}${indicators.defense ? progressBar('SG', indicators.sgPercent, 'sg', `Saldo de gols ${indicators.sgPercent.toFixed(0)}%`) : ''}`;
     return `<span class="ideal-player-indicators">${fixtureMarkup}<span class="ideal-player-bars">${bars}</span></span>`;
   }
 
@@ -149,6 +159,7 @@
   function cardHoverDetails(player, position, kind) {
     const name = player?.apelido || player?.nome || 'Atleta';
     const role = kind === 'reserve' ? 'Reserva' : 'Titular';
+    const indicators = playerIndicatorValues(player, position);
     const average = safeNumber(player?.media_num ?? player?.media);
     const games = safeNumber(player?.jogos_num ?? player?.jogos);
     const projection = points(player);
@@ -170,6 +181,10 @@
         <span><small>Projeção</small><b>${projection.toFixed(2)} pts</b></span>
         <span><small>Média</small><b>${average.toFixed(2)}</b></span>
         <span><small>Jogos</small><b>${games.toFixed(0)}</b></span>
+      </div>
+      <div class="ideal-card-hover-indices">
+        <span title="Índice de favoritismo do perfil de jogo"><small>Favoritismo</small><b>${indicators.jogo.toFixed(2)}</b></span>
+        ${indicators.defense ? `<span title="Chance de saldo de gols do perfil de saldo"><small>Saldo</small><b>${indicators.sgPercent.toFixed(0)}%</b></span>` : ''}
       </div>
       <div class="ideal-card-hover-detail ideal-card-hover-detail-bottom">
         <span class="ideal-card-hover-status"><i class="fas fa-circle"></i>${status}</span>

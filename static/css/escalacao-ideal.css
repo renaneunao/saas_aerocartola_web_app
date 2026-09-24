@@ -1805,6 +1805,42 @@
   white-space: nowrap;
 }
 
+.ideal-card-hover-indices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding-bottom: 6px;
+}
+
+.ideal-card-hover-indices span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  min-width: 0;
+  padding: 4px 5px;
+  border: 1px solid rgba(82, 230, 255, .14);
+  border-radius: 5px;
+  background: rgba(82, 230, 255, .045);
+}
+
+.ideal-card-hover-indices small {
+  color: #7894aa;
+  font-size: 6px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.ideal-card-hover-indices b {
+  color: #9ff5c5;
+  font: 800 8px 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+
+.ideal-card-hover-indices span:only-child {
+  grid-column: 1 / -1;
+}
+
 .ideal-card-hover-detail-bottom {
   padding-top: 5px;
   border-top: 1px solid rgba(127, 191, 255, .1);
@@ -1833,6 +1869,35 @@
 
 .ideal-card-hover-foot i {
   color: var(--ideal-cyan);
+}
+
+/* As barras pertencem ao cartão do jogador. O indicador pode encolher junto
+   com o card, mas nunca empurra a linha para fora dele. */
+.ideal-player-visual > .ideal-player-indicators,
+.ideal-bench-signals .ideal-player-indicators {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden;
+}
+
+.ideal-player-visual > .ideal-player-indicators {
+  flex: 1 1 0 !important;
+  width: 0 !important;
+}
+
+.ideal-player-bars,
+.ideal-player-visual .ideal-player-bars,
+.ideal-bench-signals .ideal-player-bars {
+  box-sizing: border-box;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+.ideal-player-bar,
+.ideal-player-bar-track {
+  min-width: 0 !important;
+  max-width: 100%;
 }
 
 .ideal-card-action {
