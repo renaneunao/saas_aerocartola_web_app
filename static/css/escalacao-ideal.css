@@ -2663,6 +2663,17 @@
 /* A mesma correção vertical aplicada anteriormente, repetida para que a
    defesa ganhe espaço sem alterar a distância entre os atletas da linha. */
 @media (min-width: 1101px) {
-  .ideal-field-row-defense { transform: translateY(-6%) !important; }
-  .ideal-field-row-goalkeeper { transform: translateY(-12%) !important; }
+  .ideal-field-row-defense { transform: translateY(-18%) !important; }
+  .ideal-field-row-goalkeeper { transform: translateY(-24%) !important; }
+}
+
+/* O hover precisa elevar a linha inteira. Só aumentar o z-index do card não
+   atravessa o contexto de empilhamento criado pelas outras linhas do campo. */
+.ideal-field-row {
+  position: relative;
+  z-index: 10;
+}
+.ideal-field-row:hover,
+.ideal-field-row:focus-within {
+  z-index: 120;
 }
