@@ -25,9 +25,9 @@
         default: return null;
         }
     }
-    const shortScouts = { a: 'A', ca: 'CA', cv: 'CV', de: 'DEF', ds: 'DS', fc: 'FC', fd: 'FD', ff: 'FF', fs: 'FS', g: 'G', gs: 'GS', i: 'IMP', sg: 'SG' };
-    const scoutLabels = { a: 'Assistências', ca: 'Cartões amarelos', cv: 'Cartões vermelhos', de: 'Defesas', ds: 'Desarmes', fc: 'Faltas cometidas', fd: 'Finalizações defendidas', ff: 'Finalizações para fora', fs: 'Faltas sofridas', g: 'Gols', gs: 'Gols sofridos', i: 'Impedimentos', sg: 'Saldo de gols' };
-    const negativeScouts = new Set(['ca', 'cv', 'fc', 'gs', 'i']);
+    const shortScouts = { a: 'A', ca: 'CA', cv: 'CV', de: 'DEF', ds: 'DS', fc: 'FC', fd: 'FD', ff: 'FF', fs: 'FS', g: 'G', gs: 'GS', i: 'IMP', sg: 'SG', dp: 'DP', ft: 'FT', pc: 'PC', pp: 'PP', ps: 'PS', v: 'V' };
+    const scoutLabels = { a: 'Assistências', ca: 'Cartões amarelos', cv: 'Cartões vermelhos', de: 'Defesas', ds: 'Desarmes', fc: 'Faltas cometidas', fd: 'Finalizações defendidas', ff: 'Finalizações para fora', fs: 'Faltas sofridas', g: 'Gols', gs: 'Gols sofridos', i: 'Impedimentos', sg: 'Saldo de gols', dp: 'Defesas de pênalti', ft: 'Finalizações na trave', pc: 'Pênaltis cometidos', pp: 'Pênaltis perdidos', ps: 'Pênaltis sofridos', v: 'Variação' };
+    const negativeScouts = new Set(['ca', 'cv', 'fc', 'gs', 'i', 'pc', 'pp']);
     const statusOf = (player) => Number(player.source_status_id ?? player.status_id);
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[char]));
     const number = (value, digits = 2) => Number.isFinite(Number(value)) ? Number(value).toLocaleString('pt-BR', { minimumFractionDigits: digits, maximumFractionDigits: digits }) : '0,00';
@@ -428,7 +428,7 @@
         const saldo = Number(own?.saldo || 0);
         const saldoPercent = Math.max(0, Math.min(100, Number(own?.saldo_percent || 0)));
         const signal = (label, value, percent, kind, title) => `<span class="scx-side-signal scx-side-signal-${kind}" title="${escapeHtml(title)}"><span><b>${label}</b> ${number(value)}</span><i><em style="width:${percent.toFixed(0)}%"></em></i></span>`;
-        return `<div class="scx-side-matchup"><div class="scx-side-matchup-fixture">${fixtureMarkup(match.casa, match.fora, ownId, match.placar_casa, match.placar_fora)}</div><div class="scx-side-matchup-signals">${signal('F', favoritismo, favoritismoPercent, 'favorite', `Favoritismo do ${own?.nome || 'time'} pelo perfil de jogo`)}${defense ? signal('SG', saldoPercent, saldoPercent, 'sg', `Chance de saldo de gols do ${own?.nome || 'time'}`) : ''}</div></div>`;
+        return `<div class="scx-side-matchup"><div class="scx-side-matchup-fixture">${fixtureMarkup(match.casa, match.fora, ownId, match.placar_casa, match.placar_fora)}</div><div class="scx-side-matchup-signals">${signal('Favoritismo do time', favoritismo, favoritismoPercent, 'favorite', `Favoritismo do time ${own?.nome || ''} pelo perfil de jogo`)}${defense ? signal('Saldo de gols do time', saldoPercent, saldoPercent, 'sg', `Chance de saldo de gols do time ${own?.nome || ''}`) : ''}</div></div>`;
     }
 
     function comparisonSide(data, prediction, comparisonMetrics = {}) {

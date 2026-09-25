@@ -47,6 +47,12 @@ SCOUT_LABELS = {
     "gs": "Gols sofridos",
     "i": "Impedimentos",
     "sg": "Saldo de gols",
+    "dp": "Defesas de pênalti",
+    "ft": "Finalizações na trave",
+    "pc": "Pênaltis cometidos",
+    "pp": "Pênaltis perdidos",
+    "ps": "Pênaltis sofridos",
+    "v": "Variação",
 }
 POSITION_SCOUTS = {
     1: ("de", "gs", "sg", "ds"),
@@ -550,6 +556,7 @@ def _match_query(cursor, atleta_id, temporada, rodada_limite, adversario_id=None
                p.scout_a, p.scout_ca, p.scout_cv, p.scout_de, p.scout_ds,
                p.scout_fc, p.scout_fd, p.scout_ff, p.scout_fs, p.scout_g,
                p.scout_gs, p.scout_i, p.scout_sg,
+               p.scout_dp, p.scout_ft, p.scout_pc, p.scout_pp, p.scout_ps, p.scout_v,
                partida.partida_id,
                partida.clube_casa_id, partida.clube_visitante_id,
                partida.placar_oficial_mandante, partida.placar_oficial_visitante,
@@ -794,6 +801,10 @@ def _aggregate_matches(matches):
 
 
 def _empty_conceded_summary(main_scouts):
+    # main_scouts continua identificando a posição, mas o histórico exibido
+    # precisa ser auditável: não escondemos scouts que também participaram da
+    # pontuação oficial do atleta.
+    scout_keys = SCOUT_COLUMNS
     return {
         "jogos": 0,
         "jogos_com_dados": 0,
@@ -802,7 +813,7 @@ def _empty_conceded_summary(main_scouts):
         "pontuacao_por_jogo": 0,
         "pontuacao_por_atleta": 0,
         "pico": 0,
-        "scouts": {key: 0 for key in main_scouts},
+        "scouts": {key: 0 for key in scout_keys},
         "scouts_detalhados": [],
         "recorrencia": {"5": 0, "8": 0, "12": 0},
         "historico": [],
@@ -833,7 +844,7 @@ def _summarize_conceded_games(games, main_scouts):
     summary["pontuacao_por_atleta"] = _json_number(sum(points) / max(1, len(points)))
     summary["pico"] = _json_number(max(points) if points else 0)
 
-    for key in main_scouts:
+    for key in SCOUT_COLUMNS:
         total = sum(game["scouts"].get(key, 0) for game in data_games)
         occurrences = sum(1 for game in data_games if game["scouts"].get(key, 0) > 0)
         summary["scouts"][key] = _json_number(total / denominator)
@@ -910,7 +921,8 @@ def _opponent_conceded_scouts(
                    p.pontuacao,
                    p.scout_a, p.scout_ca, p.scout_cv, p.scout_de, p.scout_ds,
                    p.scout_fc, p.scout_fd, p.scout_ff, p.scout_fs, p.scout_g,
-                   p.scout_gs, p.scout_i, p.scout_sg
+                   p.scout_gs, p.scout_i, p.scout_sg,
+                   p.scout_dp, p.scout_ft, p.scout_pc, p.scout_pp, p.scout_ps, p.scout_v
             FROM acf_pontuados p
             LEFT JOIN LATERAL (
                 SELECT foto_custom, foto
@@ -929,7 +941,8 @@ def _opponent_conceded_scouts(
         SELECT j.*, p.atleta_id, p.apelido, p.foto, p.pontuacao,
                p.scout_a, p.scout_ca, p.scout_cv, p.scout_de, p.scout_ds,
                p.scout_fc, p.scout_fd, p.scout_ff, p.scout_fs, p.scout_g,
-               p.scout_gs, p.scout_i, p.scout_sg
+               p.scout_gs, p.scout_i, p.scout_sg,
+               p.scout_dp, p.scout_ft, p.scout_pc, p.scout_pp, p.scout_ps, p.scout_v
         FROM jogos j
         LEFT JOIN pontos p
           ON p.rodada_id = j.rodada_id
@@ -951,7 +964,11 @@ def _opponent_conceded_scouts(
                 "mando_label": "Casa" if row["mando_alvo"] == "casa" else "Fora",
                 "pontuacao": 0,
                 "pico": 0,
-                "scouts": {key: 0 for key in main_scouts},
+                # O resumo continua usando os scouts principais da posição,
+                # mas a partida e cada atleta carregam todos os scouts brutos
+                # do mesmo registro de acf_pontuados. Isso evita que a tela
+                # pareça ter pontos sem origem só porque um scout foi omitido.
+                "scouts": {key: 0 for key in SCOUT_COLUMNS},
                 "jogadores": [],
                 "casa": _club_payload(row["clube_casa_id"], row["casa_nome"], row["casa_abreviacao"]),
                 "fora": _club_payload(row["clube_visitante_id"], row["visitante_nome"], row["visitante_abreviacao"]),
@@ -965,7 +982,7 @@ def _opponent_conceded_scouts(
         if row["atleta_id"] is None:
             continue
         player_scouts = {
-            key: _json_int(row[f"scout_{key}"]) for key in main_scouts
+            key: _json_int(row[f"scout_{key}"]) for key in SCOUT_COLUMNS
         }
         player = {
             "id": _json_int(row["atleta_id"]),

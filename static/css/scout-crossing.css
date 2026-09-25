@@ -332,6 +332,7 @@
 .scx-ceded-player-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .scx-ceded-player strong { min-width: 0; overflow: hidden; color: var(--scx-text); font-size: .58rem; text-overflow: ellipsis; white-space: nowrap; }
 .scx-ceded-player-scouts { min-width: 0; }
+.scx-ceded-player-scouts { display: grid; gap: .08rem; }
 .scx-ceded-player > b { color: var(--scx-good); font: 700 .6rem 'JetBrains Mono', monospace; white-space: nowrap; }
 .scx-side-history-row > div { min-width: 0; overflow: hidden; }
 .scx-side-history-row .scx-match-fixture { display: block; width: 100%; overflow: hidden; }
