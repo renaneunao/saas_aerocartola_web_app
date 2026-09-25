@@ -2419,13 +2419,14 @@
 /* Campo mais largo e centralizado entre a área principal e o banco. */
 @media (min-width: 1101px) {
   .ideal-field-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(238px, 268px);
+    grid-template-columns: minmax(0, 720px) minmax(238px, 268px);
     gap: 15px;
+    justify-content: center;
     justify-items: stretch;
   }
   .ideal-field,
   .ideal-bench { width: 100%; justify-self: stretch; }
-  .ideal-field { min-height: 800px; }
+  .ideal-field { width: 100%; max-width: 720px; min-height: 0; }
   .ideal-field-rows { min-height: 688px; gap: 29px; }
   .ideal-field-defense-line { gap: clamp(12px, 1.4vw, 24px); }
   .ideal-field-defense-line .ideal-field-players { min-width: 0; }
@@ -2434,9 +2435,33 @@
 /* Refinos finais do campo e do painel de detalhes. */
 @media (min-width: 1101px) {
   .ideal-field-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(250px, 280px);
+    grid-template-columns: minmax(0, 720px) minmax(250px, 280px);
   }
 }
+
+/* Indicador de disponibilidade do Cartola, preso logo abaixo do card e
+   fora da área de preço/pontuação. */
+.ideal-player-status {
+  position: absolute;
+  left: 50%;
+  bottom: -10px;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  transform: translateX(-50%);
+  border: 2px solid #081523;
+  border-radius: 50%;
+  color: #06151a;
+  background: #5cf0a7;
+  box-shadow: 0 3px 9px rgba(0, 0, 0, .42);
+  font: 900 13px/1 Arial, sans-serif;
+}
+.ideal-player-status.is-probable { color: #031b12; background: #5cf0a7; }
+.ideal-player-status.is-doubt { color: #241700; background: #ffd166; }
+.ideal-player-status.is-unlikely { color: #fff; background: #ef476f; }
+.ideal-player-status.is-null { color: #e5e7eb; background: #64748b; }
 
 .ideal-card-actions-close {
   position: absolute;

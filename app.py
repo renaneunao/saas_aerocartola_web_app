@@ -4698,7 +4698,11 @@ def api_escalacao_dados():
                             jogador_norm['status_id'] = 0  # Status desconhecido
                         jogador_norm['source_status_id'] = source_status_dict.get(atleta_key)
                         jogador_norm['probables_source'] = probable_source
-                        if jogador_norm['source_status_id'] is not None and jogador_norm['status_id'] != 6:
+                        # Quando a fonte externa está ativa, o vínculo mapeado
+                        # é a autoridade para disponibilidade. Não bloquear o
+                        # status "fora" (6): ele precisa substituir também um
+                        # status oficial diferente para o mesmo atleta.
+                        if jogador_norm['source_status_id'] is not None:
                             jogador_norm['status_id'] = jogador_norm['source_status_id']
 
                         # O ranking salvo é um snapshot. Foto customizada é
@@ -5037,6 +5041,7 @@ def api_escalacao_dados():
             'team_name': team_name,
             'team_shield_url': team_shield_url,
             'rodada_atual': rodada_atual,
+            'probables_source': probable_source,
             'rankings_por_posicao': rankings_por_posicao,
             'todos_goleiros': todos_goleiros,  # Lista completa de goleiros para hack
             'adversarios_dict': adversarios_dict,

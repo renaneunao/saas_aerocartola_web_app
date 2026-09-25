@@ -859,7 +859,7 @@ async function renderizarTabelaGoleiros(resultados) {
                         </div>
                     </div>
                     <div class="min-w-0">
-                        <div class="font-semibold text-white text-xs truncate">${jogador.apelido}</div>
+                        <button type="button" onclick="openGoleiroModal(${jogador.atleta_id})" class="module-player-details-name font-semibold text-white text-xs truncate text-left bg-transparent border-0 p-0 cursor-pointer hover:text-cyan-300 transition-colors" title="Abrir detalhes de ${jogador.apelido}">${jogador.apelido}</button>
                     </div>
                 </div>
             </td>

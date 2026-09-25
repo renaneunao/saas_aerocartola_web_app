@@ -10,6 +10,7 @@ class EscalacaoIdeal {
         this.rodada = dados.rodada_atual;
         this.patrimonio = parseFloat(dados.patrimonio) || 0;
         this.rankings = dados.rankings_por_posicao || {};
+        this.probablesSource = dados.probables_source || 'globo';
         this.clubes_sg = dados.clubes_sg || [];
         this.todosGoleiros = dados.todos_goleiros || [];  // Lista completa de goleiros para hack
         this.adversarios_dict = dados.adversarios_dict || {};
@@ -111,6 +112,12 @@ class EscalacaoIdeal {
         let candidatos = ranking.filter(j => {
             if (j.ignorado === true) return false;
             if (excluirIds.includes(j.atleta_id)) return false;
+            // O ranking salvo é um snapshot de pontuação, não uma garantia de
+            // disponibilidade. O status vivo da API precisa prevalecer para
+            // que um atleta que virou nulo/suspenso não continue no campinho.
+            const status = Number(j.status_id);
+            const cravado = j.availability_rule === 'cravado';
+            if (!cravado && status !== 7) return false;
             const preco = this.getPreco(j);
             if (maxPreco !== null && preco > maxPreco) return false;
             return true;

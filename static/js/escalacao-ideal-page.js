@@ -412,7 +412,19 @@
     const priceLabel = money(price(player));
     const pointsLabel = `${points(player).toFixed(1)} pts`;
     const badges = player?.eh_capitao ? `<span class="ideal-badge ideal-badge-captain" title="Capitão atual"><img class="ideal-cartola-role-icon" src="${CARTOLA_CAPTAIN_ICON}" alt="Capitão"></span>` : '';
-    return `<div class="ideal-player ideal-player-card" title="Clique para trocar ${playerName}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}${cardActionRail(player, position, 'starter')}<div class="ideal-player-visual">${avatar(player)}${teamIndicators(player, position)}</div><span class="ideal-player-name" title="Jogador: ${playerName}">${playerName}</span><span class="ideal-player-chips"><span title="Preço do jogador: ${priceLabel}">${priceLabel}</span><span title="Pontuação prevista: ${pointsLabel}">${pointsLabel}</span></span></div>`;
+    return `<div class="ideal-player ideal-player-card" title="Clique para trocar ${playerName}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}${cardActionRail(player, position, 'starter')}<div class="ideal-player-visual">${avatar(player)}${teamIndicators(player, position)}</div><span class="ideal-player-name" title="Jogador: ${playerName}">${playerName}</span><span class="ideal-player-chips"><span title="Preço do jogador: ${priceLabel}">${priceLabel}</span><span title="Pontuação prevista: ${pointsLabel}">${pointsLabel}</span></span>${statusIndicator(player)}</div>`;
+  }
+
+  function statusIndicator(player) {
+    const status = Number(player?.status_id);
+    const cravado = player?.availability_rule === 'cravado';
+    let indicator = { className: 'is-unlikely', symbol: '×', label: 'Improvável' };
+    if (cravado || status === 7) indicator = { className: 'is-probable', symbol: '✓', label: 'Provável' };
+    else if (status === 2) indicator = { className: 'is-doubt', symbol: '?', label: 'Dúvida' };
+    else if (status === 6) indicator = { className: 'is-null', symbol: '×', label: 'Nulo' };
+    else if (status === 5) indicator.label = 'Suspenso';
+    const label = escapeHtml(indicator.label);
+    return `<span class="ideal-player-status ${indicator.className}" title="${label}" aria-label="${label}">${indicator.symbol}</span>`;
   }
 
   function emptySlot(position, index) {
@@ -485,7 +497,7 @@
       const reserveName = escapeHtml(player?.apelido || 'N/A');
       const reservePrice = player ? money(price(player)) : '';
       const reservePoints = player ? `${points(player).toFixed(1)} pts` : '';
-      const card = player ? `<div class="ideal-bench-player ideal-player-card" title="Clique para trocar a reserva ${reserveName}" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? `<span class="ideal-badge ideal-badge-luxury" title="Reserva de luxo atual"><img class="ideal-cartola-role-icon" src="${CARTOLA_LUXURY_ICON}" alt="Reserva de luxo"></span>` : ''}${cardActionRail(player, position, 'reserve')}${avatar(player)}<span class="ideal-bench-copy"><span class="ideal-player-name" title="Jogador: ${reserveName}">${reserveName}</span><span class="ideal-player-chips"><span title="Preço da reserva: ${reservePrice}">${reservePrice}</span><span title="Pontuação prevista da reserva: ${reservePoints}">${reservePoints}</span></span></span><span class="ideal-bench-signals">${teamIndicators(player, position)}</span></div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" title="Adicionar reserva" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
+      const card = player ? `<div class="ideal-bench-player ideal-player-card" title="Clique para trocar a reserva ${reserveName}" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0" role="button" tabindex="0">${player.eh_reserva_luxo ? `<span class="ideal-badge ideal-badge-luxury" title="Reserva de luxo atual"><img class="ideal-cartola-role-icon" src="${CARTOLA_LUXURY_ICON}" alt="Reserva de luxo"></span>` : ''}${cardActionRail(player, position, 'reserve')}${avatar(player)}<span class="ideal-bench-copy"><span class="ideal-player-name" title="Jogador: ${reserveName}">${reserveName}</span><span class="ideal-player-chips"><span title="Preço da reserva: ${reservePrice}">${reservePrice}</span><span title="Pontuação prevista da reserva: ${reservePoints}">${reservePoints}</span></span></span><span class="ideal-bench-signals">${teamIndicators(player, position)}</span>${statusIndicator(player)}</div>` : `<button type="button" class="ideal-bench-player ideal-bench-empty" title="Adicionar reserva" data-picker-kind="reserve" data-picker-position="${position}" data-picker-index="0"><i class="fas fa-plus"></i><span>Adicionar reserva</span></button>`;
       return `<div class="ideal-bench-group"><div class="ideal-bench-label">${POSITIONS[position].label}<small>mais barata que o titular</small></div>${card}</div>`;
     }).join('');
     return `<aside class="ideal-bench"><div class="ideal-bench-head"><span class="ideal-bench-title"><i class="fas fa-exchange-alt"></i>Reservas</span><span class="ideal-bench-note">sem custo</span></div>${groups}</aside>`;
@@ -634,6 +646,7 @@
       const data = recarregarDados || !state.data ? await loadData() : state.data;
       const escalador = new window.EscalacaoIdeal({
         rodada_atual: data.rodada_atual,
+        probables_source: data.probables_source || 'globo',
         patrimonio: data.patrimonio,
         rankings_por_posicao: data.rankings_por_posicao,
         todos_goleiros: data.todos_goleiros || [],
