@@ -168,7 +168,7 @@
 
 .modal-scout-history-fixture {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto auto auto minmax(0, 1fr);
     align-items: center;
     width: 100%;
     gap: .25rem;
@@ -187,12 +187,12 @@
 
 .modal-scout-history-fixture-team.home {
     align-self: start;
-    justify-content: flex-end;
+    justify-content: flex-start;
 }
 
 .modal-scout-history-fixture-team.away {
     align-self: end;
-    justify-content: flex-start;
+    justify-content: flex-end;
 }
 
 .modal-scout-history-fixture-team.active {
@@ -231,6 +231,12 @@
 .modal-scout-history-fixture-vs {
     color: #64748b;
     font: 800 .58rem/1 'JetBrains Mono', monospace;
+}
+
+.modal-scout-history-score-value {
+    color: #e2e8f0;
+    font: 800 .62rem/1 'JetBrains Mono', monospace;
+    text-align: center;
 }
 
 .modal-scout-history-game small {
@@ -347,6 +353,79 @@
     color: #64748b;
     font-size: .52rem;
 }
+
+.modal-scout-history-ceded-context {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    margin-bottom: .35rem;
+    color: #8293a8;
+    font-size: .5rem;
+}
+.modal-scout-history-ceded-context.is-recommended {
+    color: #67e8f9;
+    font-weight: 750;
+}
+.modal-scout-history-ceded-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .25rem;
+    margin-bottom: .35rem;
+}
+.modal-scout-history-ceded-metrics span {
+    display: grid;
+    gap: .12rem;
+    padding: .3rem .35rem;
+    border: 1px solid rgba(148, 163, 184, .1);
+    border-radius: .35rem;
+    background: rgba(2, 12, 23, .25);
+}
+.modal-scout-history-ceded-metrics small {
+    color: #64748b;
+    font-size: .45rem;
+}
+.modal-scout-history-ceded-metrics b {
+    color: #e2e8f0;
+    font: 800 .62rem/1 'JetBrains Mono', monospace;
+}
+.modal-scout-history-ceded-thresholds {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem .5rem;
+    margin-bottom: .35rem;
+    color: #94a3b8;
+    font: 600 .48rem/1.2 'JetBrains Mono', monospace;
+}
+.modal-scout-history-ceded-thresholds b { color: #7bd88f; }
+.modal-scout-history-ceded-scouts { display: grid; gap: .05rem; }
+.modal-scout-history-ceded-row span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modal-scout-history-ceded-row span b { margin-right: .18rem; }
+.modal-scout-history-ceded-row strong small { margin-left: .15rem; color: #94a3b8; font: 600 .46rem/1 'JetBrains Mono', monospace; }
+.modal-scout-history-ceded-matches {
+    display: grid;
+    gap: .18rem;
+    margin-top: .4rem;
+    padding-top: .35rem;
+    border-top: 1px solid rgba(148, 163, 184, .08);
+}
+.modal-scout-history-ceded-match {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: .25rem;
+    padding: .2rem 0;
+    color: #94a3b8;
+    font-size: .48rem;
+}
+.modal-scout-history-ceded-match > span { color: #67e8f9; font: 700 .47rem 'JetBrains Mono', monospace; }
+.modal-scout-history-ceded-match > strong { color: #7bd88f; font: 700 .5rem 'JetBrains Mono', monospace; white-space: nowrap; }
+.modal-scout-history-ceded-match .modal-scout-history-fixture { gap: .12rem; }
+.modal-scout-history-ceded-match .modal-scout-history-fixture-team { font-size: .44rem; }
+.modal-scout-history-ceded-match .modal-scout-history-fixture-team img,
+.modal-scout-history-ceded-match .modal-scout-history-shield-fallback { width: .8rem; height: .8rem; flex-basis: .8rem; }
+.modal-scout-history-ceded-match .modal-scout-history-fixture-team b { max-width: 2rem; }
+.modal-scout-history-ceded-match .modal-scout-history-score-value,
+.modal-scout-history-ceded-match .modal-scout-history-fixture-vs { font-size: .45rem; }
 
 .modal-scout-history-ceded-scores {
     margin: -.05rem 0 .35rem;
@@ -507,6 +586,10 @@
         font-size: .44rem;
     }
 
+    .modal-scout-history-score-value {
+        font-size: .46rem;
+    }
+
     .modal-scout-history-inline-scouts {
         gap: .06rem .16rem;
         margin-top: .12rem;
@@ -514,6 +597,18 @@
 
     .modal-scout-history-ceded-scores {
         font-size: .38rem;
+    }
+
+    .modal-scout-history-ceded-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .modal-scout-history-ceded-metrics b {
+        font-size: .55rem;
+    }
+
+    .modal-scout-history-ceded-match {
+        grid-template-columns: 2.1rem minmax(0, 1fr) auto;
     }
 }
 

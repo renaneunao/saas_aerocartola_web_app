@@ -2,7 +2,7 @@
     <div class="modal-scout-history-heading">
         <div>
             <p class="modal-scout-history-kicker">Leitura do confronto</p>
-            <h4>Últimas pontuações e cedidos</h4>
+            <h4>Últimas pontuações e cedimento</h4>
         </div>
         <div class="modal-scout-history-actions">
             <span class="modal-scout-history-status" id="modal{{ scout_prefix }}ScoutHistoryStatus">Carregando…</span>
@@ -18,18 +18,18 @@
     <div class="modal-scout-history-ceded" id="modal{{ scout_prefix }}ScoutHistoryCeded" hidden>
         <div class="modal-scout-history-ceded-heading">
             <div>
-                <p class="modal-scout-history-kicker">Referência do adversário</p>
-                <h5>Scouts cedidos para esta posição</h5>
+                <p class="modal-scout-history-kicker">O que o adversário cede</p>
+                <h5>Produção da posição contra essa defesa</h5>
             </div>
-            <span>média por jogo do confronto</span>
+            <span>média por partida · atletas que entraram em campo</span>
         </div>
         <div class="modal-scout-history-ceded-columns">
             <section class="modal-scout-history-ceded-column">
-                <strong>Em casa</strong>
+                <strong>Adversário como mandante</strong>
                 <div id="modal{{ scout_prefix }}ScoutHistoryCededHome"></div>
             </section>
             <section class="modal-scout-history-ceded-column">
-                <strong>Fora</strong>
+                <strong>Adversário como visitante</strong>
                 <div id="modal{{ scout_prefix }}ScoutHistoryCededAway"></div>
             </section>
         </div>

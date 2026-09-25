@@ -52,6 +52,13 @@
         return `<span class="modal-scout-history-scouts-positive">${markup(false)}</span><span class="modal-scout-history-scouts-negative">${markup(true)}</span>`;
     }
 
+    function fixtureScoreValue(value) {
+        const parsed = Number(value);
+        return value !== null && value !== undefined && value !== '' && Number.isFinite(parsed)
+            ? String(Math.round(parsed))
+            : '—';
+    }
+
     function fixtureMarkup(match) {
         const home = match?.casa || {
             nome: match?.casa_nome || 'Casa',
@@ -70,20 +77,12 @@
             const label = club?.abreviacao || club?.nome || '—';
             const initials = escapeHtml(String(label).replace(/[^A-Za-zÀ-ÿ0-9]/g, '').slice(0, 4).toUpperCase() || '—');
             const image = imageUrl(club?.escudo);
-            return `<span class="modal-scout-history-fixture-team ${side} ${active ? 'active' : 'dim'}">${image ? `<img src="${escapeHtml(image)}" alt="" data-history-shield>` : ''}<span class="modal-scout-history-shield-fallback" ${image ? 'hidden' : ''}>${initials}</span><b>${escapeHtml(label)}</b></span>`;
+            const content = image ? `<img src="${escapeHtml(image)}" alt="" data-history-shield>` : `<span class="modal-scout-history-shield-fallback">${initials}</span>`;
+            return side === 'home'
+                ? `<span class="modal-scout-history-fixture-team ${side} ${active ? 'active' : 'dim'}">${content}<b>${escapeHtml(label)}</b></span>`
+                : `<span class="modal-scout-history-fixture-team ${side} ${active ? 'active' : 'dim'}"><b>${escapeHtml(label)}</b>${content}</span>`;
         };
-        return `<div class="modal-scout-history-fixture">${team(home, 'home')}<span class="modal-scout-history-fixture-vs" aria-hidden="true">×</span>${team(away, 'away')}</div>`;
-    }
-
-    function scoreLabel(match) {
-        const rawHome = match?.placar_casa;
-        const rawAway = match?.placar_fora;
-        const home = Number(rawHome);
-        const away = Number(rawAway);
-        const validHome = rawHome !== null && rawHome !== undefined && rawHome !== '' && Number.isFinite(home);
-        const validAway = rawAway !== null && rawAway !== undefined && rawAway !== '' && Number.isFinite(away);
-        if (!validHome && !validAway) return 'Placar não informado';
-        return `Placar ${validHome ? Math.round(home) : '—'} × ${validAway ? Math.round(away) : '—'}`;
+        return `<div class="modal-scout-history-fixture">${team(home, 'home')}<b class="modal-scout-history-score-value">${fixtureScoreValue(match?.placar_casa)}</b><span class="modal-scout-history-fixture-vs" aria-hidden="true">×</span><b class="modal-scout-history-score-value">${fixtureScoreValue(match?.placar_fora)}</b>${team(away, 'away')}</div>`;
     }
 
     function roundCard(round, match) {
@@ -102,41 +101,23 @@
             <div class="modal-scout-history-game">
                 ${fixtureMarkup(match)}
                 <small>${escapeHtml(match.mando_label || 'Sem mando')} · adversário ${escapeHtml(match.adversario_nome || 'não informado')}</small>
-                <span class="modal-scout-history-score">${escapeHtml(scoreLabel(match))}</span>
             </div>
              <div class="modal-scout-history-inline-scouts">${scouts || '<span class="is-muted">Sem scouts</span>'}</div>
          </article>`;
     }
 
-    function cededSummary(matches, mando) {
-        const relevant = matches.filter((match) => match.mando === mando && match.cedidos_adversario?.scouts);
-        if (!relevant.length) {
-            return '<div class="modal-scout-history-ceded-empty">Sem cedidos registrados.</div>';
+    function cededSummary(profile, mando) {
+        const summary = profile?.por_mando?.[mando];
+        if (!summary || !Number(summary.jogos_com_dados)) {
+            return '<div class="modal-scout-history-ceded-empty">Sem partidas suficientes neste mando.</div>';
         }
-        const totals = {};
-        const counts = {};
-        relevant.forEach((match) => {
-            Object.entries(match.cedidos_adversario.scouts || {}).forEach(([code, value]) => {
-                const numeric = Number(value);
-                if (!Number.isFinite(numeric) || numeric === 0) return;
-                totals[code] = (totals[code] || 0) + numeric;
-                counts[code] = (counts[code] || 0) + 1;
-            });
-        });
-        const rows = Object.entries(totals)
-            .map(([code, value]) => {
-                const average = value / Math.max(1, counts[code] || relevant.length);
-                const negative = negativeScouts.has(code) || average < 0;
-                return { code, average, negative };
-            })
-            .filter((item) => Math.round(Math.abs(item.average)) > 0)
-            .sort((a, b) => Math.abs(b.average) - Math.abs(a.average));
-        if (!rows.length) return '<div class="modal-scout-history-ceded-empty">Sem scouts cedidos acima de zero.</div>';
-        const scores = relevant
-            .sort((a, b) => Number(b.rodada) - Number(a.rodada))
-            .map((match) => `Rodada ${match.rodada}: ${scoreLabel(match).replace(/^Placar\s*/, '')}`)
-            .join(' · ');
-        return `<div class="modal-scout-history-ceded-games">${relevant.length} jogo(s) com dados</div><div class="modal-scout-history-ceded-scores">${escapeHtml(scores)}</div>${rows.map((item) => `<div class="modal-scout-history-ceded-row ${item.negative ? 'is-negative' : 'is-positive'}"><span>${escapeHtml(labels[item.code] || item.code.toUpperCase())}</span><strong>${item.negative ? '-' : ''}${Math.round(Math.abs(item.average)).toLocaleString('pt-BR')}</strong></div>`).join('')}`;
+        const recommended = profile?.mando_relevante === mando;
+        const scoutRows = (summary.scouts_detalhados || [])
+            .filter((item) => Math.round(Math.abs(Number(item.media_por_jogo) || 0)) > 0)
+            .map((item) => `<div class="modal-scout-history-ceded-row ${negativeScouts.has(item.codigo) ? 'is-negative' : 'is-positive'}"><span><b>${escapeHtml(labels[item.codigo] || item.codigo.toUpperCase())}</b> ${escapeHtml(item.nome || '')}</span><strong>${Math.round(Math.abs(Number(item.media_por_jogo) || 0)).toLocaleString('pt-BR')} <small>${Number(item.recorrencia || 0)}%</small></strong></div>`)
+            .join('');
+        const recent = (summary.historico || []).slice(0, 4).map((match) => `<article class="modal-scout-history-ceded-match"><span>Rodada ${match.rodada}</span>${fixtureMarkup(match)}<strong>${number(match.pontuacao)} pts</strong></article>`).join('');
+        return `<div class="modal-scout-history-ceded-context ${recommended ? 'is-recommended' : ''}">${recommended ? '<i class="fas fa-crosshairs"></i><span>Recorte mais parecido com o confronto atual</span>' : '<span>Histórico geral deste mando</span>'}</div><div class="modal-scout-history-ceded-metrics"><span><small>Jogos</small><b>${summary.jogos_com_dados}</b></span><span><small>Pts/jogo</small><b>${number(summary.pontuacao_por_jogo)}</b></span><span><small>Pts/atleta</small><b>${number(summary.pontuacao_por_atleta)}</b></span><span><small>Pico</small><b>${number(summary.pico)}</b></span></div><div class="modal-scout-history-ceded-thresholds"><span>≥5 pts <b>${summary.recorrencia?.['5'] || 0}%</b></span><span>≥8 pts <b>${summary.recorrencia?.['8'] || 0}%</b></span><span>≥12 pts <b>${summary.recorrencia?.['12'] || 0}%</b></span></div><div class="modal-scout-history-ceded-scouts">${scoutRows || '<span class="modal-scout-history-ceded-empty">Nenhum scout positivo no recorte.</span>'}</div><div class="modal-scout-history-ceded-matches">${recent || '<span class="modal-scout-history-ceded-empty">Sem partidas recentes.</span>'}</div>`;
     }
 
     function render(prefix, data, fallbackPhoto) {
@@ -189,10 +170,10 @@
             crossingLink.href = `/cruzamento-scouts/?posicao_id=${encodeURIComponent(root.dataset.positionId || data.filtros?.posicao_id || '')}&atleta_id=${encodeURIComponent(data.jogador.id)}`;
         }
         if (ceded && cededHome && cededAway) {
-            const historical = matches.filter((match) => Number(match.rodada) <= currentRound && match.entrou_em_campo === true);
-            cededHome.innerHTML = cededSummary(historical, 'casa');
-            cededAway.innerHTML = cededSummary(historical, 'fora');
-            ceded.hidden = !historical.some((match) => match.cedidos_adversario?.scouts);
+            const profile = data.cedidos_adversario || {};
+            cededHome.innerHTML = cededSummary(profile, 'casa');
+            cededAway.innerHTML = cededSummary(profile, 'fora');
+            ceded.hidden = !Object.values(profile.por_mando || {}).some((summary) => Number(summary?.jogos_com_dados) > 0);
         }
     }
 

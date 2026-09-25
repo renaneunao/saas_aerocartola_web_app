@@ -2379,8 +2379,83 @@
 
 @media (max-width: 620px) {
   .ideal-card-actions { width: min(310px, calc(100vw - 18px)); padding: 10px; }
-  .ideal-card-hover-avatar { width: 40px !important; height: 40px !important; }
+  .ideal-card-hover-avatar { width: 54px !important; height: 54px !important; }
   .ideal-card-hover-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ideal-card-hover-stats b, .ideal-card-hover-indices b { font-size: 9px; }
   .ideal-card-action { min-height: 43px; }
+}
+
+/* Refinos finais do campo e do painel de detalhes. */
+@media (min-width: 1101px) {
+  .ideal-field-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(250px, 280px);
+  }
+}
+
+.ideal-card-actions-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  padding: 0;
+  border: 1px solid rgba(148, 163, 184, .22);
+  border-radius: 8px;
+  color: #aab9c8;
+  background: rgba(2, 12, 23, .72);
+  cursor: pointer;
+}
+.ideal-card-actions-close:hover,
+.ideal-card-actions-close:focus-visible {
+  border-color: rgba(82, 230, 255, .55);
+  color: #f4fbff;
+  background: rgba(82, 230, 255, .13);
+  outline: none;
+}
+.ideal-card-actions-close i { font-size: 11px; }
+.ideal-player-card.is-hover-closed > .ideal-card-actions {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  transform: translate(-7px, -50%) !important;
+}
+.ideal-card-hover-avatar {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 15px !important;
+}
+.ideal-card-hover-match .ideal-fixture-team,
+.ideal-card-hover-match .ideal-fixture-team-solo,
+.ideal-card-hover-match .ideal-fixture-team img,
+.ideal-card-hover-match .ideal-fixture-team i,
+.ideal-card-hover-match .ideal-fixture-team-solo img,
+.ideal-card-hover-match .ideal-fixture-team-solo i {
+  width: 24px !important;
+  min-width: 24px !important;
+  height: 24px !important;
+  min-height: 24px !important;
+}
+.ideal-player-visual > .ideal-player-indicators {
+  overflow: visible !important;
+  padding-top: 3px;
+  padding-bottom: 2px;
+}
+
+@media (max-width: 620px) {
+  .ideal-card-actions-close { top: 6px; right: 6px; width: 23px; height: 23px; }
+  .ideal-card-hover-avatar { width: 54px !important; height: 54px !important; }
+  .ideal-card-hover-match .ideal-fixture-team,
+  .ideal-card-hover-match .ideal-fixture-team-solo,
+  .ideal-card-hover-match .ideal-fixture-team img,
+  .ideal-card-hover-match .ideal-fixture-team i,
+  .ideal-card-hover-match .ideal-fixture-team-solo img,
+  .ideal-card-hover-match .ideal-fixture-team-solo i {
+    width: 20px !important;
+    min-width: 20px !important;
+    height: 20px !important;
+    min-height: 20px !important;
+  }
 }

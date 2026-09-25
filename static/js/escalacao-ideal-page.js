@@ -203,7 +203,7 @@
       actions.push(`<button type="button" class="ideal-card-action ideal-card-action-luxury" data-special-role="luxury" data-athlete-id="${playerId}" title="Definir ${name} como reserva de luxo"><span class="ideal-card-action-icon"><i class="fas fa-diamond"></i></span><span>Reserva de luxo</span><small>entra como melhor reserva</small></button>`);
     }
     actions.push(`<button type="button" class="ideal-card-action ideal-card-action-unavailable" data-availability-action="poupar" data-athlete-id="${playerId}" title="Marcar ${name} como não joga"><span class="ideal-card-action-icon"><i class="fas fa-user-slash"></i></span><span>Não joga</span><small>remove das próximas escolhas</small></button>`);
-    return `<div class="ideal-card-actions" aria-label="Detalhes e ações de ${name}">${cardHoverDetails(player, position, kind)}<div class="ideal-card-actions-head"><i class="fas fa-sliders"></i><span>Ações rápidas</span></div>${actions.join('')}<div class="ideal-card-hover-foot"><i class="fas fa-hand-pointer"></i><span>Detalhes do atleta e comandos rápidos</span></div></div>`;
+    return `<div class="ideal-card-actions" aria-label="Detalhes e ações de ${name}"><button type="button" class="ideal-card-actions-close" data-card-hover-close aria-label="Fechar detalhes de ${name}" title="Fechar"><i class="fas fa-xmark"></i></button>${cardHoverDetails(player, position, kind)}<div class="ideal-card-actions-head"><i class="fas fa-sliders"></i><span>Ações rápidas</span></div>${actions.join('')}<div class="ideal-card-hover-foot"><i class="fas fa-hand-pointer"></i><span>Detalhes do atleta e comandos rápidos</span></div></div>`;
   }
 
   function renderTeamSummary(data) {
@@ -1046,6 +1046,13 @@
     $('fonteProvaveisSelect')?.addEventListener('change', aoMudarFonteProvaveis);
     $('manualEditBtn')?.addEventListener('click', toggleManualEdit);
     $('escalacaoContent')?.addEventListener('click', (event) => {
+      const hoverClose = event.target.closest('[data-card-hover-close]');
+      if (hoverClose) {
+        event.preventDefault();
+        event.stopPropagation();
+        hoverClose.closest('.ideal-player-card')?.classList.add('is-hover-closed');
+        return;
+      }
       const submitButton = event.target.closest('[data-submit-lineup]');
       if (submitButton) {
         event.preventDefault();
@@ -1069,6 +1076,10 @@
       }
       const target = event.target.closest('[data-picker-kind]');
       if (target) openPicker(target.dataset.pickerPosition, target.dataset.pickerKind, target.dataset.pickerIndex);
+    });
+    $('escalacaoContent')?.addEventListener('pointerover', (event) => {
+      const card = event.target.closest('.ideal-player-card');
+      if (card && !card.contains(event.relatedTarget)) card.classList.remove('is-hover-closed');
     });
     $('escalacaoContent')?.addEventListener('keydown', (event) => {
       const target = event.target.closest('[data-picker-kind]');

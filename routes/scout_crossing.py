@@ -678,52 +678,219 @@ def _aggregate_matches(matches):
     }
 
 
-def _opponent_conceded_scouts(cursor, adversario_id, posicao_id, temporada, rodada_limite):
-    """Média por jogo cedida pelo adversário à posição antes da rodada atual."""
-    main_scouts = POSITION_SCOUTS.get(posicao_id, ())
-    if not adversario_id or not main_scouts:
-        return {"jogos": 0, "pontuacao": 0, "scouts": {}}
+def _empty_conceded_summary(main_scouts):
+    return {
+        "jogos": 0,
+        "jogos_com_dados": 0,
+        "atletas_analisados": 0,
+        "pontuacao": 0,
+        "pontuacao_por_jogo": 0,
+        "pontuacao_por_atleta": 0,
+        "pico": 0,
+        "scouts": {key: 0 for key in main_scouts},
+        "scouts_detalhados": [],
+        "recorrencia": {"5": 0, "8": 0, "12": 0},
+        "historico": [],
+    }
 
-    match_totals = ", ".join(
-        f"SUM(COALESCE(p.scout_{key}, 0)) AS total_{key}" for key in main_scouts
+
+def _summarize_conceded_games(games, main_scouts):
+    """Resume o cedimento por partida, sem misturar atletas ou rodadas.
+
+    O indicador principal é a média por jogo da posição adversária. Também
+    mantemos a média por atleta, o pico individual e a recorrência dos scouts
+    para que o usuário consiga distinguir volume de consistência.
+    """
+    summary = _empty_conceded_summary(main_scouts)
+    summary["jogos"] = len(games)
+    data_games = [game for game in games if game["jogadores"]]
+    summary["jogos_com_dados"] = len(data_games)
+    summary["atletas_analisados"] = sum(len(game["jogadores"]) for game in data_games)
+    if not data_games:
+        return summary
+
+    denominator = float(len(data_games))
+    points = [player["pontuacao"] for game in data_games for player in game["jogadores"]]
+    summary["pontuacao_por_jogo"] = _json_number(
+        sum(game["pontuacao"] for game in data_games) / denominator
     )
-    averages = ", ".join(
-        f"AVG(total_{key}) AS media_{key}" for key in main_scouts
+    summary["pontuacao"] = summary["pontuacao_por_jogo"]
+    summary["pontuacao_por_atleta"] = _json_number(sum(points) / max(1, len(points)))
+    summary["pico"] = _json_number(max(points) if points else 0)
+
+    for key in main_scouts:
+        total = sum(game["scouts"].get(key, 0) for game in data_games)
+        occurrences = sum(1 for game in data_games if game["scouts"].get(key, 0) > 0)
+        summary["scouts"][key] = _json_number(total / denominator)
+        summary["scouts_detalhados"].append(
+            {
+                "codigo": key,
+                "nome": SCOUT_LABELS[key],
+                "media_por_jogo": _json_number(total / denominator),
+                "total": _json_int(total),
+                "recorrencia": round(occurrences / denominator * 100),
+            }
+        )
+
+    for threshold in (5, 8, 12):
+        count = sum(
+            1
+            for game in data_games
+            if any(player["pontuacao"] >= threshold for player in game["jogadores"])
+        )
+        summary["recorrencia"][str(threshold)] = round(count / denominator * 100)
+    summary["scouts_detalhados"].sort(
+        key=lambda item: (item["media_por_jogo"], item["recorrencia"]), reverse=True
     )
+    return summary
+
+
+def _opponent_conceded_scouts(
+    cursor, adversario_id, posicao_id, temporada, rodada_limite, mando_jogador=None
+):
+    """Monta um perfil de cedimento real do adversário.
+
+    Cada linha histórica é uma partida do adversário-alvo. Os números são
+    agregados somente pelos atletas da posição que enfrentaram aquele clube e
+    entraram em campo. O recorte recomendado inverte o mando do jogador:
+    se o atleta joga em casa, o adversário é analisado nos jogos fora, e
+    vice-versa.
+    """
+    main_scouts = POSITION_SCOUTS.get(posicao_id, ())
+    empty = {
+        "adversario_id": _json_int(adversario_id),
+        "jogos": 0,
+        "pontuacao": 0,
+        "scouts": {},
+        "mando_relevante": "",
+        "por_mando": {"casa": _empty_conceded_summary(main_scouts), "fora": _empty_conceded_summary(main_scouts)},
+        "historico": [],
+    }
+    if not adversario_id or not main_scouts:
+        return empty
+
     cursor.execute(
         f"""
-        WITH por_jogo AS (
-            SELECT partida.partida_id,
-                   SUM(COALESCE(p.pontuacao, 0)) AS pontos,
-                   {match_totals}
-            FROM acf_partidas partida
-            JOIN acf_pontuados p
-              ON p.rodada_id = partida.rodada_id
-             AND (p.temporada = partida.temporada OR p.temporada IS NULL)
-             AND p.clube_id = CASE
-                 WHEN partida.clube_casa_id = %s THEN partida.clube_visitante_id
-                 ELSE partida.clube_casa_id
-             END
-            WHERE partida.temporada = %s
-              AND partida.valida = TRUE
-              AND partida.rodada_id < %s
-              AND %s IN (partida.clube_casa_id, partida.clube_visitante_id)
-              AND p.posicao_id = %s
+        WITH jogos AS (
+            SELECT p.partida_id, p.rodada_id,
+                   p.clube_casa_id, p.clube_visitante_id,
+                   CASE WHEN p.clube_casa_id = %s THEN 'casa' ELSE 'fora' END AS mando_alvo,
+                   CASE WHEN p.clube_casa_id = %s THEN p.clube_visitante_id ELSE p.clube_casa_id END AS rival_id,
+                   p.placar_oficial_mandante, p.placar_oficial_visitante,
+                   p.partida_data, p.local,
+                   casa.nome AS casa_nome, casa.abreviacao AS casa_abreviacao,
+                   visitante.nome AS visitante_nome, visitante.abreviacao AS visitante_abreviacao
+            FROM acf_partidas p
+            LEFT JOIN acf_clubes casa ON casa.id = p.clube_casa_id
+            LEFT JOIN acf_clubes visitante ON visitante.id = p.clube_visitante_id
+            WHERE p.temporada = %s
+              AND p.valida = TRUE
+              AND p.rodada_id < %s
+              AND %s IN (p.clube_casa_id, p.clube_visitante_id)
+        ), pontos AS (
+            SELECT DISTINCT ON (p.atleta_id, p.rodada_id, p.clube_id)
+                   p.atleta_id, p.rodada_id, p.clube_id,
+                   p.apelido, p.foto, p.pontuacao,
+                   p.scout_a, p.scout_ca, p.scout_cv, p.scout_de, p.scout_ds,
+                   p.scout_fc, p.scout_fd, p.scout_ff, p.scout_fs, p.scout_g,
+                   p.scout_gs, p.scout_i, p.scout_sg
+            FROM acf_pontuados p
+            WHERE p.posicao_id = %s
               AND p.entrou_em_campo = TRUE
-            GROUP BY partida.partida_id
+              AND (p.temporada = %s OR p.temporada IS NULL)
+            ORDER BY p.atleta_id, p.rodada_id, p.clube_id,
+                     CASE WHEN p.temporada = %s THEN 0 ELSE 1 END
         )
-        SELECT COUNT(*) AS jogos, AVG(pontos) AS media_pontos, {averages}
-        FROM por_jogo
+        SELECT j.*, p.atleta_id, p.apelido, p.foto, p.pontuacao,
+               p.scout_a, p.scout_ca, p.scout_cv, p.scout_de, p.scout_ds,
+               p.scout_fc, p.scout_fd, p.scout_ff, p.scout_fs, p.scout_g,
+               p.scout_gs, p.scout_i, p.scout_sg
+        FROM jogos j
+        LEFT JOIN pontos p
+          ON p.rodada_id = j.rodada_id
+         AND p.clube_id = j.rival_id
+        ORDER BY j.rodada_id DESC, p.pontuacao DESC NULLS LAST
         """,
-        (adversario_id, temporada, rodada_limite, adversario_id, posicao_id),
+        (adversario_id, adversario_id, temporada, rodada_limite, adversario_id, posicao_id, temporada, temporada),
     )
-    row = cursor.fetchone()
+
+    grouped = {}
+    for row in cursor.fetchall():
+        partida_id = _json_int(row["partida_id"])
+        game = grouped.setdefault(
+            partida_id,
+            {
+                "partida_id": partida_id,
+                "rodada": _json_int(row["rodada_id"]),
+                "mando_adversario": row["mando_alvo"],
+                "mando_label": "Casa" if row["mando_alvo"] == "casa" else "Fora",
+                "pontuacao": 0,
+                "pico": 0,
+                "scouts": {key: 0 for key in main_scouts},
+                "jogadores": [],
+                "casa": _club_payload(row["clube_casa_id"], row["casa_nome"], row["casa_abreviacao"]),
+                "fora": _club_payload(row["clube_visitante_id"], row["visitante_nome"], row["visitante_abreviacao"]),
+                "clube_id": _json_int(adversario_id),
+                "placar_casa": row["placar_oficial_mandante"],
+                "placar_fora": row["placar_oficial_visitante"],
+                "local": row["local"] or "",
+                "partida_data": row["partida_data"] or "",
+            },
+        )
+        if row["atleta_id"] is None:
+            continue
+        player_scouts = {
+            key: _json_int(row[f"scout_{key}"]) for key in main_scouts
+        }
+        player = {
+            "id": _json_int(row["atleta_id"]),
+            "nome": row["apelido"] or f"Atleta {_json_int(row['atleta_id'])}",
+            "pontuacao": _json_number(row["pontuacao"]),
+            "scouts": player_scouts,
+        }
+        game["jogadores"].append(player)
+        game["pontuacao"] += _json_number(row["pontuacao"])
+        game["pico"] = max(game["pico"], _json_number(row["pontuacao"]))
+        for key, value in player_scouts.items():
+            game["scouts"][key] += value
+
+    games = list(grouped.values())
+    for game in games:
+        game["pontuacao"] = _json_number(game["pontuacao"])
+        game["pico"] = _json_number(game["pico"])
+        game["jogadores"].sort(key=lambda item: item["pontuacao"], reverse=True)
+        game["jogadores"] = game["jogadores"][:5]
+        game["scouts"] = {key: _json_int(value) for key, value in game["scouts"].items()}
+    games.sort(key=lambda item: item["rodada"], reverse=True)
+
+    by_mando = {
+        "casa": [game for game in games if game["mando_adversario"] == "casa"],
+        "fora": [game for game in games if game["mando_adversario"] == "fora"],
+    }
+    summaries = {
+        mando: _summarize_conceded_games(items, main_scouts)
+        for mando, items in by_mando.items()
+    }
+    for mando, items in by_mando.items():
+        summaries[mando]["historico"] = items[:8]
+
+    mando_relevante = ""
+    if mando_jogador == "casa":
+        mando_relevante = "fora"
+    elif mando_jogador == "fora":
+        mando_relevante = "casa"
+    selected = summaries.get(mando_relevante) or _empty_conceded_summary(main_scouts)
     return {
-        "jogos": _json_int(row["jogos"] if row else 0),
-        "pontuacao": _json_number(row["media_pontos"] if row else 0),
-        "scouts": {
-            key: _json_number(row[f"media_{key}"] if row else 0) for key in main_scouts
-        },
+        "adversario_id": _json_int(adversario_id),
+        "jogos": selected["jogos_com_dados"],
+        "jogos_com_dados": selected["jogos_com_dados"],
+        "pontuacao": selected["pontuacao_por_jogo"],
+        "scouts": selected["scouts"],
+        "scouts_detalhados": selected["scouts_detalhados"],
+        "recorrencia": selected["recorrencia"],
+        "mando_relevante": mando_relevante,
+        "por_mando": summaries,
+        "historico": selected["historico"],
     }
 
 
@@ -987,7 +1154,12 @@ def crossing():
         confronto = _current_fixture(cursor, player["clube_id"], temporada, rodada)
         adversario_id = confronto["adversario"]["id"] if confronto else None
         cedidos = _opponent_conceded_scouts(
-            cursor, adversario_id, posicao_id, temporada, rodada
+            cursor,
+            adversario_id,
+            posicao_id,
+            temporada,
+            rodada,
+            confronto.get("mando") if confronto else None,
         )
         return jsonify(
             {
