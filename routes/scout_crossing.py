@@ -203,17 +203,45 @@ def _round_fixture_options(cursor, temporada, rodada):
     )
     fixtures = []
     for row in cursor.fetchall():
-        fixtures.append(
-            {
-                "id": _json_int(row["partida_id"]),
-                "casa": _club_payload(row["clube_casa_id"], row["casa_nome"], row["casa_abreviacao"]),
-                "fora": _club_payload(row["clube_visitante_id"], row["visitante_nome"], row["visitante_abreviacao"]),
-                "placar_casa": row["placar_oficial_mandante"],
-                "placar_fora": row["placar_oficial_visitante"],
-                "local": row["local"] or "",
-                "valido": bool(row["valida"]),
-            }
+        fixture = {
+            "id": _json_int(row["partida_id"]),
+            "casa": _club_payload(row["clube_casa_id"], row["casa_nome"], row["casa_abreviacao"]),
+            "fora": _club_payload(row["clube_visitante_id"], row["visitante_nome"], row["visitante_abreviacao"]),
+            "placar_casa": row["placar_oficial_mandante"],
+            "placar_fora": row["placar_oficial_visitante"],
+            "local": row["local"] or "",
+            "valido": bool(row["valida"]),
+        }
+        # A seleção visual precisa usar exatamente os mesmos pesos do
+        # dashboard e da leitura lado a lado, inclusive quando o jogo ainda
+        # não tem placar oficial.
+        _attach_fixture_indices(cursor, fixture, temporada, rodada)
+        fixtures.append(fixture)
+
+    # A barra é uma única barra por confronto: o maior desequilíbrio da
+    # rodada ocupa metade da régua, e os demais jogos são comparáveis entre si.
+    max_difference = max(
+        (
+            abs(
+                float((fixture.get("casa") or {}).get("favoritismo") or 0)
+                - float((fixture.get("fora") or {}).get("favoritismo") or 0)
+            )
+            for fixture in fixtures
+        ),
+        default=0.0,
+    ) or 1.0
+    for fixture in fixtures:
+        home_favoritism = float((fixture.get("casa") or {}).get("favoritismo") or 0)
+        away_favoritism = float((fixture.get("fora") or {}).get("favoritismo") or 0)
+        difference = home_favoritism - away_favoritism
+        fixture["favoritismo_diferenca"] = round(difference, 2)
+        fixture["favoritismo_lado"] = (
+            "casa" if difference > 0 else "visitante" if difference < 0 else "equilibrado"
         )
+        fixture["favoritismo_bar_percent"] = round(
+            min(50.0, abs(difference) / max_difference * 50.0), 1
+        )
+        fixture["favoritismo_maximo"] = round(max_difference, 2)
     return fixtures
 
 

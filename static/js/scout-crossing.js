@@ -65,10 +65,19 @@
         const content = side === 'casa' ? `<b>${label}</b>${image}` : `${image}<b>${label}</b>`;
         return `<button type="button" class="scx-match-team ${teamClass}${selected ? ' is-selected' : ''}" data-team="${team.id}" role="option" aria-selected="${selected}" aria-disabled="${!valid}" title="${escapeHtml(valid ? `Selecionar ${team.nome || team.abreviacao || ''} · ${side === 'casa' ? 'casa' : 'fora'}` : `${team.nome || team.abreviacao || ''} · sem confronto válido`)}"${valid ? '' : ' disabled'}>${content}</button>`;
     }
+    function fixtureFavoritismMarkup(fixture) {
+        const home = Number(fixture?.casa?.favoritismo || 0);
+        const away = Number(fixture?.fora?.favoritismo || 0);
+        const difference = Number(fixture?.favoritismo_diferenca || (home - away));
+        const side = fixture?.favoritismo_lado || (difference > 0 ? 'casa' : difference < 0 ? 'visitante' : 'equilibrado');
+        const width = Math.max(0, Math.min(50, Number(fixture?.favoritismo_bar_percent || 0)));
+        const title = `Favoritismo do confronto · ${number(Math.abs(difference))} de diferença · escala comum da rodada`;
+        return `<div class="scx-match-indices" title="${escapeHtml(title)}"><div class="scx-match-indices-head"><b>Favoritismo do confronto</b><span>${escapeHtml(side === 'casa' ? 'casa' : side === 'visitante' ? 'fora' : 'equilibrado')}</span></div><div class="scx-match-favoritism-meter is-${side}" aria-label="${escapeHtml(title)}"><i style="--scx-favoritism-width:${width}%"></i></div><div class="scx-match-favoritism-values"><span>Casa <strong>${number(home)}</strong></span><span>Fora <strong>${number(away)}</strong></span></div></div>`;
+    }
     function fixtureOption(fixture, index) {
         const invalid = fixture.valido === false;
         const status = invalid ? '<small class="scx-match-status">sem jogo válido</small>' : '';
-        return `<article class="scx-match-option${invalid ? ' is-invalid' : ''}" data-fixture="${fixture.id}" aria-label="${escapeHtml(`${fixture.casa?.nome || ''} x ${fixture.fora?.nome || ''}`)}"><div class="scx-match-option-teams">${teamButton(fixture.casa || {}, 'casa', fixture)}<span class="scx-match-option-vs">×</span>${teamButton(fixture.fora || {}, 'fora', fixture)}</div>${status}</article>`;
+        return `<article class="scx-match-option${invalid ? ' is-invalid' : ''}" data-fixture="${fixture.id}" aria-label="${escapeHtml(`${fixture.casa?.nome || ''} x ${fixture.fora?.nome || ''}`)}"><div class="scx-match-option-teams">${teamButton(fixture.casa || {}, 'casa', fixture)}<span class="scx-match-option-vs">×</span>${teamButton(fixture.fora || {}, 'fora', fixture)}</div>${fixtureFavoritismMarkup(fixture)}${status}</article>`;
     }
     function renderTeams(fixtures) {
         const target = $('scoutCrossingTeams'); if (!target) return;

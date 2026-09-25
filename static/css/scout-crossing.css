@@ -503,3 +503,83 @@
   .scx-match-team .scx-team-fallback { width: 1.3rem; height: 1.3rem; flex-basis: 1.3rem; }
   .scx-match-team b { font-size: .58rem; }
 }
+
+/* Seleção visual dos confrontos: os escudos funcionam como botões e a régua
+   representa o desequilíbrio do jogo, sempre na mesma escala da rodada. */
+.scx-match-option {
+  min-height: 7.3rem;
+  padding: .78rem .7rem .62rem;
+}
+.scx-match-team {
+  min-height: 2.8rem;
+  padding: .28rem .24rem;
+  border: 1px solid rgba(127, 191, 255, .2);
+  border-radius: .55rem;
+  background: rgba(7, 22, 38, .52);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .018);
+}
+.scx-match-team:hover,
+.scx-match-team:focus-visible {
+  border-color: rgba(82, 230, 255, .82);
+  background: rgba(53, 199, 217, .13);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(82, 230, 255, .12);
+}
+.scx-match-team.is-selected {
+  border-color: rgba(82, 230, 255, .95);
+  background: rgba(53, 199, 217, .18);
+  box-shadow: 0 0 0 2px rgba(82, 230, 255, .16), 0 7px 18px rgba(0, 0, 0, .18);
+}
+.scx-match-team img,
+.scx-match-team .scx-team-fallback {
+  width: 2rem;
+  height: 2rem;
+  flex-basis: 2rem;
+  padding: .16rem;
+  border: 1px solid rgba(127, 191, 255, .38);
+  border-radius: .58rem;
+  background: rgba(2, 12, 23, .72);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, .2);
+}
+.scx-match-team .scx-team-fallback { padding: 0; }
+.scx-match-team b { font-size: .72rem; }
+.scx-match-indices { margin-top: .48rem; }
+.scx-match-indices-head { display: flex; align-items: center; justify-content: space-between; gap: .4rem; color: var(--scx-muted); font-size: .49rem; text-transform: uppercase; letter-spacing: .05em; }
+.scx-match-indices-head b { color: var(--scx-accent); font-weight: 800; }
+.scx-match-indices-head span { color: var(--scx-muted); font: 700 .46rem 'JetBrains Mono', monospace; }
+.scx-match-favoritism-meter { position: relative; height: .42rem; margin-top: .28rem; overflow: hidden; border: 1px solid rgba(127, 191, 255, .16); border-radius: 99px; background: rgba(127, 191, 255, .11); }
+.scx-match-favoritism-meter::before { content: ''; position: absolute; top: -1px; bottom: -1px; left: 50%; z-index: 1; width: 1px; background: rgba(226, 232, 240, .46); }
+.scx-match-favoritism-meter i { position: absolute; top: 0; bottom: 0; width: var(--scx-favoritism-width, 0%); border-radius: inherit; background: linear-gradient(90deg, rgba(53, 199, 217, .68), #35c7d9); }
+.scx-match-favoritism-meter.is-casa i { right: 50%; background: linear-gradient(90deg, rgba(53, 199, 217, .35), #35c7d9); }
+.scx-match-favoritism-meter.is-visitante i { left: 50%; background: linear-gradient(90deg, #35c7d9, rgba(53, 199, 217, .35)); }
+.scx-match-favoritism-meter.is-equilibrado i { left: 50%; width: 0; }
+.scx-match-favoritism-values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .3rem; margin-top: .24rem; color: var(--scx-muted); font: 600 .48rem 'JetBrains Mono', monospace; }
+.scx-match-favoritism-values span:last-child { text-align: right; }
+.scx-match-favoritism-values strong { color: var(--scx-text); font-weight: 800; }
+
+/* O confronto fica em uma coluna própria: o tamanho dos scouts não pode
+   empurrar escudos e placar para os lados. */
+.scx-side-history-row {
+  grid-template-columns: 3.15rem minmax(11rem, 1fr) minmax(6.5rem, auto);
+}
+.scx-side-history-row > div {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+.scx-side-history-row .scx-match-fixture { display: grid; place-items: center; width: 100%; }
+.scx-side-history-row .scx-fixture-pair { width: max-content; max-width: 100%; min-width: 0; margin-inline: auto; grid-template-columns: auto auto auto auto auto; }
+.scx-side-history-row > strong { min-width: 6.5rem; }
+
+@media (max-width: 760px) {
+  .scx-side-history-row { grid-template-columns: 3rem minmax(9rem, 1fr) minmax(5.2rem, auto); }
+  .scx-side-history-row > strong { min-width: 5.2rem; }
+}
+
+@media (max-width: 520px) {
+  .scx-match-option { min-height: 6.8rem; padding-inline: .45rem; }
+  .scx-match-team img,
+  .scx-match-team .scx-team-fallback { width: 1.75rem; height: 1.75rem; flex-basis: 1.75rem; }
+  .scx-match-team b { font-size: .62rem; }
+}
