@@ -1,72 +1,64 @@
-<section class="module-probables-source" data-recalculate="{{ modulo_recalcular_funcao }}">
-  <div>
-    <span class="module-probables-source-kicker"><i class="fas fa-radar"></i> Disponibilidade</span>
-    <strong>Fonte de prováveis</strong>
-    <small>Essa escolha atualiza o ranking deste módulo e da escalação ideal.</small>
+<section class="module-probables-source" data-recalculate="{{ modulo_recalcular_funcao }}" aria-label="Fonte de prováveis">
+  <div class="module-probables-source-label">
+    <span class="module-probables-source-kicker"><i class="fas fa-signal"></i> Prováveis</span>
+    <strong>Fonte</strong>
   </div>
-  <label class="module-probables-source-control">
-    <span class="sr-only">Fonte de prováveis</span>
-    <select id="moduleProbablesSource" aria-label="Fonte de prováveis">
-      <option value="globo">Globo / Cartola</option>
-      <option value="provaveisdocartola">Prováveis do Cartola</option>
-    </select>
-    <span id="moduleProbablesSourceStatus" role="status" aria-live="polite"></span>
-  </label>
+  <div class="module-probables-toggle" role="group" aria-label="Escolher fonte de prováveis">
+    <button type="button" data-source="globo" title="Usar prováveis oficiais do Globo / Cartola">
+      <img src="{{ url_for('static', filename='img/fonte-provaveis-globo.png') }}" alt="">
+      <span>Globo / Cartola</span>
+    </button>
+    <button type="button" data-source="provaveisdocartola" title="Usar prováveis do site Prováveis do Cartola">
+      <img src="{{ url_for('static', filename='img/fonte-provaveis-cartola.png') }}" alt="">
+      <span>Prováveis do Cartola</span>
+    </button>
+  </div>
+  <span class="module-probables-source-status" role="status" aria-live="polite"></span>
 </section>
 
 <style>
   .module-probables-source {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    padding: .85rem 1rem;
-    border: 1px solid rgba(103, 232, 249, .22);
-    border-radius: .85rem;
-    background: linear-gradient(110deg, rgba(8, 31, 48, .9), rgba(12, 25, 43, .82));
-    box-shadow: 0 10px 28px rgba(0, 0, 0, .14);
+    justify-content: flex-end;
+    gap: .65rem;
+    padding: .55rem .75rem .65rem;
+    border-bottom: 1px solid rgba(103, 232, 249, .14);
   }
+  .module-probables-source-label { margin-right: auto; }
   .module-probables-source-kicker,
-  .module-probables-source strong,
-  .module-probables-source small { display: block; }
+  .module-probables-source strong { display: block; }
   .module-probables-source-kicker {
     color: #67e8f9;
-    font-size: .62rem;
+    font-size: .56rem;
     font-weight: 800;
     letter-spacing: .08em;
     text-transform: uppercase;
   }
   .module-probables-source-kicker i { margin-right: .35rem; }
-  .module-probables-source strong { margin-top: .15rem; color: #f4fbff; font-size: .85rem; }
-  .module-probables-source small { margin-top: .18rem; color: #89a7b9; font-size: .64rem; }
-  .module-probables-source-control { display: grid; justify-items: end; gap: .2rem; min-width: 12rem; }
-  .module-probables-source-control select {
-    width: 100%;
-    padding: .48rem .65rem;
-    border: 1px solid rgba(103, 232, 249, .35);
-    border-radius: .5rem;
-    color: #ecfeff;
-    background: rgba(2, 12, 23, .82);
-    font-size: .72rem;
-    font-weight: 700;
-  }
-  .module-probables-source-control select:disabled { opacity: .62; cursor: wait; }
-  #moduleProbablesSourceStatus { min-height: .8rem; color: #7dd3fc; font-size: .58rem; text-align: right; }
-  #moduleProbablesSourceStatus.is-error { color: #fda4af; }
+  .module-probables-source strong { margin-top: .08rem; color: #f4fbff; font-size: .72rem; }
+  .module-probables-toggle { display: inline-flex; align-items: center; gap: .25rem; padding: .18rem; border: 1px solid rgba(103, 232, 249, .18); border-radius: .55rem; background: rgba(2, 12, 23, .54); }
+  .module-probables-toggle button { display: inline-flex; align-items: center; gap: .28rem; min-height: 2rem; padding: .25rem .45rem; border: 1px solid transparent; border-radius: .4rem; color: #8ba8ba; background: transparent; cursor: pointer; font-size: .58rem; font-weight: 750; white-space: nowrap; }
+  .module-probables-toggle button:hover { color: #e8fbff; background: rgba(103, 232, 249, .08); }
+  .module-probables-toggle button.is-selected { border-color: rgba(103, 232, 249, .52); color: #effeff; background: rgba(37, 140, 165, .23); box-shadow: 0 0 0 1px rgba(103, 232, 249, .08); }
+  .module-probables-toggle button:disabled { opacity: .58; cursor: wait; }
+  .module-probables-toggle img { width: 22px; height: 22px; object-fit: contain; border-radius: .3rem; }
+  .module-probables-source-status { min-width: 5rem; color: #7dd3fc; font-size: .55rem; text-align: right; }
+  .module-probables-source-status.is-error { color: #fda4af; }
   @media (max-width: 640px) {
-    .module-probables-source { align-items: stretch; flex-direction: column; gap: .65rem; }
-    .module-probables-source-control { justify-items: stretch; min-width: 0; }
-    #moduleProbablesSourceStatus { text-align: left; }
+    .module-probables-source { align-items: flex-start; flex-wrap: wrap; }
+    .module-probables-toggle { flex: 1 1 100%; }
+    .module-probables-toggle button { flex: 1 1 0; justify-content: center; }
+    .module-probables-source-status { margin-left: auto; }
   }
 </style>
 
 <script>
 (() => {
   const panel = document.querySelector('.module-probables-source');
-  const select = document.getElementById('moduleProbablesSource');
-  const status = document.getElementById('moduleProbablesSourceStatus');
-  if (!panel || !select) return;
+  const buttons = [...panel.querySelectorAll('[data-source]')];
+  const status = panel.querySelector('.module-probables-source-status');
+  if (!panel || !buttons.length) return;
 
   const setStatus = (message, error = false) => {
     if (!status) return;
@@ -101,27 +93,33 @@
     if (!response.ok) throw new Error(result.error || 'Não foi possível salvar a fonte.');
   };
 
+  const setSelected = (source) => buttons.forEach(button => {
+    button.classList.toggle('is-selected', button.dataset.source === source);
+    button.setAttribute('aria-pressed', button.dataset.source === source ? 'true' : 'false');
+  });
+
   readConfig().then(config => {
-    select.value = config.fonte_provaveis || 'globo';
-    select.dataset.previous = select.value;
+    setSelected(config.fonte_provaveis || 'globo');
   }).catch(error => setStatus(error.message, true));
 
-  select.addEventListener('change', async () => {
-    const previous = select.dataset.previous || 'globo';
-    select.disabled = true;
+  buttons.forEach(button => button.addEventListener('click', async () => {
+    const previous = buttons.find(item => item.classList.contains('is-selected'))?.dataset.source || 'globo';
+    const next = button.dataset.source;
+    if (next === previous) return;
+    buttons.forEach(item => { item.disabled = true; });
     setStatus('Salvando e recalculando…');
     try {
-      await saveSource(select.value);
+      await saveSource(next);
+      setSelected(next);
       setStatus('Fonte atualizada.');
       const recalculate = window[panel.dataset.recalculate];
       if (typeof recalculate === 'function') recalculate();
     } catch (error) {
-      select.value = previous;
+      setSelected(previous);
       setStatus(error.message, true);
     } finally {
-      select.disabled = false;
-      select.dataset.previous = select.value;
+      buttons.forEach(item => { item.disabled = false; });
     }
-  });
+  }));
 })();
 </script>
