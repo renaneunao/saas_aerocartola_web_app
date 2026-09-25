@@ -2377,6 +2377,23 @@
 .ideal-card-action-luxury .ideal-card-action-icon { border-color: rgba(208, 183, 255, .34); color: #e1ceff; background: rgba(91, 61, 145, .2); }
 .ideal-card-action-unavailable .ideal-card-action-icon { border-color: rgba(248, 113, 113, .3); color: #ffabb4; background: rgba(127, 29, 44, .2); }
 
+/* Ícones oficiais dos controles de capitão e reserva de luxo. */
+.ideal-cartola-role-icon {
+  display: block;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+.ideal-card-action-icon .ideal-cartola-role-icon {
+  width: 18px;
+  height: 18px;
+}
+.ideal-badge .ideal-cartola-role-icon {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+}
+
 @media (max-width: 620px) {
   .ideal-card-actions { width: min(310px, calc(100vw - 18px)); padding: 10px; }
   .ideal-card-hover-avatar { width: 54px !important; height: 54px !important; }

@@ -60,14 +60,15 @@
         const selected = state.teamIds.includes(Number(team.id));
         const valid = fixture.valido !== false;
         const image = team.escudo ? `<img src="${escapeHtml(team.escudo)}" alt="Escudo de ${escapeHtml(team.nome || team.abreviacao || '')}" loading="lazy">` : '<span class="scx-team-fallback"><i class="fas fa-shield-halved"></i></span>';
-        const score = side === 'casa' ? fixture.placar_casa : fixture.placar_fora;
-        const scoreMarkup = fixtureScore(score);
-        return `<button type="button" class="scx-match-team${selected ? ' is-selected' : ''}" data-team="${team.id}" role="option" aria-selected="${selected}" aria-disabled="${!valid}" title="${escapeHtml(valid ? `Selecionar ${team.nome || team.abreviacao || ''} · ${side === 'casa' ? 'casa' : 'fora'}` : `${team.nome || team.abreviacao || ''} · sem confronto válido`)}"${valid ? '' : ' disabled'}><span class="scx-match-team-side">${side === 'casa' ? 'C' : 'F'}</span>${image}<b>${escapeHtml(team.abreviacao || team.nome || '---')}</b><strong>${escapeHtml(scoreMarkup)}</strong></button>`;
+        const label = escapeHtml(team.abreviacao || team.nome || '---');
+        const teamClass = side === 'casa' ? 'scx-match-team-home' : 'scx-match-team-away';
+        const content = side === 'casa' ? `<b>${label}</b>${image}` : `${image}<b>${label}</b>`;
+        return `<button type="button" class="scx-match-team ${teamClass}${selected ? ' is-selected' : ''}" data-team="${team.id}" role="option" aria-selected="${selected}" aria-disabled="${!valid}" title="${escapeHtml(valid ? `Selecionar ${team.nome || team.abreviacao || ''} · ${side === 'casa' ? 'casa' : 'fora'}` : `${team.nome || team.abreviacao || ''} · sem confronto válido`)}"${valid ? '' : ' disabled'}>${content}</button>`;
     }
     function fixtureOption(fixture, index) {
         const invalid = fixture.valido === false;
         const status = invalid ? '<small class="scx-match-status">sem jogo válido</small>' : '';
-        return `<article class="scx-match-option${invalid ? ' is-invalid' : ''}" data-fixture="${fixture.id}" aria-label="${escapeHtml(`${fixture.casa?.nome || ''} x ${fixture.fora?.nome || ''}`)}"><span class="scx-match-number">${String(index + 1).padStart(2, '0')}</span><div class="scx-match-option-teams">${teamButton(fixture.casa || {}, 'casa', fixture)}<span class="scx-match-option-vs">×</span>${teamButton(fixture.fora || {}, 'fora', fixture)}</div>${status}</article>`;
+        return `<article class="scx-match-option${invalid ? ' is-invalid' : ''}" data-fixture="${fixture.id}" aria-label="${escapeHtml(`${fixture.casa?.nome || ''} x ${fixture.fora?.nome || ''}`)}"><div class="scx-match-option-teams">${teamButton(fixture.casa || {}, 'casa', fixture)}<span class="scx-match-option-vs">×</span>${teamButton(fixture.fora || {}, 'fora', fixture)}</div>${status}</article>`;
     }
     function renderTeams(fixtures) {
         const target = $('scoutCrossingTeams'); if (!target) return;

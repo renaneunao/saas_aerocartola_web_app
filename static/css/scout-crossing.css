@@ -414,3 +414,92 @@
   font: 800 .48rem 'JetBrains Mono', monospace;
 }
 .scx-side-signal > i { max-width: 100%; }
+
+/* Seleção de confrontos alinhada ao dashboard: o jogo é o cartão, com
+   escudo e sigla da casa à esquerda, adversário à direita e o xis no centro. */
+.scx-team-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: .7rem;
+}
+.scx-match-option {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  min-height: 5.7rem;
+  padding: .72rem .62rem .55rem;
+  border: 1px solid rgba(148, 163, 184, .14);
+  border-radius: .7rem;
+  background: rgba(2, 6, 23, .38);
+}
+.scx-match-option:hover { border-color: rgba(53, 199, 217, .56); }
+.scx-match-option.is-invalid { opacity: .52; border-style: dashed; }
+.scx-match-option-teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: .42rem;
+  width: 100%;
+}
+.scx-match-team {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 2.25rem;
+  padding: .2rem .18rem;
+  border: 1px solid transparent;
+  border-radius: .38rem;
+  color: #e2e8f0;
+  background: transparent;
+  cursor: pointer;
+}
+.scx-match-team-home { justify-content: flex-end; text-align: right; }
+.scx-match-team-away { justify-content: flex-start; text-align: left; }
+.scx-match-team:hover,
+.scx-match-team.is-selected {
+  border-color: var(--scx-accent);
+  color: var(--scx-text);
+  background: rgba(53, 199, 217, .1);
+}
+.scx-match-team:disabled { opacity: .42; cursor: not-allowed; }
+.scx-match-team:disabled:hover { border-color: transparent; background: transparent; }
+.scx-match-team img,
+.scx-match-team .scx-team-fallback {
+  width: 1.55rem;
+  height: 1.55rem;
+  flex: 0 0 1.55rem;
+  object-fit: contain;
+}
+.scx-match-team .scx-team-fallback { display: grid; place-items: center; color: #64748b; }
+.scx-match-team b {
+  min-width: 0;
+  max-width: 3.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: .68rem;
+  font-weight: 800;
+}
+.scx-match-team-home b { margin-right: .3rem; }
+.scx-match-team-away b { margin-left: .3rem; }
+.scx-match-option-vs { color: #64748b; font-size: .78rem; font-weight: 800; }
+.scx-match-status {
+  display: block;
+  margin-top: .38rem;
+  color: #fca5a5;
+  font-size: .5rem;
+  text-align: center;
+}
+
+@media (max-width: 1200px) {
+  .scx-team-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .scx-team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .scx-match-option { min-height: 5rem; padding-inline: .42rem; }
+  .scx-match-team img,
+  .scx-match-team .scx-team-fallback { width: 1.3rem; height: 1.3rem; flex-basis: 1.3rem; }
+  .scx-match-team b { font-size: .58rem; }
+}
