@@ -2463,6 +2463,17 @@
 .ideal-player-status.is-unlikely { color: #fff; background: #ef476f; }
 .ideal-player-status.is-null { color: #e5e7eb; background: #64748b; }
 
+/* O aumento horizontal do campo também aumentou os cards. Reserve uma
+   faixa inferior maior para que defesa e goleiro permaneçam dentro do campo,
+   sem colidir com o treinador. */
+@media (min-width: 1101px) {
+  .ideal-field-rows {
+    inset: 7% 9% 14%;
+  }
+  .ideal-field-row-defense { transform: translateY(-1%); }
+  .ideal-field-row-goalkeeper { transform: translateY(-2%); }
+}
+
 .ideal-card-actions-close {
   position: absolute;
   top: 8px;

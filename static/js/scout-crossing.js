@@ -62,7 +62,9 @@
         const image = team.escudo ? `<img src="${escapeHtml(team.escudo)}" alt="Escudo de ${escapeHtml(team.nome || team.abreviacao || '')}" loading="lazy">` : '<span class="scx-team-fallback"><i class="fas fa-shield-halved"></i></span>';
         const label = escapeHtml(team.abreviacao || team.nome || '---');
         const teamClass = side === 'casa' ? 'scx-match-team-home' : 'scx-match-team-away';
-        const content = side === 'casa' ? `<b>${label}</b>${image}` : `${image}<b>${label}</b>`;
+        // O escudo fica no lado externo do botão e a sigla voltada para o
+        // centro do confronto, como na leitura do dashboard.
+        const content = side === 'casa' ? `${image}<b>${label}</b>` : `<b>${label}</b>${image}`;
         return `<button type="button" class="scx-match-team ${teamClass}${selected ? ' is-selected' : ''}" data-team="${team.id}" role="option" aria-selected="${selected}" aria-disabled="${!valid}" title="${escapeHtml(valid ? `Selecionar ${team.nome || team.abreviacao || ''} · ${side === 'casa' ? 'casa' : 'fora'}` : `${team.nome || team.abreviacao || ''} · sem confronto válido`)}"${valid ? '' : ' disabled'}>${content}</button>`;
     }
     function fixtureFavoritismMarkup(fixture) {

@@ -580,11 +580,13 @@
 .scx-match-team-away b { margin-inline: .35rem; }
 .scx-match-favoritism-meter.is-casa i {
   right: 50%;
-  background: linear-gradient(90deg, rgba(53, 199, 217, .12) 0%, rgba(53, 199, 217, .42) 58%, #68edf0 100%);
+  background: #68edf0;
+  box-shadow: 0 0 8px rgba(104, 237, 240, .42);
 }
 .scx-match-favoritism-meter.is-visitante i {
   left: 50%;
-  background: linear-gradient(90deg, #68edf0 0%, rgba(53, 199, 217, .42) 42%, rgba(53, 199, 217, .12) 100%);
+  background: #68edf0;
+  box-shadow: 0 0 8px rgba(104, 237, 240, .42);
 }
 .scx-side-history-row .scx-match-fixture { display: grid; place-items: center; width: 100%; }
 .scx-side-history-row .scx-fixture-pair { width: max-content; max-width: 100%; min-width: 0; margin-inline: auto; grid-template-columns: auto auto auto auto auto; }

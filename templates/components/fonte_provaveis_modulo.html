@@ -1,0 +1,127 @@
+<section class="module-probables-source" data-recalculate="{{ modulo_recalcular_funcao }}">
+  <div>
+    <span class="module-probables-source-kicker"><i class="fas fa-radar"></i> Disponibilidade</span>
+    <strong>Fonte de prováveis</strong>
+    <small>Essa escolha atualiza o ranking deste módulo e da escalação ideal.</small>
+  </div>
+  <label class="module-probables-source-control">
+    <span class="sr-only">Fonte de prováveis</span>
+    <select id="moduleProbablesSource" aria-label="Fonte de prováveis">
+      <option value="globo">Globo / Cartola</option>
+      <option value="provaveisdocartola">Prováveis do Cartola</option>
+    </select>
+    <span id="moduleProbablesSourceStatus" role="status" aria-live="polite"></span>
+  </label>
+</section>
+
+<style>
+  .module-probables-source {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: .85rem 1rem;
+    border: 1px solid rgba(103, 232, 249, .22);
+    border-radius: .85rem;
+    background: linear-gradient(110deg, rgba(8, 31, 48, .9), rgba(12, 25, 43, .82));
+    box-shadow: 0 10px 28px rgba(0, 0, 0, .14);
+  }
+  .module-probables-source-kicker,
+  .module-probables-source strong,
+  .module-probables-source small { display: block; }
+  .module-probables-source-kicker {
+    color: #67e8f9;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .module-probables-source-kicker i { margin-right: .35rem; }
+  .module-probables-source strong { margin-top: .15rem; color: #f4fbff; font-size: .85rem; }
+  .module-probables-source small { margin-top: .18rem; color: #89a7b9; font-size: .64rem; }
+  .module-probables-source-control { display: grid; justify-items: end; gap: .2rem; min-width: 12rem; }
+  .module-probables-source-control select {
+    width: 100%;
+    padding: .48rem .65rem;
+    border: 1px solid rgba(103, 232, 249, .35);
+    border-radius: .5rem;
+    color: #ecfeff;
+    background: rgba(2, 12, 23, .82);
+    font-size: .72rem;
+    font-weight: 700;
+  }
+  .module-probables-source-control select:disabled { opacity: .62; cursor: wait; }
+  #moduleProbablesSourceStatus { min-height: .8rem; color: #7dd3fc; font-size: .58rem; text-align: right; }
+  #moduleProbablesSourceStatus.is-error { color: #fda4af; }
+  @media (max-width: 640px) {
+    .module-probables-source { align-items: stretch; flex-direction: column; gap: .65rem; }
+    .module-probables-source-control { justify-items: stretch; min-width: 0; }
+    #moduleProbablesSourceStatus { text-align: left; }
+  }
+</style>
+
+<script>
+(() => {
+  const panel = document.querySelector('.module-probables-source');
+  const select = document.getElementById('moduleProbablesSource');
+  const status = document.getElementById('moduleProbablesSourceStatus');
+  if (!panel || !select) return;
+
+  const setStatus = (message, error = false) => {
+    if (!status) return;
+    status.textContent = message || '';
+    status.classList.toggle('is-error', error);
+  };
+
+  const readConfig = async () => {
+    const response = await fetch('/api/escalacao-ideal/config', { headers: { Accept: 'application/json' } });
+    const config = await response.json();
+    if (!response.ok) throw new Error(config.error || 'Não foi possível carregar a configuração.');
+    return config;
+  };
+
+  const saveSource = async (source) => {
+    const config = await readConfig();
+    const payload = {
+      formation: config.formation || '4-3-3',
+      fonte_provaveis: source,
+      hack_goleiro: Boolean(config.hack_goleiro),
+      fechar_defesa: Boolean(config.fechar_defesa),
+      posicao_capitao: config.posicao_capitao || 'atacantes',
+      posicao_reserva_luxo: config.posicao_reserva_luxo || 'atacantes',
+      prioridades: config.prioridades || 'atacantes,laterais,meias,zagueiros,goleiros,tecnicos'
+    };
+    const response = await fetch('/api/escalacao-ideal/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Não foi possível salvar a fonte.');
+  };
+
+  readConfig().then(config => {
+    select.value = config.fonte_provaveis || 'globo';
+    select.dataset.previous = select.value;
+  }).catch(error => setStatus(error.message, true));
+
+  select.addEventListener('change', async () => {
+    const previous = select.dataset.previous || 'globo';
+    select.disabled = true;
+    setStatus('Salvando e recalculando…');
+    try {
+      await saveSource(select.value);
+      setStatus('Fonte atualizada.');
+      const recalculate = window[panel.dataset.recalculate];
+      if (typeof recalculate === 'function') recalculate();
+    } catch (error) {
+      select.value = previous;
+      setStatus(error.message, true);
+    } finally {
+      select.disabled = false;
+      select.dataset.previous = select.value;
+    }
+  });
+})();
+</script>
