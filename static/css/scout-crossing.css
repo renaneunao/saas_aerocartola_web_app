@@ -292,13 +292,15 @@
 .scx-side-signal { display: grid; gap: .18rem; min-width: 0; }
 .scx-side-signal > span { color: var(--scx-muted); font: 600 .52rem 'JetBrains Mono', monospace; }
 .scx-side-signal > span b { color: var(--scx-text); }
-.scx-side-signal > i { display: block; height: .28rem; overflow: hidden; border-radius: 999px; background: rgba(148, 163, 184, .17); }
+.scx-side-signal > i { display: block; width: 100%; min-width: 7rem; height: .42rem; overflow: hidden; border-radius: 999px; background: rgba(148, 163, 184, .17); }
 .scx-side-signal > i em { display: block; height: 100%; border-radius: inherit; background: var(--scx-accent); }
 .scx-side-signal-sg > i em { background: var(--scx-good); }
 .scx-side-matchup-empty { color: var(--scx-muted); font-size: .58rem; }
 .scx-side-identity-row { display: grid; grid-template-columns: minmax(9rem, .8fr) minmax(0, 1.2fr); align-items: stretch; gap: .65rem; padding-bottom: .65rem; border-bottom: 1px solid rgba(148, 163, 184, .1); }
 .scx-side-identity-row .scx-comparison-side-head { padding-bottom: 0; border-bottom: 0; }
 .scx-side-identity-row .scx-side-matchup { margin: 0; }
+.scx-side-matchup-fixture { display: grid; place-items: center; }
+.scx-side-matchup-fixture .scx-fixture-pair { margin-inline: auto; }
 .scx-side-history-columns > div {
   min-width: 0;
   padding: .35rem;
@@ -324,12 +326,18 @@
 .scx-ceded-game > summary > i { color: var(--scx-muted); font-size: .6rem; transition: transform .15s; }
 .scx-ceded-game[open] > summary > i { transform: rotate(180deg); }
 .scx-ceded-player-list { display: grid; gap: .18rem; padding: .35rem .5rem .5rem; border-top: 1px solid rgba(148, 163, 184, .1); }
+.scx-ceded-game > .scx-ceded-player-list { display: grid; align-items: stretch; width: 100%; }
 .scx-ceded-player { display: grid; grid-template-columns: 1.35rem minmax(5rem, 1fr) minmax(8rem, 1.2fr) auto; align-items: center; gap: .35rem; padding: .3rem .35rem; background: rgba(4, 11, 23, .3); }
 .scx-ceded-player-avatar { display: grid; place-items: center; width: 1.25rem; height: 1.25rem; overflow: hidden; border-radius: 50%; color: var(--scx-muted); background: #0d1727; font-size: .55rem; }
 .scx-ceded-player-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .scx-ceded-player strong { min-width: 0; overflow: hidden; color: var(--scx-text); font-size: .58rem; text-overflow: ellipsis; white-space: nowrap; }
 .scx-ceded-player-scouts { min-width: 0; }
 .scx-ceded-player > b { color: var(--scx-good); font: 700 .6rem 'JetBrains Mono', monospace; white-space: nowrap; }
+.scx-side-history-row > div { min-width: 0; overflow: hidden; }
+.scx-side-history-row .scx-match-fixture { display: block; width: 100%; overflow: hidden; }
+.scx-side-history-row .scx-fixture-pair { width: 100%; min-width: 0; margin-inline: 0; grid-template-columns: minmax(2rem, 1fr) auto auto auto minmax(2rem, 1fr); }
+.scx-side-history-row .scx-fixture-team.home { justify-content: flex-end; }
+.scx-side-history-row .scx-fixture-team.away { justify-content: flex-start; }
 
 @media (max-width: 760px) {
   .scx-team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }

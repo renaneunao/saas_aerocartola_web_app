@@ -36,7 +36,10 @@
     const selectedPosition = () => Number(document.querySelector('.scx-position.is-selected')?.dataset.position || state.posicaoId || 5);
     const predictionValue = (player) => Number(state.predictionById[player.id] ?? player.previsao ?? player.pontos_num ?? player.media_num ?? 0);
     const normalizedPhoto = (value, athleteId) => {
-        let photo = value || (typeof window.getPlayerImage === 'function' ? window.getPlayerImage(Number(athleteId)) : '') || '';
+        let photo = value && !String(value).includes('placeholder_')
+            ? value
+            : (typeof window.getPlayerImage === 'function' ? window.getPlayerImage(Number(athleteId)) : '') || '';
+        if (String(photo).includes('placeholder_')) photo = '';
         if (photo.startsWith('//')) photo = `https:${photo}`;
         // FORMATO.png é uma silhueta válida do Cartola. Só converta o
         // marcador em URLs de foto que realmente usam o padrão de tamanho;

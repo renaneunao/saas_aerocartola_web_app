@@ -21,9 +21,12 @@
     }
 
     function imageUrl(value) {
-        const candidate = String(value || '').trim();
+        let candidate = String(value || '').trim();
         if (!candidate || candidate.includes('placeholder_')) return '';
         if (candidate.startsWith('//')) return `https:${candidate}`;
+        if (!/\/silhuetas\/[^/]+\/FORMATO\.png(?:\?|$)/i.test(candidate)) {
+            candidate = candidate.replace(/FORMATO/gi, '220x220');
+        }
         return candidate;
     }
 

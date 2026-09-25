@@ -310,10 +310,23 @@ def _attach_fixture_indices(cursor, fixture, temporada, rodada):
         saldo = peso_sg.get(club_id, 0.0)
         saldo_percent = saldo * 100 if abs(saldo) <= 1 else saldo
         club["favoritismo"] = round(favoritismo, 2)
-        club["favoritismo_percent"] = round(min(100.0, abs(favoritismo) / max_jogo * 100), 1)
         club["saldo"] = round(saldo, 2)
         club["saldo_percent"] = round(max(0.0, min(100.0, saldo_percent)), 1)
-    fixture["favoritismo_maximo"] = round(max_jogo, 2)
+    # Na leitura de um confronto, o maior índice entre os dois clubes é a
+    # referência visual de 100%. Assim a barra comunica a diferença do jogo,
+    # sem ficar minúscula por causa de um clube distante do maior índice da
+    # rodada inteira.
+    confronto_maximo = max(
+        abs(float(fixture.get(side, {}).get("favoritismo") or 0))
+        for side in ("casa", "fora")
+    ) or max_jogo
+    for side in ("casa", "fora"):
+        club = fixture.get(side) or {}
+        club["favoritismo_percent"] = round(
+            min(100.0, abs(float(club.get("favoritismo") or 0)) / confronto_maximo * 100),
+            1,
+        )
+    fixture["favoritismo_maximo"] = round(confronto_maximo, 2)
     return fixture
 
 
@@ -887,11 +900,21 @@ def _opponent_conceded_scouts(
         ), pontos AS (
             SELECT DISTINCT ON (p.atleta_id, p.rodada_id, p.clube_id)
                    p.atleta_id, p.rodada_id, p.clube_id,
-                   p.apelido, p.foto, p.pontuacao,
+                   p.apelido,
+                   COALESCE(NULLIF(BTRIM(p.foto), ''), NULLIF(BTRIM(a.foto_custom), ''), a.foto) AS foto,
+                   p.pontuacao,
                    p.scout_a, p.scout_ca, p.scout_cv, p.scout_de, p.scout_ds,
                    p.scout_fc, p.scout_fd, p.scout_ff, p.scout_fs, p.scout_g,
                    p.scout_gs, p.scout_i, p.scout_sg
             FROM acf_pontuados p
+            LEFT JOIN LATERAL (
+                SELECT foto_custom, foto
+                FROM acf_atletas atual
+                WHERE atual.atleta_id = p.atleta_id
+                  AND atual.temporada = %s
+                ORDER BY atual.rodada_id DESC NULLS LAST
+                LIMIT 1
+            ) a ON TRUE
             WHERE p.posicao_id = %s
               AND p.entrou_em_campo = TRUE
               AND (p.temporada = %s OR p.temporada IS NULL)
@@ -908,7 +931,7 @@ def _opponent_conceded_scouts(
          AND p.clube_id = j.rival_id
         ORDER BY j.rodada_id DESC, p.pontuacao DESC NULLS LAST
         """,
-        (adversario_id, adversario_id, temporada, rodada_limite, adversario_id, posicao_id, temporada, temporada),
+        (adversario_id, adversario_id, temporada, rodada_limite, adversario_id, temporada, posicao_id, temporada, temporada),
     )
 
     grouped = {}
