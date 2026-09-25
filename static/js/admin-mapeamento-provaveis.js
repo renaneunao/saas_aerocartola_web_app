@@ -92,14 +92,14 @@
       <section class="mapping-team" data-club="${escapeHtml(team.clube_slug_externo)}">
         <header class="mapping-team-head">
           <div><strong class="mapping-team-name">${escapeHtml(team.nome_externo)}</strong><span class="mapping-team-count">· ${team.externos.length} para revisar</span></div>
-          <label class="mapping-team-link"><span>Time oficial</span><select data-team-slug="${escapeHtml(team.clube_slug_externo)}" aria-label="Time oficial para ${escapeHtml(team.nome_externo)}">${officialClubOptions(team)}</select>${team.clube_mapeado ? '<b class="mapping-team-state is-confirmed">confirmado</b>' : '<b class="mapping-team-state is-suggested">sugestão</b>'}</label>
+          <label class="mapping-team-link"><span>Time oficial</span><select class="aero-select" data-team-slug="${escapeHtml(team.clube_slug_externo)}" aria-label="Time oficial para ${escapeHtml(team.nome_externo)}">${officialClubOptions(team)}</select>${team.clube_mapeado ? '<b class="mapping-team-state is-confirmed">confirmado</b>' : '<b class="mapping-team-state is-suggested">sugestão</b>'}</label>
         </header>
         <div class="mapping-column-head"><span>Jogador externo · status</span><span></span><span>Oficial mais parecido · posição</span></div>
         ${team.externos.map((external) => `
           <div class="mapping-row" data-external-row="${escapeHtml(external.id)}">
             <div class="mapping-external"><span class="mapping-avatar">${initials(external.nome)}</span><div style="min-width:0"><div class="mapping-name">${escapeHtml(external.nome)}</div><small class="mapping-meta">${escapeHtml(statusLabels[external.status] || external.status || 'Status não informado')} · ${escapeHtml(positions[external.posicao_id] || 'Posição não informada')}</small></div>${external.atleta_id ? '<span class="mapping-status is-mapped">mapeado</span>' : '<span class="mapping-status is-pending">pendente</span>'}</div>
             <span class="mapping-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></span>
-            <div class="mapping-official"><span class="mapping-avatar"><i class="fas fa-user-check"></i></span><select data-external-select="${escapeHtml(external.id)}" aria-label="Jogador oficial para ${escapeHtml(external.nome)}"><option value="">Escolha o jogador oficial</option>${candidateOptions(team, external)}</select><button type="button" class="mapping-confirm" data-save-external="${escapeHtml(external.id)}" disabled title="Confirmar vínculo"><i class="fas fa-check"></i></button></div>
+            <div class="mapping-official"><span class="mapping-avatar"><i class="fas fa-user-check"></i></span><select class="aero-select" data-external-select="${escapeHtml(external.id)}" aria-label="Jogador oficial para ${escapeHtml(external.nome)}"><option value="">Escolha o jogador oficial</option>${candidateOptions(team, external)}</select><button type="button" class="mapping-confirm" data-save-external="${escapeHtml(external.id)}" disabled title="Confirmar vínculo"><i class="fas fa-check"></i></button></div>
           </div>`).join('')}
       </section>`).join('');
 

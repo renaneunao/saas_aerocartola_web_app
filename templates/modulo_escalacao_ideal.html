@@ -2,7 +2,7 @@
 {% block title %}Escalação Ideal - Cartola Aero{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/escalacao-ideal.css', v='14') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/escalacao-ideal.css', v='15') }}">
 
 <div id="escalacaoIdealPage"
      class="ideal-page"
@@ -38,7 +38,7 @@
 
         <div class="ideal-form-group">
           <label class="ideal-label" for="formationSelect"><span>Formação</span><span>11 atletas</span></label>
-          <select id="formationSelect" class="ideal-select">
+          <select id="formationSelect" class="ideal-select aero-select">
             <option value="4-3-3">4-3-3 · equilíbrio ofensivo</option>
             <option value="4-4-2">4-4-2 · meio-campo forte</option>
             <option value="3-5-2">3-5-2 · domínio central</option>
@@ -51,7 +51,7 @@
 
         <div class="ideal-form-group">
           <label class="ideal-label" for="fonteProvaveisSelect">Fonte de prováveis</label>
-          <select id="fonteProvaveisSelect" class="ideal-select">
+          <select id="fonteProvaveisSelect" class="ideal-select aero-select">
             <option value="globo">Globo / Cartola</option>
             <option value="provaveisdocartola">Prováveis do Cartola</option>
           </select>
@@ -60,7 +60,7 @@
 
         <div class="ideal-form-group">
           <label class="ideal-label" for="posicaoCapitao">Capitão</label>
-          <select id="posicaoCapitao" class="ideal-select">
+          <select id="posicaoCapitao" class="ideal-select aero-select">
             <option value="atacantes">Atacantes</option>
             <option value="meias">Meias</option>
             <option value="laterais">Laterais</option>
@@ -71,7 +71,7 @@
 
         <div class="ideal-form-group">
           <label class="ideal-label" for="posicaoReservaLuxo">Reserva de luxo</label>
-          <select id="posicaoReservaLuxo" class="ideal-select">
+          <select id="posicaoReservaLuxo" class="ideal-select aero-select">
             <option value="atacantes">Atacantes</option>
             <option value="meias">Meias</option>
             <option value="laterais">Laterais</option>
@@ -161,9 +161,9 @@
       </header>
       <div class="ideal-picker-filters">
         <label><span>Nome</span><input id="pickerName" class="ideal-input" type="search" placeholder="Buscar"></label>
-        <label><span>Time</span><select id="pickerClub" class="ideal-select"><option value="">Todos</option></select></label>
-        <label><span>Ordenar por</span><select id="pickerSort" class="ideal-select"><option value="expected">Previsão de pontos</option><option value="average">Média</option><option value="price_asc">Preço: menor primeiro</option><option value="price_desc">Preço: maior primeiro</option><option value="scout">Scout selecionado</option><option value="name">Nome</option></select></label>
-        <label><span>Scout para ordenar</span><select id="pickerScout" class="ideal-select"><option value="">Escolha o scout</option></select></label>
+        <label><span>Time</span><select id="pickerClub" class="ideal-select aero-select"><option value="">Todos</option></select></label>
+        <label><span>Ordenar por</span><select id="pickerSort" class="ideal-select aero-select"><option value="expected">Previsão de pontos</option><option value="average">Média</option><option value="price_asc">Preço: menor primeiro</option><option value="price_desc">Preço: maior primeiro</option><option value="scout">Scout selecionado</option><option value="name">Nome</option></select></label>
+        <label><span>Scout para ordenar</span><select id="pickerScout" class="ideal-select aero-select"><option value="">Escolha o scout</option></select></label>
         <div class="ideal-picker-status-filter" aria-label="Filtrar disponibilidade">
           <span>Disponibilidade</span>
           <div class="ideal-picker-status-options">
@@ -194,5 +194,5 @@
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js', v='2') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modulos-calculo-todos.js', v='1') }}"></script>
-<script src="{{ url_for('static', filename='js/escalacao-ideal-page.js', v='15') }}"></script>
+<script src="{{ url_for('static', filename='js/escalacao-ideal-page.js', v='16') }}"></script>
 {% endblock %}

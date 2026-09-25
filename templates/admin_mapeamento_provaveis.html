@@ -13,9 +13,9 @@
   </header>
 
   <section class="mapping-toolbar">
-    <label><span>Time</span><select id="mappingTeamFilter"><option value="">Todos os times</option></select></label>
+    <label><span>Time</span><select id="mappingTeamFilter" class="aero-select"><option value="">Todos os times</option></select></label>
     <label class="mapping-search"><span>Buscar jogador ou time</span><input id="mappingNameFilter" type="search" placeholder="Nome externo ou oficial…" autocomplete="off"></label>
-    <label><span>Status</span><select id="mappingStatusFilter">
+    <label><span>Status</span><select id="mappingStatusFilter" class="aero-select">
       <option value="">Todos os status</option><option value="provavel">Prováveis</option><option value="duvida">Dúvidas</option>
       <option value="improvavel">Improváveis</option><option value="lesionado">Lesionados</option><option value="suspenso">Suspensos</option>
       <option value="fora">Fora</option><option value="nulo">Nulos</option>
@@ -99,5 +99,5 @@
     .mapping-team-state { display:none; }
   }
 </style>
-<script src="{{ url_for('static', filename='js/admin-mapeamento-provaveis.js', v='1') }}"></script>
+<script src="{{ url_for('static', filename='js/admin-mapeamento-provaveis.js', v='2') }}"></script>
 {% endblock %}

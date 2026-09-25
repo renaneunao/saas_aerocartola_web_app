@@ -170,6 +170,9 @@
       : player?.availability_rule === 'poupar'
         ? 'Marcado para não jogar'
         : 'Disponibilidade da rodada';
+    const interactionHint = position === 'treinadores'
+      ? 'Detalhes do treinador'
+      : 'Passe o mouse para manter as ações';
     const favoritismTitle = `Favoritismo do time · ${indicators.jogo.toFixed(2)}`;
     return `
       <div class="ideal-card-hover-detail ideal-card-hover-detail-top">
@@ -194,7 +197,7 @@
       </div>
       <div class="ideal-card-hover-detail ideal-card-hover-detail-bottom">
         <span class="ideal-card-hover-status"><i class="fas fa-circle"></i>${status}</span>
-        <span class="ideal-card-hover-hint">Passe o mouse para manter as ações</span>
+        <span class="ideal-card-hover-hint">${interactionHint}</span>
       </div>`;
   }
 
@@ -213,7 +216,11 @@
     if (position !== 'treinadores') {
       actions.push(`<button type="button" class="ideal-card-action ideal-card-action-unavailable" data-availability-action="poupar" data-athlete-id="${playerId}" title="Marcar ${name} como não joga"><span class="ideal-card-action-icon"><i class="fas fa-user-slash"></i></span><span>Não joga</span><small>remove das próximas escolhas</small></button>`);
     }
-    return `<div class="ideal-card-actions" aria-label="Detalhes e ações de ${name}"><button type="button" class="ideal-card-actions-close" data-card-hover-close aria-label="Fechar detalhes de ${name}" title="Fechar"><i class="fas fa-xmark"></i></button>${cardHoverDetails(player, position, kind)}<div class="ideal-card-actions-head"><i class="fas fa-sliders"></i><span>Ações rápidas</span></div>${actions.join('')}<div class="ideal-card-hover-foot"><i class="fas fa-hand-pointer"></i><span>Detalhes do atleta e comandos rápidos</span></div></div>`;
+    const closeButton = `<button type="button" class="ideal-card-actions-close" data-card-hover-close aria-label="Fechar detalhes de ${name}" title="Fechar"><i class="fas fa-xmark"></i></button>`;
+    if (position === 'treinadores') {
+      return `<div class="ideal-card-actions ideal-card-actions-details-only" aria-label="Detalhes de ${name}">${closeButton}${cardHoverDetails(player, position, kind)}</div>`;
+    }
+    return `<div class="ideal-card-actions" aria-label="Detalhes e ações de ${name}">${closeButton}${cardHoverDetails(player, position, kind)}<div class="ideal-card-actions-head"><i class="fas fa-sliders"></i><span>Ações rápidas</span></div>${actions.join('')}<div class="ideal-card-hover-foot"><i class="fas fa-hand-pointer"></i><span>Detalhes do atleta e comandos rápidos</span></div></div>`;
   }
 
   function replaceHintMarkup() {
@@ -1080,6 +1087,12 @@
   }
 
   function bindEvents() {
+    const isTouchSurface = () => Boolean(window.matchMedia?.('(hover: none), (pointer: coarse)').matches);
+    const closeTouchCards = (except = null) => {
+      document.querySelectorAll('.ideal-player-card.is-touch-open').forEach(card => {
+        if (card !== except) card.classList.remove('is-touch-open');
+      });
+    };
     ['formationSelect', 'hackGoleiroToggle', 'fecharDefesaToggle', 'posicaoCapitao', 'posicaoReservaLuxo'].forEach(id => $(id)?.addEventListener('change', () => aoMudarConfiguracao()));
     $('fonteProvaveisSelect')?.addEventListener('change', aoMudarFonteProvaveis);
     $('manualEditBtn')?.addEventListener('click', toggleManualEdit);
@@ -1088,7 +1101,9 @@
       if (hoverClose) {
         event.preventDefault();
         event.stopPropagation();
-        hoverClose.closest('.ideal-player-card')?.classList.add('is-hover-closed');
+        const card = hoverClose.closest('.ideal-player-card');
+        card?.classList.add('is-hover-closed');
+        card?.classList.remove('is-touch-open');
         return;
       }
       const submitButton = event.target.closest('[data-submit-lineup]');
@@ -1113,9 +1128,20 @@
         return;
       }
       const target = event.target.closest('[data-picker-kind]');
-      if (target) openPicker(target.dataset.pickerPosition, target.dataset.pickerKind, target.dataset.pickerIndex);
+      if (!target || event.target.closest('.ideal-card-actions')) return;
+      if (isTouchSurface()) {
+        if (!target.classList.contains('is-touch-open')) {
+          closeTouchCards(target);
+          target.classList.remove('is-hover-closed');
+          target.classList.add('is-touch-open');
+          return;
+        }
+        target.classList.remove('is-touch-open');
+      }
+      openPicker(target.dataset.pickerPosition, target.dataset.pickerKind, target.dataset.pickerIndex);
     });
     $('escalacaoContent')?.addEventListener('pointerover', (event) => {
+      if (event.pointerType === 'touch') return;
       const card = event.target.closest('.ideal-player-card');
       if (card && !card.contains(event.relatedTarget)) card.classList.remove('is-hover-closed');
     });
@@ -1134,7 +1160,15 @@
     $('markUnavailableBtn')?.addEventListener('click', () => applyAvailability('poupar'));
     $('markAvailableBtn')?.addEventListener('click', () => applyAvailability('cravado'));
     $('availabilityRecalculateBtn')?.addEventListener('click', calcularEscalacao);
-    document.addEventListener('keydown', event => { if (event.key === 'Escape') closePicker(); });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape') {
+        closePicker();
+        closeTouchCards();
+      }
+    });
+    document.addEventListener('click', event => {
+      if (isTouchSurface() && !event.target.closest('.ideal-player-card')) closeTouchCards();
+    });
   }
 
   async function init() {

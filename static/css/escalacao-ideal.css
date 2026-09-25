@@ -2631,3 +2631,38 @@
     flex-basis: 64px !important;
   }
 }
+
+/* Em telas touch não existe hover confiável: o primeiro toque abre o painel
+   de detalhes e o segundo toque no cartão segue para a troca do atleta. */
+@media (hover: none), (pointer: coarse) {
+  .ideal-player-card.is-touch-open {
+    z-index: 80;
+  }
+  .ideal-player-card.is-touch-open > .ideal-card-actions {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    position: fixed;
+    left: 50%;
+    right: auto;
+    top: auto;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: min(342px, calc(100vw - 18px));
+    transform: translate(-50%, 0);
+  }
+  .ideal-card-actions::before,
+  .ideal-card-actions::after {
+    display: none;
+  }
+  .ideal-player-card.is-touch-open > .ideal-player-replace-hint {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* A mesma correção vertical aplicada anteriormente, repetida para que a
+   defesa ganhe espaço sem alterar a distância entre os atletas da linha. */
+@media (min-width: 1101px) {
+  .ideal-field-row-defense { transform: translateY(-3%) !important; }
+  .ideal-field-row-goalkeeper { transform: translateY(-6%) !important; }
+}

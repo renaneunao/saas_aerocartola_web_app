@@ -1,0 +1,22 @@
+{% set modulo_navegacao = [
+    ('goleiro', 'Goleiros', 'goleiro.jpg'),
+    ('lateral', 'Laterais', 'lateral.jpg'),
+    ('zagueiro', 'Zagueiros', 'zagueiro.jpg'),
+    ('meia', 'Meias', 'meia.jpg'),
+    ('atacante', 'Atacantes', 'atacante.webp'),
+    ('treinador', 'Treinadores', 'treinador.avif')
+] %}
+<nav class="module-position-nav" aria-label="Navegar entre os módulos de posição">
+    <span class="module-position-nav-label"><i class="fas fa-compass" aria-hidden="true"></i><span>Posições</span></span>
+    <div class="module-position-nav-links">
+        {% for slug, label, image in modulo_navegacao %}
+        <a href="{{ url_for('modulo_individual', modulo=slug) }}"
+           class="module-position-nav-link{% if modulo == slug %} is-active{% endif %}"
+           {% if modulo == slug %}aria-current="page"{% endif %}
+           title="Abrir módulo de {{ label|lower }}">
+            <img src="{{ url_for('static', filename='img/posicoes/' + image) }}" alt="" aria-hidden="true">
+            <span>{{ label }}</span>
+        </a>
+        {% endfor %}
+    </div>
+</nav>

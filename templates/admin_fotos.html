@@ -30,14 +30,14 @@
             </label>
             <label class="admin-photos-field">
                 <span>Situação da foto</span>
-                <select name="status">
+                <select name="status" class="aero-select">
                     <option value="all" {% if filtros.status == 'all' %}selected{% endif %}>Todas</option>
                     <option value="missing" {% if filtros.status == 'missing' %}selected{% endif %}>Somente sem foto customizada</option>
                 </select>
             </label>
             <label class="admin-photos-field">
                 <span>Time</span>
-                <select name="clube_id">
+                <select name="clube_id" class="aero-select">
                     <option value="">Todos os times</option>
                     {% for clube in clubes %}
                     <option value="{{ clube[0] }}" {% if filtros.clube_id == clube[0]|string %}selected{% endif %}>{{ clube[1] }}</option>
@@ -46,7 +46,7 @@
             </label>
             <label class="admin-photos-field">
                 <span>Posição</span>
-                <select name="posicao_id">
+                <select name="posicao_id" class="aero-select">
                     <option value="">Todas as posições</option>
                     {% for position_id, position_name in posicoes.items() %}
                     <option value="{{ position_id }}" {% if filtros.posicao_id == position_id|string %}selected{% endif %}>{{ position_name }}</option>
