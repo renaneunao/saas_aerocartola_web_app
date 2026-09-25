@@ -464,7 +464,8 @@
     const count = FORMATION_COUNTS[$('formationSelect')?.value] || FORMATION_COUNTS['4-3-3'];
     const player = result.titulares?.[position]?.[index];
     if (position === 'laterais' && !(count.laterais > index) && !player) return '';
-    return `<div class="ideal-field-defense-lane"><div class="ideal-field-pos">${label}</div><div class="ideal-field-players">${playerSlot(result, position, index)}</div></div>`;
+    const lateralClass = position === 'laterais' ? ' is-lateral' : '';
+    return `<div class="ideal-field-defense-lane${lateralClass}"><div class="ideal-field-pos">${label}</div><div class="ideal-field-players">${playerSlot(result, position, index)}</div></div>`;
   }
 
   function fieldGroup(result, position, className = '') {
