@@ -2663,6 +2663,6 @@
 /* A mesma correção vertical aplicada anteriormente, repetida para que a
    defesa ganhe espaço sem alterar a distância entre os atletas da linha. */
 @media (min-width: 1101px) {
-  .ideal-field-row-defense { transform: translateY(-3%) !important; }
-  .ideal-field-row-goalkeeper { transform: translateY(-6%) !important; }
+  .ideal-field-row-defense { transform: translateY(-6%) !important; }
+  .ideal-field-row-goalkeeper { transform: translateY(-12%) !important; }
 }
