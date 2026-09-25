@@ -2664,7 +2664,9 @@
    defesa ganhe espaço sem alterar a distância entre os atletas da linha. */
 @media (min-width: 1101px) {
   .ideal-field-row-defense { transform: translateY(-18%) !important; }
-  .ideal-field-row-goalkeeper { transform: translateY(-24%) !important; }
+  .ideal-field-row-attack { transform: translateY(-10%) !important; }
+  .ideal-field-row-midfield { transform: translateY(-15%) !important; }
+  .ideal-field-row-goalkeeper { transform: translateY(-39%) !important; }
 }
 
 /* O hover precisa elevar a linha inteira. Só aumentar o z-index do card não
