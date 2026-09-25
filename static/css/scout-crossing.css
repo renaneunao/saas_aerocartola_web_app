@@ -363,3 +363,53 @@
   .scx-comparison-side .scx-ceded-game > summary { grid-template-columns: 2.8rem minmax(0, 1fr) auto 1rem; }
   .scx-comparison-side .scx-ceded-game-scouts { grid-column: 2 / 4; }
 }
+
+/* O confronto é uma unidade visual: escudo, placar e escudo ficam juntos no
+   centro da célula, sem os espaços elásticos que empurravam os visitantes
+   para a coluna dos scouts. */
+.scx-fixture-pair {
+  grid-template-columns: auto auto auto auto auto;
+  justify-content: center;
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+}
+.scx-fixture-team.home { justify-content: flex-end; }
+.scx-fixture-team.away { justify-content: flex-start; }
+.scx-match-option-teams { justify-content: center; }
+.scx-match-team {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .25rem;
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: none;
+  grid-template-rows: none;
+}
+.scx-match-team:nth-child(3) { justify-content: flex-start; text-align: left; }
+.scx-match-team img,
+.scx-match-team .scx-team-fallback {
+  flex: 0 0 1.35rem;
+  grid-row: auto;
+}
+.scx-match-team b { max-width: 3rem; }
+.scx-side-history-row .scx-fixture-pair,
+.scx-ceded-game-fixture .scx-fixture-pair,
+.scx-side-matchup-fixture .scx-fixture-pair {
+  width: max-content;
+  max-width: 100%;
+  margin-inline: auto;
+  grid-template-columns: auto auto auto auto auto;
+}
+.scx-ceded-player-avatar .scx-player-photo-fallback,
+.scx-player-photo-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--scx-muted);
+  background: #0d1727;
+  font: 800 .48rem 'JetBrains Mono', monospace;
+}
+.scx-side-signal > i { max-width: 100%; }

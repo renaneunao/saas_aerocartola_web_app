@@ -270,13 +270,23 @@ def _attach_fixture_indices(cursor, fixture, temporada, rodada):
     peso_jogo = {}
     peso_sg = {}
     try:
-        from models.user_escalacao_config import get_user_escalacao_config
+        # Os pesos de favoritismo/SG ficam em acw_weight_configurations.
+        # acw_escalacao_config guarda formação, capitão e prováveis, mas não
+        # possui os IDs dos perfis de pesos. Usar a tabela de escalação aqui
+        # fazia o confronto chegar ao frontend sempre com F/SG zerados.
+        from models.user_configurations import get_user_default_configuration
 
-        config = get_user_escalacao_config(
-            cursor.connection,
-            int(session.get("user_id")),
-            session.get("selected_team_id"),
+        user_id = session.get("user_id")
+        team_id = session.get("selected_team_id")
+        config = (
+            get_user_default_configuration(cursor.connection, int(user_id), team_id)
+            if user_id
+            else None
         ) or {}
+        # Mantém uma recuperação segura para sessões antigas que ainda não
+        # carregaram selected_team_id, sem misturar perfis de outro usuário.
+        if not config and user_id:
+            config = get_user_default_configuration(cursor.connection, int(user_id)) or {}
         perfil_jogo = config.get("perfil_peso_jogo")
         perfil_sg = config.get("perfil_peso_sg")
         if perfil_jogo:
@@ -302,6 +312,9 @@ def _attach_fixture_indices(cursor, fixture, temporada, rodada):
     except Exception as exc:
         print(f"[SCOUT CROSSING] Índices do confronto indisponíveis: {exc}")
 
+    # A régua é comum à rodada inteira. Assim o maior favoritismo da rodada
+    # representa 100% em todos os confrontos, permitindo comparar as barras
+    # entre jogos sem que cada duelo crie uma escala própria.
     max_jogo = max((abs(value) for value in peso_jogo.values()), default=1.0) or 1.0
     for side in ("casa", "fora"):
         club = fixture.get(side) or {}
@@ -312,21 +325,13 @@ def _attach_fixture_indices(cursor, fixture, temporada, rodada):
         club["favoritismo"] = round(favoritismo, 2)
         club["saldo"] = round(saldo, 2)
         club["saldo_percent"] = round(max(0.0, min(100.0, saldo_percent)), 1)
-    # Na leitura de um confronto, o maior índice entre os dois clubes é a
-    # referência visual de 100%. Assim a barra comunica a diferença do jogo,
-    # sem ficar minúscula por causa de um clube distante do maior índice da
-    # rodada inteira.
-    confronto_maximo = max(
-        abs(float(fixture.get(side, {}).get("favoritismo") or 0))
-        for side in ("casa", "fora")
-    ) or max_jogo
     for side in ("casa", "fora"):
         club = fixture.get(side) or {}
         club["favoritismo_percent"] = round(
-            min(100.0, abs(float(club.get("favoritismo") or 0)) / confronto_maximo * 100),
+            min(100.0, abs(float(club.get("favoritismo") or 0)) / max_jogo * 100),
             1,
         )
-    fixture["favoritismo_maximo"] = round(confronto_maximo, 2)
+    fixture["favoritismo_maximo"] = round(max_jogo, 2)
     return fixture
 
 
@@ -901,7 +906,7 @@ def _opponent_conceded_scouts(
             SELECT DISTINCT ON (p.atleta_id, p.rodada_id, p.clube_id)
                    p.atleta_id, p.rodada_id, p.clube_id,
                    p.apelido,
-                   COALESCE(NULLIF(BTRIM(p.foto), ''), NULLIF(BTRIM(a.foto_custom), ''), a.foto) AS foto,
+                   COALESCE(NULLIF(BTRIM(a.foto_custom), ''), NULLIF(BTRIM(p.foto), ''), a.foto) AS foto,
                    p.pontuacao,
                    p.scout_a, p.scout_ca, p.scout_cv, p.scout_de, p.scout_ds,
                    p.scout_fc, p.scout_fd, p.scout_ff, p.scout_fs, p.scout_g,

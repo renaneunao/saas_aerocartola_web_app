@@ -36,9 +36,13 @@
     const selectedPosition = () => Number(document.querySelector('.scx-position.is-selected')?.dataset.position || state.posicaoId || 5);
     const predictionValue = (player) => Number(state.predictionById[player.id] ?? player.previsao ?? player.pontos_num ?? player.media_num ?? 0);
     const normalizedPhoto = (value, athleteId) => {
-        let photo = value && !String(value).includes('placeholder_')
-            ? value
-            : (typeof window.getPlayerImage === 'function' ? window.getPlayerImage(Number(athleteId)) : '') || '';
+        const raw = String(value || '');
+        const isPlaceholder = raw.includes('placeholder_');
+        const isSilhouette = /\/silhuetas\//i.test(raw);
+        const mapped = (typeof window.getPlayerImage === 'function' ? window.getPlayerImage(Number(athleteId)) : '') || '';
+        // A silhueta é útil como último recurso, mas não deve impedir que a
+        // foto personalizada/mapeada do atleta seja usada nas linhas cedidas.
+        let photo = (!raw || isPlaceholder || isSilhouette) ? (mapped || raw) : raw;
         if (String(photo).includes('placeholder_')) photo = '';
         if (photo.startsWith('//')) photo = `https:${photo}`;
         // FORMATO.png é uma silhueta válida do Cartola. Só converta o
@@ -294,6 +298,22 @@
             }, { once: true });
         });
     }
+    function bindPlayerPhotoFallbacks(root) {
+        root?.querySelectorAll('img[data-scx-player-photo]').forEach((image) => {
+            image.addEventListener('error', () => {
+                const mapped = normalizedPhoto('', image.dataset.playerId);
+                if (mapped && !image.dataset.mappedFallback && mapped !== image.src) {
+                    image.dataset.mappedFallback = 'true';
+                    image.src = mapped;
+                    return;
+                }
+                const fallback = document.createElement('span');
+                fallback.className = 'scx-player-photo-fallback';
+                fallback.textContent = image.dataset.fallback || '?';
+                image.replaceWith(fallback);
+            });
+        });
+    }
     function renderRecent(matches) {
         const target = $('scoutCrossingRecent');
         const currentRound = Number(state.rodada || 0);
@@ -331,7 +351,10 @@
         const games = (summary.historico || []).slice(0, 8).map((game) => {
             const players = (game.jogadores || []).map((player) => {
                 const photo = normalizedPhoto(player.foto, player.id);
-                const avatar = photo ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy">` : '<i class="fas fa-user"></i>';
+                const initials = escapeHtml((player.nome || '?').slice(0, 2).toUpperCase());
+                const avatar = photo
+                    ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy" data-scx-player-photo data-player-id="${escapeHtml(player.id)}" data-fallback="${initials}">`
+                    : `<span class="scx-player-photo-fallback">${initials}</span>`;
                 return `<div class="scx-ceded-player"><span class="scx-ceded-player-avatar">${avatar}</span><strong>${escapeHtml(player.nome || 'Atleta')}</strong><span class="scx-ceded-player-scouts">${scoutSummary(player.scouts)}</span><b>${number(player.pontuacao)} pts</b></div>`;
             }).join('') || '<span class="scx-muted">Sem atleta da posição com dados.</span>';
             return `<details class="scx-ceded-game"><summary><span class="scx-ceded-game-round">Rodada ${integer(game.rodada)}</span><span class="scx-ceded-game-fixture">${fixtureMarkup(game.casa, game.fora, game.clube_id, game.placar_casa, game.placar_fora)}</span><span class="scx-ceded-game-scouts">${scoutSummary(game.scouts)}</span><strong>${number(game.pontuacao)} pts</strong><i class="fas fa-chevron-down" aria-hidden="true"></i></summary><div class="scx-ceded-player-list">${players}</div></details>`;
@@ -345,6 +368,7 @@
         const relevant = ceded.mando_relevante ? `Adversário como ${ceded.mando_relevante === 'casa' ? 'mandante' : 'visitante'}` : 'Todos os mandos';
         target.innerHTML = `<div class="scx-confrontation-head"><div class="scx-confrontation-title">${fixtureMarkup(match.casa, match.fora, data.jogador.clube_id, match.placar_casa, match.placar_fora)}<div><strong>O que ${escapeHtml(match.adversario?.abreviacao || match.adversario?.nome || 'o adversário')} cede à posição</strong><small>${escapeHtml(match.mando_label)} para o jogador · ${escapeHtml(relevant)} · somente rodadas anteriores</small></div></div><strong class="scx-confrontation-score">${number(ceded.pontuacao)} pts/jogo</strong></div><div class="scx-conceded-profile">${cededProfileMarkup(ceded)}</div>`;
         bindFixtureFallbacks(target);
+        bindPlayerPhotoFallbacks(target);
     }
     function renderPrediction(player) {
         const value = predictionValue(player); $('scoutCrossingPrediction').textContent = `Previsão calculada: ${number(value)} pts`;
@@ -443,6 +467,7 @@
             renderPlayers();
         });
         comparison.querySelectorAll('img').forEach((image) => image.addEventListener('error', () => image.remove(), { once: true }));
+        bindPlayerPhotoFallbacks(comparison);
     }
 
     async function runCrossing() {
