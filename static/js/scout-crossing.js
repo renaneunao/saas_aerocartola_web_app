@@ -49,16 +49,25 @@
     function setAlert(message, error = false) { const alert = $('scoutCrossingAlert'); if (!alert) return; alert.hidden = !message; alert.textContent = message || ''; alert.classList.toggle('scx-alert-error', error); }
     function currentClub(id) { const teams = state.lastTeams || []; return teams.find((team) => Number(team.id) === Number(id)) || {}; }
 
-    function teamButton(team) {
+    function teamButton(team, side, fixture) {
         const selected = state.teamIds.includes(Number(team.id));
-        const valid = team.valido !== false;
-        const image = team.escudo ? `<img src="${escapeHtml(team.escudo)}" alt="" loading="lazy">` : '<span class="scx-team-fallback"><i class="fas fa-shield-halved"></i></span>';
-        return `<button type="button" class="scx-team${selected ? ' is-selected' : ''}${valid ? '' : ' is-invalid'}" data-team="${team.id}" role="option" aria-selected="${selected}" aria-disabled="${!valid}" title="${escapeHtml(valid ? team.nome : `${team.nome} · sem confronto válido`)}"${valid ? '' : ' disabled'}>${image}<b>${escapeHtml(team.abreviacao || team.nome)}</b>${valid ? '' : '<small>sem jogo</small>'}</button>`;
+        const valid = fixture.valido !== false;
+        const image = team.escudo ? `<img src="${escapeHtml(team.escudo)}" alt="Escudo de ${escapeHtml(team.nome || team.abreviacao || '')}" loading="lazy">` : '<span class="scx-team-fallback"><i class="fas fa-shield-halved"></i></span>';
+        const score = side === 'casa' ? fixture.placar_casa : fixture.placar_fora;
+        const scoreMarkup = fixtureScore(score);
+        return `<button type="button" class="scx-match-team${selected ? ' is-selected' : ''}" data-team="${team.id}" role="option" aria-selected="${selected}" aria-disabled="${!valid}" title="${escapeHtml(valid ? `Selecionar ${team.nome || team.abreviacao || ''} · ${side === 'casa' ? 'casa' : 'fora'}` : `${team.nome || team.abreviacao || ''} · sem confronto válido`)}"${valid ? '' : ' disabled'}><span class="scx-match-team-side">${side === 'casa' ? 'C' : 'F'}</span>${image}<b>${escapeHtml(team.abreviacao || team.nome || '---')}</b><strong>${escapeHtml(scoreMarkup)}</strong></button>`;
     }
-    function renderTeams(teams) {
+    function fixtureOption(fixture, index) {
+        const invalid = fixture.valido === false;
+        const status = invalid ? '<small class="scx-match-status">sem jogo válido</small>' : '';
+        return `<article class="scx-match-option${invalid ? ' is-invalid' : ''}" data-fixture="${fixture.id}" aria-label="${escapeHtml(`${fixture.casa?.nome || ''} x ${fixture.fora?.nome || ''}`)}"><span class="scx-match-number">${String(index + 1).padStart(2, '0')}</span><div class="scx-match-option-teams">${teamButton(fixture.casa || {}, 'casa', fixture)}<span class="scx-match-option-vs">×</span>${teamButton(fixture.fora || {}, 'fora', fixture)}</div>${status}</article>`;
+    }
+    function renderTeams(fixtures) {
         const target = $('scoutCrossingTeams'); if (!target) return;
-        state.lastTeams = teams || [];
-        target.innerHTML = teams?.length ? teams.map(teamButton).join('') : '<span class="scx-muted">Nenhum time encontrado na rodada atual.</span>';
+        const matches = fixtures || [];
+        state.lastFixtures = matches;
+        state.lastTeams = matches.flatMap((fixture) => [fixture.casa, fixture.fora]);
+        target.innerHTML = matches.length ? matches.map(fixtureOption).join('') : '<span class="scx-muted">Nenhum confronto encontrado na rodada atual.</span>';
         target.querySelectorAll('[data-team]').forEach((button) => button.addEventListener('click', () => {
             const clicked = Number(button.dataset.team);
             state.teamIds = state.teamIds.includes(clicked)
@@ -230,7 +239,7 @@
                 state.selectedPlayerIds = [Number(page.dataset.selectedPlayer)];
                 state.atletaId = Number(page.dataset.selectedPlayer);
             }
-            renderTeams(data.times || []); state.players = data.jogadores || []; state.predictionById = {};
+            renderTeams(data.confrontos || []); state.players = data.jogadores || []; state.predictionById = {};
             renderScoutFilter(); renderHiddenPlayerSelect(); renderPlayers(); setAlert('');
             await loadPredictionContext();
         } catch (error) { setAlert(error.message, true); $('scoutCrossingSelectionHint').textContent = 'Não foi possível carregar os jogadores.'; }
@@ -290,7 +299,7 @@
             const list = played.filter((match) => match.mando === mando).sort((a, b) => Number(b.rodada) - Number(a.rodada));
             const visible = state.historyExpanded ? list : list.slice(0, 5);
             return visible.length
-                ? visible.map((match) => `<article class="scx-recent-row"><span class="scx-round">Rodada ${match.rodada}</span><span class="scx-match-copy"><strong>${escapeHtml(match.adversario_nome)}</strong><small>${fixtureMarkup(match.casa, match.fora, match.clube_id, match.placar_casa, match.placar_fora)}</small></span><span class="scx-points">${number(match.pontuacao)}<span class="scx-point-scouts">${scoutSummary(match.scouts)}</span></span></article>`).join('')
+                ? visible.map((match) => `<article class="scx-recent-row scx-recent-row-${mando}"><span class="scx-round">Rodada ${match.rodada}</span><span class="scx-match-copy"><strong>${escapeHtml(match.adversario_nome)}</strong><span class="scx-match-fixture">${fixtureMarkup(match.casa, match.fora, match.clube_id, match.placar_casa, match.placar_fora)}</span></span><span class="scx-points">${number(match.pontuacao)}<span class="scx-point-scouts">${scoutSummary(match.scouts)}</span></span></article>`).join('')
                 : '<div class="scx-muted">Nenhuma pontuação encontrada.</div>';
         };
         const home = $('scoutCrossingRecentHome');
@@ -316,7 +325,14 @@
         const thresholds = `<div class="scx-ceded-thresholds"><span>≥5 <b>${integer(summary.recorrencia?.['5'] || 0)}%</b></span><span>≥8 <b>${integer(summary.recorrencia?.['8'] || 0)}%</b></span><span>≥12 <b>${integer(summary.recorrencia?.['12'] || 0)}%</b></span></div>`;
         const scouts = (summary.scouts_detalhados || []).filter((item) => Math.round(Math.abs(Number(item.media_por_jogo) || 0)) > 0).map((item) => `<div class="scx-ceded-scout-row ${negativeScouts.has(item.codigo) ? 'is-negative' : 'is-positive'}"><span><b>${escapeHtml(shortScouts[item.codigo] || item.codigo.toUpperCase())}</b> ${escapeHtml(item.nome || '')}</span><strong>${integer(Math.abs(item.media_por_jogo || 0))}<small>${integer(item.recorrencia || 0)}% dos jogos</small></strong></div>`).join('') || '<span class="scx-muted">Nenhum scout positivo no recorte.</span>';
         if (compact) return `${metrics}${thresholds}<div class="scx-ceded-scouts">${scouts}</div>`;
-        const games = (summary.historico || []).slice(0, 5).map((game) => `<article class="scx-ceded-game"><div><span>Rodada ${integer(game.rodada)}</span>${fixtureMarkup(game.casa, game.fora, game.clube_id, game.placar_casa, game.placar_fora)}</div><strong>${number(game.pontuacao)} pts</strong><small>${(game.jogadores || []).slice(0, 3).map((player) => `${escapeHtml(player.nome)} ${number(player.pontuacao)}`).join(' · ') || 'Sem atleta da posição com dados'}</small></article>`).join('');
+        const games = (summary.historico || []).slice(0, 8).map((game) => {
+            const players = (game.jogadores || []).map((player) => {
+                const photo = normalizedPhoto(player.foto, player.id);
+                const avatar = photo ? `<img src="${escapeHtml(photo)}" alt="" loading="lazy">` : '<i class="fas fa-user"></i>';
+                return `<div class="scx-ceded-player"><span class="scx-ceded-player-avatar">${avatar}</span><strong>${escapeHtml(player.nome || 'Atleta')}</strong><span class="scx-ceded-player-scouts">${scoutSummary(player.scouts)}</span><b>${number(player.pontuacao)} pts</b></div>`;
+            }).join('') || '<span class="scx-muted">Sem atleta da posição com dados.</span>';
+            return `<details class="scx-ceded-game"><summary><span class="scx-ceded-game-round">Rodada ${integer(game.rodada)}</span><span class="scx-ceded-game-fixture">${fixtureMarkup(game.casa, game.fora, game.clube_id, game.placar_casa, game.placar_fora)}</span><span class="scx-ceded-game-scouts">${scoutSummary(game.scouts)}</span><strong>${number(game.pontuacao)} pts</strong><i class="fas fa-chevron-down" aria-hidden="true"></i></summary><div class="scx-ceded-player-list">${players}</div></details>`;
+        }).join('');
         return `${metrics}${thresholds}<div class="scx-ceded-scouts">${scouts}</div><div class="scx-ceded-games">${games || '<span class="scx-muted">Sem partidas no recorte.</span>'}</div>`;
     }
     function renderConfrontation(data) {
@@ -366,12 +382,26 @@
         const currentRound = Number(data.filtros?.rodada || state.rodada || 0);
         const matches = (data.ultimas_pontuacoes || []).filter((match) => match.entrou_em_campo === true && Number(match.rodada) < currentRound && match.mando === mando).slice(0, 5);
         if (!matches.length) return '<div class="scx-muted">Sem jogos registrados.</div>';
-        return matches.map((match) => `<article class="scx-side-history-row"><span>Rodada ${match.rodada}</span><div>${fixtureMarkup(match.casa, match.fora, match.clube_id, match.placar_casa, match.placar_fora)}<small>${escapeHtml(match.adversario_nome || '')}</small></div><strong>${number(match.pontuacao)}<em>${scoutSummary(match.scouts)}</em></strong></article>`).join('');
+        return matches.map((match) => `<article class="scx-side-history-row"><span>Rodada ${match.rodada}</span><div><span class="scx-match-fixture">${fixtureMarkup(match.casa, match.fora, match.clube_id, match.placar_casa, match.placar_fora)}</span><small>${escapeHtml(match.adversario_nome || '')}</small></div><strong>${number(match.pontuacao)}<em>${scoutSummary(match.scouts)}</em></strong></article>`).join('');
     }
 
     function comparisonCeded(data) {
         const ceded = data.cedidos_adversario || {};
-        return ceded.por_mando ? cededProfileMarkup(ceded, true) : '<span class="scx-muted">Sem scouts cedidos registrados.</span>';
+        return ceded.por_mando ? cededProfileMarkup(ceded) : '<span class="scx-muted">Sem scouts cedidos registrados.</span>';
+    }
+
+    function comparisonMatchup(data, player) {
+        const match = data.confronto;
+        if (!match) return '<div class="scx-side-matchup-empty">Sem confronto válido na rodada atual.</div>';
+        const ownId = Number(player?.clube_id || data.jogador?.clube_id);
+        const own = Number(match.casa?.id) === ownId ? match.casa : match.fora;
+        const defense = [1, 2, 3].includes(Number(state.posicaoId));
+        const favoritismo = Number(own?.favoritismo || 0);
+        const favoritismoPercent = Math.max(0, Math.min(100, Number(own?.favoritismo_percent || 0)));
+        const saldo = Number(own?.saldo || 0);
+        const saldoPercent = Math.max(0, Math.min(100, Number(own?.saldo_percent || 0)));
+        const signal = (label, value, percent, kind, title) => `<span class="scx-side-signal scx-side-signal-${kind}" title="${escapeHtml(title)}"><span><b>${label}</b> ${number(value)}</span><i><em style="width:${percent.toFixed(0)}%"></em></i></span>`;
+        return `<div class="scx-side-matchup"><div class="scx-side-matchup-fixture">${fixtureMarkup(match.casa, match.fora, ownId, match.placar_casa, match.placar_fora)}</div><div class="scx-side-matchup-signals">${signal('F', favoritismo, favoritismoPercent, 'favorite', `Favoritismo do ${own?.nome || 'time'} pelo perfil de jogo`)}${defense ? signal('SG', saldoPercent, saldoPercent, 'sg', `Chance de saldo de gols do ${own?.nome || 'time'}`) : ''}</div></div>`;
     }
 
     function comparisonSide(data, prediction, comparisonMetrics = {}) {
@@ -385,7 +415,7 @@
             const tone = Number.isFinite(other) && current !== other ? (current > other ? 'better' : 'worse') : '';
             return `<div class="${tone}"><span>${label}</span><strong>${formatter(value)}</strong></div>`;
         };
-        return `<article class="scx-comparison-side"><header class="scx-comparison-side-head"><div class="scx-avatar">${avatar}</div><div><p class="scx-overline">Jogador analisado</p><h3>${escapeHtml(player.nome || 'Jogador')}</h3><small>${escapeHtml(player.posicao || '')} · ${escapeHtml(player.clube_nome || '')}</small></div></header><div class="scx-side-metrics">${metric('Previsão', prediction, 'prediction')}${metric('Média', summary.media, 'average')}${metric('Jogos', summary.jogos, 'games', integer)}${metric('Maior', summary.maior_pontuacao, 'highest')}</div><div class="scx-side-section"><h4>Últimas pontuações</h4><div class="scx-side-history-columns"><div><span class="scx-side-column-label">Em casa</span>${comparisonHistory(data, 'casa')}</div><div><span class="scx-side-column-label">Fora</span>${comparisonHistory(data, 'fora')}</div></div></div><div class="scx-side-section"><h4>Cedidos no confronto atual</h4><div class="scx-side-ceded">${comparisonCeded(data)}</div></div><div class="scx-side-section"><h4>Principais scouts da posição</h4><div class="scx-side-scouts">${comparisonScoutRows(data.scouts_da_posicao)}</div></div></article>`;
+        return `<article class="scx-comparison-side"><div class="scx-side-identity-row"><header class="scx-comparison-side-head"><div class="scx-avatar">${avatar}</div><div><p class="scx-overline">Jogador analisado</p><h3>${escapeHtml(player.nome || 'Jogador')}</h3><small>${escapeHtml(player.posicao || '')} · ${escapeHtml(player.clube_nome || '')}</small></div></header>${comparisonMatchup(data, player)}</div><div class="scx-side-metrics">${metric('Previsão', prediction, 'prediction')}${metric('Média', summary.media, 'average')}${metric('Jogos', summary.jogos, 'games', integer)}${metric('Maior', summary.maior_pontuacao, 'highest')}</div><div class="scx-side-section"><h4>Últimas pontuações</h4><div class="scx-side-history-columns"><div><span class="scx-side-column-label">Em casa</span>${comparisonHistory(data, 'casa')}</div><div><span class="scx-side-column-label">Fora</span>${comparisonHistory(data, 'fora')}</div></div></div><div class="scx-side-section"><h4>Cedidos no confronto atual</h4><div class="scx-side-ceded">${comparisonCeded(data)}</div></div><div class="scx-side-section"><h4>Principais scouts da posição</h4><div class="scx-side-scouts">${comparisonScoutRows(data.scouts_da_posicao)}</div></div></article>`;
     }
 
     function renderComparison(first, second) {

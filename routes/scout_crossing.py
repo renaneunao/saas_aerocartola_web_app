@@ -170,6 +170,47 @@ def _team_options(cursor, temporada, rodada):
     ]
 
 
+def _round_fixture_options(cursor, temporada, rodada):
+    """Retorna os confrontos da rodada para a seleção visual da página.
+
+    A tela precisa apresentar o campeonato como pares de adversários, e não
+    como uma lista solta de clubes. Mantemos os mesmos dados de escudo,
+    mando e placar usados no histórico para evitar duas fontes visuais
+    diferentes.
+    """
+    cursor.execute(
+        """
+        SELECT p.partida_id, p.clube_casa_id, p.clube_visitante_id,
+               casa.nome AS casa_nome, visitante.nome AS visitante_nome,
+               casa.abreviacao AS casa_abreviacao,
+               visitante.abreviacao AS visitante_abreviacao,
+               p.placar_oficial_mandante, p.placar_oficial_visitante,
+               p.local, p.valida
+        FROM acf_partidas p
+        LEFT JOIN acf_clubes casa ON casa.id = p.clube_casa_id
+        LEFT JOIN acf_clubes visitante ON visitante.id = p.clube_visitante_id
+        WHERE p.temporada = %s
+          AND p.rodada_id = %s
+        ORDER BY p.partida_id
+        """,
+        (temporada, rodada),
+    )
+    fixtures = []
+    for row in cursor.fetchall():
+        fixtures.append(
+            {
+                "id": _json_int(row["partida_id"]),
+                "casa": _club_payload(row["clube_casa_id"], row["casa_nome"], row["casa_abreviacao"]),
+                "fora": _club_payload(row["clube_visitante_id"], row["visitante_nome"], row["visitante_abreviacao"]),
+                "placar_casa": row["placar_oficial_mandante"],
+                "placar_fora": row["placar_oficial_visitante"],
+                "local": row["local"] or "",
+                "valido": bool(row["valida"]),
+            }
+        )
+    return fixtures
+
+
 def _match_options(cursor, clube_id, temporada, rodada):
     cursor.execute(
         """
@@ -214,9 +255,65 @@ def _current_fixture(cursor, clube_id, temporada, rodada):
     if not matches:
         return None
     fixture = matches[0]
+    _attach_fixture_indices(cursor, fixture, temporada, rodada)
     fixture["mando_label"] = "Casa" if fixture["mando"] == "casa" else "Fora"
     fixture["casa_nome"] = fixture["casa"]["nome"]
     fixture["visitante_nome"] = fixture["fora"]["nome"]
+    return fixture
+
+
+def _attach_fixture_indices(cursor, fixture, temporada, rodada):
+    """Anexa favoritismo e SG dos perfis escolhidos pelo usuário ao jogo."""
+    if not fixture:
+        return fixture
+
+    peso_jogo = {}
+    peso_sg = {}
+    try:
+        from models.user_escalacao_config import get_user_escalacao_config
+
+        config = get_user_escalacao_config(
+            cursor.connection,
+            int(session.get("user_id")),
+            session.get("selected_team_id"),
+        ) or {}
+        perfil_jogo = config.get("perfil_peso_jogo")
+        perfil_sg = config.get("perfil_peso_sg")
+        if perfil_jogo:
+            cursor.execute(
+                """
+                SELECT clube_id, peso_jogo
+                FROM acp_peso_jogo_perfis
+                WHERE perfil_id = %s AND rodada_atual = %s
+                """,
+                (perfil_jogo, rodada),
+            )
+            peso_jogo = {_json_int(row["clube_id"]): float(row["peso_jogo"] or 0) for row in cursor.fetchall()}
+        if perfil_sg:
+            cursor.execute(
+                """
+                SELECT clube_id, peso_sg
+                FROM acp_peso_sg_perfis
+                WHERE perfil_id = %s AND rodada_atual = %s
+                """,
+                (perfil_sg, rodada),
+            )
+            peso_sg = {_json_int(row["clube_id"]): float(row["peso_sg"] or 0) for row in cursor.fetchall()}
+    except Exception as exc:
+        print(f"[SCOUT CROSSING] Índices do confronto indisponíveis: {exc}")
+
+    max_jogo = max((abs(value) for value in peso_jogo.values()), default=1.0) or 1.0
+    for side in ("casa", "fora"):
+        club = fixture.get(side) or {}
+        club_id = _json_int(club.get("id"))
+        favoritismo = peso_jogo.get(club_id, 0.0)
+        saldo = peso_sg.get(club_id, 0.0)
+        saldo_percent = saldo * 100 if abs(saldo) <= 1 else saldo
+        club["favoritismo"] = round(favoritismo, 2)
+        club["favoritismo_percent"] = round(min(100.0, abs(favoritismo) / max_jogo * 100), 1)
+        club["saldo"] = round(saldo, 2)
+        club["saldo_percent"] = round(max(0.0, min(100.0, saldo_percent)), 1)
+    fixture["favoritismo_maximo"] = round(max_jogo, 2)
     return fixture
 
 
@@ -845,6 +942,7 @@ def _opponent_conceded_scouts(
         player = {
             "id": _json_int(row["atleta_id"]),
             "nome": row["apelido"] or f"Atleta {_json_int(row['atleta_id'])}",
+            "foto": row["foto"] or "",
             "pontuacao": _json_number(row["pontuacao"]),
             "scouts": player_scouts,
         }
@@ -859,7 +957,6 @@ def _opponent_conceded_scouts(
         game["pontuacao"] = _json_number(game["pontuacao"])
         game["pico"] = _json_number(game["pico"])
         game["jogadores"].sort(key=lambda item: item["pontuacao"], reverse=True)
-        game["jogadores"] = game["jogadores"][:5]
         game["scouts"] = {key: _json_int(value) for key, value in game["scouts"].items()}
     games.sort(key=lambda item: item["rodada"], reverse=True)
 
@@ -1061,6 +1158,7 @@ def options():
         cursor = conn.cursor(cursor_factory=RealDictCursor)
         temporada, rodada = _current_context(cursor)
         teams = _team_options(cursor, temporada, rodada)
+        fixtures = _round_fixture_options(cursor, temporada, rodada)
         if atleta_id and posicao_id and not clube_id:
             selected_player = _player_snapshot(cursor, atleta_id, temporada, posicao_id)
             clube_id = selected_player["clube_id"] if selected_player else None
@@ -1100,6 +1198,7 @@ def options():
                 "rodada": rodada,
                 "clube_id": clube_id,
                 "times": teams,
+                "confrontos": fixtures,
                 "jogadores": players,
                 "regras_disponibilidade": availability_rules,
                 "confronto": _current_fixture(cursor, clube_id, temporada, rodada) if clube_id else None,

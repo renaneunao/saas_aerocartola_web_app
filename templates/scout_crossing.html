@@ -3,7 +3,7 @@
 {% block title %}Cruzamento de Scouts{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/scout-crossing.css', v='3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/scout-crossing.css', v='5') }}">
 <main class="scx-page" id="scoutCrossingPage"
       data-options-url="{{ url_for('scout_crossing.options') }}"
       data-crossing-url="{{ url_for('scout_crossing.crossing') }}"
@@ -21,7 +21,7 @@
 
     <section class="scx-selector" aria-label="Filtros do cruzamento">
         <div class="scx-selector-row">
-            <div class="scx-section-label"><span>1</span><div><strong>Escolha os times</strong><small>Selecione um ou mais clubes · filtro opcional</small></div></div>
+            <div class="scx-section-label"><span>1</span><div><strong>Escolha o confronto</strong><small>Selecione o escudo do time para filtrar os atletas</small></div></div>
             <div class="scx-team-grid" id="scoutCrossingTeams" role="listbox" aria-label="Times"></div>
         </div>
         <div class="scx-selector-row scx-position-row">
@@ -104,5 +104,5 @@
 <script src="{{ url_for('static', filename='js/calculo_meia.js') }}"></script>
 <script src="{{ url_for('static', filename='js/calculo_atacante.js') }}"></script>
 <script src="{{ url_for('static', filename='js/calculo_treinador.js') }}"></script>
-<script src="{{ url_for('static', filename='js/scout-crossing.js', v='4') }}"></script>
+<script src="{{ url_for('static', filename='js/scout-crossing.js', v='5') }}"></script>
 {% endblock %}

@@ -612,6 +612,55 @@
     }
 }
 
+/* Cedimento por partida: confronto e placar ficam na coluna principal; os
+   scouts e a lista de atletas aparecem ao expandir o jogo. */
+.modal-scout-history-ceded-match {
+    display: block;
+    padding: 0;
+    border: 1px solid rgba(148, 163, 184, .1);
+    border-radius: .35rem;
+    background: rgba(255, 255, 255, .018);
+    color: #94a3b8;
+}
+.modal-scout-history-ceded-match + .modal-scout-history-ceded-match { margin-top: .18rem; }
+.modal-scout-history-ceded-match > summary {
+    display: grid;
+    grid-template-columns: 2.7rem minmax(10rem, 1.35fr) minmax(6rem, 1fr) auto 1rem;
+    align-items: center;
+    gap: .3rem;
+    padding: .3rem .35rem;
+    cursor: pointer;
+    list-style: none;
+}
+.modal-scout-history-ceded-match > summary::-webkit-details-marker { display: none; }
+.modal-scout-history-ceded-match > summary:hover { background: rgba(103, 232, 249, .04); }
+.modal-scout-history-ceded-match > summary > span:first-child { color: #67e8f9; font: 700 .47rem 'JetBrains Mono', monospace; }
+.modal-scout-history-ceded-fixture { min-width: 0; }
+.modal-scout-history-ceded-fixture .modal-scout-history-fixture { min-width: 0; }
+.modal-scout-history-ceded-scouts-inline { min-width: 0; }
+.modal-scout-history-ceded-scouts-inline .modal-scout-history-scouts-positive,
+.modal-scout-history-ceded-scouts-inline .modal-scout-history-scouts-negative { justify-content: flex-start; }
+.modal-scout-history-ceded-match > summary > strong { color: #7bd88f; font: 700 .5rem 'JetBrains Mono', monospace; white-space: nowrap; }
+.modal-scout-history-ceded-match > summary > i { color: #64748b; font-size: .5rem; transition: transform .15s; }
+.modal-scout-history-ceded-match[open] > summary > i { transform: rotate(180deg); }
+.modal-scout-history-ceded-players { display: grid; gap: .12rem; padding: .25rem .35rem .35rem; border-top: 1px solid rgba(148, 163, 184, .08); }
+.modal-scout-history-ceded-player { display: grid; grid-template-columns: 1.05rem minmax(4rem, 1fr) minmax(5rem, 1.2fr) auto; align-items: center; gap: .25rem; padding: .2rem .25rem; background: rgba(2, 12, 23, .25); }
+.modal-scout-history-ceded-player-avatar { display: grid; place-items: center; width: 1rem; height: 1rem; overflow: hidden; border-radius: 50%; color: #64748b; background: #0d1727; font-size: .4rem; }
+.modal-scout-history-ceded-player-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.modal-scout-history-ceded-player strong { min-width: 0; overflow: hidden; color: #e2e8f0; font-size: .5rem; text-overflow: ellipsis; white-space: nowrap; }
+.modal-scout-history-ceded-player-scouts { min-width: 0; }
+.modal-scout-history-ceded-player > b { color: #7bd88f; font: 700 .48rem 'JetBrains Mono', monospace; white-space: nowrap; }
+
+@media (max-width: 640px) {
+    .modal-scout-history-ceded-match > summary {
+        grid-template-columns: 2.5rem minmax(0, 1fr) auto 1rem;
+    }
+    .modal-scout-history-ceded-scouts-inline { grid-column: 2 / 4; }
+    .modal-scout-history-ceded-player {
+        grid-template-columns: 1rem minmax(3.5rem, 1fr) minmax(0, 1fr) auto;
+    }
+}
+
 /* No histórico, os scouts positivos e negativos ficam em linhas distintas
    para facilitar a leitura do efeito de cada partida. */
 .modal-scout-history-inline-scouts {
