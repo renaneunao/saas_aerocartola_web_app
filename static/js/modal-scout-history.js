@@ -24,8 +24,19 @@
         const side = ['casa', 'visitante'].includes(data?.favoritismo_lado)
             ? data.favoritismo_lado : 'equilibrado';
         const width = Math.max(0, Math.min(50, Number(data?.favoritismo_bar_percent) || 0));
-        const title = `Favoritismo do confronto · escala comum da rodada · ${side === 'casa' ? 'mandante favorito' : side === 'visitante' ? 'visitante favorito' : 'equilibrado'}`;
-        return `<div class="modal-detail-favoritism-meter is-${side}" title="${escapeHtml(title)}"><i style="--favoritismo-width:${width}%"></i></div><div class="modal-detail-favoritism-values"><span>Casa <b>${number(data?.favoritismo_casa)}</b></span><span>Fora <b>${number(data?.favoritismo_visitante)}</b></span></div>`;
+        const favorite = side === 'casa' ? 'mandante' : side === 'visitante' ? 'visitante' : '';
+        const title = `Favoritismo do confronto · escala comum da rodada · ${favorite ? `${favorite} favorito` : 'confronto equilibrado'}`;
+        const homeName = escapeHtml(data?.favoritismo_clube_casa_nome || 'Mandante');
+        const awayName = escapeHtml(data?.favoritismo_clube_visitante_nome || 'Visitante');
+        const teamLine = (kind, label, name, value, isFavorite) =>
+            `<div class="modal-detail-favoritism-team is-${kind}${isFavorite ? ' is-favorite' : ''}"><span class="modal-detail-favoritism-team-name"><b>${label}</b><strong>${name}</strong>${isFavorite ? '<em>FAVORITO</em>' : ''}</span><b class="modal-detail-favoritism-team-value">${number(value)}</b></div>`;
+        return `<div class="modal-detail-favoritism-heading"><span>MANDANTE</span><span>VISITANTE</span></div><div class="modal-detail-favoritism-teams">${teamLine('casa', 'CASA', homeName, data?.favoritismo_casa, side === 'casa')}${teamLine('visitante', 'FORA', awayName, data?.favoritismo_visitante, side === 'visitante')}</div><div class="modal-detail-favoritism-meter is-${side}" role="img" aria-label="${escapeHtml(title)}"><i style="--favoritismo-width:${width}%"></i></div><div class="modal-detail-favoritism-caption">${favorite ? `${favorite === 'mandante' ? homeName : awayName} é o favorito deste confronto` : 'Sem favoritismo definido entre os times'}</div>`;
+    };
+
+    window.renderModalSG = function (data) {
+        const percent = Math.max(0, Math.min(100, Number(data?.peso_sg_percentual) || 0));
+        const rounded = Math.round(percent);
+        return `<div class="modal-detail-sg-meter" role="img" aria-label="Indicador relativo de SG: ${rounded}%"><i style="width:${percent}%"></i></div><div class="modal-detail-sg-caption"><b>${rounded}%</b><span>do maior índice de SG da rodada</span></div>`;
     };
 
     function imageUrl(value) {

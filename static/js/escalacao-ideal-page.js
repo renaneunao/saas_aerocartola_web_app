@@ -423,12 +423,16 @@
     return [...unique.values()];
   }
 
-  function playerCard(player, position, index) {
+  function playerCard(player, position, index, result) {
     const playerName = escapeHtml(player?.apelido || 'N/A');
     const priceLabel = money(price(player));
     const pointsLabel = `${points(player).toFixed(1)} pts`;
     const badges = player?.eh_capitao ? `<span class="ideal-badge ideal-badge-captain" title="Capitão atual"><img class="ideal-cartola-role-icon" src="${CARTOLA_CAPTAIN_ICON}" alt="Capitão"></span>` : '';
-    return `<div class="ideal-player ideal-player-card" title="Clique para trocar ${playerName}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}${replaceHintMarkup()}${cardActionRail(player, position, 'starter')}<div class="ideal-player-visual">${avatar(player)}${teamIndicators(player, position)}</div><span class="ideal-player-name" title="Jogador: ${playerName}">${playerName}</span><span class="ideal-player-chips"><span title="Preço do jogador: ${priceLabel}">${priceLabel}</span><span title="Pontuação prevista: ${pointsLabel}">${pointsLabel}</span></span>${statusIndicator(player)}</div>`;
+    const hackedReserve = position === 'goleiros' && player?.eh_goleiro_hack
+      ? (result?.reservas?.goleiros || []).find(Boolean)
+      : null;
+    const hackMarkup = hackedReserve ? `<span class="ideal-goalkeeper-hack-protection">TITULAR NULO · PROTEÇÃO</span><div class="ideal-goalkeeper-hack-entry" title="${escapeHtml(hackedReserve.apelido || 'Goleiro reserva')} é quem pode entrar em campo pelo hack do goleiro"><span class="ideal-goalkeeper-hack-label"><i class="fas fa-arrow-right-to-bracket"></i> RESERVA QUE ENTRA</span><span class="ideal-goalkeeper-hack-player">${avatar(hackedReserve, 'ideal-goalkeeper-hack-avatar')}<b>${escapeHtml(hackedReserve.apelido || 'Goleiro reserva')}</b><strong>${points(hackedReserve).toFixed(1)} pts</strong></span></div>` : '';
+    return `<div class="ideal-player ideal-player-card${hackedReserve ? ' is-goalkeeper-hack' : ''}" title="Clique para trocar ${playerName}" data-picker-kind="starter" data-picker-position="${position}" data-picker-index="${index}" role="button" tabindex="0">${badges}${replaceHintMarkup()}${cardActionRail(player, position, 'starter')}<div class="ideal-player-visual">${avatar(player)}${teamIndicators(player, position)}</div><span class="ideal-player-name" title="Jogador: ${playerName}">${playerName}</span>${hackMarkup || `<span class="ideal-player-chips"><span title="Preço do jogador: ${priceLabel}">${priceLabel}</span><span title="Pontuação prevista: ${pointsLabel}">${pointsLabel}</span></span>`}${statusIndicator(player)}</div>`;
   }
 
   function statusIndicator(player) {
@@ -456,7 +460,7 @@
 
   function playerSlot(result, position, index) {
     const players = (result.titulares?.[position] || []).filter(Boolean);
-    return players[index] ? playerCard(players[index], position, index) : emptySlot(position, index);
+    return players[index] ? playerCard(players[index], position, index, result) : emptySlot(position, index);
   }
 
   function defenseLane(result, position, index, label) {
@@ -1150,26 +1154,9 @@
       const target = event.target.closest('[data-picker-kind]');
       if (!target || event.target.closest('.ideal-card-actions')) return;
       if (isTouchSurface()) {
-        if (!target.classList.contains('is-touch-open')) {
-          closeTouchCards(target);
-          target.classList.remove('is-hover-closed');
-          target.classList.add('is-touch-open');
-          const panel = target.querySelector(':scope > .ideal-card-actions');
-          if (panel) {
-            if (!panel.querySelector('[data-touch-replace]')) panel.insertAdjacentHTML('afterbegin', '<button type="button" class="ideal-touch-replace" data-touch-replace><i class="fas fa-arrows-rotate"></i> Trocar jogador</button>');
-            panel._idealOriginCard = target;
-            panel.classList.add('is-touch-portal');
-            panel.querySelectorAll('[data-athlete-id]').forEach(action => {
-              action.dataset.pickerPosition = target.dataset.pickerPosition || '';
-              action.dataset.pickerIndex = target.dataset.pickerIndex || '0';
-              action.dataset.pickerKind = target.dataset.pickerKind || '';
-            });
-            document.body.appendChild(panel);
-          }
-          return;
-        }
         closeTouchCards();
-        target.classList.remove('is-touch-open');
+        openPicker(target.dataset.pickerPosition, target.dataset.pickerKind, target.dataset.pickerIndex);
+        return;
       }
       openPicker(target.dataset.pickerPosition, target.dataset.pickerKind, target.dataset.pickerIndex);
     });

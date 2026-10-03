@@ -96,7 +96,7 @@
                 </div>
                 <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3">
                     <p class="text-[11px] text-slate-400 font-medium">Índice Saldo de Gol (SG)</p>
-                    <p id="modalLateralSG" class="text-emerald-400 font-bold text-base mt-0.5"></p>
+                    <div id="modalLateralSG" class="modal-detail-sg"></div>
                 </div>
             </div>
             <div id="modalLateralEscalacoesContainer" class="mt-3 text-xs text-slate-400 hidden flex items-center gap-1.5">
@@ -176,7 +176,7 @@ function preencherModalLateral(dados) {
     document.getElementById('modalLateralMedia').textContent = formatNumber(dados.media || 0);
     document.getElementById('modalLateralMediaGeralTotal').textContent = formatNumber(dados.media || 0);
     document.getElementById('modalLateralPreco').textContent = `R$ ${formatNumber(dados.preco || 0)}`;
-    document.getElementById('modalLateralSG').textContent = `${formatNumber(dados.peso_sg || 0)} (probabilidade)`;
+    document.getElementById('modalLateralSG').innerHTML = window.renderModalSG(dados);
     
     // Novas métricas de Média Básica & Mando
     document.getElementById('modalLateralMediaBasica').textContent = formatNumber(dados.media_basica || 0);

@@ -134,14 +134,23 @@ def _get_round_matchup_favoritism(cursor, perfil_id, rodada, clube_id, adversari
         'favoritismo_visitante': 0.0,
         'favoritismo_lado': 'equilibrado',
         'favoritismo_bar_percent': 0.0,
+        'favoritismo_clube_casa_id': None,
+        'favoritismo_clube_casa_nome': 'Mandante',
+        'favoritismo_clube_casa_escudo': '',
+        'favoritismo_clube_visitante_id': None,
+        'favoritismo_clube_visitante_nome': 'Visitante',
+        'favoritismo_clube_visitante_escudo': '',
     }
     if not all((perfil_id, rodada, clube_id, adversario_id, temporada)):
         return result
 
     cursor.execute(
         '''SELECT p.clube_casa_id, p.clube_visitante_id,
-                  COALESCE(casa.peso_jogo, 0), COALESCE(fora.peso_jogo, 0)
+                  COALESCE(casa.peso_jogo, 0), COALESCE(fora.peso_jogo, 0),
+                  mandante.nome, visitante.nome
            FROM acf_partidas p
+           LEFT JOIN acf_clubes mandante ON mandante.id = p.clube_casa_id
+           LEFT JOIN acf_clubes visitante ON visitante.id = p.clube_visitante_id
            LEFT JOIN acp_peso_jogo_perfis casa
              ON casa.perfil_id = %s AND casa.rodada_atual = p.rodada_id
             AND casa.clube_id = p.clube_casa_id
@@ -155,7 +164,7 @@ def _get_round_matchup_favoritism(cursor, perfil_id, rodada, clube_id, adversari
     differences = [abs(float(row[2] or 0) - float(row[3] or 0)) for row in matches]
     max_difference = max(differences, default=0.0)
 
-    for home_id, away_id, home_value, away_value in matches:
+    for home_id, away_id, home_value, away_value, home_name, away_name in matches:
         if {int(home_id), int(away_id)} != {int(clube_id), int(adversario_id)}:
             continue
         home_value = float(home_value or 0)
@@ -168,6 +177,10 @@ def _get_round_matchup_favoritism(cursor, perfil_id, rodada, clube_id, adversari
             'favoritismo_lado': 'casa' if difference > 0 else 'visitante' if difference < 0 else 'equilibrado',
             'favoritismo_bar_percent': round(min(50.0, abs(difference) / max_difference * 50.0), 2)
                 if max_difference > 0 else 0.0,
+            'favoritismo_clube_casa_id': int(home_id),
+            'favoritismo_clube_casa_nome': home_name or 'Mandante',
+            'favoritismo_clube_visitante_id': int(away_id),
+            'favoritismo_clube_visitante_nome': away_name or 'Visitante',
         })
         break
     return result
@@ -2818,6 +2831,7 @@ def api_lateral_detalhes(atleta_id):
             'adversario_escudo_url': adversario_escudo_url,
             **favoritismo,
             'peso_sg': peso_sg,
+            'peso_sg_percentual': peso_sg_percentual,
             'media_ds': media_ds,
             'media_a': media_a,
             'media_g': media_g,
@@ -3072,6 +3086,7 @@ def api_goleiro_detalhes(atleta_id):
             'adversario_escudo_url': adversario_escudo_url,
             **favoritismo,
             'peso_sg': peso_sg,
+            'peso_sg_percentual': peso_sg_percentual,
             'media_de': media_de,
             'media_gols_sofridos': media_gols_sofridos,
             'adv_chutes_gol_media': adv_chutes_gol_media,
@@ -3297,6 +3312,7 @@ def api_zagueiro_detalhes(atleta_id):
             'adversario_escudo_url': adversario_escudo_url,
             **favoritismo,
             'peso_sg': peso_sg,
+            'peso_sg_percentual': peso_sg_percentual,
             'media_ds': media_ds,
             'media_fc': media_fc,
             'media_g': media_g,

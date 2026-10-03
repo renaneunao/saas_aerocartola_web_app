@@ -2777,3 +2777,25 @@ select.aero-select.ideal-strategy-select:focus-visible {
   }
   .ideal-bench-player .ideal-bench-copy { padding-left: 3px; }
 }
+
+/* No hack, o goleiro nulo é a proteção e o reserva é quem efetivamente pode
+   entrar. Esta faixa deixa a relação explícita dentro do card do campo. */
+.ideal-player.is-goalkeeper-hack { padding-bottom: 6px; }
+.ideal-goalkeeper-hack-protection { display: block; width: 100%; margin-top: 3px; color: #fda4af; font-size: 5px; font-weight: 900; letter-spacing: .035em; white-space: nowrap; }
+.ideal-goalkeeper-hack-entry { display: grid; gap: 2px; width: 100%; margin-top: 4px; padding: 3px 4px; border: 1px solid rgba(92,242,165,.32); border-radius: 6px; background: rgba(16,185,129,.09); text-align: left; }
+.ideal-goalkeeper-hack-label { display: flex; align-items: center; gap: 3px; color: #75efb1; font-size: 5px; font-weight: 900; letter-spacing: .045em; white-space: nowrap; }
+.ideal-goalkeeper-hack-player { display: flex; align-items: center; min-width: 0; gap: 3px; }
+.ideal-goalkeeper-hack-player b { min-width: 0; overflow: hidden; color: #e5fff2; font-size: 6px; text-overflow: ellipsis; white-space: nowrap; }
+.ideal-goalkeeper-hack-player strong { flex: 0 0 auto; margin-left: auto; color: #67e8f9; font: 700 6px 'JetBrains Mono',monospace; white-space: nowrap; }
+.ideal-goalkeeper-hack-avatar { width: 13px !important; height: 13px !important; flex: 0 0 13px !important; border-radius: 50% !important; }
+
+/* Em telas touch não mostramos o painel de hover: o toque no atleta abre
+   diretamente o seletor, que já é a ação disponível no celular. */
+@media (hover: none), (pointer: coarse) {
+  .ideal-player-card > .ideal-card-actions,
+  .ideal-player-card > .ideal-player-replace-hint { display: none !important; }
+  .ideal-player-card:hover,
+  .ideal-player-card:focus-within { z-index: 2; }
+  .ideal-player-card.is-touch-open > .ideal-card-actions,
+  .ideal-card-actions.is-touch-portal { display: none !important; }
+}
