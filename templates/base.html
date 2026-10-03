@@ -20,8 +20,11 @@
     <script src="{{ url_for('static', filename='cartola_imgs/player_images_by_id.js') }}"></script>
     <!-- Design System -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/aero-theme.css', v='6') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/scout-crossing.css', v='11') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/scout-crossing.css', v='12') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modal-scout-history.css', v='6') }}">
+    {% if modulo is defined and pesos_padrao is defined %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/weight-editor.css', v='1') }}">
+    {% endif %}
     <script>
         tailwind.config = {
             theme: {
@@ -691,5 +694,9 @@
 
     <script src="{{ url_for('static', filename='js/aero-dropdowns.js', v='1') }}"></script>
     {% block scripts %}{% endblock %}
+    {% if modulo is defined and pesos_padrao is defined %}
+    <script id="idealWeightDefaults" type="application/json">{{ pesos_padrao | tojson }}</script>
+    <script src="{{ url_for('static', filename='js/weight-editor.js', v='1') }}"></script>
+    {% endif %}
   </body>
 </html>

@@ -16,7 +16,7 @@ O container `cartola-aero-calculador-container` executa `main.py`. Calcula `acp_
 
 Os intervalos pretendidos são 30 minutos normalmente e 5 minutos no dia de fechamento. Foi encontrado um desvio: `datetime.now()` produz horário UTC sem fuso dentro do container, enquanto `BlockingScheduler` interpreta o `run_date` sem fuso como `America/Sao_Paulo`. Isso acrescenta três horas ao intervalo real (3h30 normalmente e 3h05 no dia de fechamento).
 
-Evidência: a última rotina terminou às 10:23:34 UTC (07:23:34 de Brasília), e o log indicou próxima execução “10:53:34”. O agendador interpreta esse horário como Brasília, correspondendo a 13:53:34 UTC. O timestamp mais recente das tabelas de pesos correspondia à mesma execução às 10:23:34 UTC. Correção indicada: usar datetimes com fuso explícito em todos os caminhos de agendamento, preferencialmente `datetime.now(BRASILIA_TZ)`, e testar o intervalo por diferença absoluta. Este serviço foi auditado, mas não alterado neste trabalho do Web App.
+Evidência: a rotina terminava às 10:23:34 UTC (07:23:34 de Brasília), e o log indicava próxima execução “10:53:34”. O agendador interpretava esse horário como Brasília, correspondendo a 13:53:34 UTC. O timestamp das tabelas de pesos confirmava o ciclo. A correção foi feita em `main.py`: início, duração e fim da execução agora usam `America/Sao_Paulo`, e o agendador normaliza o instante antes de calcular o próximo ciclo. O deploy do calculador ocorre pelo workflow Docker deste repositório.
 
 ## Pesos e pontuação dos clones
 
@@ -26,4 +26,10 @@ Foram copiados os seis conjuntos completos para os cinco clones das contas `aero
 
 No `Aero-MVPSB` da conta Premium de teste, foram removidas a escolha de perfis e a estratégia de escalação para verificar o guia desde o começo. Antes da alteração, configurações, pesos e rankings dos testes foram copiados para a tabela recuperável `acw_test_setup_backup_20261003`. Os times originais não foram alterados.
 
-As fórmulas individuais de pontuação dos seis módulos não foram alteradas neste trabalho. O total da escalação é a soma das notas dos titulares e treinador mais uma nota adicional do capitão (pontuação em dobro). É um índice calculado pelos pesos, e não uma promessa de pontos reais do Cartola. O card passou a explicar esse significado. A API de edição agora valida números finitos, aceita decimais, preserva os outros pesos em atualizações parciais e invalida o ranking da posição editada.
+As fórmulas individuais de pontuação dos seis módulos não foram alteradas no trabalho anterior. O total da escalação é a soma das notas dos titulares e treinador mais uma nota adicional do capitão (pontuação em dobro). É um índice calculado pelos pesos, e não uma promessa de pontos reais do Cartola. A API de edição valida números finitos, aceita decimais, preserva os outros pesos em atualizações parciais e invalida o ranking da posição editada.
+
+## Ajustes desta continuação
+
+Os limites de perfis foram removidos dos planos Free e Premium: os 15 perfis de jogo e 10 de SG disponíveis na rodada podem ser escolhidos em qualquer tier, com validação no servidor. A edição de pesos continua sujeita à permissão própria do plano. Nas telas dos módulos, os campos numéricos ganham sliders sincronizados e a ação “Retornar ao padrão ideal calculado”, que restaura os valores base da posição para o usuário revisar e salvar.
+
+Os argumentos dos modais foram reescritos para relatar médias e índices medidos, sem transformar o índice de SG em probabilidade, nem inferir titularidade ou estilo de jogo sem dados. No comparativo de scouts, o histórico fica em linhas fluidas no celular e o bloco de cedidos resume os indicadores da posição contra o adversário, com uma explicação curta e sem expandir oito partidas por padrão.

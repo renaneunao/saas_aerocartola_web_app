@@ -15,8 +15,8 @@ PLANS_CONFIG = {
     "free": {
         "name": "Free",
         "rankingCompleto": True,
-        "pesosJogo": 2,
-        "pesosSG": 2,
+        "pesosJogo": 15,
+        "pesosSG": 10,
         "editarPesosModulos": False,
         "verEscalacaoIdealCompleta": True,
         "podeEscalar": True,
@@ -31,8 +31,8 @@ PLANS_CONFIG = {
     "avancado": {
         "name": "Premium",
         "rankingCompleto": True,
-        "pesosJogo": 5,
-        "pesosSG": 5,
+        "pesosJogo": 15,
+        "pesosSG": 10,
         "editarPesosModulos": True,
         "verEscalacaoIdealCompleta": True,
         "podeEscalar": True,

@@ -112,17 +112,25 @@ class PlanApiTests(unittest.TestCase):
         self.assertEqual(response.json['prioridades'], DEFAULT_PRIORITIES)
         self.assertTrue(old_config['hack_goleiro'])  # Sem apagar configuração persistida.
 
-    def test_profile_limit_uses_order_not_raw_id_and_checks_invalid_inputs(self):
+    def test_all_round_profiles_are_available_on_every_tier(self):
         cursor = self.conn.cursor.return_value
         cursor.fetchall.return_value = [(10,), (20,), (30,), (40,), (50,), (60,)]
         with patch('models.user_configurations.create_user_configurations_table'), \
              patch.object(web, 'get_all_user_teams', return_value=[{'id': 501}]), \
              patch('models.user_configurations.create_user_configuration') as save:
-            response = self.client.post('/salvar-configuracao-perfis', data={'perfil_peso_jogo': '20', 'perfil_peso_sg': '20'})
-            self.assertEqual(response.location, '/modulos')
-            save.assert_called_once()
-            save.reset_mock()
-            self.client.post('/salvar-configuracao-perfis', data={'perfil_peso_jogo': '30', 'perfil_peso_sg': '20'})
+            for plan in PLANS_CONFIG:
+                with self.subTest(plan=plan):
+                    self.plan = plan
+                    response = self.client.post('/salvar-configuracao-perfis', data={
+                        'perfil_peso_jogo': '60', 'perfil_peso_sg': '60'
+                    })
+                    self.assertEqual(response.location, '/modulos')
+                    save.assert_called_once()
+                    save.reset_mock()
+            response = self.client.post('/salvar-configuracao-perfis', data={
+                'perfil_peso_jogo': '999', 'perfil_peso_sg': '60'
+            })
+            self.assertEqual(response.status_code, 302)
             save.assert_not_called()
             response = self.client.post('/salvar-configuracao-perfis', data={'perfil_peso_jogo': 'invalid'})
             self.assertEqual(response.status_code, 302)

@@ -215,7 +215,7 @@
                                            value="{{ perfil.perfil_id }}" 
                                            class="peer sr-only"
                                            {% if config_default and config_default.perfil_peso_jogo == perfil.perfil_id %}checked{% endif %}
-                                           {% if perfil.get('bloqueado') %}disabled data-bloqueado="true"{% else %}required data-bloqueado="false"{% endif %}>
+                                           required data-bloqueado="false">
                                     <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-2.5 hover:border-dark-blue-500/70 transition-all duration-200 peer-checked:border-dark-blue-500 peer-checked:bg-dark-blue-900/20 peer-checked:shadow-2xl h-full flex flex-col relative">
                                         {% if perfil.get('bloqueado') %}
                                         <div class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
@@ -294,7 +294,7 @@
                                            value="{{ perfil.perfil_id }}" 
                                            class="peer sr-only"
                                            {% if config_default and config_default.perfil_peso_sg == perfil.perfil_id %}checked{% endif %}
-                                           {% if perfil.get('bloqueado') %}disabled data-bloqueado="true"{% else %}required data-bloqueado="false"{% endif %}>
+                                           required data-bloqueado="false">
                                     <div class="bg-slate-800/90 border-2 border-slate-600/50 rounded-xl p-3 hover:border-cyan-500/70 transition-all duration-200 peer-checked:border-cyan-500 peer-checked:bg-cyan-900/20 peer-checked:shadow-2xl h-full flex flex-col relative">
                                         {% if perfil.get('bloqueado') %}
                                         <div class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">

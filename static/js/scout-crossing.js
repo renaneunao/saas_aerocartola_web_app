@@ -426,7 +426,7 @@
 
     function comparisonCeded(data) {
         const ceded = data.cedidos_adversario || {};
-        return ceded.por_mando ? cededProfileMarkup(ceded) : '<span class="scx-muted">Sem scouts cedidos registrados.</span>';
+        return ceded.por_mando ? cededProfileMarkup(ceded, true) : '<span class="scx-muted">Sem scouts cedidos registrados.</span>';
     }
 
     function comparisonMatchup(data, player) {
@@ -454,7 +454,7 @@
             const tone = Number.isFinite(other) && current !== other ? (current > other ? 'better' : 'worse') : '';
             return `<div class="${tone}"><span>${label}</span><strong>${formatter(value)}</strong></div>`;
         };
-        return `<article class="scx-comparison-side"><div class="scx-side-identity-row"><header class="scx-comparison-side-head"><div class="scx-avatar">${avatar}</div><div><p class="scx-overline">Jogador analisado</p><h3>${escapeHtml(player.nome || 'Jogador')}</h3><small>${escapeHtml(player.posicao || '')} · ${escapeHtml(player.clube_nome || '')}</small></div></header>${comparisonMatchup(data, player)}</div><div class="scx-side-metrics">${metric('Previsão', prediction, 'prediction')}${metric('Média', summary.media, 'average')}${metric('Jogos', summary.jogos, 'games', integer)}${metric('Maior', summary.maior_pontuacao, 'highest')}</div><div class="scx-side-section"><h4>Últimas pontuações</h4><div class="scx-side-history-columns"><div><span class="scx-side-column-label">Em casa</span>${comparisonHistory(data, 'casa')}</div><div><span class="scx-side-column-label">Fora</span>${comparisonHistory(data, 'fora')}</div></div></div><div class="scx-side-section"><h4>Cedidos no confronto atual</h4><div class="scx-side-ceded">${comparisonCeded(data)}</div></div><div class="scx-side-section"><h4>Principais scouts da posição</h4><div class="scx-side-scouts">${comparisonScoutRows(data.scouts_da_posicao)}</div></div></article>`;
+        return `<article class="scx-comparison-side"><div class="scx-side-identity-row"><header class="scx-comparison-side-head"><div class="scx-avatar">${avatar}</div><div><p class="scx-overline">Jogador analisado</p><h3>${escapeHtml(player.nome || 'Jogador')}</h3><small>${escapeHtml(player.posicao || '')} · ${escapeHtml(player.clube_nome || '')}</small></div></header>${comparisonMatchup(data, player)}</div><div class="scx-side-metrics">${metric('Previsão', prediction, 'prediction')}${metric('Média', summary.media, 'average')}${metric('Jogos', summary.jogos, 'games', integer)}${metric('Maior', summary.maior_pontuacao, 'highest')}</div><div class="scx-side-section"><h4>Últimas pontuações</h4><div class="scx-side-history-columns"><div><span class="scx-side-column-label">Em casa</span>${comparisonHistory(data, 'casa')}</div><div><span class="scx-side-column-label">Fora</span>${comparisonHistory(data, 'fora')}</div></div></div><div class="scx-side-section"><h4>O que o adversário cede</h4><p class="scx-section-note">Scouts e pontos que atletas desta posição fizeram contra o próximo rival, separados pelo mando do rival.</p><div class="scx-side-ceded">${comparisonCeded(data)}</div></div><div class="scx-side-section"><h4>Principais scouts da posição</h4><div class="scx-side-scouts">${comparisonScoutRows(data.scouts_da_posicao)}</div></div></article>`;
     }
 
     function renderComparison(first, second) {

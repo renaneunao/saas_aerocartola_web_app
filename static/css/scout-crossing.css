@@ -593,8 +593,25 @@
 .scx-side-history-row > strong { min-width: 6.5rem; }
 
 @media (max-width: 760px) {
-  .scx-side-history-row { grid-template-columns: 3rem minmax(9rem, 1fr) minmax(5.2rem, auto); }
-  .scx-side-history-row > strong { min-width: 5.2rem; }
+  .scx-side-history-columns { grid-template-columns: minmax(0, 1fr); gap: .35rem; }
+  .scx-side-history-row { grid-template-columns: 2.6rem minmax(0, 1fr) auto; gap: .22rem; padding: .28rem 0; }
+  .scx-side-history-row > strong { min-width: 4.1rem; font-size: .56rem; }
+  .scx-side-history-row em { max-width: 4.2rem; }
+  .scx-side-history-row .scx-fixture-pair { gap: .06rem; }
+  .scx-side-history-row .scx-fixture-team img,
+  .scx-side-history-row .scx-fixture-fallback { width: .75rem; height: .75rem; flex-basis: .75rem; }
+  .scx-side-history-row .scx-fixture-score,
+  .scx-side-history-row .scx-fixture-vs { font-size: .43rem; }
+  .scx-section-note { margin: -.2rem 0 .45rem; color: var(--scx-muted); font-size: .54rem; line-height: 1.35; }
+  .scx-comparison-side .scx-ceded-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .2rem; }
+  .scx-comparison-side .scx-ceded-metrics span { padding: .3rem .25rem; }
+  .scx-comparison-side .scx-ceded-metrics small { font-size: .48rem; }
+  .scx-comparison-side .scx-ceded-metrics b { font-size: .62rem; }
+  .scx-comparison-side .scx-ceded-thresholds { gap: .25rem .45rem; margin: .35rem 0; font-size: .5rem; }
+  .scx-comparison-side .scx-ceded-scouts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .15rem .3rem; }
+  .scx-comparison-side .scx-ceded-scout-row { min-width: 0; padding: .24rem .28rem; }
+  .scx-comparison-side .scx-ceded-scout-row span { font-size: .5rem; }
+  .scx-comparison-side .scx-ceded-scout-row strong { font-size: .56rem; }
 }
 
 @media (max-width: 520px) {
