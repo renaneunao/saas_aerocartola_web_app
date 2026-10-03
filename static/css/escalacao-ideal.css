@@ -3098,3 +3098,39 @@ select.aero-select.ideal-strategy-select:focus-visible {
   #escalacaoIdealPage .ideal-field .ideal-player { padding-bottom:12px; }
   #escalacaoIdealPage .ideal-goalkeeper-hack-main { padding-bottom:10px; }
 }
+
+/* Emblemas de capitão/luxo dimensionados na escala dos escudos do confronto. */
+#escalacaoIdealPage .ideal-badge {
+  width: clamp(19px, 1.45vw, 22px);
+  height: clamp(19px, 1.45vw, 22px);
+  min-height: 0;
+  padding: 2px;
+  border-radius: 7px;
+}
+#escalacaoIdealPage .ideal-cartola-role-icon {
+  width: clamp(13px, .95vw, 15px);
+  height: clamp(13px, .95vw, 15px);
+}
+#escalacaoIdealPage .ideal-badge .ideal-cartola-role-icon {
+  width: clamp(13px, .95vw, 15px);
+  height: clamp(13px, .95vw, 15px);
+  flex: 0 0 auto;
+}
+#escalacaoIdealPage .ideal-card-action-icon .ideal-cartola-role-icon {
+  width: clamp(13px, .95vw, 15px);
+  height: clamp(13px, .95vw, 15px);
+}
+@media (max-width: 620px) {
+  #escalacaoIdealPage .ideal-badge {
+    width: clamp(16px, 4.6vw, 19px);
+    height: clamp(16px, 4.6vw, 19px);
+    padding: 1px;
+    border-radius: 6px;
+  }
+  #escalacaoIdealPage .ideal-cartola-role-icon,
+  #escalacaoIdealPage .ideal-badge .ideal-cartola-role-icon,
+  #escalacaoIdealPage .ideal-card-action-icon .ideal-cartola-role-icon {
+    width: clamp(10px, 3vw, 12px);
+    height: clamp(10px, 3vw, 12px);
+  }
+}
