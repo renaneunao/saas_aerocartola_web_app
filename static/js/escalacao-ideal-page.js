@@ -239,8 +239,7 @@
         <div><span class="ideal-eyebrow">Time selecionado</span><strong class="ideal-team-name">${escapeHtml(teamName)}</strong></div>
       </div>
       <div class="ideal-stat"><i class="fas fa-calendar-alt"></i><div><span class="ideal-eyebrow">Rodada</span><strong>${escapeHtml(data.rodada_atual || '—')}</strong></div></div>
-      <div class="ideal-stat"><i class="fas fa-wallet"></i><div><span class="ideal-eyebrow">Patrimônio</span><strong>${money(data.patrimonio)}</strong><small>${escapeHtml(data.patrimonio_error || 'disponível para montar o time')}</small></div></div>
-      <div class="ideal-stat"><i class="fas fa-layer-group"></i><div><span class="ideal-eyebrow">Base de análise</span><strong>${Object.values(data.rankings_por_posicao || {}).reduce((total, list) => total + list.length, 0)}</strong><small>atletas ranqueados</small></div></div>`;
+      <div class="ideal-stat"><i class="fas fa-wallet"></i><div><span class="ideal-eyebrow">Patrimônio</span><strong>${money(data.patrimonio)}</strong><small>${escapeHtml(data.patrimonio_error || 'para montar o time')}</small></div></div>`;
   }
 
   function rankingPlayer(player) {
@@ -651,7 +650,7 @@
     const patrimonio = safeNumber(result.patrimonio || state.data?.patrimonio);
     const balance = patrimonio - safeNumber(result.custoTotal);
     const captain = POSITION_ORDER.flatMap(position => result.titulares?.[position] || []).find(player => player.eh_capitao);
-    content.innerHTML = `<div class="ideal-metrics"><div class="ideal-metric cost"><span>Investimento</span><strong>${money(result.custoTotal)}</strong><em>titulares</em></div><div class="ideal-metric balance"><span>Saldo disponível</span><strong>${money(balance)}</strong><em>patrimônio ${money(patrimonio)}</em></div><div class="ideal-metric points"><span>Projeção</span><strong>${safeNumber(result.pontuacaoTotal).toFixed(2)} pts</strong><em>${captain ? `capitão em dobro: ${escapeHtml(captain.apelido)}` : 'sem capitão definido'}</em></div></div><div class="ideal-field-layout">${renderField(result)}${renderBench(result)}</div><div id="manualEditor" class="ideal-manual-editor ${state.editing ? 'is-open' : ''}"></div>`;
+    content.innerHTML = `<div class="ideal-metrics"><div class="ideal-metric cost"><span>Preço do time</span><strong>${money(result.custoTotal)}</strong><em>titulares e treinador</em></div><div class="ideal-metric balance"><span>Saldo disponível</span><strong>${money(balance)}</strong><em>do patrimônio ${money(patrimonio)}</em></div><div class="ideal-metric points" title="Soma das notas dos titulares e treinador calculadas com seus pesos; a nota do capitão conta em dobro. É um índice estimado, não uma pontuação garantida no Cartola."><span>Pontuação projetada</span><strong>${safeNumber(result.pontuacaoTotal).toFixed(2)} pts</strong><em>${captain ? `${escapeHtml(captain.apelido)} em dobro` : 'sem capitão definido'}</em></div></div><div class="ideal-field-layout">${renderField(result)}${renderBench(result)}</div><div id="manualEditor" class="ideal-manual-editor ${state.editing ? 'is-open' : ''}"></div>`;
     renderManualEditor(result);
     panel.classList.remove('hidden');
     refreshSubmitButton();
@@ -1105,6 +1104,15 @@
     $('fonteProvaveisSelect')?.addEventListener('change', aoMudarFonteProvaveis);
     $('manualEditBtn')?.addEventListener('click', toggleManualEdit);
     document.addEventListener('click', (event) => {
+      const touchReplace = event.target.closest('[data-touch-replace]');
+      if (touchReplace) {
+        event.preventDefault();
+        const card = touchReplace.closest('.ideal-card-actions')?._idealOriginCard;
+        if (!card) return;
+        closeTouchCards();
+        openPicker(card.dataset.pickerPosition, card.dataset.pickerKind, card.dataset.pickerIndex);
+        return;
+      }
       const hoverClose = event.target.closest('[data-card-hover-close]');
       if (hoverClose) {
         event.preventDefault();
@@ -1148,6 +1156,7 @@
           target.classList.add('is-touch-open');
           const panel = target.querySelector(':scope > .ideal-card-actions');
           if (panel) {
+            if (!panel.querySelector('[data-touch-replace]')) panel.insertAdjacentHTML('afterbegin', '<button type="button" class="ideal-touch-replace" data-touch-replace><i class="fas fa-arrows-rotate"></i> Trocar jogador</button>');
             panel._idealOriginCard = target;
             panel.classList.add('is-touch-portal');
             panel.querySelectorAll('[data-athlete-id]').forEach(action => {

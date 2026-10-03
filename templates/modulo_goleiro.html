@@ -81,12 +81,12 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 {% if not permissions.editarPesosModulos %}opacity-50{% endif %}" {% if not permissions.editarPesosModulos %}style="filter: blur(0.3px); pointer-events: none;"{% endif %}>
                 <div class="space-y-1">
                     <label class="block text-xs font-medium text-purple-200">FATOR_MEDIA</label>
-                    <input type="number" id="FATOR_MEDIA" name="FATOR_MEDIA" value="{{ pesos_atuais.get('FATOR_MEDIA', 0.2) }}" step="0.1" {% if not permissions.editarPesosModulos %}disabled{% endif %}
+                    <input type="number" id="FATOR_MEDIA" name="FATOR_MEDIA" value="{{ pesos_atuais.get('FATOR_MEDIA', 0.2) }}" step="any" required inputmode="decimal" {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200">
                 </div>
                 <div class="space-y-1">
                     <label class="block text-xs font-medium text-purple-200">FATOR_FF</label>
-                    <input type="number" id="FATOR_FF" name="FATOR_FF" value="{{ pesos_atuais.get('FATOR_FF', 4.5) }}" step="0.1" {% if not permissions.editarPesosModulos %}disabled{% endif %}
+                    <input type="number" id="FATOR_FF" name="FATOR_FF" value="{{ pesos_atuais.get('FATOR_FF', 4.5) }}" step="any" required inputmode="decimal" {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200">
                 </div>
                 <div class="space-y-1">
@@ -96,7 +96,7 @@
                            id="FATOR_FD"
                            name="FATOR_FD" 
                            value="{{ pesos_atuais.get('FATOR_FD', 6.5) }}" 
-                           step="0.1"
+                           step="any" required inputmode="decimal"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200">
                 </div>
@@ -107,7 +107,7 @@
                            id="FATOR_SG"
                            name="FATOR_SG" 
                            value="{{ pesos_atuais.get('FATOR_SG', 1.5) }}" 
-                           step="0.1"
+                           step="any" required inputmode="decimal"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200">
                 </div>
@@ -118,7 +118,7 @@
                            id="FATOR_PESO_JOGO"
                            name="FATOR_PESO_JOGO" 
                            value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 1.5) }}" 
-                           step="0.1"
+                           step="any" required inputmode="decimal"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200">
                 </div>
@@ -129,7 +129,7 @@
                            id="FATOR_GOL_ADVERSARIO"
                            name="FATOR_GOL_ADVERSARIO" 
                            value="{{ pesos_atuais.get('FATOR_GOL_ADVERSARIO', 2.0) }}" 
-                           step="0.1"
+                           step="any" required inputmode="decimal"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200">
                 </div>
@@ -436,7 +436,7 @@ async function carregarDados(forcarRecalculo = false) {
                     const formData = new FormData(form);
                     const pesos = {};
                     for (const [key, value] of formData.entries()) {
-                        pesos[key] = parseFloat(value);
+                        pesos[key] = Number(value);
                     }
                     
                     // Salvar pesos padrão
@@ -946,6 +946,8 @@ async function renderizarTabelaGoleiros(resultados) {
 
 // Função para salvar pesos
 async function salvarPesos() {
+    const weightForm = document.getElementById('pesosForm');
+    if (!weightForm || !weightForm.reportValidity()) return;
     showLoader('Salvando configurações de pesos...');
     
     const form = document.getElementById('pesosForm');
@@ -953,7 +955,7 @@ async function salvarPesos() {
     
     const pesos = {};
     for (const [key, value] of formData.entries()) {
-        pesos[key] = parseFloat(value);
+        pesos[key] = Number(value);
     }
     
     try {

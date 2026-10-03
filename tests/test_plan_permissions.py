@@ -1,5 +1,6 @@
 """Contratos dos planos e APIs, sem acesso ao banco ou ao Cartola."""
 import os
+import json
 import unittest
 from contextlib import ExitStack, redirect_stdout
 from io import StringIO
@@ -66,6 +67,26 @@ class PlanApiTests(unittest.TestCase):
             })
         self.assertEqual(response.status_code, 200)
         save.assert_called_once()
+
+    def test_weight_values_must_be_finite_numbers(self):
+        self.plan = 'pro'
+        for value in (None, True, '', 'abc', '2.5junk', 'NaN', 'Infinity', {}, []):
+            with self.subTest(value=value):
+                self.conn.commit.reset_mock()
+                response = self.client.post('/api/modulos/atacante/pesos', json={'FATOR_MEDIA': value})
+                self.assertEqual(response.status_code, 400)
+                self.conn.commit.assert_not_called()
+
+    def test_decimal_weight_updates_preserve_other_weights_and_invalidate_ranking(self):
+        self.plan = 'avancado'
+        cursor = self.conn.cursor.return_value
+        cursor.fetchone.return_value = (30, {'FATOR_MEDIA': 2.4, 'FATOR_G': 6.5})
+        response = self.client.post('/api/modulos/atacante/pesos', json={'FATOR_MEDIA': '2,51'})
+        self.assertEqual(response.status_code, 200)
+        updates = [call.args for call in cursor.execute.call_args_list if 'UPDATE acw_posicao_weights' in call.args[0]]
+        self.assertEqual(json.loads(updates[0][1][0]), {'FATOR_MEDIA': 2.51, 'FATOR_G': 6.5})
+        deletes = [call.args for call in cursor.execute.call_args_list if 'DELETE FROM acw_rankings_teams' in call.args[0]]
+        self.assertEqual(deletes[0][1], (101, 501, 5))
 
     def test_pro_options_cannot_be_written_by_other_tiers(self):
         for plan in PLANS_CONFIG:

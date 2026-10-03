@@ -129,7 +129,7 @@
                 <i class="fas fa-bolt"></i><span><strong>Escalação rápida</strong><small>Calcular e enviar a escalação do seu time</small></span><i class="fas fa-arrow-right"></i>
             </button>
             {% elif not status.tem_perfis %}
-            <a href="{{ url_for('pagina_inicial') }}" class="dashboard-action dashboard-action-primary">
+            <a href="{{ url_for('pagina_inicial', guia=1) }}" class="dashboard-action dashboard-action-primary">
                 <i class="fas fa-bolt"></i><span><strong>Preparar escalação rápida</strong><small>Escolha seus perfis de jogo e de saldo de gols</small></span><i class="fas fa-arrow-right"></i>
             </a>
             {% elif not permissions.podeEscalar %}
@@ -180,7 +180,7 @@
                 <li class="{% if not status.tem_perfis %}is-current{% else %}is-done{% endif %}">
                     <span class="dashboard-guide-step-icon"><i class="fas {% if status.tem_perfis %}fa-check{% else %}fa-sliders{% endif %}"></i></span>
                     <span><strong>Perfis de jogo e de saldo de gols</strong><small>{% if status.tem_perfis %}Seus dois perfis já estão escolhidos.{% else %}Escolha como valorizar o mando/favoritismo e o saldo de gols nos cálculos.{% endif %}</small></span>
-                    {% if not status.tem_perfis %}<a href="{{ url_for('pagina_inicial') }}">Escolher</a>{% endif %}
+                    {% if not status.tem_perfis %}<a href="{{ url_for('pagina_inicial', guia=1) }}">Escolher</a>{% endif %}
                 </li>
                 <li class="{% if status.tem_calculos %}is-done{% elif status.tem_perfis %}is-current{% else %}is-pending{% endif %}">
                     <span class="dashboard-guide-step-icon"><i class="fas {% if status.tem_calculos %}fa-check{% else %}fa-chart-column{% endif %}"></i></span>
@@ -188,10 +188,11 @@
                     {% if status.tem_perfis and not status.tem_calculos %}<a href="{{ url_for('modulos') }}">Ver módulos</a>{% endif %}
                 </li>
             </ol>
+            <p id="dashboardGuideStatus" class="dashboard-guide-intro" role="status" aria-live="polite"></p>
             <div class="dashboard-guide-actions">
                 <button type="button" class="dashboard-guide-later" data-guide-dismiss>Continuar depois</button>
-                {% if not status.tem_perfis %}<a class="dashboard-guide-primary" href="{{ url_for('pagina_inicial') }}">Configurar perfis <i class="fas fa-arrow-right"></i></a>
-                {% elif not status.tem_calculos %}<a class="dashboard-guide-primary" href="{{ url_for('modulos') }}">Ir para os módulos <i class="fas fa-arrow-right"></i></a>{% endif %}
+                {% if not status.tem_perfis %}<a class="dashboard-guide-primary" href="{{ url_for('pagina_inicial', guia=1) }}">Configurar perfis <i class="fas fa-arrow-right"></i></a>
+                {% elif not status.tem_calculos %}<button type="button" class="dashboard-guide-primary" id="dashboardCalculateModules">Calcular módulos agora <i class="fas fa-bolt"></i></button>{% endif %}
             </div>
         </form>
     </dialog>
@@ -300,6 +301,7 @@
 <script src="{{ url_for('static', filename='js/calculo_treinador.js') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
+<script src="{{ url_for('static', filename='js/modulos-calculo-todos.js', v='1') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script>
     (() => {
@@ -309,12 +311,39 @@
         if (sessionStorage.getItem(key)) return;
         guide.showModal();
         const dismiss = () => {
+            if (guide.querySelector('#dashboardCalculateModules')?.disabled) return;
             sessionStorage.setItem(key, '1');
             guide.close();
         };
         guide.querySelector('[data-guide-dismiss]')?.addEventListener('click', dismiss);
-        guide.addEventListener('cancel', () => sessionStorage.setItem(key, '1'), { once: true });
+        guide.addEventListener('cancel', event => {
+            if (guide.querySelector('#dashboardCalculateModules')?.disabled) event.preventDefault();
+            else sessionStorage.setItem(key, '1');
+        });
         guide.addEventListener('click', event => { if (event.target === guide) dismiss(); });
+        guide.querySelector('#dashboardCalculateModules')?.addEventListener('click', async event => {
+            const button = event.currentTarget;
+            const progress = guide.querySelector('#dashboardGuideStatus');
+            const later = guide.querySelector('[data-guide-dismiss]');
+            button.disabled = true;
+            later.disabled = true;
+            try {
+                progress.textContent = 'Verificando módulos pendentes...';
+                const response = await fetch('/api/modulos/status');
+                const data = await response.json();
+                if (!response.ok || !data.status) throw new Error(data.error || 'Não foi possível verificar os módulos.');
+                const pending = Object.keys(data.status).filter(name => !data.status[name]);
+                if (pending.length) await window.calcularModulosPendentes(pending, {
+                    onProgress: ({ mensagem }) => { progress.textContent = mensagem; }
+                });
+                progress.textContent = 'Módulos calculados. Sua rodada está pronta para escalar.';
+                window.location.reload();
+            } catch (error) {
+                progress.textContent = error.message || 'Não foi possível concluir o cálculo. Tente novamente.';
+                button.disabled = false;
+                later.disabled = false;
+            }
+        });
     })();
 </script>
 {% endblock %}

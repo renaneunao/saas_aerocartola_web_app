@@ -2,6 +2,7 @@ from flask import Flask, jsonify, render_template, Response, request, redirect, 
 from flask.sessions import SecureCookieSessionInterface
 import traceback
 import json
+import math
 from datetime import datetime, timezone, timedelta
 import os
 from dotenv import load_dotenv
@@ -1373,7 +1374,7 @@ def salvar_configuracao_perfis():
         )
         
         flash('Perfis salvos com sucesso!', 'success')
-        return redirect(url_for('modulos'))
+        return redirect(url_for('dashboard' if request.form.get('guia') == '1' else 'modulos'))
     except Exception as e:
         flash(f'Erro ao salvar configuração: {str(e)}', 'error')
         return redirect(url_for('pagina_inicial'))
@@ -2466,7 +2467,23 @@ def api_salvar_pesos(modulo):
         return jsonify({'error': 'A edição de pesos requer o plano Premium ou Pro.'}), 403
     
     try:
-        pesos = request.get_json()
+        pesos = request.get_json(silent=True)
+        if not isinstance(pesos, dict) or not pesos:
+            return jsonify({'error': 'Informe os pesos numéricos do módulo.'}), 400
+        normalized_weights = {}
+        for key, value in pesos.items():
+            if not isinstance(key, str) or not key.startswith('FATOR_'):
+                return jsonify({'error': 'Nome de peso inválido.'}), 400
+            try:
+                if isinstance(value, bool) or value is None or not isinstance(value, (str, int, float)):
+                    raise ValueError()
+                number = float(value.strip().replace(',', '.') if isinstance(value, str) else value)
+                if not math.isfinite(number):
+                    raise ValueError()
+            except (TypeError, ValueError, OverflowError):
+                return jsonify({'error': f'{key}: informe um número válido, incluindo decimais.'}), 400
+            normalized_weights[key] = number
+        pesos = normalized_weights
         
         # Validar módulo
         modulos_validos = ['goleiro', 'lateral', 'zagueiro', 'meia', 'atacante', 'treinador']
@@ -2485,12 +2502,18 @@ def api_salvar_pesos(modulo):
             
             # Verificar se existe registro
             cursor.execute('''
-                SELECT id FROM acw_posicao_weights 
+                SELECT id, weights_json FROM acw_posicao_weights
                 WHERE user_id = %s AND team_id = %s AND posicao = %s
             ''', (user['id'], team_id, modulo))
             existing = cursor.fetchone()
             
             if existing:
+                # Atualizações parciais devem preservar os outros pesos salvos.
+                previous_weights = existing[1] if len(existing) > 1 else {}
+                if isinstance(previous_weights, str):
+                    previous_weights = json.loads(previous_weights)
+                if isinstance(previous_weights, dict):
+                    pesos = {**previous_weights, **pesos}
                 # Atualizar
                 cursor.execute('''
                     UPDATE acw_posicao_weights 
@@ -2504,6 +2527,10 @@ def api_salvar_pesos(modulo):
                     VALUES (%s, %s, %s, %s)
                 ''', (user['id'], team_id, modulo, json.dumps(pesos, ensure_ascii=False)))
             
+            cursor.execute('''
+                DELETE FROM acw_rankings_teams
+                WHERE user_id = %s AND team_id = %s AND posicao_id = %s
+            ''', (user['id'], team_id, modulos_validos.index(modulo) + 1))
             conn.commit()
             return jsonify({'success': True, 'message': 'Pesos salvos com sucesso'})
         finally:

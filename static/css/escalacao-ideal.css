@@ -67,7 +67,7 @@
 
 .ideal-team-strip {
   display: grid;
-  grid-template-columns: minmax(190px, 1.25fr) repeat(3, minmax(120px, .75fr));
+  grid-template-columns: minmax(190px, 1.5fr) repeat(2, minmax(120px, 1fr));
   gap: 10px;
   padding: 10px;
   margin-bottom: 16px;
@@ -122,6 +122,7 @@
 .ideal-panel-title i { color: var(--ideal-cyan); }
 .ideal-panel-subtitle { margin: 4px 0 0 24px; color: #7690a9; font-size: 11px; line-height: 1.45; }
 .ideal-form-group { margin-bottom: 13px; }
+.ideal-strategy-grid { display:grid; gap:10px; }
 .ideal-label { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; color: #b8c9d9; font-size: 11px; font-weight: 750; }
 .ideal-select { width: 100%; padding: 10px 11px; color: #f4f8fc; background: rgba(3, 12, 22, .62); border: 1px solid rgba(127, 191, 255, .17); border-radius: 9px; outline: 0; }
 .ideal-select:focus { border-color: var(--ideal-cyan); box-shadow: 0 0 0 3px rgba(82, 230, 255, .1); }
@@ -362,7 +363,24 @@
 @media (max-width: 620px) {
   .ideal-page { padding: 12px 4px 32px; }
   .ideal-hero { align-items: flex-start; flex-direction: column; gap: 10px; }
-  .ideal-team-strip, .ideal-sidebar, .ideal-metrics { grid-template-columns: 1fr; }
+  .ideal-sidebar { grid-template-columns: 1fr; }
+  .ideal-team-strip { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .ideal-team-identity { grid-column:1/-1; }
+  .ideal-metrics { grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+  .ideal-metric { min-width:0; padding:9px 7px; }
+  .ideal-metric strong { font-size:15px; overflow-wrap:anywhere; }
+  .ideal-metric span { font-size:9px; letter-spacing:0; }
+  .ideal-metric em { font-size:9px; line-height:1.4; }
+  .ideal-strategy-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .ideal-strategy-grid .ideal-form-group { min-width:0; margin-bottom:0; }
+  .ideal-strategy-grid .ideal-panel-subtitle { margin-left:0; font-size:10px; }
+  .ideal-strategy-grid .ideal-switch-card { gap:6px; align-items:flex-start; }
+  .ideal-strategy-grid .ideal-select { font-size:12px; }
+  .ideal-priority { grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+  .ideal-priority-item { min-width:0; padding:8px 6px; gap:5px; }
+  .ideal-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .ideal-save-note,.ideal-actions > .ideal-upgrade { grid-column:1/-1; }
+  .ideal-actions .ideal-btn { min-width:0; padding:9px 5px; font-size:11px; gap:5px; }
   .ideal-sidebar > .ideal-panel:first-child { grid-column: auto; }
   .ideal-sidebar .ideal-panel { padding: 13px; }
   .ideal-field-layout { gap: 10px; }
@@ -2634,6 +2652,7 @@
 
 /* Em telas touch não existe hover confiável: o primeiro toque abre o painel
    de detalhes e o segundo toque no cartão segue para a troca do atleta. */
+.ideal-touch-replace { display:none; }
 @media (hover: none), (pointer: coarse) {
   .ideal-player-card.is-touch-open {
     z-index: 80;
@@ -2657,6 +2676,10 @@
   /* No celular, o painel sai do contexto do campo e vira uma folha compacta
      presa à viewport; assim não é cortado pelas linhas nem cobre metade da tela. */
   .ideal-card-actions.is-touch-portal {
+    --ideal-cyan: #52e6ff;
+    --ideal-green: #5cf2a5;
+    --ideal-amber: #ffc857;
+    --ideal-purple: #b99bff;
     position: fixed !important;
     z-index: 10000 !important;
     inset: auto 10px max(10px, env(safe-area-inset-bottom)) !important;
@@ -2674,6 +2697,7 @@
     border-radius: 15px;
     box-shadow: 0 18px 48px rgba(0,0,0,.62), 0 0 0 1px rgba(103,232,249,.08);
   }
+  .ideal-touch-replace { display:flex; align-items:center; justify-content:center; gap:7px; width:calc(100% - 32px); min-height:36px; padding:7px 10px; margin-bottom:5px; border:1px solid rgba(82,230,255,.35); border-radius:8px; color:#bdf4ff; background:#103144; font-size:12px; font-weight:800; cursor:pointer; }
   .ideal-player-card.is-touch-open > .ideal-player-replace-hint {
     opacity: 1;
     transform: translateY(0) scale(1);

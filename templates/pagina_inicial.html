@@ -182,6 +182,7 @@
 <!-- Form para seleção de perfis -->
 <div class="w-full px-1 sm:px-2 lg:px-3">
     <form method="post" action="{{ url_for('salvar_configuracao_perfis') }}" id="profileForm">
+        {% if request.args.get('guia') == '1' %}<input type="hidden" name="guia" value="1">{% endif %}
         
         <!-- Container com slides -->
         <div class="profile-slider-container">
