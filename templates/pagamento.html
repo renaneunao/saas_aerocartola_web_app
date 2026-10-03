@@ -20,15 +20,29 @@
   .billing-compare th, .billing-compare td { padding: 12px 16px; border-bottom: 1px solid rgba(148,163,184,.10); }
   .billing-compare thead th { color: #94a3b8; font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
   .billing-compare tbody th { color: #cbd5e1; font-size: 12px; font-weight: 550; text-align: left; }
-  .billing-compare td { color: #e2e8f0; font-size: 12px; text-align: center; white-space: nowrap; }
+  .billing-compare td { color: #e2e8f0; font-size: 12px; text-align: center; white-space: normal; }
   .billing-compare td:nth-child(3) { color: #67eaff; }
   .billing-compare td:nth-child(4) { color: #5bf0ad; }
-  .billing-scroll { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+  .billing-compare { table-layout: fixed; }
+  .billing-compare th:first-child { width: 46%; }
+  .billing-compare th:not(:first-child) { width: 18%; }
+  .billing-compare-mobile { display: none; }
   @media (max-width: 640px) {
     .billing-page { padding-top: 22px; }
     .billing-panel { border-radius: 15px; }
     .billing-plan:hover { transform: none; }
-    .billing-compare th, .billing-compare td { padding: 10px 12px; }
+    .billing-compare-desktop { display: none; }
+    .billing-compare-mobile { display: grid; gap: 9px; padding: 12px; }
+    .billing-comparison-row { padding: 12px; border: 1px solid rgba(148,163,184,.12); border-radius: 12px; background: rgba(6,11,20,.38); }
+    .billing-comparison-row h3 { margin-bottom: 10px; color: #e2e8f0; font-size: 12px; font-weight: 650; line-height: 1.4; }
+    .billing-comparison-values { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; }
+    .billing-comparison-values div { min-width: 0; padding: 8px 6px; border: 1px solid rgba(148,163,184,.09); border-radius: 9px; background: rgba(17,27,46,.72); text-align: center; }
+    .billing-comparison-values div:nth-child(2) { border-color: rgba(0,229,255,.14); }
+    .billing-comparison-values div:nth-child(3) { border-color: rgba(0,255,136,.12); }
+    .billing-comparison-values span { display: block; margin-bottom: 4px; color: #64748b; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .billing-comparison-values strong { display: block; color: #e2e8f0; font-size: 11px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; }
+    .billing-comparison-values div:nth-child(2) strong { color: #67eaff; }
+    .billing-comparison-values div:nth-child(3) strong { color: #5bf0ad; }
   }
   @media (prefers-reduced-motion: reduce) { .billing-plan, .billing-button { transition: none; } }
 </style>
@@ -129,23 +143,39 @@
       <p class="text-[10px] font-bold uppercase tracking-[.16em] text-neon-cyan">Compare os limites</p>
       <h2 id="billing-compare-title" class="mt-1 text-base font-semibold text-white">O que muda entre os planos</h2>
     </div>
-    <div class="billing-scroll overflow-x-auto" tabindex="0" aria-label="Tabela comparativa; deslize horizontalmente em telas pequenas">
-      <table class="billing-compare w-full min-w-[620px] border-collapse">
+    {% set comparison_rows = [
+      ('Times vinculados', '1', '2', 'Sem limite'),
+      ('Perfis de peso de jogo', '2', '5', '15'),
+      ('Perfis de peso de SG', '2', '5', '10'),
+      ('Rankings, scouts e comparações completos', 'Incluído', 'Incluído', 'Incluído'),
+      ('Escalação ideal, ajuste manual e envio', 'Incluído', 'Incluído', 'Incluído'),
+      ('Editar pesos por posição', '—', 'Incluído', 'Incluído'),
+      ('Hack do goleiro e fechar defesa', '—', '—', 'Incluído'),
+      ('Reordenar prioridades', '—', '—', 'Incluído'),
+      ('Escalar vários times em lote', '—', '—', 'Incluído')
+    ] %}
+    <div class="billing-compare-desktop">
+      <table class="billing-compare w-full border-collapse">
         <thead><tr><th scope="col" class="text-left">Recurso</th><th scope="col">Gratuito</th><th scope="col">Premium</th><th scope="col">Pro</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Times vinculados</th><td>1</td><td>2</td><td>Sem limite de plano</td></tr>
-          <tr><th scope="row">Perfis de peso de jogo</th><td>2</td><td>5</td><td>15</td></tr>
-          <tr><th scope="row">Perfis de peso de SG</th><td>2</td><td>5</td><td>10</td></tr>
-          <tr><th scope="row">Rankings, scouts e comparações completos</th><td><i class="fas fa-check" aria-label="Incluído"></i></td><td><i class="fas fa-check" aria-label="Incluído"></i></td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
-          <tr><th scope="row">Escalação ideal, ajuste manual e envio</th><td><i class="fas fa-check" aria-label="Incluído"></i></td><td><i class="fas fa-check" aria-label="Incluído"></i></td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
-          <tr><th scope="row">Editar pesos por posição</th><td>—</td><td><i class="fas fa-check" aria-label="Incluído"></i></td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
-          <tr><th scope="row">Hack do goleiro e fechar defesa</th><td>—</td><td>—</td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
-          <tr><th scope="row">Reordenar prioridades</th><td>—</td><td>—</td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
-          <tr><th scope="row">Escalar vários times em lote</th><td>—</td><td>—</td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
+          {% for resource, free, premium, pro in comparison_rows %}
+          <tr><th scope="row">{{ resource }}</th><td>{{ free }}</td><td>{{ premium }}</td><td>{{ pro }}</td></tr>
+          {% endfor %}
         </tbody>
       </table>
     </div>
-    <p class="border-t border-white/5 px-4 py-2 text-[10px] text-text-muted sm:hidden"><i class="fas fa-arrows-left-right mr-1 text-neon-cyan" aria-hidden="true"></i>Deslize a tabela para comparar todos os planos.</p>
+    <div class="billing-compare-mobile" aria-label="Comparação dos limites por plano">
+      {% for resource, free, premium, pro in comparison_rows %}
+      <article class="billing-comparison-row">
+        <h3>{{ resource }}</h3>
+        <div class="billing-comparison-values">
+          <div><span>Gratuito</span><strong>{{ free }}</strong></div>
+          <div><span>Premium</span><strong>{{ premium }}</strong></div>
+          <div><span>Pro</span><strong>{{ pro }}</strong></div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
   </section>
 
   <aside class="billing-panel mt-4 flex items-start gap-3 px-4 py-4 sm:items-center sm:px-5" aria-label="Informações de pagamento">
