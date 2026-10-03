@@ -445,7 +445,7 @@
 .ideal-bench-signals .ideal-player-team-badge { order:2; }
 .ideal-bench-signals .ideal-player-sg-badge { order:1; }
 .ideal-bench-signals .ideal-player-team-badge b { font-size:7px; }
-.ideal-bench-player .ideal-badge-luxury { top:-6px; right:7px; }
+.ideal-bench-player .ideal-badge-luxury { top:-11px; right:-4px; z-index:5; }
 
 @media (max-width:900px) {
   .ideal-field { min-height:620px; padding:18px 12px 14px; }
@@ -2778,16 +2778,28 @@ select.aero-select.ideal-strategy-select:focus-visible {
   .ideal-bench-player .ideal-bench-copy { padding-left: 3px; }
 }
 
-/* No hack, o goleiro nulo é a proteção e o reserva é quem efetivamente pode
-   entrar. Esta faixa deixa a relação explícita dentro do card do campo. */
-.ideal-player.is-goalkeeper-hack { padding-bottom: 6px; }
-.ideal-goalkeeper-hack-protection { display: block; width: 100%; margin-top: 3px; color: #fda4af; font-size: 5px; font-weight: 900; letter-spacing: .035em; white-space: nowrap; }
-.ideal-goalkeeper-hack-entry { display: grid; gap: 2px; width: 100%; margin-top: 4px; padding: 3px 4px; border: 1px solid rgba(92,242,165,.32); border-radius: 6px; background: rgba(16,185,129,.09); text-align: left; }
-.ideal-goalkeeper-hack-label { display: flex; align-items: center; gap: 3px; color: #75efb1; font-size: 5px; font-weight: 900; letter-spacing: .045em; white-space: nowrap; }
-.ideal-goalkeeper-hack-player { display: flex; align-items: center; min-width: 0; gap: 3px; }
-.ideal-goalkeeper-hack-player b { min-width: 0; overflow: hidden; color: #e5fff2; font-size: 6px; text-overflow: ellipsis; white-space: nowrap; }
-.ideal-goalkeeper-hack-player strong { flex: 0 0 auto; margin-left: auto; color: #67e8f9; font: 700 6px 'JetBrains Mono',monospace; white-space: nowrap; }
-.ideal-goalkeeper-hack-avatar { width: 13px !important; height: 13px !important; flex: 0 0 13px !important; border-radius: 50% !important; }
+/* No hack efetivo, o card da frente é o goleiro que pode entrar. O goleiro
+   nulo fica atrás, esmaecido, como a máscara/proteção do hack. */
+.ideal-goalkeeper-hack { position: relative; z-index: 3; width: 142px; height: 120px; flex: 0 0 142px; isolation: isolate; cursor: pointer; }
+.ideal-goalkeeper-hack-mask { position: absolute; z-index: 0; top: 4px; right: 0; display: grid; justify-items: center; gap: 3px; width: 83px; height: 103px; padding: 7px 5px; overflow: hidden; border: 1px solid rgba(211,226,239,.22); border-radius: 11px; color: #9eb0c0; background: linear-gradient(145deg,rgba(27,43,57,.88),rgba(7,16,27,.92)); box-shadow: 0 7px 17px rgba(0,0,0,.28); opacity: .42; filter: grayscale(.78); transform: perspective(420px) rotateY(-24deg) rotateZ(2deg) scale(.9); transform-origin: right center; }
+.ideal-goalkeeper-hack-mask > span { padding: 2px 4px; border-radius: 99px; color: #fda4af; background: rgba(127,29,29,.3); font-size: 6px; font-weight: 900; letter-spacing: .05em; }
+.ideal-goalkeeper-hack-mask-avatar { width: 36px !important; height: 36px !important; margin: 0 !important; border-radius: 9px !important; }
+.ideal-goalkeeper-hack-mask > b { max-width: 100%; overflow: hidden; font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
+.ideal-goalkeeper-hack-main { position: absolute; z-index: 2; top: 9px; left: 0; display: grid; justify-items: center; gap: 3px; width: 112px; min-height: 105px; padding: 6px 6px 7px; border: 1px solid rgba(92,242,165,.58); border-radius: 12px; background: linear-gradient(150deg,rgba(7,32,37,.98),rgba(3,18,27,.98)); box-shadow: 0 10px 24px rgba(0,0,0,.38),0 0 15px rgba(92,242,165,.11); transform: perspective(460px) rotateY(-12deg) rotateZ(-1deg); transform-origin: right center; }
+.ideal-goalkeeper-hack-main-label { display: flex; align-items: center; gap: 3px; color: #70f1b1; font-size: 6px; font-weight: 900; letter-spacing: .045em; white-space: nowrap; }
+.ideal-goalkeeper-hack-main .ideal-player-visual { min-height: 44px; }
+.ideal-goalkeeper-hack-main .ideal-player-avatar { width: 37px; height: 37px; flex-basis: 37px; margin: 0; border-radius: 10px; }
+.ideal-goalkeeper-hack-main .ideal-player-fixture-badge { max-width: 46px; }
+.ideal-goalkeeper-hack-main .ideal-player-fixture-badge .ideal-fixture-team img,
+.ideal-goalkeeper-hack-main .ideal-player-fixture-badge .ideal-fixture-team i { width: 10px; height: 10px; }
+.ideal-goalkeeper-hack-main .ideal-player-name { width: 100%; font-size: 9px; }
+.ideal-goalkeeper-hack-main .ideal-player-chips { gap: 3px; margin-top: 1px; }
+.ideal-goalkeeper-hack-main .ideal-player-chips span { padding: 2px 3px; font-size: 6px; }
+@media (hover: hover) and (pointer: fine) {
+  .ideal-goalkeeper-hack:hover .ideal-goalkeeper-hack-main,
+  .ideal-goalkeeper-hack:focus-visible .ideal-goalkeeper-hack-main { border-color: rgba(92,242,165,.86); box-shadow: 0 12px 26px rgba(0,0,0,.44),0 0 19px rgba(92,242,165,.2); }
+  .ideal-goalkeeper-hack:hover .ideal-goalkeeper-hack-mask { opacity: .58; }
+}
 
 /* Em telas touch não mostramos o painel de hover: o toque no atleta abre
    diretamente o seletor, que já é a ação disponível no celular. */
