@@ -2796,6 +2796,32 @@ select.aero-select.ideal-strategy-select:focus-visible {
 .ideal-goalkeeper-hack-main-label { justify-self: end; margin-right: 3px; }
 .ideal-goalkeeper-hack-main .ideal-player-chips { justify-content: flex-end; gap: 4px; margin-top: 2px; padding-left: 30px; box-sizing: border-box; }
 .ideal-goalkeeper-hack-main .ideal-player-chips span { padding: 3px 4px; border-radius: 5px; font-size: 8px; }
+@media (max-width: 900px) {
+  .ideal-goalkeeper-hack { width: 142px; height: 116px; flex-basis: 142px; }
+  .ideal-goalkeeper-hack-mask { top: 10px; width: 62px; height: 90px; padding: 6px 4px; transform: perspective(340px) rotateY(-23deg) rotateZ(-5deg) translateX(-4px) scale(.93); }
+  .ideal-goalkeeper-hack-mask-avatar { width: 38px !important; height: 38px !important; }
+  .ideal-goalkeeper-hack-main { top: 6px; left: 26px; width: 116px; min-height: 104px; padding: 6px; }
+  .ideal-goalkeeper-hack-main .ideal-player-visual { min-height: 47px; }
+  .ideal-goalkeeper-hack-main .ideal-player-avatar { width: 42px; height: 42px; flex-basis: 42px; }
+  .ideal-goalkeeper-hack-main .ideal-player-chips span { padding: 2px 3px; font-size: 7px; }
+}
+@media (max-width: 620px) {
+  .ideal-goalkeeper-hack { width: 126px; height: 101px; flex-basis: 126px; }
+  .ideal-goalkeeper-hack-mask { top: 9px; left: -8px; width: 54px; height: 79px; gap: 2px; padding: 5px 3px; border-radius: 9px; transform: perspective(300px) rotateY(-22deg) rotateZ(-4deg) translateX(-3px) scale(.94); }
+  .ideal-goalkeeper-hack-mask > span { padding: 2px 4px; font-size: 5px; }
+  .ideal-goalkeeper-hack-mask-avatar { width: 32px !important; height: 32px !important; border-radius: 7px !important; }
+  .ideal-goalkeeper-hack-mask > b { font-size: 6px; }
+  .ideal-goalkeeper-hack-main { top: 5px; left: 23px; width: 102px; min-height: 91px; gap: 2px; padding: 5px 5px 6px; border-radius: 10px; }
+  .ideal-goalkeeper-hack-main-label { gap: 2px; font-size: 5.5px; }
+  .ideal-goalkeeper-hack-main .ideal-player-visual { min-height: 40px; gap: 2px; }
+  .ideal-goalkeeper-hack-main .ideal-player-avatar { width: 35px; height: 35px; flex-basis: 35px; border-radius: 8px; }
+  .ideal-goalkeeper-hack-main .ideal-player-fixture-badge { max-width: 36px; }
+  .ideal-goalkeeper-hack-main .ideal-player-fixture-badge .ideal-fixture-team img,
+  .ideal-goalkeeper-hack-main .ideal-player-fixture-badge .ideal-fixture-team i { width: 8px; height: 8px; }
+  .ideal-goalkeeper-hack-main .ideal-player-name { width: calc(100% - 20px); margin-left: 20px; font-size: 8px; }
+  .ideal-goalkeeper-hack-main .ideal-player-chips { gap: 2px; margin-top: 1px; padding-left: 18px; }
+  .ideal-goalkeeper-hack-main .ideal-player-chips span { padding: 2px 3px; border-radius: 4px; font-size: 7px; }
+}
 @media (hover: hover) and (pointer: fine) {
   .ideal-goalkeeper-hack:hover .ideal-goalkeeper-hack-main,
   .ideal-goalkeeper-hack:focus-visible .ideal-goalkeeper-hack-main { border-color: rgba(92,242,165,.86); box-shadow: 0 12px 26px rgba(0,0,0,.44),0 0 19px rgba(92,242,165,.2); }
