@@ -2875,3 +2875,35 @@ select.aero-select.ideal-strategy-select:focus-visible {
   .ideal-player-card.is-touch-open > .ideal-card-actions,
   .ideal-card-actions.is-touch-portal { display: none !important; }
 }
+
+/* Em celular, preserve preço e projeção inteiros lado a lado. As regras
+   globais dos chips usavam ellipsis e comprimiam os números nos cards do campo. */
+@media (max-width: 620px) {
+  #escalacaoIdealPage .ideal-field .ideal-player-chips {
+    gap: 1px !important;
+  }
+  #escalacaoIdealPage .ideal-field .ideal-player-chips span {
+    flex: 0 0 auto !important;
+    width: max-content !important;
+    max-width: none !important;
+    min-width: max-content !important;
+    padding: 1px !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: nowrap;
+    font-size: clamp(4.6px, 1.3vw, 5.2px) !important;
+    line-height: 1.15 !important;
+  }
+  #escalacaoIdealPage .ideal-goalkeeper-hack-main .ideal-player-chips {
+    flex-direction: row !important;
+    justify-content: center;
+    gap: 1px !important;
+    margin-top: 1px;
+    padding-left: 0;
+  }
+  #escalacaoIdealPage .ideal-bench .ideal-player-chips span {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    font-size: clamp(4.6px, 1.3vw, 5.2px) !important;
+  }
+}
