@@ -2812,13 +2812,28 @@ select.aero-select.ideal-strategy-select:focus-visible {
     right: 7%;
     bottom: 1% !important;
   }
+  .ideal-field-layout { gap: 16px !important; }
+  .ideal-field-submit {
+    left: 7% !important;
+    bottom: 1% !important;
+    width: 92px;
+    height: 28px;
+    min-height: 28px !important;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 6px !important;
+    font-size: 7px !important;
+    line-height: 1;
+  }
 
   .ideal-goalkeeper-hack { width: 74px; height: 70px; flex-basis: 74px; }
-  .ideal-goalkeeper-hack-mask { top: 7px; left: -6px; width: 38px; height: 54px; gap: 1px; padding: 4px 2px; border-radius: 8px; transform: perspective(300px) rotateY(-19deg) rotateZ(-3deg) translateX(-2px) scale(.96); }
+  /* Safari/iOS pode repintar de forma intermitente camadas com rotateY e
+     perspective. No celular, mantenha o efeito de máscara em 2D estável. */
+  .ideal-goalkeeper-hack-mask { top: 7px; left: -6px; width: 38px; height: 54px; gap: 1px; padding: 4px 2px; border-radius: 8px; transform: rotate(-2deg) translateX(-1px) scale(.96); -webkit-backface-visibility: hidden; backface-visibility: hidden; }
   .ideal-goalkeeper-hack-mask > span { padding: 1px 3px; font-size: 4.5px; }
   .ideal-goalkeeper-hack-mask-avatar { width: 22px !important; height: 22px !important; border-radius: 6px !important; }
   .ideal-goalkeeper-hack-mask > b { font-size: 5px; }
-  .ideal-goalkeeper-hack-main { top: 4px; left: 14px; width: 60px; min-height: 64px; gap: 1px; padding: 3px; border-radius: 8px; }
+  .ideal-goalkeeper-hack-main { top: 4px; left: 14px; width: 60px; min-height: 64px; gap: 1px; padding: 3px; border-radius: 8px; transform: none; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
   .ideal-goalkeeper-hack-main-label { gap: 1px; font-size: 4.5px; }
   .ideal-goalkeeper-hack-main-label > span { display: none; }
   .ideal-goalkeeper-hack-main-label::after { content: 'ENTRA'; }
