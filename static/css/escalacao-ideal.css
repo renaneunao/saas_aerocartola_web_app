@@ -2478,18 +2478,18 @@
   font: 900 13px/1 Arial, sans-serif;
 }
 .ideal-player-status.is-probable {
-  right: 3px;
-  bottom: 2px;
+  right: -4px;
+  bottom: -7px;
   left: auto;
-  width: 11px;
-  height: 11px;
+  width: 9px;
+  height: 9px;
   transform: none;
   border: 0;
   border-radius: 0;
   color: #5cf0a7;
   background: transparent;
   box-shadow: none;
-  font-size: 10px;
+  font-size: 9px;
 }
 .ideal-player-status.is-doubt { color: #241700; background: #ffd166; }
 .ideal-player-status.is-unlikely { color: #fff; background: #ef476f; }
