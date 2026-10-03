@@ -1,439 +1,155 @@
 {% extends "base.html" %}
 
-{% block title %}Planos e Preços - Cartola Manager{% endblock %}
+{% block title %}Planos e assinatura — Aero Cartola{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 py-8">
-    <!-- Header -->
-    <div class="text-center mb-12">
-        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full mb-6 shadow-lg">
-            <i class="fas fa-crown text-3xl text-white"></i>
-        </div>
-        <h1 class="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-white via-orange-200 to-orange-300 bg-clip-text text-transparent mb-4">
-            Escolha o Plano Ideal
-        </h1>
-        <p class="text-xl text-dark-blue-300 max-w-2xl mx-auto">
-            Todos os planos têm análises completas. Escolha quanto deseja personalizar e quantos times vai gerenciar.
+<style>
+  .billing-page { max-width: 1240px; margin: 0 auto; padding: 30px clamp(14px, 3vw, 32px) 56px; }
+  .billing-panel { background: linear-gradient(145deg, rgba(17,27,46,.92), rgba(11,17,32,.96)); border: 1px solid rgba(148,163,184,.14); border-radius: 18px; box-shadow: 0 16px 42px rgba(0,0,0,.20); }
+  .billing-plan { position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden; transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease; }
+  .billing-plan:hover { transform: translateY(-3px); border-color: rgba(0,229,255,.34); }
+  .billing-plan.is-current { border-color: rgba(0,229,255,.55); box-shadow: 0 0 0 1px rgba(0,229,255,.11), 0 18px 42px rgba(0,0,0,.25); }
+  .billing-plan.is-featured { border-color: rgba(0,229,255,.38); }
+  .billing-featured { position: absolute; top: 13px; right: 13px; padding: 5px 9px; border: 1px solid rgba(0,229,255,.22); border-radius: 999px; background: rgba(0,229,255,.08); color: #67eaff; font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+  .billing-feature { display: flex; align-items: flex-start; gap: 10px; color: #cbd5e1; font-size: 13px; line-height: 1.45; }
+  .billing-feature i { width: 15px; margin-top: 2px; color: #00e5ff; text-align: center; flex: 0 0 auto; }
+  .billing-button { display: inline-flex; min-height: 46px; width: 100%; align-items: center; justify-content: center; gap: 9px; border: 1px solid rgba(0,229,255,.38); border-radius: 11px; background: linear-gradient(100deg, rgba(0,229,255,.18), rgba(68,148,255,.16)); color: #ecfbff; font-size: 13px; font-weight: 750; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
+  .billing-button:hover { transform: translateY(-1px); border-color: rgba(0,229,255,.7); background: linear-gradient(100deg, rgba(0,229,255,.27), rgba(68,148,255,.23)); }
+  .billing-button.is-pro { border-color: rgba(0,255,136,.34); background: linear-gradient(100deg, rgba(0,255,136,.16), rgba(0,229,255,.14)); }
+  .billing-button:disabled { cursor: default; opacity: .72; transform: none; }
+  .billing-compare th, .billing-compare td { padding: 12px 16px; border-bottom: 1px solid rgba(148,163,184,.10); }
+  .billing-compare thead th { color: #94a3b8; font-size: 11px; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+  .billing-compare tbody th { color: #cbd5e1; font-size: 12px; font-weight: 550; text-align: left; }
+  .billing-compare td { color: #e2e8f0; font-size: 12px; text-align: center; white-space: nowrap; }
+  .billing-compare td:nth-child(3) { color: #67eaff; }
+  .billing-compare td:nth-child(4) { color: #5bf0ad; }
+  .billing-scroll { scrollbar-width: thin; scrollbar-color: #334155 transparent; }
+  @media (max-width: 640px) {
+    .billing-page { padding-top: 22px; }
+    .billing-panel { border-radius: 15px; }
+    .billing-plan:hover { transform: none; }
+    .billing-compare th, .billing-compare td { padding: 10px 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .billing-plan, .billing-button { transition: none; } }
+</style>
+
+<main class="billing-page" aria-labelledby="billing-title">
+  <header class="mb-7 sm:mb-9">
+    <div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+      <div class="max-w-2xl">
+        <p class="mb-2 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[.18em] text-neon-cyan">
+          <i class="fas fa-gem" aria-hidden="true"></i> Aero Cartola · planos
         </p>
+        <h1 id="billing-title" class="text-2xl font-bold leading-tight text-white sm:text-4xl">Escolha como quer escalar</h1>
+        <p class="mt-2 max-w-xl text-sm leading-relaxed text-text-secondary sm:text-base">Todos os planos mantêm rankings, scouts e análises completos. A diferença está nos times e no controle da estratégia.</p>
+      </div>
+      <div class="billing-panel flex items-center gap-3 self-start px-4 py-3 sm:self-auto">
+        <span class="flex h-9 w-9 items-center justify-center rounded-xl border border-[rgba(0,229,255,.16)] bg-[rgba(0,229,255,.08)] text-neon-cyan"><i class="fas fa-user-check" aria-hidden="true"></i></span>
+        <span><span class="block text-[10px] font-semibold uppercase tracking-wider text-text-muted">Seu plano atual</span><strong class="block text-sm text-white">{{ {'free': 'Gratuito', 'avancado': 'Premium', 'pro': 'Pro'}.get(plan_key, 'Gratuito') }}</strong></span>
+      </div>
     </div>
+  </header>
 
-    <!-- Planos Cards -->
-    <div class="grid md:grid-cols-3 gap-6 mb-12">
-        <!-- Plano FREE -->
-        <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl overflow-hidden flex flex-col">
-            <div class="p-6 border-b border-dark-blue-700/50">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-2xl font-bold text-white">Free</h3>
-                    <div class="w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-user text-white text-xl"></i>
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <p class="text-4xl font-bold text-white">R$ 0<span class="text-lg text-dark-blue-300 font-normal">/mês</span></p>
-                    <p class="text-sm text-dark-blue-400 mt-1">Para começar</p>
-                </div>
-            </div>
-            
-            <div class="p-6 flex-1 flex flex-col">
-                <ul class="space-y-3 mb-6 flex-1">
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">1 time do Cartola FC</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">Acesso a todos os módulos de cálculo</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">2 perfis prontos de jogo</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">2 perfis prontos de SG</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">Rankings e análises completos</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Editar pesos dos módulos</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">Campinho e edição manual</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">Escalação rápida e envio do seu time</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">Estatísticas e scouts completos</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Hack do Goleiro</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Fechar Defesa</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Escalar múltiplos times</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Reordenar prioridades</span>
-                    </li>
-                </ul>
-                
-                <button disabled class="w-full bg-gray-600 text-gray-400 px-4 py-3 rounded-lg font-semibold cursor-not-allowed">
-                    {{ 'Plano Atual' if plan_key == 'free' else 'Experiência gratuita incluída' }}
-                </button>
-            </div>
-        </div>
+  <section aria-label="Planos disponíveis" class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
+    <article class="billing-panel billing-plan {{ 'is-current' if plan_key == 'free' else '' }} p-5 sm:p-6">
+      {% if plan_key == 'free' %}<span class="billing-featured">Seu plano</span>{% endif %}
+      <div class="mb-5 flex items-start justify-between gap-3 border-b border-white/5 pb-5">
+        <div><p class="text-[11px] font-bold uppercase tracking-[.16em] text-text-muted">Para começar</p><h2 class="mt-1 text-xl font-bold text-white">Gratuito</h2></div>
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-500/20 bg-slate-400/10 text-slate-300"><i class="fas fa-seedling" aria-hidden="true"></i></span>
+      </div>
+      <p class="mb-1 text-3xl font-bold tracking-tight text-white">R$ 0 <span class="text-xs font-medium text-text-muted">/ mês</span></p>
+      <p class="mb-5 min-h-5 text-xs text-text-muted">Tudo para acompanhar a rodada e escalar seu time.</p>
+      <ul class="mb-6 space-y-3">
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>1 time do Cartola</span></li>
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>2 perfis de jogo e 2 de SG</span></li>
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>Rankings, scouts e comparações completos</span></li>
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>Escalação ideal, ajustes manuais e envio</span></li>
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>Formação, capitão e reserva de luxo</span></li>
+        <li class="billing-feature"><i class="fas fa-sliders" aria-hidden="true"></i><span>Pesos padrão dos módulos</span></li>
+      </ul>
+      <button type="button" class="billing-button mt-auto" disabled aria-current="{{ 'true' if plan_key == 'free' else 'false' }}"><i class="fas {{ 'fa-circle-check' if plan_key == 'free' else 'fa-infinity' }}" aria-hidden="true"></i>{{ 'Plano atual' if plan_key == 'free' else 'Gratuito para sempre' }}</button>
+    </article>
 
-        <!-- Plano Premium (chave interna: avancado) -->
-        <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border-2 border-orange-500 shadow-2xl overflow-hidden flex flex-col relative transform scale-105">
-            <!-- Badge Popular -->
-            <div class="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-1 rounded-bl-lg text-xs font-bold shadow-lg">
-                <i class="fas fa-star mr-1"></i>Mais Popular
-            </div>
-            
-            <div class="p-6 border-b border-dark-blue-700/50">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-2xl font-bold text-white">Premium</h3>
-                    <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
-                        <i class="fas fa-rocket text-white text-xl"></i>
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <p class="text-4xl font-bold text-white">R$ 9,90<span class="text-lg text-dark-blue-300 font-normal">/mês</span></p>
-                    <p class="text-sm text-orange-300 mt-1 font-semibold">Melhor custo-benefício</p>
-                </div>
-            </div>
-            
-            <div class="p-6 flex-1 flex flex-col">
-                <ul class="space-y-3 mb-6 flex-1">
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-semibold">2 times do Cartola FC</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">Acesso a todos os módulos de cálculo</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-semibold">5 perfis prontos de jogo</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-semibold">5 perfis prontos de SG</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-semibold">Ranking completo ilimitado</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-semibold">Editar pesos dos módulos</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-semibold">Escalação Ideal completa</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-semibold">Escalar times automaticamente</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-semibold">Estatísticas avançadas</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Hack do Goleiro</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Fechar Defesa</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Escalar múltiplos times</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Reordenar prioridades</span>
-                    </li>
-                </ul>
-                
-                {% if plan_key == 'avancado' %}
-                <button disabled class="w-full bg-gray-600 text-gray-400 px-4 py-3 rounded-lg font-semibold">Plano Atual</button>
-                {% else %}
-                <form action="{{ url_for('pagamento.create_checkout_session') }}" method="POST" target="_blank">
-                    <input type="hidden" name="lookup_key" value="aero-cartola-avancado" />
-                    <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold px-4 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
-                        <i class="fas fa-arrow-right mr-2"></i>Assinar Agora
-                    </button>
-                </form>
-                {% endif %}
-            </div>
-        </div>
+    <article class="billing-panel billing-plan billing-plan-premium {{ 'is-current' if plan_key == 'avancado' else '' }} {{ 'is-featured' if plan_key != 'avancado' else '' }} p-5 sm:p-6">
+      {% if plan_key == 'avancado' %}<span class="billing-featured">Seu plano</span>{% elif plan_key != 'pro' %}<span class="billing-featured"><i class="fas fa-sparkles mr-1" aria-hidden="true"></i>Mais escolhido</span>{% endif %}
+      <div class="mb-5 flex items-start justify-between gap-3 border-b border-white/5 pb-5">
+        <div><p class="text-[11px] font-bold uppercase tracking-[.16em] text-neon-cyan">Mais controle</p><h2 class="mt-1 text-xl font-bold text-white">Premium</h2></div>
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-[rgba(0,229,255,.2)] bg-[rgba(0,229,255,.08)] text-neon-cyan"><i class="fas fa-chart-line" aria-hidden="true"></i></span>
+      </div>
+      <p class="mb-1 text-3xl font-bold tracking-tight text-white">R$ 9,90 <span class="text-xs font-medium text-text-muted">/ mês</span></p>
+      <p class="mb-5 min-h-5 text-xs text-text-muted">Para cuidar de mais de um time e ajustar os cálculos.</p>
+      <p class="mb-3 text-[10px] font-bold uppercase tracking-[.14em] text-text-muted">Tudo do Gratuito, mais</p>
+      <ul class="mb-6 space-y-3">
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>Até 2 times do Cartola</span></li>
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>5 perfis de jogo e 5 de SG</span></li>
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>Edição dos pesos por posição</span></li>
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>Configurações salvas por time</span></li>
+      </ul>
+      {% if plan_key == 'avancado' %}
+      <button type="button" class="billing-button mt-auto" disabled aria-current="true"><i class="fas fa-circle-check" aria-hidden="true"></i>Plano atual</button>
+      {% elif plan_key == 'pro' %}
+      <button type="button" class="billing-button mt-auto" disabled><i class="fas fa-check" aria-hidden="true"></i>Incluído no Pro</button>
+      {% else %}
+      <form class="mt-auto" action="{{ url_for('pagamento.create_checkout_session') }}" method="POST" target="_blank">
+        <input type="hidden" name="lookup_key" value="aero-cartola-avancado">
+        <button type="submit" class="billing-button"><i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>Assinar Premium</button>
+      </form>
+      {% endif %}
+    </article>
 
-        <!-- Plano PRO -->
-        <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl overflow-hidden flex flex-col">
-            <div class="p-6 border-b border-dark-blue-700/50">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-2xl font-bold text-white">Pro</h3>
-                    <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center shadow-lg">
-                        <i class="fas fa-crown text-white text-xl"></i>
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <p class="text-4xl font-bold text-white">R$ 19,90<span class="text-lg text-dark-blue-300 font-normal">/mês</span></p>
-                    <p class="text-sm text-yellow-300 mt-1 font-semibold">Máximo desempenho</p>
-                </div>
-            </div>
-            
-            <div class="p-6 flex-1 flex flex-col">
-                <ul class="space-y-3 mb-6 flex-1">
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold">Times ilimitados do Cartola FC</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">Acesso a todos os módulos de cálculo</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold">Até 15 perfis prontos de jogo</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold">Até 10 perfis prontos de SG</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold">Ranking completo ilimitado</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold">Editar pesos dos módulos</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold">Escalação Ideal completa</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold">Escalar times automaticamente</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold">Estatísticas avançadas</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold text-yellow-300">Hack do Goleiro (Exclusivo)</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold text-yellow-300">Fechar Defesa (Exclusivo)</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold text-yellow-300">Escalar múltiplos times com 1 clique</span>
-                    </li>
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold text-yellow-300">Reordenar prioridades</span>
-                    </li>
-                </ul>
-                
-                {% if plan_key == 'pro' %}
-                <button disabled class="w-full bg-gray-600 text-gray-400 px-4 py-3 rounded-lg font-semibold">Plano Atual</button>
-                {% else %}
-                <form action="{{ url_for('pagamento.create_checkout_session') }}" method="POST" target="_blank">
-                    <input type="hidden" name="lookup_key" value="aero-cartola-pro" />
-                    <button type="submit" class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold px-4 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
-                        <i class="fas fa-crown mr-2"></i>Assinar Pro
-                    </button>
-                </form>
-                {% endif %}
-            </div>
-        </div>
+    <article class="billing-panel billing-plan {{ 'is-current' if plan_key == 'pro' else '' }} p-5 sm:p-6">
+      {% if plan_key == 'pro' %}<span class="billing-featured">Seu plano</span>{% endif %}
+      <div class="mb-5 flex items-start justify-between gap-3 border-b border-white/5 pb-5">
+        <div><p class="text-[11px] font-bold uppercase tracking-[.16em] text-neon-green">Estratégia completa</p><h2 class="mt-1 text-xl font-bold text-white">Pro</h2></div>
+        <span class="flex h-10 w-10 items-center justify-center rounded-xl border border-[rgba(0,255,136,.18)] bg-[rgba(0,255,136,.07)] text-neon-green"><i class="fas fa-trophy" aria-hidden="true"></i></span>
+      </div>
+      <p class="mb-1 text-3xl font-bold tracking-tight text-white">R$ 19,90 <span class="text-xs font-medium text-text-muted">/ mês</span></p>
+      <p class="mb-5 min-h-5 text-xs text-text-muted">Para gerenciar vários times e automatizar decisões.</p>
+      <p class="mb-3 text-[10px] font-bold uppercase tracking-[.14em] text-text-muted">Tudo do Premium, mais</p>
+      <ul class="mb-6 space-y-3">
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>Times sem limite do plano</span></li>
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>15 perfis de jogo e 10 de SG</span></li>
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>Hack do goleiro e fechar defesa</span></li>
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>Reordenar prioridades da escalação</span></li>
+        <li class="billing-feature"><i class="fas fa-check" aria-hidden="true"></i><span>Escalar todos os times em lote</span></li>
+      </ul>
+      {% if plan_key == 'pro' %}
+      <button type="button" class="billing-button is-pro mt-auto" disabled aria-current="true"><i class="fas fa-circle-check" aria-hidden="true"></i>Plano atual</button>
+      {% else %}
+      <form class="mt-auto" action="{{ url_for('pagamento.create_checkout_session') }}" method="POST" target="_blank">
+        <input type="hidden" name="lookup_key" value="aero-cartola-pro">
+        <button type="submit" class="billing-button is-pro"><i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>Assinar Pro</button>
+      </form>
+      {% endif %}
+    </article>
+  </section>
+
+  <section class="billing-panel mt-6 overflow-hidden" aria-labelledby="billing-compare-title">
+    <div class="border-b border-white/5 px-5 py-4 sm:px-6">
+      <p class="text-[10px] font-bold uppercase tracking-[.16em] text-neon-cyan">Compare os limites</p>
+      <h2 id="billing-compare-title" class="mt-1 text-base font-semibold text-white">O que muda entre os planos</h2>
     </div>
-
-    <!-- Tabela Comparativa Detalhada -->
-    <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl overflow-hidden mb-12">
-        <div class="p-6 border-b border-dark-blue-700/50">
-            <h2 class="text-2xl font-bold text-white flex items-center">
-                <i class="fas fa-table mr-3 text-orange-400"></i>
-                Comparação Detalhada de Recursos
-            </h2>
-        </div>
-        
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead>
-                    <tr class="bg-dark-blue-900/50 border-b border-dark-blue-700/50">
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-dark-blue-300">Recurso</th>
-                        <th class="px-6 py-4 text-center text-sm font-semibold text-dark-blue-300">Free</th>
-                        <th class="px-6 py-4 text-center text-sm font-semibold text-orange-400">Premium</th>
-                        <th class="px-6 py-4 text-center text-sm font-semibold text-yellow-400">Pro</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-dark-blue-700/50">
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Times do Cartola FC</td>
-                        <td class="px-6 py-4 text-center text-dark-blue-300">1</td>
-                        <td class="px-6 py-4 text-center text-orange-300 font-semibold">2</td>
-                        <td class="px-6 py-4 text-center text-yellow-300 font-bold">Ilimitados</td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Perfis prontos de jogo</td>
-                        <td class="px-6 py-4 text-center text-dark-blue-300">2</td>
-                        <td class="px-6 py-4 text-center text-orange-300 font-semibold">5</td>
-                        <td class="px-6 py-4 text-center text-yellow-300 font-bold">15</td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Perfis prontos de SG</td>
-                        <td class="px-6 py-4 text-center text-dark-blue-300">2</td>
-                        <td class="px-6 py-4 text-center text-orange-300 font-semibold">5</td>
-                        <td class="px-6 py-4 text-center text-yellow-300 font-bold">10</td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Ranking Completo</td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Editar Pesos dos Módulos</td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Campinho e edição manual</td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Escalação rápida e envio</td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Estatísticas e scouts</td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors bg-yellow-900/10">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">
-                            <span class="text-yellow-300">Hack do Goleiro</span>
-                            <span class="text-xs text-yellow-400 ml-2">(Exclusivo Pro)</span>
-                        </td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-yellow-400"></i></td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors bg-yellow-900/10">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">
-                            <span class="text-yellow-300">Fechar Defesa</span>
-                            <span class="text-xs text-yellow-400 ml-2">(Exclusivo Pro)</span>
-                        </td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-yellow-400"></i></td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors bg-yellow-900/10">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">
-                            <span class="text-yellow-300">Escalar Múltiplos Times com 1 Clique</span>
-                            <span class="text-xs text-yellow-400 ml-2">(Exclusivo Pro)</span>
-                        </td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-yellow-400"></i></td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors bg-yellow-900/10">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">
-                            <span class="text-yellow-300">Reordenar Prioridades</span>
-                            <span class="text-xs text-yellow-400 ml-2">(Exclusivo Pro)</span>
-                        </td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-yellow-400"></i></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+    <div class="billing-scroll overflow-x-auto" tabindex="0" aria-label="Tabela comparativa; deslize horizontalmente em telas pequenas">
+      <table class="billing-compare w-full min-w-[620px] border-collapse">
+        <thead><tr><th scope="col" class="text-left">Recurso</th><th scope="col">Gratuito</th><th scope="col">Premium</th><th scope="col">Pro</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Times vinculados</th><td>1</td><td>2</td><td>Sem limite de plano</td></tr>
+          <tr><th scope="row">Perfis de peso de jogo</th><td>2</td><td>5</td><td>15</td></tr>
+          <tr><th scope="row">Perfis de peso de SG</th><td>2</td><td>5</td><td>10</td></tr>
+          <tr><th scope="row">Rankings, scouts e comparações completos</th><td><i class="fas fa-check" aria-label="Incluído"></i></td><td><i class="fas fa-check" aria-label="Incluído"></i></td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
+          <tr><th scope="row">Escalação ideal, ajuste manual e envio</th><td><i class="fas fa-check" aria-label="Incluído"></i></td><td><i class="fas fa-check" aria-label="Incluído"></i></td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
+          <tr><th scope="row">Editar pesos por posição</th><td>—</td><td><i class="fas fa-check" aria-label="Incluído"></i></td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
+          <tr><th scope="row">Hack do goleiro e fechar defesa</th><td>—</td><td>—</td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
+          <tr><th scope="row">Reordenar prioridades</th><td>—</td><td>—</td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
+          <tr><th scope="row">Escalar vários times em lote</th><td>—</td><td>—</td><td><i class="fas fa-check" aria-label="Incluído"></i></td></tr>
+        </tbody>
+      </table>
     </div>
+  </section>
 
-    <!-- Destaques dos Planos -->
-    <div class="grid md:grid-cols-3 gap-6 mb-12">
-        <div class="bg-gradient-to-br from-dark-blue-800/30 to-dark-blue-900/30 rounded-xl p-6 border border-dark-blue-700/50">
-            <div class="w-12 h-12 bg-gradient-to-br from-gray-500 to-gray-600 rounded-lg flex items-center justify-center mb-4">
-                <i class="fas fa-gift text-white text-xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-white mb-2">Plano Free</h3>
-            <p class="text-dark-blue-300 text-sm">Análises completas, campinho e envio da escalação do seu time, sem ajustes finos de estratégia.</p>
-        </div>
-        
-        <div class="bg-gradient-to-br from-orange-900/30 to-orange-800/30 rounded-xl p-6 border border-orange-700/50">
-            <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mb-4">
-                <i class="fas fa-chart-line text-white text-xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-white mb-2">Plano Premium</h3>
-            <p class="text-dark-blue-300 text-sm">Dois times, mais perfis prontos e edição dos pesos de cálculo.</p>
-        </div>
-        
-        <div class="bg-gradient-to-br from-yellow-900/30 to-yellow-800/30 rounded-xl p-6 border border-yellow-700/50">
-            <div class="w-12 h-12 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center mb-4">
-                <i class="fas fa-trophy text-white text-xl"></i>
-            </div>
-            <h3 class="text-lg font-bold text-white mb-2">Plano Pro</h3>
-            <p class="text-dark-blue-300 text-sm">Para os mais competitivos! Times ilimitados, recursos exclusivos como Hack do Goleiro e Fechar Defesa, e escalar múltiplos times com apenas 1 clique.</p>
-        </div>
-    </div>
-
-    <!-- Garantia e Segurança -->
-    <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border border-dark-blue-700/50 shadow-xl p-8 text-center">
-        <div class="max-w-3xl mx-auto">
-            <div class="flex items-center justify-center space-x-4 mb-6">
-                <i class="fas fa-shield-alt text-4xl text-green-400"></i>
-                <i class="fas fa-lock text-4xl text-green-400"></i>
-                <i class="fas fa-credit-card text-4xl text-green-400"></i>
-            </div>
-            <h3 class="text-2xl font-bold text-white mb-4">Pagamento 100% Seguro</h3>
-            <p class="text-dark-blue-300 mb-6">
-                Todos os pagamentos são processados de forma segura pelo Stripe, líder mundial em processamento de pagamentos. 
-                Seus dados estão protegidos e você pode cancelar sua assinatura a qualquer momento.
-            </p>
-            <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-dark-blue-400">
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle text-green-400 mr-2"></i>
-                    <span>Sem compromisso</span>
-                </div>
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle text-green-400 mr-2"></i>
-                    <span>Cancele quando quiser</span>
-                </div>
-                <div class="flex items-center">
-                    <i class="fas fa-check-circle text-green-400 mr-2"></i>
-                    <span>Suporte dedicado</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+  <aside class="billing-panel mt-4 flex items-start gap-3 px-4 py-4 sm:items-center sm:px-5" aria-label="Informações de pagamento">
+    <span class="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-xl border border-[rgba(0,229,255,.16)] bg-[rgba(0,229,255,.07)] text-neon-cyan sm:mt-0"><i class="fas fa-lock" aria-hidden="true"></i></span>
+    <p class="text-xs leading-relaxed text-text-secondary">A contratação continua pelo checkout seguro do Stripe. O valor e as condições da cobrança são apresentados antes da confirmação.</p>
+  </aside>
+</main>
 {% endblock %}
