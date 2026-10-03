@@ -3051,8 +3051,8 @@ select.aero-select.ideal-strategy-select:focus-visible {
 #escalacaoIdealPage .ideal-availability-choice-copy small,
 #escalacaoIdealPage .ideal-availability-selected-copy small { overflow:hidden; color:#829caf; font-size:7px; text-overflow:ellipsis; white-space:nowrap; }
 #escalacaoIdealPage .ideal-availability-choice-fixture { display:flex; justify-content:flex-end; min-width:0; }
-#escalacaoIdealPage .ideal-availability-choice-fixture .ideal-player-fixture-badge { position:static; width:auto; gap:3px; transform:none; }
-#escalacaoIdealPage .ideal-availability-choice-fixture .ideal-fixture-team { width:auto !important; padding:0; border:0; background:none; }
+#escalacaoIdealPage .ideal-availability-choice-fixture .ideal-player-fixture-badge { position:static; display:flex !important; flex-direction:row !important; align-items:center !important; justify-content:flex-end; width:max-content; max-width:none; gap:3px; transform:none; }
+#escalacaoIdealPage .ideal-availability-choice-fixture .ideal-fixture-team { display:inline-flex !important; align-items:center; justify-content:center; width:15px !important; min-width:15px !important; padding:0; border:0; background:none; }
 #escalacaoIdealPage .ideal-availability-choice-fixture .ideal-fixture-team img,
 #escalacaoIdealPage .ideal-availability-choice-fixture .ideal-fixture-team i { width:15px !important; height:15px !important; }
 #escalacaoIdealPage .ideal-availability-selected { margin-top:5px; border-color:rgba(82,230,255,.28); }
