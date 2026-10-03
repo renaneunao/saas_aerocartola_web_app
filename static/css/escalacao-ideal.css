@@ -2806,6 +2806,13 @@ select.aero-select.ideal-strategy-select:focus-visible {
   .ideal-goalkeeper-hack-main .ideal-player-chips span { padding: 2px 3px; font-size: 7px; }
 }
 @media (max-width: 620px) {
+  /* O treinador é ancorado fora das linhas do grid. Mantê-lo a 9% do fundo
+     fazia o card subir até a linha defensiva em telas estreitas. */
+  .ideal-field-coach {
+    right: 7%;
+    bottom: 1% !important;
+  }
+
   .ideal-goalkeeper-hack { width: 110px; height: 96px; flex-basis: 110px; }
   .ideal-goalkeeper-hack-mask { top: 9px; left: -8px; width: 54px; height: 73px; gap: 2px; padding: 5px 3px; border-radius: 9px; transform: perspective(300px) rotateY(-22deg) rotateZ(-4deg) translateX(-3px) scale(.94); }
   .ideal-goalkeeper-hack-mask > span { padding: 2px 4px; font-size: 5px; }
