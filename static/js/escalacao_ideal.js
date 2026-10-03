@@ -676,7 +676,7 @@ class EscalacaoIdeal {
         // Pontuação total
         escalacao.pontuacaoTotal = Object.values(escalacao.titulares)
             .flat()
-            .reduce((sum, j) => sum + this.getPontuacao(j), 0);
+            .reduce((sum, j) => sum + this.getPontuacao(j) * (j.eh_capitao ? 2 : 1), 0);
         
         escalacao.patrimonio = this.patrimonio;
         
