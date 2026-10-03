@@ -2373,8 +2373,6 @@ def api_atacante_detalhes(atleta_id):
             argumentos_contra.append("Média reduzida de gols anotados na temporada atual.")
         if medias_mando['media_basica'] < 1.0:
             argumentos_contra.append(f"Média básica baixa ({medias_mando['media_basica']:.2f} pts), pontuação depende muito de eventos decisivos (G/A).")
-        if not argumentos_contra:
-            argumentos_contra.append("Nenhum indicador de risco estatístico ultrapassou o limite definido para esta posição.")
         
         return jsonify({
             'atleta_id': atleta_id_val,
@@ -2733,8 +2731,6 @@ def api_lateral_detalhes(atleta_id):
             argumentos_contra.append(f"Índice do confronto abaixo de zero ({peso_jogo:+.2f}) para este atleta.")
         if medias_mando['media_basica'] < 1.0:
             argumentos_contra.append(f"Média básica baixa ({medias_mando['media_basica']:.2f} pts), pontuação depende muito de SG e assistências.")
-        if not argumentos_contra:
-            argumentos_contra.append("Nenhum indicador de risco estatístico ultrapassou o limite definido para esta posição.")
 
         return jsonify({
             'atleta_id': atleta_id_val,
@@ -2994,8 +2990,6 @@ def api_goleiro_detalhes(atleta_id):
             argumentos_contra.append(f"Adversário {adversario_nome} finaliza pouco no alvo ({adv_chutes_gol_media:.1f} chutes/jogo), limitando o potencial de acumular defesas (DE).")
         if medias_mando['media_basica'] < 1.0:
             argumentos_contra.append(f"Média básica baixa ({medias_mando['media_basica']:.2f} pts), pontuação depende muito do SG.")
-        if not argumentos_contra:
-            argumentos_contra.append("Nenhum indicador de risco estatístico ultrapassou o limite definido para esta posição.")
         
         return jsonify({
             'atleta_id': atleta_id_val,
@@ -3226,8 +3220,6 @@ def api_zagueiro_detalhes(atleta_id):
             argumentos_contra.append(f"Média discreta de desarmes para o setor defensivo ({media_ds:.1f} DS/jogo).")
         if medias_mando['media_basica'] < 1.0:
             argumentos_contra.append(f"Média básica baixa ({medias_mando['media_basica']:.2f} pts), pontuação depende fortemente de manter o SG.")
-        if not argumentos_contra:
-            argumentos_contra.append("Nenhum indicador de risco estatístico ultrapassou o limite definido para esta posição.")
 
         return jsonify({
             'atleta_id': atleta_id_val,
@@ -3477,8 +3469,6 @@ def api_meia_detalhes(atleta_id):
             argumentos_contra.append("Pontuação sem scouts principais (G, A, DS) tende a ser moderada.")
         if medias_mando['media_basica'] < 1.0:
             argumentos_contra.append(f"Média básica baixa ({medias_mando['media_basica']:.2f} pts), pontuação depende muito de gols e assistências.")
-        if not argumentos_contra:
-            argumentos_contra.append("Nenhum indicador de risco estatístico ultrapassou o limite definido para esta posição.")
 
         return jsonify({
             'atleta_id': atleta_id_val,

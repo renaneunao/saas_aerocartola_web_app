@@ -269,6 +269,15 @@ function renderizarArgumentos(containerId, argumentos, cor) {
 
     container.innerHTML = '';
 
+    if (cor === 'rose') {
+        const card = container.parentElement;
+        const grid = card?.parentElement;
+        const semArgumentos = argumentos.length === 0;
+        if (card) card.style.display = semArgumentos ? 'none' : '';
+        if (grid) grid.style.gridTemplateColumns = semArgumentos ? '1fr' : '';
+        if (semArgumentos) return;
+    }
+
     if (argumentos.length === 0) {
         container.innerHTML = `<li class="text-slate-500 italic">Nenhum ponto registrado.</li>`;
         return;
