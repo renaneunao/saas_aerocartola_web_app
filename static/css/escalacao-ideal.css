@@ -3040,6 +3040,8 @@ select.aero-select.ideal-strategy-select:focus-visible {
   background:rgba(3,13,25,.6);
   text-align:left;
 }
+#escalacaoIdealPage .ideal-availability-selected[hidden],
+#escalacaoIdealPage .ideal-availability-choices[hidden] { display:none !important; }
 #escalacaoIdealPage .ideal-availability-choice { cursor:pointer; }
 #escalacaoIdealPage .ideal-availability-choice.is-selected { border-color:rgba(82,230,255,.55); background:rgba(82,230,255,.08); }
 #escalacaoIdealPage .ideal-availability-choice-avatar .ideal-player-avatar,
