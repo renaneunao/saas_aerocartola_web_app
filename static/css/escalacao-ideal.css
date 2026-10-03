@@ -3074,7 +3074,7 @@ select.aero-select.ideal-strategy-select:focus-visible {
   .ideal-picker-status-filter,
   .ideal-picker-price-limit { grid-column:1 / -1; }
   .ideal-picker-club-fixture { min-width:0; padding-inline:4px; }
-  .ideal-picker-player { grid-template-columns:42px minmax(0,1fr) !important; gap:4px 7px; padding:6px !important; }
+  .ideal-picker-player { height:auto !important; min-height:84px !important; grid-template-columns:42px minmax(0,1fr) !important; gap:4px 7px; padding:6px !important; }
   .ideal-picker-player-visual { grid-column:1; grid-row:1 / 3; }
   .ideal-picker-player-visual .ideal-player-avatar { width:30px !important; height:30px !important; }
   .ideal-picker-player-copy { grid-column:2; grid-row:1; }
