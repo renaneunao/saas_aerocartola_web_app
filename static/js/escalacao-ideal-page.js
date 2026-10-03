@@ -565,7 +565,7 @@
     const card = target.closest('[data-picker-kind]');
     const groupName = role === 'luxury' ? 'reservas' : 'titulares';
     const group = window.ultimaEscalacao[groupName] || {};
-    const position = card?.dataset.pickerPosition || '';
+    const position = card?.dataset.pickerPosition || target.dataset.pickerPosition || '';
     if (position === 'treinadores' && (role === 'captain' || role === 'unavailable')) {
       return notify('Treinadores não podem ser capitães nem marcados como não jogadores.', 'warning');
     }
@@ -1090,6 +1090,13 @@
   function bindEvents() {
     const isTouchSurface = () => Boolean(window.matchMedia?.('(hover: none), (pointer: coarse)').matches);
     const closeTouchCards = (except = null) => {
+      document.querySelectorAll('.ideal-card-actions.is-touch-portal').forEach(panel => {
+        const origin = panel._idealOriginCard;
+        if (origin?.isConnected) origin.appendChild(panel);
+        else panel.remove();
+        panel.classList.remove('is-touch-portal');
+        delete panel._idealOriginCard;
+      });
       document.querySelectorAll('.ideal-player-card.is-touch-open').forEach(card => {
         if (card !== except) card.classList.remove('is-touch-open');
       });
@@ -1097,12 +1104,14 @@
     ['formationSelect', 'hackGoleiroToggle', 'fecharDefesaToggle', 'posicaoCapitao', 'posicaoReservaLuxo'].forEach(id => $(id)?.addEventListener('change', () => aoMudarConfiguracao()));
     $('fonteProvaveisSelect')?.addEventListener('change', aoMudarFonteProvaveis);
     $('manualEditBtn')?.addEventListener('click', toggleManualEdit);
-    $('escalacaoContent')?.addEventListener('click', (event) => {
+    document.addEventListener('click', (event) => {
       const hoverClose = event.target.closest('[data-card-hover-close]');
       if (hoverClose) {
         event.preventDefault();
         event.stopPropagation();
-        const card = hoverClose.closest('.ideal-player-card');
+        const panel = hoverClose.closest('.ideal-card-actions');
+        const card = panel?._idealOriginCard || hoverClose.closest('.ideal-player-card');
+        closeTouchCards();
         card?.classList.add('is-hover-closed');
         card?.classList.remove('is-touch-open');
         return;
@@ -1118,6 +1127,7 @@
       if (specialRole) {
         event.preventDefault();
         event.stopPropagation();
+        closeTouchCards();
         setSpecialRole(specialRole.dataset.specialRole, specialRole);
         return;
       }
@@ -1125,6 +1135,7 @@
       if (availabilityButton) {
         event.preventDefault();
         event.stopPropagation();
+        closeTouchCards();
         applyAvailabilityForAthlete(availabilityButton.dataset.athleteId);
         return;
       }
@@ -1135,8 +1146,20 @@
           closeTouchCards(target);
           target.classList.remove('is-hover-closed');
           target.classList.add('is-touch-open');
+          const panel = target.querySelector(':scope > .ideal-card-actions');
+          if (panel) {
+            panel._idealOriginCard = target;
+            panel.classList.add('is-touch-portal');
+            panel.querySelectorAll('[data-athlete-id]').forEach(action => {
+              action.dataset.pickerPosition = target.dataset.pickerPosition || '';
+              action.dataset.pickerIndex = target.dataset.pickerIndex || '0';
+              action.dataset.pickerKind = target.dataset.pickerKind || '';
+            });
+            document.body.appendChild(panel);
+          }
           return;
         }
+        closeTouchCards();
         target.classList.remove('is-touch-open');
       }
       openPicker(target.dataset.pickerPosition, target.dataset.pickerKind, target.dataset.pickerIndex);
@@ -1168,7 +1191,7 @@
       }
     });
     document.addEventListener('click', event => {
-      if (isTouchSurface() && !event.target.closest('.ideal-player-card')) closeTouchCards();
+      if (isTouchSurface() && !event.target.closest('.ideal-player-card, .ideal-card-actions.is-touch-portal')) closeTouchCards();
     });
   }
 

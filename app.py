@@ -684,7 +684,24 @@ def dashboard():
             WHERE user_id = %s AND team_id = %s
         ''', (user['id'], team_id))
         count_rankings = cursor.fetchone()[0]
-        tem_calculos = count_rankings > 0
+        # Só consideramos a rodada pronta quando as seis posições têm ranking
+        # na rodada atual; um cálculo antigo ou parcial não deve liberar o fluxo.
+        cursor.execute(
+            'SELECT rodada_id FROM acf_partidas WHERE temporada = %s '
+            'ORDER BY partida_data DESC NULLS LAST, rodada_id DESC LIMIT 1',
+            (get_temporada_atual(),),
+        )
+        rodada_result = cursor.fetchone()
+        if rodada_result and rodada_result[0]:
+            cursor.execute('''
+                SELECT COUNT(DISTINCT posicao_id)
+                FROM acw_rankings_teams
+                WHERE team_id = %s AND rodada_atual = %s
+                  AND posicao_id IN (1, 2, 3, 4, 5, 6)
+            ''', (team_id, rodada_result[0]))
+            tem_calculos = (cursor.fetchone()[0] or 0) == 6
+        else:
+            tem_calculos = count_rankings > 0
         
         # 3. Verificar se tem escalação (verificar se há dados em acw_escalacao_config)
         cursor.execute('''

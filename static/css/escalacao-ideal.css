@@ -2654,6 +2654,26 @@
   .ideal-card-actions::after {
     display: none;
   }
+  /* No celular, o painel sai do contexto do campo e vira uma folha compacta
+     presa à viewport; assim não é cortado pelas linhas nem cobre metade da tela. */
+  .ideal-card-actions.is-touch-portal {
+    position: fixed !important;
+    z-index: 10000 !important;
+    inset: auto 10px max(10px, env(safe-area-inset-bottom)) !important;
+    width: auto !important;
+    max-width: 440px;
+    max-height: min(58dvh, 390px);
+    margin-inline: auto;
+    padding: 11px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transform: none !important;
+    border-radius: 15px;
+    box-shadow: 0 18px 48px rgba(0,0,0,.62), 0 0 0 1px rgba(103,232,249,.08);
+  }
   .ideal-player-card.is-touch-open > .ideal-player-replace-hint {
     opacity: 1;
     transform: translateY(0) scale(1);

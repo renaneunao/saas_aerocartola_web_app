@@ -124,6 +124,19 @@
             <p>Continue sua análise sem sair do contexto da rodada.</p>
         </div>
         <div class="dashboard-actions-grid">
+            {% if status.tem_perfis and permissions.podeEscalar %}
+            <button id="escalacaoRapidaBtn" class="dashboard-action dashboard-action-primary">
+                <i class="fas fa-bolt"></i><span><strong>Escalação rápida</strong><small>Calcular e enviar a escalação do seu time</small></span><i class="fas fa-arrow-right"></i>
+            </button>
+            {% elif not status.tem_perfis %}
+            <a href="{{ url_for('pagina_inicial') }}" class="dashboard-action dashboard-action-primary">
+                <i class="fas fa-bolt"></i><span><strong>Preparar escalação rápida</strong><small>Escolha seus perfis de jogo e de saldo de gols</small></span><i class="fas fa-arrow-right"></i>
+            </a>
+            {% elif not permissions.podeEscalar %}
+            <div class="dashboard-action dashboard-action-primary is-disabled">
+                <i class="fas fa-bolt"></i><span><strong>Escalação rápida</strong><small>Disponível em outro plano</small></span><i class="fas fa-lock"></i>
+            </div>
+            {% endif %}
             <a href="{{ url_for('credenciais') }}" class="dashboard-action">
                 <i class="fas fa-people-group"></i><span><strong>Meus times</strong><small>Gerenciar credenciais</small></span><i class="fas fa-arrow-right"></i>
             </a>
@@ -139,15 +152,9 @@
                 <i class="fas fa-chess-board"></i><span><strong>Escalação ideal</strong><small>Montar ou revisar</small></span><i class="fas fa-arrow-right"></i>
             </a>
             {% endif %}
-            {% if status.tem_perfis and permissions.podeEscalar %}
-            <button id="escalacaoRapidaBtn" class="dashboard-action">
-                <i class="fas fa-wand-magic-sparkles"></i><span><strong>Escalação rápida</strong><small>Calcular em um clique</small></span><i class="fas fa-arrow-right"></i>
+            <button type="button" onclick="window.location.reload()" class="dashboard-action">
+                <i class="fas fa-rotate"></i><span><strong>Atualizar dados</strong><small>Sincronizar painel</small></span><i class="fas fa-arrow-right"></i>
             </button>
-            {% elif status.tem_perfis and not permissions.podeEscalar %}
-            <div class="dashboard-action is-disabled">
-                <i class="fas fa-wand-magic-sparkles"></i><span><strong>Escalação rápida</strong><small>Disponível em outro plano</small></span><i class="fas fa-lock"></i>
-            </div>
-            {% endif %}
             {% if status.tem_perfis and permissions.multiEscalacao %}
             <button id="escalarTodosTimesBtn" class="dashboard-action">
                 <i class="fas fa-layer-group"></i><span><strong>Todos os times</strong><small>Processar em lote</small></span><i class="fas fa-arrow-right"></i>
@@ -160,11 +167,35 @@
             <a href="{{ url_for('player_availability.player_availability_page') }}" class="dashboard-action">
                 <i class="fas fa-user-check"></i><span><strong>Disponibilidade</strong><small>Poupar ou cravar</small></span><i class="fas fa-arrow-right"></i>
             </a>
-            <button onclick="window.location.reload()" class="dashboard-action">
-                <i class="fas fa-rotate"></i><span><strong>Atualizar dados</strong><small>Sincronizar painel</small></span><i class="fas fa-arrow-right"></i>
-            </button>
         </div>
     </section>
+
+    {% if not status.tem_perfis or not status.tem_calculos %}
+    <dialog class="dashboard-guide" id="dashboardGuide" aria-labelledby="dashboardGuideTitle">
+        <form method="dialog" class="dashboard-guide-card">
+            <span class="dashboard-guide-kicker"><i class="fas fa-compass"></i> Próximos passos</span>
+            <h2 id="dashboardGuideTitle">Vamos deixar sua rodada pronta?</h2>
+            <p class="dashboard-guide-intro">Siga esta sequência. Você pode fazer agora ou continuar depois.</p>
+            <ol class="dashboard-guide-steps">
+                <li class="{% if not status.tem_perfis %}is-current{% else %}is-done{% endif %}">
+                    <span class="dashboard-guide-step-icon"><i class="fas {% if status.tem_perfis %}fa-check{% else %}fa-sliders{% endif %}"></i></span>
+                    <span><strong>Perfis de jogo e de saldo de gols</strong><small>{% if status.tem_perfis %}Seus dois perfis já estão escolhidos.{% else %}Escolha como valorizar o mando/favoritismo e o saldo de gols nos cálculos.{% endif %}</small></span>
+                    {% if not status.tem_perfis %}<a href="{{ url_for('pagina_inicial') }}">Escolher</a>{% endif %}
+                </li>
+                <li class="{% if status.tem_calculos %}is-done{% elif status.tem_perfis %}is-current{% else %}is-pending{% endif %}">
+                    <span class="dashboard-guide-step-icon"><i class="fas {% if status.tem_calculos %}fa-check{% else %}fa-chart-column{% endif %}"></i></span>
+                    <span><strong>Calcular os módulos</strong><small>{% if status.tem_calculos %}Os rankings das posições estão prontos.{% elif status.tem_perfis %}Calcule os rankings por posição para liberar a escalação ideal.{% else %}Depois de salvar os perfis, calcule os rankings por posição.{% endif %}</small></span>
+                    {% if status.tem_perfis and not status.tem_calculos %}<a href="{{ url_for('modulos') }}">Ver módulos</a>{% endif %}
+                </li>
+            </ol>
+            <div class="dashboard-guide-actions">
+                <button type="button" class="dashboard-guide-later" data-guide-dismiss>Continuar depois</button>
+                {% if not status.tem_perfis %}<a class="dashboard-guide-primary" href="{{ url_for('pagina_inicial') }}">Configurar perfis <i class="fas fa-arrow-right"></i></a>
+                {% elif not status.tem_calculos %}<a class="dashboard-guide-primary" href="{{ url_for('modulos') }}">Ir para os módulos <i class="fas fa-arrow-right"></i></a>{% endif %}
+            </div>
+        </form>
+    </dialog>
+    {% endif %}
 
     <!-- Central da rodada -->
     <section class="dashboard-section dashboard-round-hub">
@@ -270,4 +301,20 @@
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script>
+    (() => {
+        const guide = document.getElementById('dashboardGuide');
+        if (!guide) return;
+        const key = `aero-dashboard-guide-dismissed:{{ team.id if team else 'none' }}:{{ rodada.rodada or 0 }}:{{ 1 if not status.tem_perfis else 0 }}:{{ 1 if not status.tem_calculos else 0 }}`;
+        if (sessionStorage.getItem(key)) return;
+        guide.showModal();
+        const dismiss = () => {
+            sessionStorage.setItem(key, '1');
+            guide.close();
+        };
+        guide.querySelector('[data-guide-dismiss]')?.addEventListener('click', dismiss);
+        guide.addEventListener('cancel', () => sessionStorage.setItem(key, '1'), { once: true });
+        guide.addEventListener('click', event => { if (event.target === guide) dismiss(); });
+    })();
+</script>
 {% endblock %}
