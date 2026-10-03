@@ -15,16 +15,16 @@ from utils.weights import get_weight
 
 # Fatores multiplicadores (defaults)
 DEFAULTS = {
-    'FATOR_MEDIA': 3.0,
-    'FATOR_DS': 8.0,
-    'FATOR_SG': 2.0,
-    'FATOR_ESCALACAO': 10.0,
-    'FATOR_FF': 2.0,
-    'FATOR_FS': 1.0,
-    'FATOR_FD': 2.0,
-    'FATOR_G': 4.0,
-    'FATOR_A': 4.0,
-    'FATOR_PESO_JOGO': 1.0,
+    'FATOR_MEDIA': 1.1,
+    'FATOR_DS': 1.6,
+    'FATOR_SG': 1.5,
+    'FATOR_ESCALACAO': 1.0,
+    'FATOR_FF': 0.9,
+    'FATOR_FS': 0.8,
+    'FATOR_FD': 0.9,
+    'FATOR_G': 2.0,
+    'FATOR_A': 2.5,
+    'FATOR_PESO_JOGO': 1.7,
 }
 
 # Função para carregar pesos dinamicamente

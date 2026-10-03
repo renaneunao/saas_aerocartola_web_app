@@ -25,12 +25,12 @@ from utils.utilidades import get_temporada_atual
 from utils.weights import get_weight
 
 DEFAULTS = {
-    'FATOR_MEDIA': 0.2,
-    'FATOR_FF': 4.5,
-    'FATOR_FD': 6.5,
-    'FATOR_SG': 1.5,
-    'FATOR_PESO_JOGO': 1.5,
-    'FATOR_GOL_ADVERSARIO': 2.0,
+    'FATOR_MEDIA': 1.5,
+    'FATOR_FF': 1.6,
+    'FATOR_FD': 2.0,
+    'FATOR_SG': 3.5,
+    'FATOR_PESO_JOGO': 1.0,
+    'FATOR_GOL_ADVERSARIO': 3.5,
 }
 
 # Função para carregar pesos dinamicamente

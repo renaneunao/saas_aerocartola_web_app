@@ -9,7 +9,7 @@ from utils.weights import get_weight
 def _load_weights():
     """Carrega os pesos do banco de dados a cada execução."""
     return {
-        'FATOR_PESO_JOGO': float(get_weight('treinador', 'FATOR_PESO_JOGO', 1.0))
+        'FATOR_PESO_JOGO': float(get_weight('treinador', 'FATOR_PESO_JOGO', 3.5))
     }
 
 
@@ -19,7 +19,7 @@ def calcular_melhores_treinadores(rodada_atual, top_n=100, usar_provaveis_cartol
     FATOR_PESO_JOGO = weights['FATOR_PESO_JOGO']
     
     # Log dos pesos carregados
-    printdbg(f"[PESOS TREINADOR] FATOR_PESO_JOGO: {FATOR_PESO_JOGO} (padrão: 1.0)")
+    printdbg(f"[PESOS TREINADOR] FATOR_PESO_JOGO: {FATOR_PESO_JOGO} (padrão: 3.5)")
     
     conn = get_db_connection()
     cursor = conn.cursor()

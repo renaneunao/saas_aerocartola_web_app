@@ -86,7 +86,7 @@
                     <input type="number" 
                            id="FATOR_MEDIA"
                            name="FATOR_MEDIA" 
-                           value="{{ pesos_atuais.get('FATOR_MEDIA', 3.0) }}" 
+                           value="{{ pesos_atuais.get('FATOR_MEDIA', 1.1) }}"
                            step="any" required inputmode="decimal"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">
@@ -194,7 +194,7 @@
                     <input type="number" 
                            id="FATOR_PESO_JOGO"
                            name="FATOR_PESO_JOGO" 
-                           value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 1.0) }}" 
+                           value="{{ pesos_atuais.get('FATOR_PESO_JOGO', 1.7) }}"
                            step="any" required inputmode="decimal"
                            {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-blue-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200">

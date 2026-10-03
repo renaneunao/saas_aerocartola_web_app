@@ -14,10 +14,14 @@
 
     const tools = document.createElement('div');
     tools.className = 'weight-editor-tools';
-    tools.innerHTML = '<div><strong>Ajuste a influência de cada indicador</strong><small>Use o controle deslizante ou digite o valor. A alteração vale após salvar e recalcular.</small></div><button type="button" class="weight-editor-reset"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>Retornar ao padrão ideal calculado</span></button>';
+    tools.innerHTML = '<div><strong>Ajuste a influência de cada indicador</strong><small>Arraste o controle. Salve e recalcule para aplicar.</small></div><button type="button" class="weight-editor-reset"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>Restaurar padrão</span></button>';
     form.prepend(tools);
 
     editable.forEach((numberInput) => {
+      numberInput.readOnly = true;
+      numberInput.inputMode = 'none';
+      numberInput.setAttribute('aria-readonly', 'true');
+      numberInput.title = 'Altere este valor pelo controle deslizante';
       const wrap = document.createElement('div');
       wrap.className = 'weight-range-wrap';
       const slider = document.createElement('input');

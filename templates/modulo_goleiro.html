@@ -81,7 +81,7 @@
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2 {% if not permissions.editarPesosModulos %}opacity-50{% endif %}" {% if not permissions.editarPesosModulos %}style="filter: blur(0.3px); pointer-events: none;"{% endif %}>
                 <div class="space-y-1">
                     <label class="block text-xs font-medium text-purple-200">FATOR_MEDIA</label>
-                    <input type="number" id="FATOR_MEDIA" name="FATOR_MEDIA" value="{{ pesos_atuais.get('FATOR_MEDIA', 0.2) }}" step="any" required inputmode="decimal" {% if not permissions.editarPesosModulos %}disabled{% endif %}
+                    <input type="number" id="FATOR_MEDIA" name="FATOR_MEDIA" value="{{ pesos_atuais.get('FATOR_MEDIA', 1.5) }}" step="any" required inputmode="decimal" {% if not permissions.editarPesosModulos %}disabled{% endif %}
                            class="w-full px-2.5 py-1.5 bg-dark-blue-800/50 border border-purple-500/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-200">
                 </div>
                 <div class="space-y-1">

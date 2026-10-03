@@ -421,7 +421,7 @@
         const currentRound = Number(data.filtros?.rodada || state.rodada || 0);
         const matches = (data.ultimas_pontuacoes || []).filter((match) => match.entrou_em_campo === true && Number(match.rodada) < currentRound && match.mando === mando).slice(0, 5);
         if (!matches.length) return '<div class="scx-muted">Sem jogos registrados.</div>';
-        return matches.map((match) => `<article class="scx-side-history-row"><span>Rodada ${match.rodada}</span><div><span class="scx-match-fixture">${fixtureMarkup(match.casa, match.fora, match.clube_id, match.placar_casa, match.placar_fora)}</span><small>${escapeHtml(match.adversario_nome || '')}</small></div><strong>${number(match.pontuacao)}<em>${scoutSummary(match.scouts)}</em></strong></article>`).join('');
+        return matches.map((match) => `<article class="scx-side-history-row"><span>Rodada ${match.rodada}</span><div><span class="scx-match-fixture">${fixtureMarkup(match.casa, match.fora, match.clube_id, match.placar_casa, match.placar_fora)}</span></div><strong>${number(match.pontuacao)}<em>${scoutSummary(match.scouts)}</em></strong></article>`).join('');
     }
 
     function comparisonCeded(data) {

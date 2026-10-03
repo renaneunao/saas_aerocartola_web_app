@@ -72,6 +72,36 @@ app.config.update(
 )
 app.session_interface = ProxyAwareSessionInterface()
 
+# Valores ideais iniciais sincronizados com os pesos salvos no time Aero-RBSV.
+# Usados tanto na tela do módulo quanto como fallback da API de cálculo.
+DEFAULT_POSITION_WEIGHTS = {
+    'goleiro': {
+        'FATOR_MEDIA': 1.5, 'FATOR_FF': 1.6, 'FATOR_FD': 2.0,
+        'FATOR_SG': 3.5, 'FATOR_PESO_JOGO': 1.0, 'FATOR_GOL_ADVERSARIO': 3.5,
+    },
+    'lateral': {
+        'FATOR_MEDIA': 1.1, 'FATOR_DS': 1.6, 'FATOR_SG': 1.5,
+        'FATOR_ESCALACAO': 1.0, 'FATOR_FF': 0.9, 'FATOR_FS': 0.8,
+        'FATOR_FD': 0.9, 'FATOR_G': 2.0, 'FATOR_A': 2.5,
+        'FATOR_PESO_JOGO': 1.7,
+    },
+    'zagueiro': {
+        'FATOR_MEDIA': 0.4, 'FATOR_DS': 3.6, 'FATOR_SG': 2.2,
+        'FATOR_ESCALACAO': 0.7, 'FATOR_PESO_JOGO': 2.6,
+    },
+    'meia': {
+        'FATOR_MEDIA': 2.9, 'FATOR_DS': 2.0, 'FATOR_FF': 2.0,
+        'FATOR_FS': 2.5, 'FATOR_FD': 3.0, 'FATOR_G': 5.0,
+        'FATOR_A': 5.5, 'FATOR_ESCALACAO': 2.1, 'FATOR_PESO_JOGO': 4.0,
+    },
+    'atacante': {
+        'FATOR_MEDIA': 2.4, 'FATOR_DS': 2.0, 'FATOR_FF': 3.3,
+        'FATOR_FS': 3.0, 'FATOR_FD': 3.7, 'FATOR_G': 6.5,
+        'FATOR_A': 4.0, 'FATOR_ESCALACAO': 3.5, 'FATOR_PESO_JOGO': 4.9,
+    },
+    'treinador': {'FATOR_PESO_JOGO': 3.5},
+}
+
 # O Nginx deste serviço envia exatamente um conjunto de X-Forwarded-*.
 # Limitar a um salto evita confiar em uma cadeia arbitrariamente longa.
 try:
@@ -1764,35 +1794,7 @@ def modulo_individual(modulo):
     finally:
         close_db_connection(conn)
     
-    # Defaults por posição (sincronizados com a API)
-    defaults_posicao = {
-        'goleiro': {
-            'FATOR_MEDIA': 0.2, 'FATOR_FF': 4.5, 'FATOR_FD': 6.5, 'FATOR_SG': 1.5,
-            'FATOR_PESO_JOGO': 1.5, 'FATOR_GOL_ADVERSARIO': 2.0
-        },
-        'lateral': {
-            'FATOR_MEDIA': 3.0, 'FATOR_DS': 8.0, 'FATOR_SG': 2.0, 'FATOR_ESCALACAO': 10.0,
-            'FATOR_FF': 2.0, 'FATOR_FS': 1.0, 'FATOR_FD': 2.0, 'FATOR_G': 4.0,
-            'FATOR_A': 4.0, 'FATOR_PESO_JOGO': 1.0
-        },
-        'zagueiro': {
-            'FATOR_MEDIA': 1.5, 'FATOR_DS': 4.5, 'FATOR_SG': 4.0, 'FATOR_ESCALACAO': 5.0,
-            'FATOR_PESO_JOGO': 5.0
-        },
-        'meia': {
-            'FATOR_MEDIA': 1.0, 'FATOR_DS': 3.6, 'FATOR_FF': 0.7, 'FATOR_FS': 0.8,
-            'FATOR_FD': 0.9, 'FATOR_G': 2.5, 'FATOR_A': 2.0, 'FATOR_ESCALACAO': 10.0,
-            'FATOR_PESO_JOGO': 9.5
-        },
-        'atacante': {
-            'FATOR_MEDIA': 2.5, 'FATOR_DS': 2.0, 'FATOR_FF': 1.2, 'FATOR_FS': 1.3,
-            'FATOR_FD': 1.3, 'FATOR_G': 2.5, 'FATOR_A': 2.5, 'FATOR_ESCALACAO': 10.0,
-            'FATOR_PESO_JOGO': 10.0
-        },
-        'treinador': {
-            'FATOR_PESO_JOGO': 1.0
-        }
-    }
+    defaults_posicao = DEFAULT_POSITION_WEIGHTS
     
     defaults_modulo = defaults_posicao.get(modulo, defaults_posicao['goleiro'])
     
@@ -3960,35 +3962,7 @@ def api_modulo_dados(modulo):
         # Buscar pesos do módulo
         from utils.weights import get_weight
         
-        # Defaults por posição
-        defaults_posicao = {
-            'goleiro': {
-                'FATOR_MEDIA': 0.2, 'FATOR_FF': 4.5, 'FATOR_FD': 6.5, 'FATOR_SG': 1.5,
-                'FATOR_PESO_JOGO': 1.5, 'FATOR_GOL_ADVERSARIO': 2.0
-            },
-            'lateral': {
-                'FATOR_MEDIA': 3.0, 'FATOR_DS': 8.0, 'FATOR_SG': 2.0, 'FATOR_ESCALACAO': 10.0,
-                'FATOR_FF': 2.0, 'FATOR_FS': 1.0, 'FATOR_FD': 2.0, 'FATOR_G': 4.0,
-                'FATOR_A': 4.0, 'FATOR_PESO_JOGO': 1.0
-            },
-            'zagueiro': {
-                'FATOR_MEDIA': 1.5, 'FATOR_DS': 4.5, 'FATOR_SG': 4.0, 'FATOR_ESCALACAO': 5.0,
-                'FATOR_PESO_JOGO': 5.0
-            },
-            'meia': {
-                'FATOR_MEDIA': 1.0, 'FATOR_DS': 3.6, 'FATOR_FF': 0.7, 'FATOR_FS': 0.8,
-                'FATOR_FD': 0.9, 'FATOR_G': 2.5, 'FATOR_A': 2.0, 'FATOR_ESCALACAO': 10.0,
-                'FATOR_PESO_JOGO': 9.5
-            },
-            'atacante': {
-                'FATOR_MEDIA': 2.5, 'FATOR_DS': 2.0, 'FATOR_FF': 1.2, 'FATOR_FS': 1.3,
-                'FATOR_FD': 1.3, 'FATOR_G': 2.5, 'FATOR_A': 2.5, 'FATOR_ESCALACAO': 10.0,
-                'FATOR_PESO_JOGO': 10.0
-            },
-            'treinador': {
-                'FATOR_PESO_JOGO': 1.0
-            }
-        }
+        defaults_posicao = DEFAULT_POSITION_WEIGHTS
         
         defaults_modulo = defaults_posicao.get(modulo, defaults_posicao['goleiro'])
         
