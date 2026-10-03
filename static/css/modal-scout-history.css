@@ -681,6 +681,25 @@
 .modal-scout-history-ceded-match > summary > strong { grid-area: points; justify-self: end; color: #7bd88f; font: 700 .5rem 'JetBrains Mono', monospace; white-space: nowrap; }
 .modal-scout-history-ceded-match > summary > i { grid-area: toggle; justify-self: end; color: #64748b; font-size: .5rem; transition: transform .15s; }
 .modal-scout-history-ceded-match[open] > summary > i { transform: rotate(180deg); }
+.modal-detail-favoritism-meter {
+    position: relative;
+    height: .42rem;
+    margin: .28rem .08rem .2rem;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, .16);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, .8);
+}
+.modal-detail-favoritism-meter::before { content: ''; position: absolute; z-index: 1; inset: 0 auto 0 50%; width: 1px; background: rgba(226, 232, 240, .42); }
+.modal-detail-favoritism-meter i { position: absolute; top: 0; bottom: 0; display: block; width: var(--favoritismo-width, 0%); border-radius: 999px; }
+.modal-detail-favoritism-meter.is-casa i { right: 50%; background: #5cf2a5; box-shadow: 0 0 8px rgba(92, 242, 165, .35); }
+.modal-detail-favoritism-meter.is-visitante i { left: 50%; background: #67e8f9; box-shadow: 0 0 8px rgba(103, 232, 249, .35); }
+.modal-detail-favoritism-meter.is-equilibrado i { left: 50%; width: 0; }
+.modal-detail-favoritism-values { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .25rem; color: #94a3b8; font-size: .58rem; }
+.modal-detail-favoritism-values span { display: flex; justify-content: space-between; gap: .25rem; padding: .2rem .25rem; border: 1px solid rgba(148, 163, 184, .11); border-radius: .3rem; }
+.modal-detail-favoritism-values span:first-child { color: #7bd88f; }
+.modal-detail-favoritism-values span:last-child { color: #8bb5c8; }
+.modal-detail-favoritism-values b { color: inherit; font: 700 .62rem 'JetBrains Mono', monospace; }
 .modal-scout-history-ceded-players { display: grid; gap: .12rem; padding: .25rem .35rem .35rem; border-top: 1px solid rgba(148, 163, 184, .08); }
 .modal-scout-history-ceded-player { display: grid; grid-template-columns: 1.05rem minmax(4rem, 1fr) minmax(5rem, 1.2fr) auto; align-items: center; gap: .25rem; padding: .2rem .25rem; background: rgba(2, 12, 23, .25); }
 .modal-scout-history-ceded-player-avatar { display: grid; place-items: center; width: 1rem; height: 1rem; overflow: hidden; border-radius: 50%; color: #64748b; background: #0d1727; font-size: .4rem; }

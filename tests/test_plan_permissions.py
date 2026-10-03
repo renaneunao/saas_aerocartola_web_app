@@ -50,6 +50,16 @@ class PlanApiTests(unittest.TestCase):
         self.assertEqual(relative_percent, 80.0)
         self.assertEqual(cursor.execute.call_count, 2)
 
+    def test_detail_favoritism_uses_the_dashboard_round_scale_and_home_away_side(self):
+        cursor = MagicMock()
+        cursor.fetchall.return_value = [(10, 20, 4.0, 1.0), (30, 40, 2.0, 5.0)]
+        home = web._get_round_matchup_favoritism(cursor, 3, 29, 10, 20, 2026)
+        away = web._get_round_matchup_favoritism(cursor, 3, 29, 20, 10, 2026)
+        self.assertEqual(home['favoritismo_lado'], 'casa')
+        self.assertEqual(away['favoritismo_lado'], 'casa')
+        self.assertEqual(home['favoritismo_bar_percent'], 50.0)
+        self.assertEqual(away['peso_jogo'], 1.0)
+
     def test_information_and_single_team_send_available_to_every_tier(self):
         for plan in PLANS_CONFIG:
             with self.subTest(plan=plan):

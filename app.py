@@ -125,6 +125,53 @@ def _get_sg_round_relative_percent(cursor, perfil_id, rodada, clube_id):
     relative_percent = min(100.0, max(0.0, value / maximum * 100.0)) if maximum > 0 else 0.0
     return value, relative_percent
 
+
+def _get_round_matchup_favoritism(cursor, perfil_id, rodada, clube_id, adversario_id, temporada):
+    """Devolve o confronto do clube na escala centralizada usada no dashboard."""
+    result = {
+        'peso_jogo': 0.0,
+        'favoritismo_casa': 0.0,
+        'favoritismo_visitante': 0.0,
+        'favoritismo_lado': 'equilibrado',
+        'favoritismo_bar_percent': 0.0,
+    }
+    if not all((perfil_id, rodada, clube_id, adversario_id, temporada)):
+        return result
+
+    cursor.execute(
+        '''SELECT p.clube_casa_id, p.clube_visitante_id,
+                  COALESCE(casa.peso_jogo, 0), COALESCE(fora.peso_jogo, 0)
+           FROM acf_partidas p
+           LEFT JOIN acp_peso_jogo_perfis casa
+             ON casa.perfil_id = %s AND casa.rodada_atual = p.rodada_id
+            AND casa.clube_id = p.clube_casa_id
+           LEFT JOIN acp_peso_jogo_perfis fora
+             ON fora.perfil_id = %s AND fora.rodada_atual = p.rodada_id
+            AND fora.clube_id = p.clube_visitante_id
+           WHERE p.temporada = %s AND p.rodada_id = %s AND p.valida = TRUE''',
+        (perfil_id, perfil_id, temporada, rodada),
+    )
+    matches = cursor.fetchall() or []
+    differences = [abs(float(row[2] or 0) - float(row[3] or 0)) for row in matches]
+    max_difference = max(differences, default=0.0)
+
+    for home_id, away_id, home_value, away_value in matches:
+        if {int(home_id), int(away_id)} != {int(clube_id), int(adversario_id)}:
+            continue
+        home_value = float(home_value or 0)
+        away_value = float(away_value or 0)
+        difference = home_value - away_value
+        result.update({
+            'peso_jogo': home_value if int(clube_id) == int(home_id) else away_value,
+            'favoritismo_casa': home_value,
+            'favoritismo_visitante': away_value,
+            'favoritismo_lado': 'casa' if difference > 0 else 'visitante' if difference < 0 else 'equilibrado',
+            'favoritismo_bar_percent': round(min(50.0, abs(difference) / max_difference * 50.0), 2)
+                if max_difference > 0 else 0.0,
+        })
+        break
+    return result
+
 # O Nginx deste serviço envia exatamente um conjunto de X-Forwarded-*.
 # Limitar a um salto evita confiar em uma cadeia arbitrariamente longa.
 try:
@@ -2190,18 +2237,16 @@ def api_atacante_detalhes(atleta_id):
         # Buscar peso do jogo
         team_id = session.get('selected_team_id')
         peso_jogo = 0
+        favoritismo = {'peso_jogo': 0.0, 'favoritismo_casa': 0.0, 'favoritismo_visitante': 0.0, 'favoritismo_lado': 'equilibrado', 'favoritismo_bar_percent': 0.0}
         if team_id and clube_id:
             try:
                 from models.user_configurations import get_user_default_configuration
                 config = get_user_default_configuration(conn, user['id'], team_id)
                 if config and config.get('perfil_peso_jogo'):
-                    cursor.execute('''
-                        SELECT peso_jogo FROM acp_peso_jogo_perfis
-                        WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                    ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
-                    peso_row = cursor.fetchone()
-                    if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
-                        peso_jogo = float(peso_row[0])
+                    favoritismo = _get_round_matchup_favoritism(
+                        cursor, config['perfil_peso_jogo'], rodada_atual, clube_id, adversario_id, temporada_atual
+                    )
+                    peso_jogo = favoritismo['peso_jogo']
             except Exception as e:
                 print(f"Erro ao buscar peso do jogo: {e}")
         
@@ -2418,7 +2463,7 @@ def api_atacante_detalhes(atleta_id):
             'adversario_id': adversario_id,
             'adversario_nome': adversario_nome,
             'adversario_escudo_url': adversario_escudo_url,
-            'peso_jogo': peso_jogo,
+            **favoritismo,
             'media_ds': media_ds,
             'media_ff': media_ff,
             'media_fs': media_fs,
@@ -2621,19 +2666,17 @@ def api_lateral_detalhes(atleta_id):
         peso_jogo = 0
         peso_sg = 0
         peso_sg_percentual = 0.0
+        favoritismo = {'peso_jogo': 0.0, 'favoritismo_casa': 0.0, 'favoritismo_visitante': 0.0, 'favoritismo_lado': 'equilibrado', 'favoritismo_bar_percent': 0.0}
         if team_id and clube_id:
             try:
                 from models.user_configurations import get_user_default_configuration
                 config = get_user_default_configuration(conn, user['id'], team_id)
                 if config:
                     if config.get('perfil_peso_jogo'):
-                        cursor.execute('''
-                            SELECT peso_jogo FROM acp_peso_jogo_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
-                        peso_row = cursor.fetchone()
-                        if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
-                            peso_jogo = float(peso_row[0])
+                        favoritismo = _get_round_matchup_favoritism(
+                            cursor, config['perfil_peso_jogo'], rodada_atual, clube_id, adversario_id, temporada_atual
+                        )
+                        peso_jogo = favoritismo['peso_jogo']
                     
                     if config.get('perfil_peso_sg'):
                         peso_sg, peso_sg_percentual = _get_sg_round_relative_percent(
@@ -2773,7 +2816,7 @@ def api_lateral_detalhes(atleta_id):
             'adversario_id': adversario_id,
             'adversario_nome': adversario_nome,
             'adversario_escudo_url': adversario_escudo_url,
-            'peso_jogo': peso_jogo,
+            **favoritismo,
             'peso_sg': peso_sg,
             'media_ds': media_ds,
             'media_a': media_a,
@@ -2882,13 +2925,10 @@ def api_goleiro_detalhes(atleta_id):
                 config = get_user_default_configuration(conn, user['id'], team_id)
                 if config:
                     if config.get('perfil_peso_jogo'):
-                        cursor.execute('''
-                            SELECT peso_jogo FROM acp_peso_jogo_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
-                        peso_row = cursor.fetchone()
-                        if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
-                            peso_jogo = float(peso_row[0])
+                        favoritismo = _get_round_matchup_favoritism(
+                            cursor, config['perfil_peso_jogo'], rodada_atual, clube_id, adversario_id, temporada_atual
+                        )
+                        peso_jogo = favoritismo['peso_jogo']
                     
                     if config.get('perfil_peso_sg'):
                         peso_sg, peso_sg_percentual = _get_sg_round_relative_percent(
@@ -2897,6 +2937,7 @@ def api_goleiro_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pesos: {e}")
         
+        favoritismo = favoritismo if 'favoritismo' in locals() else {'peso_jogo': peso_jogo, 'favoritismo_casa': 0.0, 'favoritismo_visitante': 0.0, 'favoritismo_lado': 'equilibrado', 'favoritismo_bar_percent': 0.0}
         # Buscar médias de scouts (foco em DE - defesas)
         media_de = 0
         media_gols_sofridos = 0
@@ -3029,7 +3070,7 @@ def api_goleiro_detalhes(atleta_id):
             'adversario_id': adversario_id,
             'adversario_nome': adversario_nome,
             'adversario_escudo_url': adversario_escudo_url,
-            'peso_jogo': peso_jogo,
+            **favoritismo,
             'peso_sg': peso_sg,
             'media_de': media_de,
             'media_gols_sofridos': media_gols_sofridos,
@@ -3134,13 +3175,10 @@ def api_zagueiro_detalhes(atleta_id):
                 config = get_user_default_configuration(conn, user['id'], team_id)
                 if config:
                     if config.get('perfil_peso_jogo'):
-                        cursor.execute('''
-                            SELECT peso_jogo FROM acp_peso_jogo_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
-                        peso_row = cursor.fetchone()
-                        if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
-                            peso_jogo = float(peso_row[0])
+                        favoritismo = _get_round_matchup_favoritism(
+                            cursor, config['perfil_peso_jogo'], rodada_atual, clube_id, adversario_id, temporada_atual
+                        )
+                        peso_jogo = favoritismo['peso_jogo']
                     
                     if config.get('perfil_peso_sg'):
                         peso_sg, peso_sg_percentual = _get_sg_round_relative_percent(
@@ -3149,6 +3187,7 @@ def api_zagueiro_detalhes(atleta_id):
             except Exception as e:
                 print(f"Erro ao buscar pesos: {e}")
         
+        favoritismo = favoritismo if 'favoritismo' in locals() else {'peso_jogo': peso_jogo, 'favoritismo_casa': 0.0, 'favoritismo_visitante': 0.0, 'favoritismo_lado': 'equilibrado', 'favoritismo_bar_percent': 0.0}
         # Buscar médias de scouts (DS, FC, Gols de zagueiro)
         media_ds = 0
         media_fc = 0
@@ -3256,7 +3295,7 @@ def api_zagueiro_detalhes(atleta_id):
             'adversario_id': adversario_id,
             'adversario_nome': adversario_nome,
             'adversario_escudo_url': adversario_escudo_url,
-            'peso_jogo': peso_jogo,
+            **favoritismo,
             'peso_sg': peso_sg,
             'media_ds': media_ds,
             'media_fc': media_fc,
@@ -3358,16 +3397,14 @@ def api_meia_detalhes(atleta_id):
                 from models.user_configurations import get_user_default_configuration
                 config = get_user_default_configuration(conn, user['id'], team_id)
                 if config and config.get('perfil_peso_jogo'):
-                    cursor.execute('''
-                        SELECT peso_jogo FROM acp_peso_jogo_perfis
-                        WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                    ''', (config['perfil_peso_jogo'], rodada_atual, clube_id))
-                    peso_row = cursor.fetchone()
-                    if peso_row and len(peso_row) > 0 and peso_row[0] is not None:
-                        peso_jogo = float(peso_row[0])
+                    favoritismo = _get_round_matchup_favoritism(
+                        cursor, config['perfil_peso_jogo'], rodada_atual, clube_id, adversario_id, temporada_atual
+                    )
+                    peso_jogo = favoritismo['peso_jogo']
             except Exception as e:
                 print(f"Erro ao buscar peso do jogo: {e}")
         
+        favoritismo = favoritismo if 'favoritismo' in locals() else {'peso_jogo': peso_jogo, 'favoritismo_casa': 0.0, 'favoritismo_visitante': 0.0, 'favoritismo_lado': 'equilibrado', 'favoritismo_bar_percent': 0.0}
         # Buscar médias de scouts (A, G, DS, FF, FS, FD)
         media_a = 0
         media_g = 0
@@ -3505,7 +3542,7 @@ def api_meia_detalhes(atleta_id):
             'adversario_id': adversario_id,
             'adversario_nome': adversario_nome,
             'adversario_escudo_url': adversario_escudo_url,
-            'peso_jogo': peso_jogo,
+            **favoritismo,
             'media_a': media_a,
             'media_g': media_g,
             'media_ds': media_ds,

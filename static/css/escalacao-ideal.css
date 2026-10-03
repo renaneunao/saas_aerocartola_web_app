@@ -2031,7 +2031,8 @@
 .ideal-bench-signals .ideal-player-indicators {
   min-width: 0 !important;
   max-width: 100% !important;
-  overflow: hidden;
+  overflow: visible !important;
+  padding-block: 3px 2px;
 }
 
 .ideal-player-visual > .ideal-player-indicators {

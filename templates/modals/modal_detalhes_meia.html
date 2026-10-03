@@ -122,8 +122,8 @@
                     </div>
                 </div>
                 <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3">
-                    <p class="text-[11px] text-slate-400 font-medium">Peso do Jogo</p>
-                    <p id="modalMeiaPesoJogo" class="font-bold text-base mt-0.5"></p>
+                    <p class="text-[11px] text-slate-400 font-medium">Favoritismo do confronto</p>
+                    <div id="modalMeiaPesoJogo" class="modal-detail-favoritism"></div>
                 </div>
             </div>
             <div id="modalMeiaEscalacoesContainer" class="mt-3 text-xs text-slate-400 hidden flex items-center gap-1.5">
@@ -226,14 +226,7 @@ function preencherModalMeia(dados) {
     document.getElementById('modalMeiaAdversarioEscudo').src = dados.adversario_escudo_url || 'https://via.placeholder.com/20';
     
     const pesoJogoEl = document.getElementById('modalMeiaPesoJogo');
-    pesoJogoEl.textContent = formatNumber(dados.peso_jogo);
-    if (dados.peso_jogo > 0) {
-        pesoJogoEl.className = 'font-bold text-emerald-400 text-base';
-    } else if (dados.peso_jogo < 0) {
-        pesoJogoEl.className = 'font-bold text-rose-400 text-base';
-    } else {
-        pesoJogoEl.className = 'font-bold text-slate-400 text-base';
-    }
+    pesoJogoEl.innerHTML = window.renderModalFavoritism(dados);
 
     document.getElementById('modalMeiaA').textContent = formatNumber(dados.media_a);
     document.getElementById('modalMeiaG').textContent = formatNumber(dados.media_g);

@@ -20,6 +20,14 @@
         }) : '0,00';
     }
 
+    window.renderModalFavoritism = function (data) {
+        const side = ['casa', 'visitante'].includes(data?.favoritismo_lado)
+            ? data.favoritismo_lado : 'equilibrado';
+        const width = Math.max(0, Math.min(50, Number(data?.favoritismo_bar_percent) || 0));
+        const title = `Favoritismo do confronto · escala comum da rodada · ${side === 'casa' ? 'mandante favorito' : side === 'visitante' ? 'visitante favorito' : 'equilibrado'}`;
+        return `<div class="modal-detail-favoritism-meter is-${side}" title="${escapeHtml(title)}"><i style="--favoritismo-width:${width}%"></i></div><div class="modal-detail-favoritism-values"><span>Casa <b>${number(data?.favoritismo_casa)}</b></span><span>Fora <b>${number(data?.favoritismo_visitante)}</b></span></div>`;
+    };
+
     function imageUrl(value) {
         let candidate = String(value || '').trim();
         if (!candidate || candidate.includes('placeholder_')) return '';

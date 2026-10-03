@@ -91,8 +91,8 @@
                     </div>
                 </div>
                 <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3">
-                    <p class="text-[11px] text-slate-400 font-medium">Peso do Jogo</p>
-                    <p id="modalLateralPesoJogo" class="font-bold text-base mt-0.5"></p>
+                    <p class="text-[11px] text-slate-400 font-medium">Favoritismo do confronto</p>
+                    <div id="modalLateralPesoJogo" class="modal-detail-favoritism"></div>
                 </div>
                 <div class="bg-slate-900/60 border border-slate-700/40 rounded-lg p-3">
                     <p class="text-[11px] text-slate-400 font-medium">Índice Saldo de Gol (SG)</p>
@@ -199,14 +199,7 @@ function preencherModalLateral(dados) {
     document.getElementById('modalLateralAdversarioEscudo').src = dados.adversario_escudo_url || 'https://via.placeholder.com/20';
     
     const pesoJogoEl = document.getElementById('modalLateralPesoJogo');
-    pesoJogoEl.textContent = formatNumber(dados.peso_jogo);
-    if (dados.peso_jogo > 0) {
-        pesoJogoEl.className = 'font-bold text-emerald-400 text-base';
-    } else if (dados.peso_jogo < 0) {
-        pesoJogoEl.className = 'font-bold text-rose-400 text-base';
-    } else {
-        pesoJogoEl.className = 'font-bold text-slate-400 text-base';
-    }
+    pesoJogoEl.innerHTML = window.renderModalFavoritism(dados);
 
     document.getElementById('modalLateralDS').textContent = formatNumber(dados.media_ds);
     document.getElementById('modalLateralA').textContent = formatNumber(dados.media_a);
