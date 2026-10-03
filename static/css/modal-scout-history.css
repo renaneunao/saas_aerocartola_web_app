@@ -655,9 +655,29 @@
 .modal-scout-history-ceded-match > summary > span:first-child { grid-area: round; min-width: 0; color: #67e8f9; font: 700 .47rem 'JetBrains Mono', monospace; }
 .modal-scout-history-ceded-fixture { grid-area: fixture; min-width: 0; overflow: hidden; }
 .modal-scout-history-ceded-fixture .modal-scout-history-fixture { min-width: 0; }
-.modal-scout-history-ceded-scouts-inline { grid-area: scouts; min-width: 0; overflow: hidden; }
+.modal-scout-history-ceded-scouts-inline {
+    grid-area: scouts;
+    display: grid;
+    align-content: center;
+    gap: .04rem;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+}
+.modal-scout-history-ceded-scouts-inline::-webkit-scrollbar { display: none; }
 .modal-scout-history-ceded-scouts-inline .modal-scout-history-scouts-positive,
-.modal-scout-history-ceded-scouts-inline .modal-scout-history-scouts-negative { justify-content: flex-start; }
+.modal-scout-history-ceded-scouts-inline .modal-scout-history-scouts-negative {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    gap: .3rem;
+    width: max-content;
+    min-width: 100%;
+    white-space: nowrap;
+}
+.modal-scout-history-ceded-scouts-inline > span > span { flex: 0 0 auto; white-space: nowrap; }
 .modal-scout-history-ceded-match > summary > strong { grid-area: points; justify-self: end; color: #7bd88f; font: 700 .5rem 'JetBrains Mono', monospace; white-space: nowrap; }
 .modal-scout-history-ceded-match > summary > i { grid-area: toggle; justify-self: end; color: #64748b; font-size: .5rem; transition: transform .15s; }
 .modal-scout-history-ceded-match[open] > summary > i { transform: rotate(180deg); }
