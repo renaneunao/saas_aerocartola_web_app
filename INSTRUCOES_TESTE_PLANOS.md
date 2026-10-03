@@ -1,5 +1,8 @@
 # 🚀 Instruções para Testar o Sistema de Planos
 
+> Documento histórico. A matriz atual está em [docs/PLANOS_E_PERMISSOES.md](docs/PLANOS_E_PERMISSOES.md).
+> Os contratos da API são verificados com `python -m unittest discover -s tests -v`.
+
 ## 📋 Passos para Executar
 
 ### 1. Inicializar o Sistema de Planos

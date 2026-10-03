@@ -37,12 +37,12 @@ def plan_required(feature: str, redirect_url: str = None, error_message: str = N
                 
                 # Mensagens padrão por funcionalidade
                 messages = {
-                    'podeEscalar': f'Esta funcionalidade está disponível no plano Avançado ou Pro.',
-                    'editarPesosModulos': f'Edição de pesos está disponível apenas no plano Pro.',
+                    'podeEscalar': 'O envio da escalação está disponível para todos os planos.',
+                    'editarPesosModulos': 'Edição de pesos está disponível no plano Premium ou Pro.',
                     'hackGoleiro': f'Hack do Goleiro está disponível apenas no plano Pro.',
                     'multiEscalacao': f'Multi-escalação está disponível apenas no plano Pro.',
-                    'fecharDefesa': f'Fechar Defesa está disponível no plano Avançado ou Pro.',
-                    'estatisticasAvancadas': f'Estatísticas Avançadas estão disponíveis no plano Avançado ou Pro.',
+                    'fecharDefesa': 'Fechar Defesa está disponível no plano Pro.',
+                    'estatisticasAvancadas': 'As estatísticas estão disponíveis para todos os planos.',
                 }
                 
                 message = error_message or messages.get(feature, f'Esta funcionalidade não está disponível no seu plano atual ({plan_name}).')

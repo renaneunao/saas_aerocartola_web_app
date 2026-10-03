@@ -69,13 +69,13 @@
 
         {% if not permissions.editarPesosModulos %}
         <!-- Overlay de bloqueio para edição de pesos -->
-        <div class="absolute inset-0 bg-dark-blue-900/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-6">
+        <div class="flex flex-wrap items-center justify-center gap-2 p-3 border-b border-dark-blue-700/50">
             <i class="fas fa-lock text-yellow-400 text-4xl mb-4"></i>
             <p class="text-white text-lg font-bold mb-2 text-center">Edição de Pesos Bloqueada</p>
-            <p class="text-indigo-300 text-sm text-center mb-4">Esta funcionalidade está disponível apenas no plano Pro</p>
+            <p class="text-indigo-300 text-sm text-center mb-4">Edição disponível no Premium ou Pro. Consulte os pesos padrão abaixo.</p>
             <a href="{{ url_for('pagamento.index') }}" class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-xl">
                 <i class="fas fa-arrow-up mr-2"></i>
-                Upgrade para Pro
+                Conhecer Premium e Pro
             </a>
         </div>
         {% endif %}

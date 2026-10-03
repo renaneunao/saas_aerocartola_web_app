@@ -14,14 +14,14 @@ from database import get_db_connection, close_db_connection
 PLANS_CONFIG = {
     "free": {
         "name": "Free",
-        "rankingCompleto": False,
+        "rankingCompleto": True,
         "pesosJogo": 2,
         "pesosSG": 2,
         "editarPesosModulos": False,
-        "verEscalacaoIdealCompleta": False,
-        "podeEscalar": False,
+        "verEscalacaoIdealCompleta": True,
+        "podeEscalar": True,
         "timesMaximos": 1,
-        "estatisticasAvancadas": False,
+        "estatisticasAvancadas": True,
         "fecharDefesa": False,
         "hackGoleiro": False,
         "multiEscalacao": False,
@@ -29,7 +29,7 @@ PLANS_CONFIG = {
         "nivelRisco": 1
     },
     "avancado": {
-        "name": "Avançado",
+        "name": "Premium",
         "rankingCompleto": True,
         "pesosJogo": 5,
         "pesosSG": 5,
@@ -274,15 +274,13 @@ def set_user_plan(user_id: int, plano: str, motivo: str = None) -> bool:
             WHERE id = %s
         ''', (plano, user_id))
         
-        # Registrar no histórico (se a tabela existir)
-        try:
+        # Uma tabela opcional ausente não pode abortar a transação do plano.
+        cursor.execute("SELECT to_regclass('public.acw_plan_history')")
+        if cursor.fetchone()[0]:
             cursor.execute('''
                 INSERT INTO acw_plan_history (user_id, plano_anterior, plano_novo, motivo)
                 VALUES (%s, %s, %s, %s)
             ''', (user_id, plano_anterior, plano, motivo or 'Alteração manual'))
-        except psycopg2.Error:
-            # Tabela de histórico pode não existir, não é crítico
-            pass
         
         conn.commit()
         print(f"[OK] Plano do usuario {user_id} alterado de '{plano_anterior}' para '{plano}'")

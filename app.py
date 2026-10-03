@@ -494,6 +494,16 @@ def associar_credenciais():
         password = request.form.get('password', '')
         captcha = request.form.get('h-captcha-response', '').strip()
 
+        from utils.permissions import check_max_times
+        conn = get_db_connection()
+        try:
+            allowed, message = check_max_times(user['id'], len(get_all_user_teams(conn, user['id'])))
+        finally:
+            close_db_connection(conn)
+        if not allowed:
+            flash(message, 'error')
+            return render_template('associar_credenciais.html', current_user=user), 403
+
         if not email or not password or not captcha:
             flash('Informe email, senha e confirme o hCaptcha.', 'error')
             return render_template('associar_credenciais.html', current_user=user)
@@ -1296,8 +1306,12 @@ def salvar_configuracao_perfis():
     """Salva a configuração de perfis escolhidos pelo usuário"""
     user = get_current_user()
     
-    perfil_peso_jogo = int(request.form.get('perfil_peso_jogo'))
-    perfil_peso_sg = int(request.form.get('perfil_peso_sg'))
+    try:
+        perfil_peso_jogo = int(request.form.get('perfil_peso_jogo', ''))
+        perfil_peso_sg = int(request.form.get('perfil_peso_sg', ''))
+    except (TypeError, ValueError):
+        flash('Selecione um perfil de jogo e um perfil de SG.', 'error')
+        return redirect(url_for('pagina_inicial'))
     
     from models.user_configurations import create_user_configuration, create_user_configurations_table
     
@@ -1310,6 +1324,31 @@ def salvar_configuracao_perfis():
     conn = get_db_connection()
     try:
         create_user_configurations_table(conn)
+        if not any(time['id'] == team_id for time in get_all_user_teams(conn, user['id'])):
+            flash('O time selecionado não pertence à sua conta.', 'error')
+            return redirect(url_for('credenciais'))
+
+        from models.plans import get_max_perfis_jogo, get_max_perfis_sg
+        cursor = conn.cursor()
+        cursor.execute(
+            'SELECT rodada_id FROM acf_partidas WHERE temporada = %s '
+            'ORDER BY partida_data DESC NULLS LAST, rodada_id DESC LIMIT 1',
+            (get_temporada_atual(),),
+        )
+        rodada = cursor.fetchone()
+        rodada_atual = rodada[0] if rodada and rodada[0] else 1
+        for tabela, perfil_id, limite in (
+            ('acp_peso_jogo_perfis', perfil_peso_jogo, get_max_perfis_jogo(user['id'])),
+            ('acp_peso_sg_perfis', perfil_peso_sg, get_max_perfis_sg(user['id'])),
+        ):
+            cursor.execute(
+                f'SELECT DISTINCT perfil_id FROM {tabela} WHERE rodada_atual = %s ORDER BY perfil_id',
+                (rodada_atual,),
+            )
+            disponiveis = [row[0] for row in cursor.fetchall()][:limite]
+            if perfil_id not in disponiveis:
+                flash('Um dos perfis escolhidos não está disponível no seu plano ou nesta rodada.', 'error')
+                return redirect(url_for('pagina_inicial'))
         
         create_user_configuration(
             conn, user['id'], team_id, 'Configuração Padrão', 
@@ -1784,7 +1823,8 @@ def modulo_individual(modulo):
             ''', (user['id'], team_id, modulo))
             peso_row = cursor.fetchone()
             
-            if peso_row and peso_row[0]:
+            from models.plans import check_permission
+            if peso_row and peso_row[0] and check_permission(user['id'], 'editarPesosModulos'):
                 # Pesos salvos encontrados para este time
                 pesos_salvos = peso_row[0] if isinstance(peso_row[0], dict) else json.loads(peso_row[0])
                 for key, default in defaults_modulo.items():
@@ -2404,6 +2444,9 @@ def api_salvar_pesos(modulo):
     """API para salvar pesos de um módulo específico por time"""
     from flask import jsonify, request
     user = get_current_user()
+    from models.plans import check_permission
+    if not check_permission(user['id'], 'editarPesosModulos'):
+        return jsonify({'error': 'A edição de pesos requer o plano Premium ou Pro.'}), 403
     
     try:
         pesos = request.get_json()
@@ -3946,7 +3989,8 @@ def api_modulo_dados(modulo):
         ''', (user['id'], team_id, modulo))
         peso_row = cursor.fetchone()
         
-        if peso_row and peso_row[0]:
+        from models.plans import check_permission
+        if peso_row and peso_row[0] and check_permission(user['id'], 'editarPesosModulos'):
             pesos_salvos = peso_row[0] if isinstance(peso_row[0], dict) else json.loads(peso_row[0])
         else:
             # Se não houver pesos salvos, usar defaults
@@ -4401,6 +4445,9 @@ def api_atualizar_tokens(team_id):
 def api_escalacao_config():
     """API para obter ou salvar configurações de escalação ideal"""
     user = get_current_user()
+    from models.plans import get_user_plan_config
+    from utils.plan_policy import effective_lineup_config, validate_lineup_options, normalize_priorities
+    plan_config = get_user_plan_config(user['id'])
     conn = get_db_connection()
     
     try:
@@ -4422,6 +4469,7 @@ def api_escalacao_config():
             
             config = get_user_escalacao_config(conn, user['id'], team_id)
             if config:
+                config = effective_lineup_config(config, plan_config)
                 return jsonify({
                     'formation': config['formation'],
                     'hack_goleiro': config['hack_goleiro'],
@@ -4444,6 +4492,14 @@ def api_escalacao_config():
                 })
         else:  # POST
             data = request.get_json()
+            if not isinstance(data, dict):
+                return jsonify({'error': 'Configuração inválida.'}), 400
+            try:
+                permission_error = validate_lineup_options(data, plan_config)
+            except ValueError as exc:
+                return jsonify({'error': str(exc)}), 400
+            if permission_error:
+                return jsonify({'error': permission_error}), 403
             # Usar time selecionado na sessão
             team_id = session.get('selected_team_id')
             if not team_id:
@@ -4454,7 +4510,7 @@ def api_escalacao_config():
             fechar_defesa = data.get('fechar_defesa', False)
             posicao_capitao = data.get('posicao_capitao', 'atacantes')
             posicao_reserva_luxo = data.get('posicao_reserva_luxo', 'atacantes')
-            prioridades = data.get('prioridades', 'atacantes,laterais,meias,zagueiros,goleiros,tecnicos')
+            prioridades = normalize_priorities(data.get('prioridades') or 'atacantes,laterais,meias,zagueiros,goleiros,treinadores')
             fonte_provaveis = data.get('fonte_provaveis', 'globo')
             if fonte_provaveis not in {'globo', 'provaveisdocartola'}:
                 return jsonify({'error': 'Fonte de prováveis inválida'}), 400
@@ -5215,7 +5271,7 @@ def api_escalar_time():
         )
         
         # Buscar team no banco
-        team = get_team(conn, team_id)
+        team = get_team(conn, team_id, user['id'])
         if not team:
             return jsonify({'error': 'Time não encontrado'}), 404
         

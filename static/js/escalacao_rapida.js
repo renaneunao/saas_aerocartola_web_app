@@ -21,6 +21,7 @@ class EscalacaoRapida {
         this.configurationId = null;
         this.progressCallback = null;
         this.logCallback = null;
+        this.canEditWeights = null;
     }
 
     /**
@@ -84,6 +85,14 @@ class EscalacaoRapida {
      */
     async verificarESalvarPesos(modulo, dados) {
         try {
+            if (this.canEditWeights === null) {
+                const permissionsResponse = await fetch('/api/user/permissions');
+                if (!permissionsResponse.ok) throw new Error('Não foi possível verificar as permissões');
+                const permissionsData = await permissionsResponse.json();
+                this.canEditWeights = permissionsData.permissions?.editarPesosModulos === true;
+            }
+            // O plano gratuito calcula com pesos padrão, sem gravar pesos editáveis.
+            if (!this.canEditWeights) return;
             const checkResponse = await fetch(`/api/modulos/${modulo}/verificar-ranking`);
             const checkData = await checkResponse.json();
             
@@ -284,7 +293,7 @@ class EscalacaoRapida {
         
         if (configResponse && configResponse.ok) {
             const configData = await configResponse.json();
-            if (configData.formacao) config.formacao = configData.formacao;
+            if (configData.formation || configData.formacao) config.formacao = configData.formation || configData.formacao;
             if (configData.posicao_capitao) config.posicao_capitao = configData.posicao_capitao;
             if (configData.posicao_reserva_luxo) config.posicao_reserva_luxo = configData.posicao_reserva_luxo;
             
@@ -365,8 +374,8 @@ class EscalacaoRapida {
             const configResponse = await fetch('/api/escalacao-ideal/config');
             if (configResponse && configResponse.ok) {
                 const configData = await configResponse.json();
-                if (configData.formacao) {
-                    formacao = configData.formacao;
+                if (configData.formation || configData.formacao) {
+                    formacao = configData.formation || configData.formacao;
                 }
             }
         } catch (e) {

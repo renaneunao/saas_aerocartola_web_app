@@ -1,5 +1,7 @@
 # 📘 Resumo da Implementação - Sistema de Planos
 
+> Documento histórico. Consulte [docs/PLANOS_E_PERMISSOES.md](docs/PLANOS_E_PERMISSOES.md) para a definição atual de Free, Premium e Pro.
+
 ## ✅ O que foi implementado
 
 Sistema de planos simplificado, sem dependências do Stripe, focado nos 3 planos: **Free**, **Avançado** e **Pro**.

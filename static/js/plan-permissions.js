@@ -242,13 +242,13 @@ class PlanPermissions {
      */
     getBlockedMessage(feature) {
         const messages = {
-            'podeEscalar': 'Escalar time está disponível no plano Avançado ou Pro.',
-            'editarPesosModulos': 'Edição de pesos está disponível apenas no plano Pro.',
+            'podeEscalar': 'Escalar o próprio time está disponível em todos os planos.',
+            'editarPesosModulos': 'Edição de pesos está disponível no plano Premium ou Pro.',
             'hackGoleiro': 'Hack do Goleiro está disponível apenas no plano Pro.',
             'multiEscalacao': 'Multi-escalação está disponível apenas no plano Pro.',
-            'fecharDefesa': 'Fechar Defesa está disponível no plano Avançado ou Pro.',
-            'estatisticasAvancadas': 'Estatísticas Avançadas estão disponíveis no plano Avançado ou Pro.',
-            'rankingCompleto': 'Ranking completo está disponível no plano Avançado ou Pro.',
+            'fecharDefesa': 'Fechar Defesa está disponível no plano Pro.',
+            'estatisticasAvancadas': 'As estatísticas estão disponíveis em todos os planos.',
+            'rankingCompleto': 'Ranking completo está disponível em todos os planos.',
         };
         
         return messages[feature] || `Esta funcionalidade não está disponível no plano ${this.planName}.`;
@@ -259,16 +259,16 @@ class PlanPermissions {
      */
     getRequiredPlan(feature) {
         const planMap = {
-            'podeEscalar': 'Avançado',
-            'editarPesosModulos': 'Pro',
+            'podeEscalar': 'Gratuito',
+            'editarPesosModulos': 'Premium',
             'hackGoleiro': 'Pro',
             'multiEscalacao': 'Pro',
-            'fecharDefesa': 'Avançado',
-            'estatisticasAvancadas': 'Avançado',
-            'rankingCompleto': 'Avançado',
+            'fecharDefesa': 'Pro',
+            'estatisticasAvancadas': 'Gratuito',
+            'rankingCompleto': 'Gratuito',
         };
         
-        return planMap[feature] || 'Avançado';
+        return planMap[feature] || 'Premium';
     }
 }
 

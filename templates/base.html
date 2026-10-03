@@ -155,7 +155,7 @@
                     <input type="file" id="avatarUpload" accept="image/*" class="hidden" onchange="uploadAvatar(this)">
                     {% if current_user and current_user.plano %}
                     {% set plano = current_user.plano %}
-                    {% set plano_nomes = {'free': 'FREE', 'avancado': 'AVANÇADO', 'pro': 'PRO'} %}
+                    {% set plano_nomes = {'free': 'FREE', 'avancado': 'PREMIUM', 'pro': 'PRO'} %}
                     <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border border-[rgba(0,229,255,0.2)]
                         {% if plano == 'avancado' %}bg-neon-cyan{% elif plano == 'pro' %}bg-neon-purple{% else %}bg-text-muted{% endif %}">
                     </span>

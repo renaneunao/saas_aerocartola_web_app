@@ -9,11 +9,11 @@
         <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full mb-6 shadow-lg">
             <i class="fas fa-crown text-3xl text-white"></i>
         </div>
-        <h1 class="text-5xl font-bold bg-gradient-to-r from-white via-orange-200 to-orange-300 bg-clip-text text-transparent mb-4">
+        <h1 class="text-3xl sm:text-5xl font-bold bg-gradient-to-r from-white via-orange-200 to-orange-300 bg-clip-text text-transparent mb-4">
             Escolha o Plano Ideal
         </h1>
         <p class="text-xl text-dark-blue-300 max-w-2xl mx-auto">
-            Potencialize seu Cartola FC com análises avançadas, escalações automáticas e muito mais
+            Todos os planos têm análises completas. Escolha quanto deseja personalizar e quantos times vai gerenciar.
         </p>
     </div>
 
@@ -46,31 +46,31 @@
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">2 perfis de jogo personalizados</span>
+                        <span class="text-dark-blue-200 text-sm">2 perfis prontos de jogo</span>
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm">2 perfis de SG personalizados</span>
+                        <span class="text-dark-blue-200 text-sm">2 perfis prontos de SG</span>
                     </li>
                     <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Ranking completo (apenas top 2 visíveis)</span>
+                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
+                        <span class="text-dark-blue-200 text-sm">Rankings e análises completos</span>
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
                         <span class="text-dark-blue-400 text-sm line-through">Editar pesos dos módulos</span>
                     </li>
                     <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Escalação Ideal completa</span>
+                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
+                        <span class="text-dark-blue-200 text-sm">Campinho e edição manual</span>
                     </li>
                     <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Escalar times automaticamente</span>
+                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
+                        <span class="text-dark-blue-200 text-sm">Escalação rápida e envio do seu time</span>
                     </li>
                     <li class="flex items-start">
-                        <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-400 text-sm line-through">Estatísticas avançadas</span>
+                        <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
+                        <span class="text-dark-blue-200 text-sm">Estatísticas e scouts completos</span>
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-times-circle text-red-400 mr-3 mt-0.5 flex-shrink-0"></i>
@@ -91,12 +91,12 @@
                 </ul>
                 
                 <button disabled class="w-full bg-gray-600 text-gray-400 px-4 py-3 rounded-lg font-semibold cursor-not-allowed">
-                    Plano Atual
+                    {{ 'Plano Atual' if plan_key == 'free' else 'Experiência gratuita incluída' }}
                 </button>
             </div>
         </div>
 
-        <!-- Plano AVANÇADO -->
+        <!-- Plano Premium (chave interna: avancado) -->
         <div class="bg-gradient-to-br from-dark-blue-800/50 to-dark-blue-900/50 backdrop-blur-sm rounded-2xl border-2 border-orange-500 shadow-2xl overflow-hidden flex flex-col relative transform scale-105">
             <!-- Badge Popular -->
             <div class="absolute top-0 right-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-1 rounded-bl-lg text-xs font-bold shadow-lg">
@@ -105,7 +105,7 @@
             
             <div class="p-6 border-b border-dark-blue-700/50">
                 <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-2xl font-bold text-white">Avançado</h3>
+                    <h3 class="text-2xl font-bold text-white">Premium</h3>
                     <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center shadow-lg">
                         <i class="fas fa-rocket text-white text-xl"></i>
                     </div>
@@ -128,11 +128,11 @@
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-semibold">5 perfis de jogo personalizados</span>
+                        <span class="text-dark-blue-200 text-sm font-semibold">5 perfis prontos de jogo</span>
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-semibold">5 perfis de SG personalizados</span>
+                        <span class="text-dark-blue-200 text-sm font-semibold">5 perfis prontos de SG</span>
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
@@ -172,12 +172,16 @@
                     </li>
                 </ul>
                 
+                {% if plan_key == 'avancado' %}
+                <button disabled class="w-full bg-gray-600 text-gray-400 px-4 py-3 rounded-lg font-semibold">Plano Atual</button>
+                {% else %}
                 <form action="{{ url_for('pagamento.create_checkout_session') }}" method="POST" target="_blank">
                     <input type="hidden" name="lookup_key" value="aero-cartola-avancado" />
                     <button type="submit" class="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold px-4 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
                         <i class="fas fa-arrow-right mr-2"></i>Assinar Agora
                     </button>
                 </form>
+                {% endif %}
             </div>
         </div>
 
@@ -208,11 +212,11 @@
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold">15 perfis de jogo personalizados</span>
+                        <span class="text-dark-blue-200 text-sm font-bold">Até 15 perfis prontos de jogo</span>
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
-                        <span class="text-dark-blue-200 text-sm font-bold">10 perfis de SG personalizados</span>
+                        <span class="text-dark-blue-200 text-sm font-bold">Até 10 perfis prontos de SG</span>
                     </li>
                     <li class="flex items-start">
                         <i class="fas fa-check-circle text-green-400 mr-3 mt-0.5 flex-shrink-0"></i>
@@ -252,12 +256,16 @@
                     </li>
                 </ul>
                 
+                {% if plan_key == 'pro' %}
+                <button disabled class="w-full bg-gray-600 text-gray-400 px-4 py-3 rounded-lg font-semibold">Plano Atual</button>
+                {% else %}
                 <form action="{{ url_for('pagamento.create_checkout_session') }}" method="POST" target="_blank">
                     <input type="hidden" name="lookup_key" value="aero-cartola-pro" />
                     <button type="submit" class="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold px-4 py-3 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg">
                         <i class="fas fa-crown mr-2"></i>Assinar Pro
                     </button>
                 </form>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -277,7 +285,7 @@
                     <tr class="bg-dark-blue-900/50 border-b border-dark-blue-700/50">
                         <th class="px-6 py-4 text-left text-sm font-semibold text-dark-blue-300">Recurso</th>
                         <th class="px-6 py-4 text-center text-sm font-semibold text-dark-blue-300">Free</th>
-                        <th class="px-6 py-4 text-center text-sm font-semibold text-orange-400">Avançado</th>
+                        <th class="px-6 py-4 text-center text-sm font-semibold text-orange-400">Premium</th>
                         <th class="px-6 py-4 text-center text-sm font-semibold text-yellow-400">Pro</th>
                     </tr>
                 </thead>
@@ -289,20 +297,20 @@
                         <td class="px-6 py-4 text-center text-yellow-300 font-bold">Ilimitados</td>
                     </tr>
                     <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Perfis de Jogo Personalizados</td>
+                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Perfis prontos de jogo</td>
                         <td class="px-6 py-4 text-center text-dark-blue-300">2</td>
                         <td class="px-6 py-4 text-center text-orange-300 font-semibold">5</td>
                         <td class="px-6 py-4 text-center text-yellow-300 font-bold">15</td>
                     </tr>
                     <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Perfis de SG Personalizados</td>
+                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Perfis prontos de SG</td>
                         <td class="px-6 py-4 text-center text-dark-blue-300">2</td>
                         <td class="px-6 py-4 text-center text-orange-300 font-semibold">5</td>
                         <td class="px-6 py-4 text-center text-yellow-300 font-bold">10</td>
                     </tr>
                     <tr class="hover:bg-dark-blue-800/30 transition-colors">
                         <td class="px-6 py-4 text-dark-blue-200 font-medium">Ranking Completo</td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
+                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
                         <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
                         <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
                     </tr>
@@ -313,20 +321,20 @@
                         <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
                     </tr>
                     <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Escalação Ideal Completa</td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
+                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Campinho e edição manual</td>
                         <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
-                    </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Escalar Times Automaticamente</td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
                         <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
                         <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
                     </tr>
                     <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Estatísticas Avançadas</td>
-                        <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
+                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Escalação rápida e envio</td>
+                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
+                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
+                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
+                    </tr>
+                    <tr class="hover:bg-dark-blue-800/30 transition-colors">
+                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Estatísticas e scouts</td>
+                        <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
                         <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
                         <td class="px-6 py-4 text-center"><i class="fas fa-check text-green-400"></i></td>
                     </tr>
@@ -366,12 +374,6 @@
                         <td class="px-6 py-4 text-center"><i class="fas fa-times text-red-400"></i></td>
                         <td class="px-6 py-4 text-center"><i class="fas fa-check text-yellow-400"></i></td>
                     </tr>
-                    <tr class="hover:bg-dark-blue-800/30 transition-colors">
-                        <td class="px-6 py-4 text-dark-blue-200 font-medium">Nível de Risco</td>
-                        <td class="px-6 py-4 text-center text-dark-blue-300">1</td>
-                        <td class="px-6 py-4 text-center text-orange-300 font-semibold">3</td>
-                        <td class="px-6 py-4 text-center text-yellow-300 font-bold">10</td>
-                    </tr>
                 </tbody>
             </table>
         </div>
@@ -384,15 +386,15 @@
                 <i class="fas fa-gift text-white text-xl"></i>
             </div>
             <h3 class="text-lg font-bold text-white mb-2">Plano Free</h3>
-            <p class="text-dark-blue-300 text-sm">Perfeito para começar e conhecer todas as funcionalidades básicas do sistema. Ideal para quem tem apenas um time.</p>
+            <p class="text-dark-blue-300 text-sm">Análises completas, campinho e envio da escalação do seu time, sem ajustes finos de estratégia.</p>
         </div>
         
         <div class="bg-gradient-to-br from-orange-900/30 to-orange-800/30 rounded-xl p-6 border border-orange-700/50">
             <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center mb-4">
                 <i class="fas fa-chart-line text-white text-xl"></i>
             </div>
-            <h3 class="text-lg font-bold text-white mb-2">Plano Avançado</h3>
-            <p class="text-dark-blue-300 text-sm">O melhor custo-benefício! Ideal para quem quer escalar 2 times e ter acesso completo a rankings e escalações automáticas.</p>
+            <h3 class="text-lg font-bold text-white mb-2">Plano Premium</h3>
+            <p class="text-dark-blue-300 text-sm">Dois times, mais perfis prontos e edição dos pesos de cálculo.</p>
         </div>
         
         <div class="bg-gradient-to-br from-yellow-900/30 to-yellow-800/30 rounded-xl p-6 border border-yellow-700/50">
