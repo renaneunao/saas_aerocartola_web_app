@@ -102,6 +102,29 @@ DEFAULT_POSITION_WEIGHTS = {
     'treinador': {'FATOR_PESO_JOGO': 3.5},
 }
 
+
+def _get_sg_round_relative_percent(cursor, perfil_id, rodada, clube_id):
+    """Escala o indicador de SG do perfil para 0–100, com o melhor da rodada em 100."""
+    if not perfil_id or not rodada or not clube_id:
+        return 0.0, 0.0
+    temporada = get_temporada_atual()
+    cursor.execute(
+        '''SELECT peso_sg FROM acp_peso_sg_perfis
+           WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s AND temporada = %s''',
+        (perfil_id, rodada, clube_id, temporada),
+    )
+    current_row = cursor.fetchone()
+    cursor.execute(
+        '''SELECT MAX(peso_sg) FROM acp_peso_sg_perfis
+           WHERE perfil_id = %s AND rodada_atual = %s AND temporada = %s''',
+        (perfil_id, rodada, temporada),
+    )
+    maximum_row = cursor.fetchone()
+    value = float(current_row[0]) if current_row and current_row[0] is not None else 0.0
+    maximum = float(maximum_row[0]) if maximum_row and maximum_row[0] is not None else 0.0
+    relative_percent = min(100.0, max(0.0, value / maximum * 100.0)) if maximum > 0 else 0.0
+    return value, relative_percent
+
 # O Nginx deste serviço envia exatamente um conjunto de X-Forwarded-*.
 # Limitar a um salto evita confiar em uma cadeia arbitrariamente longa.
 try:
@@ -2597,6 +2620,7 @@ def api_lateral_detalhes(atleta_id):
         team_id = session.get('selected_team_id')
         peso_jogo = 0
         peso_sg = 0
+        peso_sg_percentual = 0.0
         if team_id and clube_id:
             try:
                 from models.user_configurations import get_user_default_configuration
@@ -2612,13 +2636,9 @@ def api_lateral_detalhes(atleta_id):
                             peso_jogo = float(peso_row[0])
                     
                     if config.get('perfil_peso_sg'):
-                        cursor.execute('''
-                            SELECT peso_sg FROM acp_peso_sg_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_sg'], rodada_atual, clube_id))
-                        sg_row = cursor.fetchone()
-                        if sg_row and len(sg_row) > 0 and sg_row[0] is not None:
-                            peso_sg = float(sg_row[0])
+                        peso_sg, peso_sg_percentual = _get_sg_round_relative_percent(
+                            cursor, config['perfil_peso_sg'], rodada_atual, clube_id
+                        )
             except Exception as e:
                 print(f"Erro ao buscar pesos: {e}")
         
@@ -2714,8 +2734,8 @@ def api_lateral_detalhes(atleta_id):
 
         if media_ds >= 1.8:
             argumentos_favor.append(f"Elevado índice de desarmes por partida ({media_ds:.1f} DS/jogo).")
-        if peso_sg > 0:
-            argumentos_favor.append(f"Índice do perfil de SG favorável ({peso_sg:.2f}); não representa uma probabilidade percentual.")
+        if peso_sg_percentual >= 70:
+            argumentos_favor.append(f"Probabilidade relativa estimada de SG: {peso_sg_percentual:.0f}% (100% representa o melhor índice da rodada).")
         if media_a + media_g >= 0.15:
             argumentos_favor.append(f"Média de {media_a + media_g:.2f} participações em gol (G + A) por jogo.")
         if medias_mando['media_basica'] >= 3.0:
@@ -2723,8 +2743,8 @@ def api_lateral_detalhes(atleta_id):
         if not argumentos_favor:
             argumentos_favor.append("Nenhum dos indicadores estatísticos deste lateral ultrapassou o limite de destaque.")
 
-        if peso_sg <= 0:
-            argumentos_contra.append(f"Índice do perfil de SG desfavorável ({peso_sg:.2f}); não representa uma probabilidade percentual.")
+        if peso_sg_percentual < 35:
+            argumentos_contra.append(f"Probabilidade relativa estimada de SG: {peso_sg_percentual:.0f}% (100% representa o melhor índice da rodada).")
         if media_ds < 1.0:
             argumentos_contra.append(f"Média discreta de desarmes para a posição ({media_ds:.1f} DS/jogo).")
         if peso_jogo < 0:
@@ -2855,6 +2875,7 @@ def api_goleiro_detalhes(atleta_id):
         team_id = session.get('selected_team_id')
         peso_jogo = 0
         peso_sg = 0
+        peso_sg_percentual = 0.0
         if team_id and clube_id:
             try:
                 from models.user_configurations import get_user_default_configuration
@@ -2870,13 +2891,9 @@ def api_goleiro_detalhes(atleta_id):
                             peso_jogo = float(peso_row[0])
                     
                     if config.get('perfil_peso_sg'):
-                        cursor.execute('''
-                            SELECT peso_sg FROM acp_peso_sg_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_sg'], rodada_atual, clube_id))
-                        sg_row = cursor.fetchone()
-                        if sg_row and len(sg_row) > 0 and sg_row[0] is not None:
-                            peso_sg = float(sg_row[0])
+                        peso_sg, peso_sg_percentual = _get_sg_round_relative_percent(
+                            cursor, config['perfil_peso_sg'], rodada_atual, clube_id
+                        )
             except Exception as e:
                 print(f"Erro ao buscar pesos: {e}")
         
@@ -2973,8 +2990,8 @@ def api_goleiro_detalhes(atleta_id):
 
         if media_de >= 2.5:
             argumentos_favor.append(f"Alta média de defesas acumuladas por partida ({media_de:.1f} DE/jogo).")
-        if peso_sg > 0:
-            argumentos_favor.append(f"Índice do perfil de SG favorável ({peso_sg:.2f}); não representa uma probabilidade percentual.")
+        if peso_sg_percentual >= 70:
+            argumentos_favor.append(f"Probabilidade relativa estimada de SG: {peso_sg_percentual:.0f}% (100% representa o melhor índice da rodada).")
         if adv_chutes_gol_media >= 6.0:
             argumentos_favor.append(f"Adversário {adversario_nome} finaliza com frequência a gol ({adv_chutes_gol_media:.1f} chutes no alvo/jogo), gerando alto potencial de DE.")
         if medias_mando['media_basica'] >= 3.0:
@@ -3110,6 +3127,7 @@ def api_zagueiro_detalhes(atleta_id):
         team_id = session.get('selected_team_id')
         peso_jogo = 0
         peso_sg = 0
+        peso_sg_percentual = 0.0
         if team_id and clube_id:
             try:
                 from models.user_configurations import get_user_default_configuration
@@ -3125,13 +3143,9 @@ def api_zagueiro_detalhes(atleta_id):
                             peso_jogo = float(peso_row[0])
                     
                     if config.get('perfil_peso_sg'):
-                        cursor.execute('''
-                            SELECT peso_sg FROM acp_peso_sg_perfis
-                            WHERE perfil_id = %s AND rodada_atual = %s AND clube_id = %s
-                        ''', (config['perfil_peso_sg'], rodada_atual, clube_id))
-                        sg_row = cursor.fetchone()
-                        if sg_row and len(sg_row) > 0 and sg_row[0] is not None:
-                            peso_sg = float(sg_row[0])
+                        peso_sg, peso_sg_percentual = _get_sg_round_relative_percent(
+                            cursor, config['perfil_peso_sg'], rodada_atual, clube_id
+                        )
             except Exception as e:
                 print(f"Erro ao buscar pesos: {e}")
         
@@ -3201,8 +3215,8 @@ def api_zagueiro_detalhes(atleta_id):
         argumentos_favor = []
         argumentos_contra = []
 
-        if peso_sg > 0:
-            argumentos_favor.append(f"Índice do perfil de SG favorável ({peso_sg:.2f}); não representa uma probabilidade percentual.")
+        if peso_sg_percentual >= 70:
+            argumentos_favor.append(f"Probabilidade relativa estimada de SG: {peso_sg_percentual:.0f}% (100% representa o melhor índice da rodada).")
         if media_ds >= 1.5:
             argumentos_favor.append(f"Solidez em desarmes e combates individuais ({media_ds:.1f} DS/jogo).")
         if media_g > 0.05:
@@ -3212,8 +3226,8 @@ def api_zagueiro_detalhes(atleta_id):
         if not argumentos_favor:
             argumentos_favor.append("Nenhum dos indicadores estatísticos deste zagueiro ultrapassou o limite de destaque.")
 
-        if peso_sg <= 0:
-            argumentos_contra.append(f"Índice do perfil de SG desfavorável ({peso_sg:.2f}); não é uma estimativa direta da chance de SG.")
+        if peso_sg_percentual < 35:
+            argumentos_contra.append(f"Probabilidade relativa estimada de SG: {peso_sg_percentual:.0f}% (100% representa o melhor índice da rodada).")
         if media_fc >= 1.8:
             argumentos_contra.append(f"Índice elevado de faltas cometidas ({media_fc:.1f} FC/jogo), aumentando o risco de cartões (CA/CV).")
         if media_ds < 0.8:

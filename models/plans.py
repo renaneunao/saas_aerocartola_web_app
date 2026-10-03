@@ -52,7 +52,7 @@ PLANS_CONFIG = {
         "editarPesosModulos": True,
         "verEscalacaoIdealCompleta": True,
         "podeEscalar": True,
-        "timesMaximos": "infinite",
+        "timesMaximos": 10,
         "estatisticasAvancadas": True,
         "fecharDefesa": True,
         "hackGoleiro": True,

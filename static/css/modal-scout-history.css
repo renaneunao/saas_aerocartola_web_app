@@ -290,6 +290,9 @@
 }
 
 .modal-scout-history-ceded {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     margin-top: .8rem;
     padding-top: .75rem;
     border-top: 1px solid rgba(148, 163, 184, .12);
@@ -322,6 +325,9 @@
 
 .modal-scout-history-ceded-column {
     min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
     padding: .55rem .6rem;
     border: 1px solid rgba(148, 163, 184, .12);
     border-radius: .55rem;
@@ -373,6 +379,9 @@
     margin-bottom: .35rem;
 }
 .modal-scout-history-ceded-metrics span {
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
     display: grid;
     gap: .12rem;
     padding: .3rem .35rem;
@@ -385,8 +394,13 @@
     font-size: .45rem;
 }
 .modal-scout-history-ceded-metrics b {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
     color: #e2e8f0;
     font: 800 .62rem/1 'JetBrains Mono', monospace;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .modal-scout-history-ceded-thresholds {
     display: flex;
@@ -446,6 +460,7 @@
 .modal-scout-history-ceded-row.is-positive { color: #7bd88f; }
 .modal-scout-history-ceded-row.is-negative { color: #e78b99; }
 .modal-scout-history-ceded-row strong { font: 800 .6rem/1 'JetBrains Mono', monospace; }
+.modal-scout-history-ceded-row strong { flex: 0 0 auto; white-space: nowrap; }
 
 @media (max-width: 640px) {
     .modal-scout-history {

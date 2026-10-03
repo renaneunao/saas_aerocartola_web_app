@@ -38,6 +38,18 @@ class PlanApiTests(unittest.TestCase):
             session['user_id'] = self.user['id']
             session['selected_team_id'] = 501
 
+    def test_pro_plan_is_capped_at_ten_teams(self):
+        self.assertEqual(PLANS_CONFIG['pro']['timesMaximos'], 10)
+
+    def test_sg_argument_scales_best_round_indicator_to_one_hundred_percent(self):
+        cursor = MagicMock()
+        cursor.fetchone.side_effect = [(0.8,), (1.0,)]
+        with patch.object(web, 'get_temporada_atual', return_value=2026):
+            value, relative_percent = web._get_sg_round_relative_percent(cursor, 4, 29, 10)
+        self.assertEqual(value, 0.8)
+        self.assertEqual(relative_percent, 80.0)
+        self.assertEqual(cursor.execute.call_count, 2)
+
     def test_information_and_single_team_send_available_to_every_tier(self):
         for plan in PLANS_CONFIG:
             with self.subTest(plan=plan):
@@ -137,7 +149,7 @@ class PlanApiTests(unittest.TestCase):
             save.assert_not_called()
 
     def test_team_limit_checked_before_gateway_call(self):
-        for plan, count, expected in (('free', 1, 403), ('avancado', 2, 403), ('pro', 200, 200)):
+        for plan, count, expected in (('free', 1, 403), ('avancado', 2, 403), ('pro', 10, 403)):
             with self.subTest(plan=plan), patch.object(web, 'get_all_user_teams', return_value=[{}] * count), \
                  patch.object(web, 'render_template', return_value='fixture'), patch('requests.post') as gateway:
                 self.plan = plan

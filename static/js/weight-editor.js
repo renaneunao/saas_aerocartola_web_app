@@ -14,7 +14,7 @@
 
     const tools = document.createElement('div');
     tools.className = 'weight-editor-tools';
-    tools.innerHTML = '<div><strong>Ajuste a influência de cada indicador</strong><small>Arraste o controle. Salve e recalcule para aplicar.</small></div><button type="button" class="weight-editor-reset"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>Restaurar padrão</span></button>';
+    tools.innerHTML = '<div class="weight-editor-tools-copy"><strong>Ajuste a influência de cada indicador</strong><small>Arraste o controle. Salve e recalcule para aplicar.</small></div><div class="weight-editor-actions"><button type="button" class="weight-editor-reset"><i class="fas fa-wand-magic-sparkles" aria-hidden="true"></i><span>Restaurar padrão</span></button><div class="weight-reset-confirm" role="group" aria-label="Confirmar restauração dos pesos" hidden><span>Restaurar os pesos padrão do Aero-RBSV?</span><button type="button" class="weight-reset-cancel">Cancelar</button><button type="button" class="weight-reset-apply">Restaurar</button></div></div>';
     form.prepend(tools);
 
     editable.forEach((numberInput) => {
@@ -54,25 +54,25 @@
       syncFromNumber();
     });
 
-    tools.querySelector('.weight-editor-reset')?.addEventListener('click', async () => {
-      const applyDefaults = () => {
-        editable.forEach((input) => {
-          if (!Object.prototype.hasOwnProperty.call(defaults, input.name)) return;
-          input.value = String(defaults[input.name]);
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-        });
-      };
-      if (window.Swal?.fire) {
-        const result = await Swal.fire({
-          title: 'Restaurar padrão ideal?',
-          text: 'Os fatores deste módulo voltarão aos valores padrão sugeridos. Salve e recalcule para aplicar.',
-          icon: 'question', showCancelButton: true,
-          confirmButtonText: 'Restaurar valores', cancelButtonText: 'Cancelar',
-          confirmButtonColor: '#27c6d9', background: '#0b1524', color: '#e8f3ff'
-        });
-        if (result.isConfirmed) applyDefaults();
-      } else if (window.confirm('Restaurar os fatores padrão sugeridos para esta posição?')) applyDefaults();
+    const resetButton = tools.querySelector('.weight-editor-reset');
+    const confirmPanel = tools.querySelector('.weight-reset-confirm');
+    resetButton?.addEventListener('click', () => {
+      resetButton.hidden = true;
+      confirmPanel.hidden = false;
+    });
+    tools.querySelector('.weight-reset-cancel')?.addEventListener('click', () => {
+      confirmPanel.hidden = true;
+      resetButton.hidden = false;
+    });
+    tools.querySelector('.weight-reset-apply')?.addEventListener('click', () => {
+      editable.forEach((input) => {
+        if (!Object.prototype.hasOwnProperty.call(defaults, input.name)) return;
+        input.value = String(defaults[input.name]);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+      confirmPanel.hidden = true;
+      resetButton.hidden = false;
     });
   }
 
