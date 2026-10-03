@@ -2,7 +2,7 @@
 {% block title %}Escalação Ideal - Cartola Aero{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/escalacao-ideal.css', v='36') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/escalacao-ideal.css', v='37') }}">
 
 <div id="escalacaoIdealPage"
      class="ideal-page"
@@ -110,8 +110,9 @@
           <div><h2 class="ideal-panel-title"><i class="fas fa-user-check"></i> Disponibilidade</h2><p class="ideal-panel-subtitle">Ajuste um atleta e recalcule sem sair da escalação.</p></div>
         </div>
         <label class="ideal-label" for="availabilityAthleteInput">Jogador da rodada</label>
-        <input id="availabilityAthleteInput" class="ideal-input" list="availabilityAthletes" placeholder="Digite o nome do jogador" autocomplete="off">
-        <datalist id="availabilityAthletes"></datalist>
+        <input id="availabilityAthleteInput" class="ideal-input" placeholder="Digite o nome do jogador" autocomplete="off" aria-controls="availabilityChoices">
+        <div id="availabilitySelected" class="ideal-availability-selected" hidden></div>
+        <div id="availabilityChoices" class="ideal-availability-choices" hidden></div>
         <div class="ideal-availability-actions">
           <button id="markUnavailableBtn" class="ideal-btn ideal-btn-danger" type="button"><i class="fas fa-ban"></i> Não joga</button>
           <button id="markAvailableBtn" class="ideal-btn ideal-btn-secondary" type="button"><i class="fas fa-check"></i> Joga</button>
@@ -149,7 +150,6 @@
         {% endif %}
         <div class="ideal-result-head">
           <div><div class="ideal-result-title"><i class="fas fa-futbol"></i> Time recomendado</div><div class="ideal-result-meta">Revise o campo, o saldo e os sinais antes de enviar.</div></div>
-          <button id="manualEditBtn" class="ideal-btn ideal-btn-quiet" type="button"><i class="fas fa-pen"></i> Editar manualmente</button>
         </div>
         <div id="escalacaoContent" class="ideal-result-body"></div>
       </section>
@@ -175,7 +175,7 @@
       </header>
       <div class="ideal-picker-filters">
         <label><span>Nome</span><input id="pickerName" class="ideal-input" type="search" placeholder="Buscar"></label>
-        <label><span>Time</span><select id="pickerClub" class="ideal-select aero-select"><option value="">Todos</option></select></label>
+        <label class="ideal-picker-club-filter"><span>Time</span><select id="pickerClub" class="ideal-select aero-select"><option value="">Todos</option></select><span id="pickerClubFixture" class="ideal-picker-club-fixture"><span class="ideal-picker-club-empty">Escolha um time para ver o confronto</span></span></label>
         <label><span>Ordenar por</span><select id="pickerSort" class="ideal-select aero-select"><option value="expected">Previsão de pontos</option><option value="average">Média</option><option value="price_asc">Preço: menor primeiro</option><option value="price_desc">Preço: maior primeiro</option><option value="scout">Scout selecionado</option><option value="name">Nome</option></select></label>
         <label><span>Scout para ordenar</span><select id="pickerScout" class="ideal-select aero-select"><option value="">Escolha o scout</option></select></label>
         <div class="ideal-picker-status-filter" aria-label="Filtrar disponibilidade">
@@ -208,5 +208,5 @@
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js', v='2') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
 <script src="{{ url_for('static', filename='js/modulos-calculo-todos.js', v='1') }}"></script>
-<script src="{{ url_for('static', filename='js/escalacao-ideal-page.js', v='24') }}"></script>
+<script src="{{ url_for('static', filename='js/escalacao-ideal-page.js', v='25') }}"></script>
 {% endblock %}

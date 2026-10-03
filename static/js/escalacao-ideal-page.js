@@ -32,9 +32,9 @@
   const state = {
     data: null,
     clubes: {},
-    editing: true,
     draggedItem: null,
     availability: [],
+    selectedAvailabilityId: '',
     picker: null,
     teamChanged: false,
     availabilityBusy: false,
@@ -114,6 +114,20 @@
     const homeMarkup = fixtureTeamMarkup(home, !ownIsAway, 'home');
     const awayMarkup = fixtureTeamMarkup(away, ownIsAway, 'away');
     return `<span class="ideal-player-fixture-badge" title="${escapeHtml(side === 'fora' ? 'Joga fora' : 'Joga em casa')} contra ${escapeHtml(opponent.nome || opponent.abreviacao || 'adversário')}">${homeMarkup}${awayMarkup}</span>`;
+  }
+
+  function pickerClubMatchMarkup(player) {
+    if (!player || !opponentFor(player)) return '<span class="ideal-picker-club-empty">Confronto indisponível</span>';
+    const own = clubFor(player);
+    const opponent = opponentFor(player);
+    const ownId = String(player.clube_id || '');
+    const side = state.data?.mando_por_clube?.[ownId] || state.data?.mando_por_clube?.[Number(ownId)] || '';
+    const ownIsAway = side === 'fora';
+    const home = ownIsAway ? opponent : own;
+    const away = ownIsAway ? own : opponent;
+    const homeName = home.abreviacao || home.nome || 'CASA';
+    const awayName = away.abreviacao || away.nome || 'FORA';
+    return `<span class="ideal-picker-club-match" title="${escapeHtml(homeName)} em casa contra ${escapeHtml(awayName)} fora"><span class="ideal-picker-club-side"><small>CASA</small>${fixtureTeamMarkup(home, !ownIsAway, 'home')}<b>${escapeHtml(homeName)}</b></span><i>×</i><span class="ideal-picker-club-side"><small>FORA</small>${fixtureTeamMarkup(away, ownIsAway, 'away')}<b>${escapeHtml(awayName)}</b></span></span>`;
   }
 
   function progressBar(label, percent, kind, title) {
@@ -208,7 +222,7 @@
     const luxuryIcon = `<img class="ideal-cartola-role-icon" src="${CARTOLA_LUXURY_ICON}" alt="Ícone reserva de luxo">`;
     const actions = [];
     if (kind === 'starter' && position !== 'treinadores') {
-      actions.push(`<button type="button" class="ideal-card-action ideal-card-action-captain" data-special-role="captain" data-athlete-id="${playerId}" title="Definir ${name} como capitão"><span class="ideal-card-action-icon">${captainIcon}</span><span>Capitão</span><small>assume a pontuação em dobro</small></button>`);
+      actions.push(`<button type="button" class="ideal-card-action ideal-card-action-captain" data-special-role="captain" data-athlete-id="${playerId}" title="Definir ${name} como capitão"><span class="ideal-card-action-icon">${captainIcon}</span><span>Capitão</span></button>`);
     }
     if (kind === 'reserve' && !player?.eh_reserva_luxo) {
       actions.push(`<button type="button" class="ideal-card-action ideal-card-action-luxury" data-special-role="luxury" data-athlete-id="${playerId}" title="Definir ${name} como reserva de luxo"><span class="ideal-card-action-icon">${luxuryIcon}</span><span>Reserva de luxo</span><small>entra como melhor reserva</small></button>`);
@@ -555,15 +569,9 @@
     const luxury = manualLuxury || result.reservas[luxuryPosition]?.[0];
     if (luxury && luxuryPosition !== 'treinadores') luxury.eh_reserva_luxo = true;
     result.custoTotal = POSITION_ORDER.flatMap(position => result.titulares[position] || []).reduce((total, player) => total + price(player), 0);
-    // No Cartola, o capitão pontua em dobro. A base é recalculada para que a
-    // troca manual do capitão atualize imediatamente a projeção exibida.
+    // A projeção do capitão usa o fator oficial de 1,5.
     const pontuacaoBase = POSITION_ORDER.flatMap(position => result.titulares[position] || []).reduce((total, player) => total + points(player), 0);
-    result.pontuacaoTotal = pontuacaoBase + (captain ? points(captain) : 0);
-  }
-
-  function renderManualEditor(result) {
-    const editor = $('manualEditor');
-    if (editor) editor.innerHTML = `<p><i class="fas fa-circle-info"></i> Clique em qualquer atleta ou vaga no campo e nos reservas para trocar. O saldo, capitão e reserva de luxo são recalculados a cada alteração.</p>`;
+    result.pontuacaoTotal = pontuacaoBase + (captain ? points(captain) * 0.5 : 0);
   }
 
   function setSpecialRole(role, target) {
@@ -657,9 +665,7 @@
     recomputeResult();
     const patrimonio = safeNumber(result.patrimonio || state.data?.patrimonio);
     const balance = patrimonio - safeNumber(result.custoTotal);
-    const captain = POSITION_ORDER.flatMap(position => result.titulares?.[position] || []).find(player => player.eh_capitao);
-    content.innerHTML = `<div class="ideal-metrics"><div class="ideal-metric cost"><span>Preço do time</span><strong>${money(result.custoTotal)}</strong><em>titulares e treinador</em></div><div class="ideal-metric balance"><span>Saldo disponível</span><strong>${money(balance)}</strong><em>do patrimônio ${money(patrimonio)}</em></div><div class="ideal-metric points" title="Soma das notas dos titulares e treinador calculadas com seus pesos; a nota do capitão conta em dobro. É um índice estimado, não uma pontuação garantida no Cartola."><span>Pontuação projetada</span><strong>${safeNumber(result.pontuacaoTotal).toFixed(2)} pts</strong><em>${captain ? `${escapeHtml(captain.apelido)} em dobro` : 'sem capitão definido'}</em></div></div><div class="ideal-field-layout">${renderField(result)}${renderBench(result)}</div><div id="manualEditor" class="ideal-manual-editor ${state.editing ? 'is-open' : ''}"></div>`;
-    renderManualEditor(result);
+    content.innerHTML = `<div class="ideal-metrics"><section class="ideal-financial-card" aria-label="Resumo financeiro da escalação"><div class="ideal-financial-item patrimonio"><span>Patrimônio</span><strong>${money(patrimonio)}</strong></div><i aria-hidden="true">|</i><div class="ideal-financial-item cost"><span>Preço do time</span><strong>${money(result.custoTotal)}</strong></div><i aria-hidden="true">|</i><div class="ideal-financial-item balance"><span>Saldo restante</span><strong>${money(balance)}</strong></div></section><section class="ideal-metric points" title="Estimativa com base nas projeções dos titulares e do treinador"><span>Pontuação projetada</span><strong>${safeNumber(result.pontuacaoTotal).toFixed(2)} pts</strong><em>Estimativa da escalação</em></section></div><div class="ideal-field-layout">${renderField(result)}${renderBench(result)}</div>`;
     panel.classList.remove('hidden');
     refreshSubmitButton();
   }
@@ -732,14 +738,6 @@
     }
   }
 
-  function toggleManualEdit() {
-    if (!window.ultimaEscalacao) return notify('Calcule uma escalação antes de editar.', 'warning');
-    state.editing = !state.editing;
-    const button = $('manualEditBtn');
-    if (button) button.innerHTML = state.editing ? '<i class="fas fa-check"></i> Concluir edição' : '<i class="fas fa-pen"></i> Editar manualmente';
-    exibirResultado(window.ultimaEscalacao, state.clubes);
-  }
-
   function manualSelecionarJogador(position, index, athleteId) {
     if (!window.ultimaEscalacao) return;
     const current = window.ultimaEscalacao.titulares?.[position]?.[index];
@@ -755,7 +753,6 @@
     state.teamChanged = true;
     recomputeResult();
     exibirResultado(window.ultimaEscalacao, state.clubes);
-    if (state.editing) $('manualEditor')?.classList.add('is-open');
     adicionarLog(`↻ ${POSITIONS[position].short}: ${replacement.apelido} selecionado manualmente.`, 'info');
   }
 
@@ -772,7 +769,8 @@
   }
 
   function statusLabel(player) {
-    if (player?.availability_rule === 'cravado') return 'Cravado';
+    if (player?.availability_rule === 'cravado' || player?.rule === 'cravado') return 'Cravado';
+    if (player?.status_nome) return player.status_nome;
     return ({ 2: 'Dúvida', 3: 'Improvável', 5: 'Suspenso', 6: 'Nulo', 7: 'Provável' })[Number(player?.status_id)] || 'Status indisponível';
   }
 
@@ -786,6 +784,7 @@
     if (club) {
       const clubs = new Map(pool.map(player => [String(player.clube_id || ''), clubFor(player).nome || player.clube_nome || `Clube #${player.clube_id}`]).filter(([id]) => id));
       club.innerHTML = '<option value="">Todos os times</option>' + [...clubs.entries()].sort((a, b) => a[1].localeCompare(b[1])).map(([id, name]) => `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`).join('');
+      renderPickerClubMatch(pool);
     }
     if (scout) {
       const keys = new Set();
@@ -793,6 +792,14 @@
       ['ds', 'fs', 'ff', 'fd', 'g', 'a', 'sg', 'de'].forEach(key => keys.add(key));
       scout.innerHTML = '<option value="">Escolha o scout</option>' + [...keys].sort().map(key => `<option value="${escapeHtml(key)}">${escapeHtml(key.toUpperCase())}</option>`).join('');
     }
+  }
+
+  function renderPickerClubMatch(pool = pickerPool()) {
+    const target = $('pickerClubFixture');
+    if (!target) return;
+    const selectedClub = $('pickerClub')?.value || '';
+    const representative = selectedClub ? pool.find(player => String(player.clube_id) === selectedClub) : null;
+    target.innerHTML = representative ? pickerClubMatchMarkup(representative) : '<span class="ideal-picker-club-empty">Escolha um time para ver o confronto</span>';
   }
 
   function renderPickerResults() {
@@ -845,7 +852,7 @@
       const playerPoints = `${points(player).toFixed(2)} pts`;
       const clubName = escapeHtml(clubFor(player).nome || player.clube_nome || 'Clube');
       const scoutMarkup = scout ? `<span class="ideal-picker-metric ideal-picker-scout" title="${escapeHtml(scout.toUpperCase())}: ${scoutValue(player, scout).toFixed(2)}"><small>${escapeHtml(scout.toUpperCase())}</small><strong>${scoutValue(player, scout).toFixed(2)}</strong></span>` : '';
-      return `<button type="button" class="ideal-picker-player" data-picker-athlete="${escapeHtml(idOf(player))}" title="Selecionar ${playerName}"><span class="ideal-picker-player-visual">${avatar(player, 'ideal-picker-avatar')}${teamIndicators(player, state.picker.position)}</span><span class="ideal-picker-player-copy"><strong title="Jogador: ${playerName}">${playerName}</strong><small>${clubName} · ${escapeHtml(statusLabel(player))}</small></span><span class="ideal-picker-metrics"><span class="ideal-picker-metric" title="Preço do jogador: ${playerPrice}"><small>Preço</small><strong>${playerPrice}</strong></span><span class="ideal-picker-metric" title="Pontuação prevista: ${playerPoints}"><small>Prevista</small><strong>${playerPoints}</strong></span>${scoutMarkup}</span></button>`;
+      return `<button type="button" class="ideal-picker-player" data-picker-athlete="${escapeHtml(idOf(player))}" title="Selecionar ${playerName}"><span class="ideal-picker-player-visual">${avatar(player, 'ideal-picker-avatar')}${fixtureIndicators(player)}</span><span class="ideal-picker-player-copy"><strong title="Jogador: ${playerName}">${playerName}</strong><small>${clubName} · ${escapeHtml(statusLabel(player))}</small></span><span class="ideal-picker-metrics"><span class="ideal-picker-metric" title="Preço do jogador: ${playerPrice}"><small>Preço</small><strong>${playerPrice}</strong></span><span class="ideal-picker-metric" title="Pontuação prevista: ${playerPoints}"><small>Prevista</small><strong>${playerPoints}</strong></span>${scoutMarkup}</span></button>`;
     }).join('') : '<div class="ideal-picker-empty">Nenhum atleta atende aos filtros e às regras desta vaga.</div>';
     target.querySelectorAll('[data-picker-athlete]').forEach(button => button.addEventListener('click', () => applyPicker(button.dataset.pickerAthlete)));
   }
@@ -970,15 +977,41 @@
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Disponibilidade indisponível.');
       state.availability = data.items || [];
-      const list = $('availabilityAthletes');
-      if (list) list.innerHTML = state.availability.map(item => `<option value="${escapeHtml(item.apelido)}">${escapeHtml(item.clube_nome || '')} · ${escapeHtml(item.status_nome || '')}</option>`).join('');
+      renderAvailabilityChoices();
     } catch (error) {
       const hint = $('availabilityHint');
       if (hint) hint.textContent = error.message;
     }
   }
 
+  function renderAvailabilityChoices() {
+    const target = $('availabilityChoices');
+    const selected = $('availabilitySelected');
+    if (!target) return;
+    const normalize = (candidate) => String(candidate || '').trim().toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const query = normalize($('availabilityAthleteInput')?.value || '');
+    const matches = state.availability.filter(item => !query || normalize(`${item.apelido || ''} ${item.nome || ''} ${item.clube_nome || ''}`).includes(query)).slice(0, 8);
+    target.innerHTML = matches.length ? matches.map(item => {
+      const id = String(item.atleta_id ?? item.id ?? '');
+      const name = escapeHtml(item.apelido || item.nome || 'Jogador');
+      const clubName = escapeHtml(clubFor(item).nome || item.clube_nome || 'Time');
+      const fixture = fixtureIndicators(item);
+      const isSelected = id && id === String(state.selectedAvailabilityId);
+      return `<button type="button" class="ideal-availability-choice${isSelected ? ' is-selected' : ''}" data-availability-choice="${escapeHtml(id)}"><span class="ideal-availability-choice-avatar">${avatar(item)}</span><span class="ideal-availability-choice-copy"><strong>${name}</strong><small>${clubName} · ${escapeHtml(statusLabel(item))}</small></span><span class="ideal-availability-choice-fixture">${fixture || '<span class="ideal-picker-club-empty">Sem confronto</span>'}</span></button>`;
+    }).join('') : '<div class="ideal-picker-club-empty">Nenhum jogador encontrado</div>';
+    const athlete = state.availability.find(item => String(item.atleta_id ?? item.id) === String(state.selectedAvailabilityId));
+    if (selected) {
+      selected.innerHTML = athlete ? `<span class="ideal-availability-selected-avatar">${avatar(athlete)}</span><span class="ideal-availability-selected-copy"><strong>${escapeHtml(athlete.apelido || athlete.nome || 'Jogador')}</strong><small>${escapeHtml(clubFor(athlete).nome || athlete.clube_nome || 'Time')} · ${escapeHtml(statusLabel(athlete))}</small></span><span class="ideal-availability-choice-fixture">${fixtureIndicators(athlete) || ''}</span>` : '';
+      selected.hidden = !athlete;
+    }
+    target.hidden = Boolean(athlete) || !query;
+  }
+
   function selectedAvailabilityAthlete() {
+    if (state.selectedAvailabilityId) {
+      const selected = state.availability.find(item => String(item.atleta_id ?? item.id) === String(state.selectedAvailabilityId));
+      if (selected) return selected;
+    }
     const value = ($('availabilityAthleteInput')?.value || '').trim().toLocaleLowerCase();
     if (!value) return null;
     const normalize = (candidate) => String(candidate || '').trim().toLocaleLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -1110,7 +1143,16 @@
     };
     ['formationSelect', 'hackGoleiroToggle', 'fecharDefesaToggle', 'posicaoCapitao', 'posicaoReservaLuxo'].forEach(id => $(id)?.addEventListener('change', () => aoMudarConfiguracao()));
     $('fonteProvaveisSelect')?.addEventListener('change', aoMudarFonteProvaveis);
-    $('manualEditBtn')?.addEventListener('click', toggleManualEdit);
+    $('availabilityAthleteInput')?.addEventListener('input', () => { state.selectedAvailabilityId = ''; renderAvailabilityChoices(); });
+    $('availabilityAthleteInput')?.addEventListener('focus', renderAvailabilityChoices);
+    $('availabilityChoices')?.addEventListener('click', event => {
+      const choice = event.target.closest('[data-availability-choice]');
+      if (!choice) return;
+      state.selectedAvailabilityId = choice.dataset.availabilityChoice;
+      const athlete = state.availability.find(item => String(item.atleta_id ?? item.id) === state.selectedAvailabilityId);
+      if ($('availabilityAthleteInput')) $('availabilityAthleteInput').value = athlete?.apelido || athlete?.nome || '';
+      renderAvailabilityChoices();
+    });
     document.addEventListener('click', (event) => {
       const touchReplace = event.target.closest('[data-touch-replace]');
       if (touchReplace) {
@@ -1179,7 +1221,7 @@
     document.querySelectorAll('[data-picker-close]').forEach(element => element.addEventListener('click', closePicker));
     $('removePlayerBtn')?.addEventListener('click', removePickerPlayer);
     ['pickerName', 'pickerClub', 'pickerSort', 'pickerScout'].forEach(id => $(id)?.addEventListener('input', renderPickerResults));
-    ['pickerClub', 'pickerSort', 'pickerScout'].forEach(id => $(id)?.addEventListener('change', renderPickerResults));
+    ['pickerClub', 'pickerSort', 'pickerScout'].forEach(id => $(id)?.addEventListener('change', () => { renderPickerResults(); renderPickerClubMatch(); }));
     document.querySelectorAll('[data-picker-status]').forEach(button => button.addEventListener('click', () => setPickerStatus(button.dataset.pickerStatus)));
     $('markUnavailableBtn')?.addEventListener('click', () => applyAvailability('poupar'));
     $('markAvailableBtn')?.addEventListener('click', () => applyAvailability('cravado'));
@@ -1225,7 +1267,6 @@
   window.limparConsole = limparConsole;
   window.adicionarLog = adicionarLog;
   window.exibirResultado = exibirResultado;
-  window.toggleManualEdit = toggleManualEdit;
   window.manualSelecionarJogador = manualSelecionarJogador;
   window.aoMudarConfiguracao = aoMudarConfiguracao;
   window.renderizarPrioridades = renderizarPrioridades;

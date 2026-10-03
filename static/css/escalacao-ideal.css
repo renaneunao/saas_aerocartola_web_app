@@ -2907,3 +2907,192 @@ select.aero-select.ideal-strategy-select:focus-visible {
     font-size: clamp(4.6px, 1.3vw, 5.2px) !important;
   }
 }
+
+/* Resumo financeiro compacto, translúcido e alinhado ao tema Aero. */
+#escalacaoIdealPage .ideal-metrics {
+  grid-template-columns: minmax(0, 1.65fr) minmax(190px, .75fr);
+  align-items: stretch;
+  gap: 10px;
+}
+#escalacaoIdealPage .ideal-financial-card,
+#escalacaoIdealPage .ideal-metric.points {
+  min-width: 0;
+  min-height: 76px;
+  border: 1px solid rgba(87, 192, 225, .2);
+  border-radius: 15px;
+  background: linear-gradient(120deg, rgba(13, 35, 54, .88), rgba(7, 19, 34, .82));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 10px 26px rgba(0,0,0,.15);
+  backdrop-filter: blur(12px);
+}
+#escalacaoIdealPage .ideal-financial-card {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);
+  align-items: center;
+  gap: clamp(8px, 1.7vw, 22px);
+  padding: 12px clamp(12px, 2vw, 22px);
+}
+#escalacaoIdealPage .ideal-financial-card > i {
+  color: rgba(147, 183, 204, .42);
+  font-size: 17px;
+  font-style: normal;
+}
+#escalacaoIdealPage .ideal-financial-item { min-width: 0; }
+#escalacaoIdealPage .ideal-financial-item span,
+#escalacaoIdealPage .ideal-metric.points > span {
+  display: block;
+  color: #8da9bd;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+#escalacaoIdealPage .ideal-financial-item strong {
+  display: block;
+  margin-top: 5px;
+  overflow: hidden;
+  color: #eaf8ff;
+  font-size: clamp(13px, 1.3vw, 18px);
+  font-weight: 850;
+  letter-spacing: -.025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#escalacaoIdealPage .ideal-financial-item.patrimonio strong { color: #8feaff; }
+#escalacaoIdealPage .ideal-financial-item.cost strong { color: #ffd477; }
+#escalacaoIdealPage .ideal-financial-item.balance strong { color: #68efb0; }
+#escalacaoIdealPage .ideal-metric.points {
+  display: grid;
+  align-content: center;
+  padding: 12px 16px;
+  border-color: rgba(82, 230, 255, .27);
+  background: linear-gradient(130deg, rgba(8, 50, 63, .83), rgba(7, 21, 36, .88));
+}
+#escalacaoIdealPage .ideal-metric.points strong {
+  margin-top: 5px;
+  color: #57e8ff;
+  font-size: clamp(20px, 2vw, 27px);
+  line-height: 1.05;
+}
+#escalacaoIdealPage .ideal-metric.points em { margin-top: 4px; color: #7f9bad; font-size: 9px; font-style: normal; }
+
+/* O indicador de provável permanece dentro do card, junto à borda inferior. */
+#escalacaoIdealPage .ideal-player-status.is-probable {
+  right: 2px;
+  bottom: 2px;
+  width: 8px;
+  height: 8px;
+  font-size: 8px;
+}
+#escalacaoIdealPage .ideal-field .ideal-player { padding-bottom: 12px; }
+#escalacaoIdealPage .ideal-goalkeeper-hack-main { padding-bottom: 10px; }
+
+/* Seleção mobile dos atletas: identidade e números ocupam áreas próprias. */
+.ideal-picker-club-filter { display:grid; grid-template-columns:minmax(0,1fr) minmax(136px,1.05fr); align-items:center; min-width:0; }
+.ideal-picker-club-filter > span:first-child { grid-column:1 / -1; }
+.ideal-picker-club-fixture {
+  display: flex;
+  min-height: 35px;
+  align-items: center;
+  margin-top: 0;
+  padding: 4px 7px;
+  border: 1px solid rgba(82,230,255,.12);
+  border-radius: 9px;
+  background: rgba(3,13,25,.55);
+}
+.ideal-picker-club-match { display:flex; width:100%; align-items:center; justify-content:center; gap:9px; }
+.ideal-picker-club-match > i { color:#6e8aa0; font-size:9px; font-style:normal; }
+.ideal-picker-club-side { display:flex; align-items:center; gap:4px; min-width:0; }
+.ideal-picker-club-side small { color:#6e8ca2; font-size:7px; font-weight:800; }
+.ideal-picker-club-side b { overflow:hidden; color:#dcedf6; font-size:8px; text-overflow:ellipsis; white-space:nowrap; }
+.ideal-picker-club-match .ideal-fixture-team { width:auto !important; height:auto; padding:0; border:0; background:none; }
+.ideal-picker-club-match .ideal-fixture-team img,
+.ideal-picker-club-match .ideal-fixture-team i { width:18px !important; height:18px !important; }
+.ideal-picker-club-empty { color:#7690a5; font-size:8px; }
+.ideal-picker-player {
+  grid-template-columns: 54px minmax(0,1fr) auto !important;
+  grid-template-rows: auto auto;
+  min-height: 68px;
+  gap: 5px 9px;
+}
+.ideal-picker-player-visual { grid-row:1 / 3; align-self:stretch; justify-content:center; }
+.ideal-picker-player-visual .ideal-player-indicators { width:auto; }
+.ideal-picker-player-visual .ideal-player-bars { display:none; }
+.ideal-picker-player-copy { grid-column:2 / -1; grid-row:1; }
+.ideal-picker-player-copy strong { overflow:visible; color:#eefaff; font-size:11px; text-overflow:clip; white-space:normal; }
+.ideal-picker-player-copy small { white-space:normal; }
+.ideal-picker-metrics { grid-column:2 / -1; grid-row:2; justify-content:flex-start; gap:5px; }
+.ideal-picker-metric { min-width:70px; padding:4px 7px; }
+
+/* Busca de disponibilidade com opções visuais em vez de um datalist sem contexto. */
+#escalacaoIdealPage .ideal-availability-choices:not([hidden]) { display:grid; gap:4px; max-height:210px; overflow:auto; margin-top:5px; }
+#escalacaoIdealPage .ideal-availability-choice,
+#escalacaoIdealPage .ideal-availability-selected {
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) auto;
+  align-items:center;
+  gap:7px;
+  width:100%;
+  min-width:0;
+  padding:6px;
+  border:1px solid rgba(127,191,255,.12);
+  border-radius:9px;
+  color:#e7f1fa;
+  background:rgba(3,13,25,.6);
+  text-align:left;
+}
+#escalacaoIdealPage .ideal-availability-choice { cursor:pointer; }
+#escalacaoIdealPage .ideal-availability-choice.is-selected { border-color:rgba(82,230,255,.55); background:rgba(82,230,255,.08); }
+#escalacaoIdealPage .ideal-availability-choice-avatar .ideal-player-avatar,
+#escalacaoIdealPage .ideal-availability-selected-avatar .ideal-player-avatar { width:31px; height:31px; margin:0; border-radius:9px; }
+#escalacaoIdealPage .ideal-availability-choice-copy,
+#escalacaoIdealPage .ideal-availability-selected-copy { display:grid; min-width:0; gap:3px; }
+#escalacaoIdealPage .ideal-availability-choice-copy strong,
+#escalacaoIdealPage .ideal-availability-selected-copy strong { overflow:hidden; color:#edfaff; font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
+#escalacaoIdealPage .ideal-availability-choice-copy small,
+#escalacaoIdealPage .ideal-availability-selected-copy small { overflow:hidden; color:#829caf; font-size:7px; text-overflow:ellipsis; white-space:nowrap; }
+#escalacaoIdealPage .ideal-availability-choice-fixture { display:flex; justify-content:flex-end; min-width:0; }
+#escalacaoIdealPage .ideal-availability-choice-fixture .ideal-player-fixture-badge { position:static; width:auto; gap:3px; transform:none; }
+#escalacaoIdealPage .ideal-availability-choice-fixture .ideal-fixture-team { width:auto !important; padding:0; border:0; background:none; }
+#escalacaoIdealPage .ideal-availability-choice-fixture .ideal-fixture-team img,
+#escalacaoIdealPage .ideal-availability-choice-fixture .ideal-fixture-team i { width:15px !important; height:15px !important; }
+#escalacaoIdealPage .ideal-availability-selected { margin-top:5px; border-color:rgba(82,230,255,.28); }
+
+@media (max-width: 620px) {
+  #escalacaoIdealPage .ideal-metrics { grid-template-columns:minmax(0,1fr); gap:7px; }
+  #escalacaoIdealPage .ideal-financial-card { min-height:66px; gap:6px; padding:9px 8px; border-radius:12px; }
+  #escalacaoIdealPage .ideal-financial-card > i { font-size:12px; }
+  #escalacaoIdealPage .ideal-financial-item span,
+  #escalacaoIdealPage .ideal-metric.points > span { font-size:7px; letter-spacing:.04em; }
+  #escalacaoIdealPage .ideal-financial-item strong { margin-top:4px; font-size:clamp(10px,3.15vw,13px); }
+  #escalacaoIdealPage .ideal-metric.points { min-height:62px; padding:9px 12px; }
+  #escalacaoIdealPage .ideal-metric.points strong { font-size:21px; }
+  .ideal-picker { padding:5px; }
+  .ideal-picker-sheet { width:100%; max-height:96dvh; padding:9px; }
+  .ideal-picker-filters { grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+  .ideal-picker-filters > label:first-child,
+  .ideal-picker-club-filter,
+  .ideal-picker-status-filter,
+  .ideal-picker-price-limit { grid-column:1 / -1; }
+  .ideal-picker-club-fixture { min-width:0; padding-inline:4px; }
+  .ideal-picker-player { grid-template-columns:42px minmax(0,1fr) !important; gap:4px 7px; padding:6px !important; }
+  .ideal-picker-player-visual { grid-column:1; grid-row:1 / 3; }
+  .ideal-picker-player-visual .ideal-player-avatar { width:30px !important; height:30px !important; }
+  .ideal-picker-player-copy { grid-column:2; grid-row:1; }
+  .ideal-picker-metrics { grid-column:2; grid-row:2; flex-wrap:wrap; }
+  .ideal-picker-metric { min-width:62px; padding:3px 5px; }
+  .ideal-picker-metric small { font-size:6px; }
+  .ideal-picker-metric strong { font-size:8px; }
+  #escalacaoIdealPage .ideal-bench { grid-template-columns:repeat(2,minmax(0,1fr)); gap:7px; padding:9px; }
+  #escalacaoIdealPage .ideal-bench-group { min-width:0; padding:6px; border:1px solid rgba(127,191,255,.11); border-radius:10px; background:linear-gradient(135deg,rgba(16,34,52,.7),rgba(5,17,30,.72)); }
+  #escalacaoIdealPage .ideal-bench-label { margin-bottom:5px; font-size:7px; }
+  #escalacaoIdealPage .ideal-bench-player:not(.ideal-bench-empty) { grid-template-columns:30px minmax(0,1fr) auto; gap:4px; padding:5px 3px; }
+  #escalacaoIdealPage .ideal-bench-copy { gap:3px; }
+  #escalacaoIdealPage .ideal-bench-copy .ideal-player-name { font-size:8px; }
+  #escalacaoIdealPage .ideal-bench-signals { min-width:35px; }
+  #escalacaoIdealPage .ideal-bench-signals .ideal-player-fixture-badge { gap:2px !important; }
+  #escalacaoIdealPage .ideal-bench-signals .ideal-fixture-team img,
+  #escalacaoIdealPage .ideal-bench-signals .ideal-fixture-team i { width:9px !important; height:9px !important; }
+  #escalacaoIdealPage .ideal-player-status.is-probable { right:2px; bottom:2px; width:7px; height:7px; font-size:7px; }
+  #escalacaoIdealPage .ideal-field .ideal-player { padding-bottom:12px; }
+  #escalacaoIdealPage .ideal-goalkeeper-hack-main { padding-bottom:10px; }
+}

@@ -21,6 +21,6 @@ vm.runInContext(fs.readFileSync(path.join(__dirname, '../static/js/escalacao_ide
     calculator.selecionarReservas = () => {};
     const result = await calculator.calcular();
     assert.equal(Object.values(result.titulares).flat().filter(player => player.eh_capitao).length, 1);
-    assert.equal(result.pontuacaoTotal, 130, 'A projeção inicial deve incluir o mesmo bônus do capitão usado na edição manual');
+    assert.equal(result.pontuacaoTotal, 125, 'A projeção inicial deve aplicar o fator correto de 1,5 ao capitão');
     console.log('Lineup projection: passed');
 })().catch(error => { console.error(error); process.exitCode = 1; });
