@@ -10,7 +10,7 @@
   .billing-plan:hover { transform: translateY(-3px); border-color: rgba(0,229,255,.34); }
   .billing-plan.is-current { border-color: rgba(0,229,255,.55); box-shadow: 0 0 0 1px rgba(0,229,255,.11), 0 18px 42px rgba(0,0,0,.25); }
   .billing-plan.is-featured { border-color: rgba(0,229,255,.38); }
-  .billing-featured { position: absolute; top: 13px; right: 13px; padding: 5px 9px; border: 1px solid rgba(0,229,255,.22); border-radius: 999px; background: rgba(0,229,255,.08); color: #67eaff; font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+  .billing-featured { position: absolute; top: 20px; right: 62px; padding: 5px 9px; border: 1px solid rgba(0,229,255,.22); border-radius: 999px; background: rgba(0,229,255,.08); color: #67eaff; font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; white-space: nowrap; }
   .billing-feature { display: flex; align-items: flex-start; gap: 10px; color: #cbd5e1; font-size: 13px; line-height: 1.45; }
   .billing-feature i { width: 15px; margin-top: 2px; color: #00e5ff; text-align: center; flex: 0 0 auto; }
   .billing-button { display: inline-flex; min-height: 46px; width: 100%; align-items: center; justify-content: center; gap: 9px; border: 1px solid rgba(0,229,255,.38); border-radius: 11px; background: linear-gradient(100deg, rgba(0,229,255,.18), rgba(68,148,255,.16)); color: #ecfbff; font-size: 13px; font-weight: 750; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
@@ -145,6 +145,7 @@
         </tbody>
       </table>
     </div>
+    <p class="border-t border-white/5 px-4 py-2 text-[10px] text-text-muted sm:hidden"><i class="fas fa-arrows-left-right mr-1 text-neon-cyan" aria-hidden="true"></i>Deslize a tabela para comparar todos os planos.</p>
   </section>
 
   <aside class="billing-panel mt-4 flex items-start gap-3 px-4 py-4 sm:items-center sm:px-5" aria-label="Informações de pagamento">
