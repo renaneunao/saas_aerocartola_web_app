@@ -2477,7 +2477,20 @@
   box-shadow: 0 3px 9px rgba(0, 0, 0, .42);
   font: 900 13px/1 Arial, sans-serif;
 }
-.ideal-player-status.is-probable { color: #031b12; background: #5cf0a7; }
+.ideal-player-status.is-probable {
+  right: 3px;
+  bottom: 2px;
+  left: auto;
+  width: 11px;
+  height: 11px;
+  transform: none;
+  border: 0;
+  border-radius: 0;
+  color: #5cf0a7;
+  background: transparent;
+  box-shadow: none;
+  font-size: 10px;
+}
 .ideal-player-status.is-doubt { color: #241700; background: #ffd166; }
 .ideal-player-status.is-unlikely { color: #fff; background: #ef476f; }
 .ideal-player-status.is-null { color: #e5e7eb; background: #64748b; }
@@ -2826,13 +2839,14 @@ select.aero-select.ideal-strategy-select:focus-visible {
     line-height: 1;
   }
 
-  .ideal-goalkeeper-hack { width: 80px; height: 88px; flex-basis: 80px; transform: translateX(-6px); }
+  .ideal-goalkeeper-hack { width: 80px; height: 88px; flex-basis: 80px; transform: translate(-6px, 4.2cqi); }
   /* Safari/iOS pode repintar de forma intermitente camadas com rotateY e
      perspective. No celular, mantenha o efeito de máscara em 2D estável. */
   .ideal-goalkeeper-hack-mask { top: 7px; left: -6px; width: 38px; height: 54px; gap: 1px; padding: 4px 2px; border-radius: 8px; transform: rotate(-2deg) translateX(-1px) scale(.96); -webkit-backface-visibility: hidden; backface-visibility: hidden; }
   .ideal-goalkeeper-hack-mask > span { padding: 1px 3px; font-size: 4.5px; }
   .ideal-goalkeeper-hack-mask-avatar { width: 22px !important; height: 22px !important; border-radius: 6px !important; }
   .ideal-goalkeeper-hack-mask > b { font-size: 5px; }
+  .ideal-goalkeeper-hack-mask-price { color: #b9f4ff; font-size: 4.5px; font-weight: 800; line-height: 1.1; white-space: nowrap; }
   .ideal-goalkeeper-hack-main { top: 4px; left: 14px; width: clamp(56px, 17vw, 72px); min-height: 64px; gap: 1px; padding: 3px; border-radius: 8px; transform: none; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
   .ideal-goalkeeper-hack-main-label { gap: 1px; font-size: 4.5px; }
   .ideal-goalkeeper-hack-main-label > span { display: none; }
@@ -2844,7 +2858,7 @@ select.aero-select.ideal-strategy-select:focus-visible {
   .ideal-goalkeeper-hack-main .ideal-player-fixture-badge .ideal-fixture-team i { width: 6px; height: 6px; }
   .ideal-goalkeeper-hack-main .ideal-player-name { width: 100%; margin-left: 0; font-size: 6px; text-align: center; }
   .ideal-goalkeeper-hack-main .ideal-player-chips { display: flex; flex-direction: column; align-items: center; gap: 0; width: 100%; margin-top: 1px; padding-left: 0; }
-  .ideal-goalkeeper-hack-main .ideal-player-chips span { min-width: 0; padding: 1px 2px !important; border-radius: 4px; font-size: 5px !important; line-height: 1.1 !important; }
+  .ideal-goalkeeper-hack-main .ideal-player-chips span { min-width: 0; padding: 1px 2px !important; border-radius: 4px; font-size: 6px !important; line-height: 1.15 !important; }
 }
 @media (hover: hover) and (pointer: fine) {
   .ideal-goalkeeper-hack:hover .ideal-goalkeeper-hack-main,
