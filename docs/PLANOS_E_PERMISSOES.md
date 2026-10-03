@@ -44,3 +44,26 @@ básica e não deve exigir assinatura.
 Não ativar cobrança em produção até validar checkout, webhooks, cancelamento,
 reembolsos e atualização automática do plano. A página de assinatura precisa
 refletir esta matriz; preços atuais são apenas os que já constam no produto.
+
+## Validação executada em 3 de outubro de 2026
+
+As contas temporárias de teste foram criadas no app e receberam apenas cópias
+dos dois times autorizados. No fluxo de escalação, as chamadas ao endpoint de
+envio foram substituídas no navegador por respostas simuladas. Nenhum time
+original foi enviado ao Cartola.
+
+| Plano | Verificações no app de produção |
+| --- | --- |
+| Gratuito | Limites de 2 perfis de jogo e 2 de SG; cálculo da escalação ideal; edição e recálculo do capitão; envio simulado; pesos editáveis, opções Pro e segundo vínculo recusados pela API com 403; tela de pesos bloqueada e ranking visível. |
+| Premium | Limites de 5 perfis de jogo e 5 de SG; escalação ideal acessível; edição de pesos aceita; hack do goleiro, fechar defesa, reordenar prioridades e terceiro vínculo recusados com 403. |
+| Pro | 15 perfis de jogo e 10 de SG; opções de hack, defesa e prioridades aceitas; dois times selecionáveis; envio individual simulado e “Escalar todos” concluiu os dois clones com 2/2 sucessos simulados. |
+
+As telas de escalação ideal, módulos e cruzamento abriram na janela móvel de
+390 px sem exceder a largura do viewport. O teste encontrou e corrigiu um
+desalinhamento na projeção: o cálculo inicial agora dobra a pontuação do
+capitão, como já acontecia ao trocar o capitão manualmente. O caso foi
+adicionado à suíte de testes.
+
+Commits publicados: `fe692b4` (planos e permissões) e `9a0931d` (projeção do
+capitão). Os dois workflows de build e deploy terminaram com sucesso; o
+container de produção está na revisão `9a0931d3cfdf28738fd8a0ba5bba80a626224fab`.
