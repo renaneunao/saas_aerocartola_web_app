@@ -1413,10 +1413,6 @@ button[class*="from-blue-500"]:hover { border-color:rgba(82,230,255,.55) !import
   body footer[class~="lg:ml-64"] { margin-left: clamp(220px, 15vw, 270px) !important; }
 }
 
-@media (max-width: 1023px) {
-  #sidebar { width: min(76vw, 260px) !important; }
-}
-
 @media (max-height: 760px) and (min-width: 1024px) {
   #sidebar { --sidebar-density: .84; }
 }
@@ -1709,4 +1705,21 @@ select.aero-select:hover {
 @media (max-width: 640px) {
   .aero-dropdown-trigger { min-height: 2.7rem; font-size: .8rem; }
   .aero-dropdown-option { min-height: 2.7rem; font-size: .8rem; }
+}
+
+/* Em telas pequenas, preservar a proporção da marca e liberar área útil. */
+@media (max-width: 1023px) {
+  #sidebar { width: min(66vw, 230px) !important; }
+  #sidebar > div:first-child { height: 106px !important; }
+  #sidebar > div:first-child img {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+  }
+}
+@media (max-width: 640px) {
+  #sidebar { width: min(62vw, 216px) !important; }
+  #sidebar > div:first-child { height: 96px !important; }
 }

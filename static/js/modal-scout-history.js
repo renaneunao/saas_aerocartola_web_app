@@ -370,6 +370,7 @@
                             if (details.dataset.atletaId === modal.dataset.athleteId) details.closest('tr')?.remove();
                         });
                         modal.classList.add('hidden');
+                        window.setTimeout(() => window.location.reload(), 450);
                     } catch (error) { message.textContent = error.message; }
                     finally { button.disabled = false; }
                 });

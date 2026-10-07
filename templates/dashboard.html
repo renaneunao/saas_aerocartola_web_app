@@ -2,7 +2,7 @@
 {% block title %}Dashboard — Aero Cartola{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css', v='3') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css', v='4') }}">
 <div class="dashboard-page w-full px-3 sm:px-4 lg:px-6 py-4 lg:py-6 animate-fade-in-up">
 
     <!-- Cabeçalho: Time + Rodada -->
@@ -138,7 +138,7 @@
             </div>
             {% endif %}
             {% if not permissions.podeEscalar %}
-            <div class="dashboard-action is-disabled">
+            <div class="dashboard-action dashboard-action-ideal is-disabled">
                 <i class="fas fa-chess-board"></i><span><strong>Escalação ideal</strong><small>Disponível em outro plano</small></span><i class="fas fa-lock"></i>
             </div>
             {% else %}
@@ -282,7 +282,7 @@
 <script src="{{ url_for('static', filename='js/calculo_atacante.js', v='2') }}"></script>
 <script src="{{ url_for('static', filename='js/calculo_treinador.js', v='2') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js') }}"></script>
-<script src="{{ url_for('static', filename='js/escalacao_rapida.js') }}"></script>
+<script src="{{ url_for('static', filename='js/escalacao_rapida.js', v='3') }}"></script>
 <script src="{{ url_for('static', filename='js/modulos-calculo-todos.js', v='1') }}"></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script>
