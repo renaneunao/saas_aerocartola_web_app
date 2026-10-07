@@ -712,11 +712,20 @@ def perfil():
     
     return render_template('perfil.html', current_user=user)
 
-@app.route('/api/user/photo', methods=['POST'])
+@app.route('/api/user/photo', methods=['GET', 'POST'])
 @login_required
 def upload_user_photo():
-    """Endpoint para upload de foto do usuário"""
+    """Avatar privado, validado e persistido fora do container."""
     user = get_current_user()
+    from utils.user_photo import read_photo, save_photo
+    if request.method == 'GET':
+        payload = read_photo(user['id'])
+        if payload is None:
+            svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="#0b1728"/><circle cx="32" cy="23" r="10" fill="#67e8f9"/><path d="M12 59c0-23 40-23 40 0" fill="#67e8f9"/></svg>'
+            return Response(svg, mimetype='image/svg+xml', headers={'Cache-Control': 'private, no-store'})
+        return Response(payload, mimetype='image/jpeg', headers={'Cache-Control':'private, no-store', 'X-Content-Type-Options':'nosniff'})
+    if request.headers.get('Origin') != request.host_url.rstrip('/'):
+        return jsonify({'success':False, 'error':'Origem da solicitação inválida.'}), 403
     if 'photo' not in request.files:
         return jsonify({'success': False, 'error': 'Nenhuma foto enviada'}), 400
     
@@ -724,20 +733,11 @@ def upload_user_photo():
     if file.filename == '':
         return jsonify({'success': False, 'error': 'Arquivo vazio'}), 400
     
-    import os, imghdr
-    allowed = {'jpeg', 'png', 'gif', 'webp', 'avif'}
-    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
-    if ext not in allowed and imghdr.what(file) not in allowed:
-        return jsonify({'success': False, 'error': 'Formato não permitido'}), 400
-    
-    avatar_dir = os.path.join(app.static_folder, 'img', 'avatars')
-    os.makedirs(avatar_dir, exist_ok=True)
-    
-    filename = f'{user["id"]}.jpg'
-    filepath = os.path.join(avatar_dir, filename)
-    file.save(filepath)
-    
-    return jsonify({'success': True, 'url': url_for('static', filename=f'img/avatars/{filename}')})
+    try:
+        save_photo(user['id'], file.stream.read(2 * 1024 * 1024 + 1))
+    except ValueError as error:
+        return jsonify({'success':False, 'error':str(error)}), 400
+    return jsonify({'success': True, 'url': url_for('upload_user_photo')})
 
 @app.route('/dashboard')
 @login_required
@@ -2791,7 +2791,7 @@ def api_lateral_detalhes(atleta_id):
         if media_ds >= 1.8:
             argumentos_favor.append(f"Elevado índice de desarmes por partida ({media_ds:.1f} DS/jogo).")
         if peso_sg_percentual >= 70:
-            argumentos_favor.append(f"Probabilidade relativa estimada de SG: {peso_sg_percentual:.0f}% (100% representa o melhor índice da rodada).")
+            argumentos_favor.append(f"Índice relativo de SG: {peso_sg_percentual:.0f}%.")
         if media_a + media_g >= 0.15:
             argumentos_favor.append(f"Média de {media_a + media_g:.2f} participações em gol (G + A) por jogo.")
         if medias_mando['media_basica'] >= 3.0:
@@ -2800,7 +2800,7 @@ def api_lateral_detalhes(atleta_id):
             argumentos_favor.append("Nenhum dos indicadores estatísticos deste lateral ultrapassou o limite de destaque.")
 
         if peso_sg_percentual < 35:
-            argumentos_contra.append(f"Probabilidade relativa estimada de SG: {peso_sg_percentual:.0f}% (100% representa o melhor índice da rodada).")
+            argumentos_contra.append(f"Índice relativo de SG: {peso_sg_percentual:.0f}%.")
         if media_ds < 1.0:
             argumentos_contra.append(f"Média discreta de desarmes para a posição ({media_ds:.1f} DS/jogo).")
         if peso_jogo < 0:
@@ -3046,7 +3046,7 @@ def api_goleiro_detalhes(atleta_id):
         if media_de >= 2.5:
             argumentos_favor.append(f"Alta média de defesas acumuladas por partida ({media_de:.1f} DE/jogo).")
         if peso_sg_percentual >= 70:
-            argumentos_favor.append(f"Probabilidade relativa estimada de SG: {peso_sg_percentual:.0f}% (100% representa o melhor índice da rodada).")
+            argumentos_favor.append(f"Índice relativo de SG: {peso_sg_percentual:.0f}%.")
         if adv_chutes_gol_media >= 6.0:
             argumentos_favor.append(f"Adversário {adversario_nome} finaliza com frequência a gol ({adv_chutes_gol_media:.1f} chutes no alvo/jogo), gerando alto potencial de DE.")
         if medias_mando['media_basica'] >= 3.0:
@@ -3270,7 +3270,7 @@ def api_zagueiro_detalhes(atleta_id):
         argumentos_contra = []
 
         if peso_sg_percentual >= 70:
-            argumentos_favor.append(f"Probabilidade relativa estimada de SG: {peso_sg_percentual:.0f}% (100% representa o melhor índice da rodada).")
+            argumentos_favor.append(f"Índice relativo de SG: {peso_sg_percentual:.0f}%.")
         if media_ds >= 1.5:
             argumentos_favor.append(f"Solidez em desarmes e combates individuais ({media_ds:.1f} DS/jogo).")
         if media_g > 0.05:
@@ -3281,7 +3281,7 @@ def api_zagueiro_detalhes(atleta_id):
             argumentos_favor.append("Nenhum dos indicadores estatísticos deste zagueiro ultrapassou o limite de destaque.")
 
         if peso_sg_percentual < 35:
-            argumentos_contra.append(f"Probabilidade relativa estimada de SG: {peso_sg_percentual:.0f}% (100% representa o melhor índice da rodada).")
+            argumentos_contra.append(f"Índice relativo de SG: {peso_sg_percentual:.0f}%.")
         if media_fc >= 1.8:
             argumentos_contra.append(f"Índice elevado de faltas cometidas ({media_fc:.1f} FC/jogo), aumentando o risco de cartões (CA/CV).")
         if media_ds < 0.8:
@@ -4111,6 +4111,9 @@ def api_modulo_dados(modulo):
         
         # Garantir que ranking_salvo seja uma lista ou None antes de retornar
         ranking_para_json = ranking_salvo if (ranking_salvo and isinstance(ranking_salvo, list) and len(ranking_salvo) > 0) else None
+        if ranking_para_json:
+            ranking_para_json = [item for item in ranking_para_json
+                                if int(item.get('atleta_id') or 0) not in availability['saved_ids']]
 
         # Rankings antigos não tinham os metadados do confronto. Enriqueça a
         # resposta apenas em memória, usando a partida real da rodada atual;

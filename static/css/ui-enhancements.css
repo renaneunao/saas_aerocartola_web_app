@@ -1,0 +1,22 @@
+.ideal-panel-expand { color:#67e8f9; background:rgba(0,229,255,.06); border:1px solid rgba(0,229,255,.18); border-radius:8px; padding:7px 9px; font-size:11px; cursor:pointer; flex-shrink:0; }
+.ideal-panel-head,.ideal-console-head { flex-wrap:wrap; }
+.modal-scout-history-score-value { font-size:.82rem !important; }
+.modal-scout-history-inline-scouts { display:flex !important; flex-wrap:wrap; gap:.25rem .45rem; }
+.module-details-button { background:rgba(0,229,255,.04) !important; color:#91cbd5 !important; border:1px solid rgba(0,229,255,.15) !important; box-shadow:none !important; border-radius:7px !important; font-size:11px !important; padding:5px 8px !important; }
+.module-details-button:hover { background:rgba(0,229,255,.12) !important; color:#e6fbff !important; }
+.dashboard-action svg { width:26px; height:26px; flex-shrink:0; stroke:currentColor; fill:none; stroke-width:1.75; stroke-linecap:round; stroke-linejoin:round; }
+.dashboard-action-ideal { border-color:rgba(168,85,247,.45); background:linear-gradient(120deg,rgba(168,85,247,.2),rgba(11,17,32,.8)); }
+.dashboard-action-positions { border-color:rgba(245,158,11,.4); background:linear-gradient(120deg,rgba(245,158,11,.13),rgba(11,17,32,.8)); }
+.dashboard-action-ideal svg { color:#c084fc; }
+.dashboard-action-positions svg { color:#fbbf24; }
+.dashboard-availability-link { display:inline-flex; margin-top:5px; font-size:11px; color:#67e8f9; border-bottom:1px dashed rgba(103,232,249,.4); }
+.module-player-availability-actions { display:flex; align-items:center; flex-wrap:wrap; gap:10px; padding:12px 0; }
+.dashboard-actions-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.dashboard-action-primary { grid-column:1 / -1 !important; }
+.modal-scout-history-ceded-match .modal-scout-history-score-value,
+.modal-scout-history-ceded-match .modal-scout-history-fixture-vs { font-size:.78rem !important; }
+
+@media (max-width: 640px) {
+  .modal-scout-history-ceded-match .modal-scout-history-score-value,
+  .modal-scout-history-ceded-match .modal-scout-history-fixture-vs { font-size:.7rem !important; }
+}

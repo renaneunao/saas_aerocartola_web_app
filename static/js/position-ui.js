@@ -261,6 +261,13 @@
     }
 
     function setupPositionTables() {
+        document.querySelectorAll('table button[onclick*="Modal"]').forEach(button => {
+            if (button.textContent.trim() === 'Detalhes') {
+                button.classList.add('module-details-button');
+                const match = button.getAttribute('onclick')?.match(/Modal\(\s*['"]?(\d+)['"]?\s*\)/i);
+                if (match && button.dataset.atletaId !== match[1]) button.dataset.atletaId = match[1];
+            }
+        });
         document.querySelectorAll('table').forEach(prepareTable);
     }
 

@@ -27,6 +27,17 @@
     </div>
 
     <!-- Informações da Conta -->
+    <section class="glass rounded-2xl neon-border p-5 mb-6">
+        <h2 class="text-base font-semibold text-white">Sua foto</h2>
+        <p class="text-text-muted text-sm mt-2">Ela aparece ao lado do seu usuário na sidebar.</p>
+        <div class="flex items-center gap-4 mt-4">
+            <img id="profileAvatar" src="{{ url_for('upload_user_photo') }}" alt="Sua foto" class="w-16 h-16 rounded-full object-cover border border-cyan-400/20">
+            <label class="ideal-panel-expand cursor-pointer">Escolher foto
+                <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="uploadAvatar(this)">
+            </label>
+        </div>
+        <p class="text-xs text-text-muted mt-3">JPG, PNG ou WebP · até 2 MB.</p>
+    </section>
     <div class="glass rounded-2xl neon-border p-6 mb-6">
         <h2 class="text-base font-semibold text-white mb-4 flex items-center">
             <i class="fas fa-id-card text-neon-cyan mr-2.5 text-sm"></i>Informações da Conta

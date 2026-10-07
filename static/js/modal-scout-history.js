@@ -122,7 +122,6 @@
             </div>
             <div class="modal-scout-history-game">
                 ${fixtureMarkup(match)}
-                <small>${escapeHtml(match.mando_label || 'Sem mando')} · adversário ${escapeHtml(match.adversario_nome || 'não informado')}</small>
             </div>
              <div class="modal-scout-history-inline-scouts">${scouts || '<span class="is-muted">Sem scouts</span>'}</div>
          </article>`;
@@ -209,6 +208,37 @@
     async function load(prefix, atletaId, positionId, fallbackPhoto) {
         const root = document.getElementById(`modal${prefix}ScoutHistory`);
         if (!root || !atletaId) return;
+        const modal = root.closest('.aero-player-detail-modal');
+        if (modal) {
+            modal.dataset.athleteId = atletaId;
+            let actions = modal.querySelector('.module-player-availability-actions');
+            if (!actions) {
+                actions = document.createElement('div');
+                actions.className = 'module-player-availability-actions';
+                actions.innerHTML = '<button type="button" class="ideal-panel-expand">Cravar que não joga</button><a class="dashboard-availability-link" href="/api/player-availability/page">Rever disponibilidade</a><span role="status"></span>';
+                root.before(actions);
+                actions.querySelector('button').addEventListener('click', async () => {
+                    const button = actions.querySelector('button');
+                    const message = actions.querySelector('[role=status]');
+                    button.disabled = true;
+                    try {
+                        const contextRes = await fetch('/api/player-availability/candidates?context_only=1');
+                        const context = await contextRes.json();
+                        if (!contextRes.ok) throw new Error(context.error || 'Selecione um time primeiro.');
+                        const res = await fetch('/api/player-availability', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({team_id:context.team_id, temporada:context.season, rodada:context.round_number, athlete_id:modal.dataset.athleteId, rule:'poupar'})});
+                        const result = await res.json();
+                        if (!res.ok) throw new Error(result.error || 'Não foi possível salvar.');
+                        message.textContent = 'Marcado como não joga. Removido do ranking desta rodada.';
+                        document.querySelectorAll('table button[data-atleta-id]').forEach(details => {
+                            if (details.dataset.atletaId === modal.dataset.athleteId) details.closest('tr')?.remove();
+                        });
+                        modal.classList.add('hidden');
+                    } catch (error) { message.textContent = error.message; }
+                    finally { button.disabled = false; }
+                });
+            }
+            actions.querySelector('[role=status]').textContent = '';
+        }
         const status = root.querySelector(`#modal${prefix}ScoutHistoryStatus`);
         const list = root.querySelector(`#modal${prefix}ScoutHistoryList`);
         if (status) status.textContent = 'Carregando…';

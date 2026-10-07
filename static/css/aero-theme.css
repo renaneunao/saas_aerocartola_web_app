@@ -1414,7 +1414,7 @@ button[class*="from-blue-500"]:hover { border-color:rgba(82,230,255,.55) !import
 }
 
 @media (max-width: 1023px) {
-  #sidebar { width: min(86vw, 300px) !important; }
+  #sidebar { width: min(76vw, 260px) !important; }
 }
 
 @media (max-height: 760px) and (min-width: 1024px) {

@@ -136,6 +136,9 @@ def player_availability_candidates():
                 cursor.close()
         round_number = int(round_number)
 
+        if request.args.get("context_only", "").lower() in {"1", "true", "yes"}:
+            return jsonify({"team_id": team_id, "season": season, "round_number": round_number})
+
         create_player_availability_table(conn)
         rules = list_player_availability(
             conn,

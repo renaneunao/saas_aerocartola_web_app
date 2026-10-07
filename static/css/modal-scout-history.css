@@ -738,7 +738,9 @@
 /* No histórico, os scouts positivos e negativos ficam em linhas distintas
    para facilitar a leitura do efeito de cada partida. */
 .modal-scout-history-inline-scouts {
-    display: grid;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
     gap: .12rem;
     color: #94a3b8;
 }

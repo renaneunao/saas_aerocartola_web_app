@@ -532,6 +532,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Função principal
+    window.executarEscalarTodosTimes = executarEscalarTodosTimes;
     async function executarEscalarTodosTimes() {
         // Confirmar ação
         const confirmado = await showConfirm(

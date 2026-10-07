@@ -513,6 +513,22 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        const permissionsResponse = await fetch('/api/user/permissions');
+        const permissionsData = await permissionsResponse.json();
+        if (permissionsResponse.ok && permissionsData.permissions?.multiEscalacao && window.executarEscalarTodosTimes) {
+            const chooser = document.createElement('dialog');
+            chooser.className = 'dashboard-guide';
+            chooser.innerHTML = '<div class="dashboard-guide-card"><h2>Qual time deseja escalar?</h2><p>Cada time usa seus próprios perfis e pesos. O envio será confirmado na próxima etapa.</p><div class="ideal-actions"><button type="button" data-choice="current" class="ideal-btn ideal-btn-primary">Só o time selecionado</button><button type="button" data-choice="all" class="ideal-btn ideal-btn-secondary">Todos os meus times</button><button type="button" data-choice="cancel" class="ideal-btn ideal-btn-quiet">Cancelar</button></div></div>';
+            document.body.append(chooser);
+            const choice = await new Promise(resolve => {
+                chooser.querySelectorAll('[data-choice]').forEach(button => button.addEventListener('click', () => { chooser.close(); resolve(button.dataset.choice); }));
+                chooser.addEventListener('cancel', () => resolve('cancel'), {once:true});
+                chooser.showModal();
+            });
+            chooser.remove();
+            if (choice === 'cancel') return;
+            if (choice === 'all') { await window.executarEscalarTodosTimes(); return; }
+        }
         // Confirmar ação
         const confirmado = await showConfirm(
             'Deseja executar a Escalação Rápida?\n\n' +
