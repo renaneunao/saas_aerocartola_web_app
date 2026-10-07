@@ -23,6 +23,13 @@
 @media (max-width: 640px) {
   .modal-scout-history-ceded-match .modal-scout-history-score-value,
   .modal-scout-history-ceded-match .modal-scout-history-fixture-vs { font-size:.7rem !important; }
+
+  .aero-player-detail-dialog .module-player-availability-actions { gap:.35rem; padding:8px 2px; }
+  .aero-player-detail-dialog .availability-mark-out { gap:.25rem; padding:5px 7px; font-size:9px; }
+  .aero-player-detail-dialog .modal-scout-history-ceded-heading { align-items:flex-start; gap:.45rem; }
+  .aero-player-detail-dialog .modal-scout-history-ceded-heading > div { min-width:0; }
+  .aero-player-detail-dialog .modal-scout-history-limit { display:grid; flex:0 0 6.2rem; min-width:0; gap:.18rem; white-space:normal; font-size:.55rem; }
+  .aero-player-detail-dialog .modal-scout-history-limit select { width:100%; min-width:0; max-width:100%; box-sizing:border-box; padding:.32rem .38rem; font-size:.58rem; }
 }
 
 @media (max-width: 767px) {

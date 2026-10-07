@@ -162,6 +162,59 @@
         return `<div class="modal-scout-history-ceded-context ${recommended ? 'is-recommended' : ''}">${recommended ? '<i class="fas fa-crosshairs"></i><span>Recorte mais parecido com o confronto atual</span>' : '<span>Histórico geral deste mando</span>'}</div><div class="modal-scout-history-ceded-metrics"><span><small>Jogos no recorte</small><b>${gamesWithPlayers.length}</b></span><span><small>Pts/atleta</small><b>${number(averagePoints)}</b></span><span><small>Pico</small><b>${number(peak)}</b></span><span><small>Atletas</small><b>${points.length}</b></span></div><div class="modal-scout-history-ceded-thresholds"><span>≥5 pts <b>${threshold(5)}%</b></span><span>≥8 pts <b>${threshold(8)}%</b></span><span>≥12 pts <b>${threshold(12)}%</b></span></div><div class="modal-scout-history-ceded-scouts"><div class="modal-scout-history-ceded-row is-heading"><span>Scout</span><strong><span>Soma</span><small>Média/jogo</small></strong></div>${scoutRows || '<span class="modal-scout-history-ceded-empty">Nenhum scout registrado neste recorte.</span>'}</div><div class="modal-scout-history-ceded-matches">${recent || '<span class="modal-scout-history-ceded-empty">Sem partidas neste recorte.</span>'}</div>`;
     }
 
+    function renderRoundScoreChart(prefix, data, matches) {
+        const chart = document.getElementById(`modal${prefix}RoundScoreChart`);
+        const plot = chart?.querySelector(`#modal${prefix}RoundScoreChartPlot`);
+        const status = chart?.querySelector(`#modal${prefix}RoundScoreChartStatus`);
+        if (!chart || !plot) return;
+
+        // A rodada corrente ainda está em andamento; as barras cobrem todas as
+        // rodadas encerradas da temporada, da mais recente até a primeira.
+        const lastCompletedRound = Math.min(38, Math.max(0, Number(data.filtros?.rodada || 1) - 1));
+        if (!lastCompletedRound) {
+            if (status) status.textContent = 'Ainda não há rodadas encerradas.';
+            plot.innerHTML = '<p class="modal-round-score-chart-empty">O gráfico aparecerá após a primeira rodada.</p>';
+            return;
+        }
+
+        const scoreByRound = new Map();
+        matches.forEach((match) => {
+            const round = Number(match.rodada);
+            if (!Number.isInteger(round) || round < 1 || round > lastCompletedRound) return;
+            const previous = scoreByRound.get(round);
+            if (!previous || match.entrou_em_campo === true || previous.entrou_em_campo !== true) {
+                scoreByRound.set(round, match);
+            }
+        });
+
+        const rounds = Array.from({ length: lastCompletedRound }, (_, index) => lastCompletedRound - index);
+        const values = rounds.map((round) => {
+            const match = scoreByRound.get(round);
+            const played = match?.entrou_em_campo === true;
+            const score = played ? Number(match.pontuacao) || 0 : 0;
+            return { round, played, score };
+        });
+        const maxPositive = Math.max(1, ...values.map(({ score }) => score > 0 ? score : 0));
+        const maxNegative = Math.max(1, ...values.map(({ score }) => score < 0 ? Math.abs(score) : 0));
+        const playedCount = values.filter(({ played }) => played).length;
+
+        plot.style.setProperty('--round-count', values.length);
+        plot.innerHTML = values.map(({ round, played, score }) => {
+            const negative = score < 0;
+            const height = score > 0
+                ? Math.min(72, score / maxPositive * 72)
+                : negative ? Math.min(28, Math.abs(score) / maxNegative * 28) : 0;
+            const barClass = played ? (negative ? 'is-negative' : score === 0 ? 'is-zero' : 'is-positive') : 'is-zero';
+            const description = played ? `${number(score)} pontos` : 'Não atuou · 0,00 pontos';
+            return `<div class="modal-round-score-chart-item" role="listitem" aria-label="Rodada ${round}: ${description}" title="Rodada ${round}: ${description}">
+                <span class="modal-round-score-chart-value">${number(score)}</span>
+                <span class="modal-round-score-chart-track"><i class="modal-round-score-chart-zero-line"></i><i class="modal-round-score-chart-bar ${barClass}" style="--bar-height:${height}%"></i></span>
+                <b><span>R</span><span>${round}</span></b>
+            </div>`;
+        }).join('');
+        if (status) status.textContent = `${playedCount} jogos · ${values.length - playedCount} sem atuação (0,00)`;
+    }
+
     function render(prefix, data, fallbackPhoto) {
         const root = document.getElementById(`modal${prefix}ScoutHistory`);
         if (!root) return;
@@ -176,6 +229,8 @@
         // apareça opaca, sem transformar ausência de pontuação em zero.
         const matches = data.ultimas_pontuacoes || [];
         const photo = imageUrl(data.jogador?.foto) || imageUrl(fallbackPhoto);
+
+        renderRoundScoreChart(prefix, data, matches);
 
         if (status) status.textContent = photo ? 'Dados atuais' : 'Dados atuais · foto indisponível';
         if (summary) {

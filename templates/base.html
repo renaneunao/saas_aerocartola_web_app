@@ -21,7 +21,7 @@
     <!-- Design System -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/aero-theme.css', v='7') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/scout-crossing.css', v='12') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal-scout-history.css', v='12') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal-scout-history.css', v='14') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ui-enhancements.css', v='3') }}">
     {% if modulo is defined and pesos_padrao is defined %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/weight-editor.css', v='4') }}">
@@ -124,7 +124,7 @@
     <script src="{{ url_for('static', filename='js/escalar_todos_times.js', v='2') }}"></script>
     <script src="{{ url_for('static', filename='js/position-ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/global-ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/modal-scout-history.js', v='9') }}"></script>
+    <script src="{{ url_for('static', filename='js/modal-scout-history.js', v='11') }}"></script>
 
     <!-- ================================================================
          SIDEBAR — Glass Neon Dark
@@ -199,7 +199,7 @@
                 <a href="{{ url_for('pagina_inicial') }}" title="Configure os perfis de peso de jogo e saldo de gols"
                    class="sidebar-link {% if request.path.startswith('/pagina-inicial') %}active{% endif %} flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 text-text-secondary hover:text-white hover:bg-[rgba(0,229,255,0.04)]">
                     <i class="fas fa-sliders w-5 text-center mr-3 text-text-secondary"></i>
-                    Perfis de Jogo
+                    Preferências do time
                 </a>
             </div>
 

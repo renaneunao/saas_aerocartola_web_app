@@ -1,3 +1,4 @@
+{% set scout_prefix = 'Lateral' %}
 <div id="modalDetalhesLateral" class="aero-player-detail-modal fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
     <div class="aero-player-detail-dialog bg-slate-900 border border-slate-800 shadow-2xl rounded-2xl max-w-6xl w-full p-6 relative max-h-[92vh] overflow-y-auto text-slate-100">
         <!-- Botão Fechar -->
@@ -76,6 +77,8 @@
             </div>
         </div>
 
+        {% include 'modals/_round_score_chart.html' %}
+
         <!-- Confronto & SG -->
         <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-4 mb-5">
             <h4 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -123,7 +126,6 @@
                 </ul>
             </div>
         </div>
-        {% set scout_prefix = 'Lateral' %}
         {% set scout_position_id = 2 %}
         {% include 'modals/_scout_history.html' %}
     </div>

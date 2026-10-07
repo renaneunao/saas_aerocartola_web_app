@@ -2,7 +2,7 @@
 {% block title %}Dashboard — Aero Cartola{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css', v='4') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css', v='5') }}">
 <div class="dashboard-page w-full px-3 sm:px-4 lg:px-6 py-4 lg:py-6 animate-fade-in-up">
 
     <!-- Cabeçalho: Time + Rodada -->
@@ -61,7 +61,7 @@
             <img src="{{ url_for('static', filename='img/pesos.avif') }}" class="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500">
             <div class="relative p-3.5 bg-gradient-to-t from-[rgba(6,11,20,0.95)] via-[rgba(6,11,20,0.7)] to-[rgba(6,11,20,0.3)] flex flex-col h-full">
                 <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-sm font-semibold text-white">Perfis de Jogo</h3>
+                    <h3 class="text-sm font-semibold text-white">Preferências do time</h3>
                     <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full {% if status.tem_perfis %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]{% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">{{ 'OK' if status.tem_perfis else 'PENDENTE' }}</span>
                 </div>
                 <div class="flex-1 flex flex-col justify-center">
@@ -84,7 +84,7 @@
             <img src="{{ url_for('static', filename='img/ranking.webp') }}" class="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500">
             <div class="relative p-3.5 bg-gradient-to-t from-[rgba(6,11,20,0.95)] via-[rgba(6,11,20,0.7)] to-[rgba(6,11,20,0.3)] flex flex-col h-full">
                 <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-sm font-semibold text-white">Rankings</h3>
+                    <h3 class="text-sm font-semibold text-white">Calcular posições</h3>
                     <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full {% if status.tem_calculos %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]{% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">{{ 'OK' if status.tem_calculos else 'PENDENTE' }}</span>
                 </div>
                 <div class="flex-1 flex items-center">
@@ -99,7 +99,7 @@
             <img src="{{ url_for('static', filename='img/escalacao-dashboard.jpg') }}" class="absolute inset-0 w-full h-full object-cover opacity-20 group-hover:opacity-30 transition-opacity duration-500">
             <div class="relative p-3.5 bg-gradient-to-t from-[rgba(6,11,20,0.95)] via-[rgba(6,11,20,0.7)] to-[rgba(6,11,20,0.3)] flex flex-col h-full">
                 <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-sm font-semibold text-white">Escalação</h3>
+                    <h3 class="text-sm font-semibold text-white">Escalação Ideal</h3>
                     <span class="text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full {% if status.tem_escalacao %}bg-[rgba(0,255,136,0.12)] text-neon-green border border-[rgba(0,255,136,0.2)]{% else %}bg-[rgba(245,158,11,0.12)] text-neon-amber border border-[rgba(245,158,11,0.2)]{% endif %}">{{ 'OK' if status.tem_escalacao else 'PENDENTE' }}</span>
                 </div>
                 <div class="flex-1 flex items-center">
@@ -137,18 +137,6 @@
                 <i class="fas fa-bolt"></i><span><strong>Escalação rápida</strong><small>Disponível em outro plano</small></span><i class="fas fa-lock"></i>
             </div>
             {% endif %}
-            {% if not permissions.podeEscalar %}
-            <div class="dashboard-action dashboard-action-ideal is-disabled">
-                <i class="fas fa-chess-board"></i><span><strong>Escalação ideal</strong><small>Disponível em outro plano</small></span><i class="fas fa-lock"></i>
-            </div>
-            {% else %}
-            <a href="{{ url_for('modulo_escalacao_ideal') }}" class="dashboard-action dashboard-action-ideal">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 12h18"/><circle cx="12" cy="12" r="3"/><path d="M8 3v4h8V3M8 21v-4h8v4"/></svg><span><strong>Calcular escalação ideal</strong><small>Monte e revise o time antes de enviar</small></span><i class="fas fa-arrow-right"></i>
-            </a>
-            {% endif %}
-            <a href="{{ url_for('modulos') }}" class="dashboard-action dashboard-action-positions">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h7m4 0h7M3 12h3m4 0h11M3 19h11m4 0h3M14 3v4M6 10v4m12 3v4"/></svg><span><strong>Calcular posições</strong><small>Analise e calcule cada posição</small></span><i class="fas fa-arrow-right"></i>
-            </a>
         </div>
     </section>
 
@@ -204,20 +192,20 @@
                 </div>
             </article>
 
-            <article class="dashboard-insight">
+            <article class="dashboard-insight dashboard-insight-market">
                 <span class="dashboard-insight-icon"><i class="fas fa-person-running"></i></span>
                 <div><small>Mercado de atletas</small><strong>{{ rodada.atletas.provaveis if rodada.atletas else '—' }} prováveis</strong>
                     <p>{% if rodada.atletas %}{{ rodada.atletas.duvidas }} dúvidas · {{ rodada.atletas.indisponiveis }} indisponíveis{% else %}Dados não disponíveis{% endif %}</p><a class="dashboard-availability-link" href="{{ url_for('player_availability.player_availability_page') }}">Crava que alguém joga ou vai para o banco?</a></div>
             </article>
 
-            <article class="dashboard-insight">
+            <article class="dashboard-insight dashboard-insight-decisions">
                 <span class="dashboard-insight-icon"><i class="fas fa-user-shield"></i></span>
                 <div><small>Suas decisões</small><strong>{{ rodada.disponibilidade.cravados }} cravados</strong>
                     <p>{{ rodada.disponibilidade.poupados }} poupados nesta rodada</p></div>
                 <a href="{{ url_for('player_availability.player_availability_page') }}" aria-label="Editar disponibilidade"><i class="fas fa-arrow-right"></i></a>
             </article>
 
-            <article class="dashboard-insight">
+            <article class="dashboard-insight dashboard-insight-favorite">
                 <span class="dashboard-insight-icon"><i class="fas fa-fire"></i></span>
                 <div><small>Favorito do mercado</small>
                     {% if rodada.favorito %}<div class="dashboard-favorite-line">{% if rodada.favorito.foto %}<img src="{{ rodada.favorito.foto }}" alt="{{ rodada.favorito.nome }}">{% else %}<span class="dashboard-favorite-fallback"><i class="fas fa-user"></i></span>{% endif %}<strong>{{ rodada.favorito.nome }} · {{ rodada.favorito.clube }}</strong></div><p><span data-locale-number="{{ rodada.favorito.escalacoes }}">{{ rodada.favorito.escalacoes }}</span> escalações</p>
@@ -225,6 +213,7 @@
                 </div>
             </article>
         </div>
+        <a class="dashboard-availability-link dashboard-availability-link-mobile" href="{{ url_for('player_availability.player_availability_page') }}"><i class="fas fa-user-check" aria-hidden="true"></i><span>Cravar disponibilidade <small>Escolher quem joga ou vai para o banco</small></span><i class="fas fa-arrow-right" aria-hidden="true"></i></a>
 
         <div class="dashboard-fixtures-heading">
             <div><span>Confrontos</span><small>{{ rodada.confrontos_validos }} válidos para pontuação</small></div>
