@@ -192,13 +192,13 @@
     </div>
 
     <script>
-        function switchTab(tab) {
+        function switchTab(tab, preserveMessages = false) {
             const loginForm = document.getElementById('loginForm');
             const registerForm = document.getElementById('registerForm');
             const loginTab = document.getElementById('loginTab');
             const registerTab = document.getElementById('registerTab');
             const flashContainer = document.getElementById('flashMessages');
-            if (flashContainer) flashContainer.innerHTML = '';
+            if (flashContainer && !preserveMessages) flashContainer.innerHTML = '';
             if (tab === 'login') {
                 loginForm.classList.remove('hidden'); registerForm.classList.add('hidden');
                 loginTab.classList.add('tab-active'); loginTab.classList.remove('tab-inactive');
@@ -224,7 +224,7 @@
         });
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('tab') === 'register') switchTab('register');
+            if (urlParams.get('tab') === 'register') switchTab('register', true);
         });
     </script>
 </body>
