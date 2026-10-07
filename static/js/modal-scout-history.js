@@ -169,7 +169,7 @@
         if (!chart || !plot) return;
 
         // A rodada corrente ainda está em andamento; as barras cobrem todas as
-        // rodadas encerradas da temporada, da mais recente até a primeira.
+        // rodadas encerradas da temporada, em ordem cronológica crescente.
         const lastCompletedRound = Math.min(38, Math.max(0, Number(data.filtros?.rodada || 1) - 1));
         if (!lastCompletedRound) {
             if (status) status.textContent = 'Ainda não há rodadas encerradas.';
@@ -187,7 +187,7 @@
             }
         });
 
-        const rounds = Array.from({ length: lastCompletedRound }, (_, index) => lastCompletedRound - index);
+        const rounds = Array.from({ length: lastCompletedRound }, (_, index) => index + 1);
         const values = rounds.map((round) => {
             const match = scoreByRound.get(round);
             const played = match?.entrou_em_campo === true;
