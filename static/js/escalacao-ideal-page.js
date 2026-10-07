@@ -334,8 +334,6 @@
     const response = await fetch('/api/escalacao-ideal/config');
     const config = await response.json();
     $('formationSelect').value = config.formation || '4-3-3';
-    state.probablesSource = config.fonte_provaveis || 'globo';
-    if ($('fonteProvaveisSelect')) $('fonteProvaveisSelect').value = state.probablesSource;
     $('hackGoleiroToggle').checked = can('hackGoleiro') ? Boolean(config.hack_goleiro) : false;
     $('fecharDefesaToggle').checked = can('fecharDefesa') ? Boolean(config.fechar_defesa) : false;
     $('posicaoCapitao').value = config.posicao_capitao || 'atacantes';
@@ -373,7 +371,6 @@
   async function salvarConfiguracoes() {
     const payload = {
       formation: $('formationSelect').value,
-      fonte_provaveis: $('fonteProvaveisSelect')?.value || 'globo',
       hack_goleiro: $('hackGoleiroToggle').checked,
       fechar_defesa: $('fecharDefesaToggle').checked,
       posicao_capitao: $('posicaoCapitao').value,
@@ -1090,43 +1087,6 @@
     }
   }
 
-  async function aoMudarFonteProvaveis() {
-    if (!window.configCarregada) return;
-    const previousSource = state.probablesSource || 'globo';
-    const nextSource = $('fonteProvaveisSelect')?.value || 'globo';
-    if (nextSource === previousSource) return;
-
-    const modules = ['goleiro', 'lateral', 'zagueiro', 'meia', 'atacante', 'treinador'];
-    state.teamChanged = true;
-    showLoading('Atualizando rankings pela fonte escolhida...');
-    try {
-      await salvarConfiguracoes();
-      adicionarLog(`Fonte de prováveis alterada. Recalculando os seis módulos com ${nextSource === 'globo' ? 'Globo / Cartola' : 'Prováveis do Cartola'}...`, 'info');
-      await window.calcularModulosPendentes(modules, {
-        onProgress: ({ mensagem, concluido, erro }) => {
-          if (mensagem) adicionarLog(mensagem, erro ? 'error' : concluido ? 'success' : 'info');
-        }
-      });
-      state.probablesSource = nextSource;
-      await calcularEscalacao(true);
-      if (!window.ultimaEscalacao) {
-        throw new Error('Os módulos foram recalculados, mas a escalação não foi atualizada. Confira os logs antes de enviar o time.');
-      }
-      notify('Fonte salva e rankings recalculados.', 'success');
-    } catch (error) {
-      $('fonteProvaveisSelect').value = previousSource;
-      try {
-        await salvarConfiguracoes();
-      } catch (rollbackError) {
-        console.error('[AERO][Prováveis] Não foi possível restaurar a fonte anterior:', rollbackError);
-      }
-      adicionarLog(`ERRO ao trocar a fonte de prováveis: ${error.message}`, 'error');
-      notify(error.message, 'error');
-    } finally {
-      hideLoading();
-    }
-  }
-
   function bindEvents() {
     const isTouchSurface = () => Boolean(window.matchMedia?.('(hover: none), (pointer: coarse)').matches);
     const closeTouchCards = (except = null) => {
@@ -1142,7 +1102,6 @@
       });
     };
     ['formationSelect', 'hackGoleiroToggle', 'fecharDefesaToggle', 'posicaoCapitao', 'posicaoReservaLuxo'].forEach(id => $(id)?.addEventListener('change', () => aoMudarConfiguracao()));
-    $('fonteProvaveisSelect')?.addEventListener('change', aoMudarFonteProvaveis);
     $('availabilityAthleteInput')?.addEventListener('input', () => { state.selectedAvailabilityId = ''; renderAvailabilityChoices(); });
     $('availabilityAthleteInput')?.addEventListener('focus', renderAvailabilityChoices);
     $('availabilityChoices')?.addEventListener('click', event => {

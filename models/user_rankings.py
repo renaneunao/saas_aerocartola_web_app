@@ -27,6 +27,7 @@ def create_rankings_teams_table(conn: psycopg2.extensions.connection):
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_rankings_teams_user_team ON acw_rankings_teams(user_id, team_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_rankings_teams_config ON acw_rankings_teams(team_id, configuration_id, posicao_id, rodada_atual)')
     conn.commit()
+    cursor.close()
 
 # Alias para compatibilidade com o nome esperado pelo app.py
 def create_user_rankings_table(conn: psycopg2.extensions.connection):
@@ -50,11 +51,15 @@ def save_team_ranking(
         cursor.execute('''
             SELECT id FROM acw_rankings_teams
             WHERE user_id = %s AND team_id = %s AND configuration_id = %s AND posicao_id = %s AND rodada_atual = %s
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
         ''', (user_id, team_id, configuration_id, posicao_id, rodada_atual))
     else:
         cursor.execute('''
             SELECT id FROM acw_rankings_teams
             WHERE user_id = %s AND team_id = %s AND configuration_id IS NULL AND posicao_id = %s AND rodada_atual = %s
+            ORDER BY created_at DESC, id DESC
+            LIMIT 1
         ''', (user_id, team_id, posicao_id, rodada_atual))
     
     existing = cursor.fetchone()
@@ -119,7 +124,7 @@ def get_team_rankings(
         query += ' AND rodada_atual = %s'
         params.append(rodada_atual)
     
-    query += ' ORDER BY rodada_atual DESC, posicao_id'
+    query += ' ORDER BY rodada_atual DESC, created_at DESC, id DESC, posicao_id'
     
     cursor.execute(query, params)
     rows = cursor.fetchall()

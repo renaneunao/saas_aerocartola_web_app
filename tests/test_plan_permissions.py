@@ -84,13 +84,29 @@ class PlanApiTests(unittest.TestCase):
 
     def test_basic_formation_captain_and_luxury_configuration_is_free(self):
         with patch('models.user_escalacao_config.create_user_escalacao_config_table'), \
-             patch('models.user_escalacao_config.upsert_user_escalacao_config') as save:
+             patch('models.user_escalacao_config.upsert_user_escalacao_config') as save, \
+             patch('models.user_escalacao_config.get_user_escalacao_config', return_value=None):
             response = self.client.post('/api/escalacao-ideal/config', json={
                 'formation': '4-4-2', 'posicao_capitao': 'meias',
                 'posicao_reserva_luxo': 'laterais', 'prioridades': DEFAULT_PRIORITIES,
             })
         self.assertEqual(response.status_code, 200)
         save.assert_called_once()
+
+    def test_strategy_update_without_source_keeps_saved_probables_source(self):
+        cursor = self.conn.cursor.return_value
+        cursor.fetchone.side_effect = [(28,), (1,)]
+        saved_config = {'fonte_provaveis': 'provaveisdocartola'}
+        with patch('models.user_escalacao_config.create_user_escalacao_config_table'), \
+             patch('models.user_escalacao_config.get_user_escalacao_config', return_value=saved_config), \
+             patch('models.user_escalacao_config.upsert_user_escalacao_config') as save, \
+             patch('models.provaveis_mapeamento.create_provaveis_mapping_table'), \
+             patch.object(web, '_external_probables_available', return_value=True), \
+             patch.object(web, 'get_temporada_atual', return_value=2026):
+            response = self.client.post('/api/escalacao-ideal/config', json={'formation': '4-4-2'})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(save.call_args.args[-1], 'provaveisdocartola')
 
     def test_weight_values_must_be_finite_numbers(self):
         self.plan = 'pro'
@@ -119,7 +135,8 @@ class PlanApiTests(unittest.TestCase):
                     self.plan = plan
                     value = 'goleiros,laterais,meias,zagueiros,atacantes,treinadores' if option == 'prioridades' else True
                     with patch('models.user_escalacao_config.create_user_escalacao_config_table'), \
-                         patch('models.user_escalacao_config.upsert_user_escalacao_config') as save:
+                         patch('models.user_escalacao_config.upsert_user_escalacao_config') as save, \
+                         patch('models.user_escalacao_config.get_user_escalacao_config', return_value=None):
                         response = self.client.post('/api/escalacao-ideal/config', json={option: value})
                     self.assertEqual(response.status_code, 200 if plan == 'pro' else 403)
                     if plan != 'pro':

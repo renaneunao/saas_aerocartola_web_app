@@ -76,6 +76,7 @@ class EscalacaoRapida {
             this.rodadaAtual = data.rodada_atual;
             this.configurationId = data.configuration_id;
         }
+        this.probablesSource = data.probables_source || 'globo';
         
         return data;
     }
@@ -188,7 +189,8 @@ class EscalacaoRapida {
             body: JSON.stringify({
                 ranking_data: ranking,
                 rodada_atual: this.rodadaAtual,
-                configuration_id: this.configurationId
+                configuration_id: this.configurationId,
+                probables_source: this.probablesSource || 'globo'
             })
         });
         

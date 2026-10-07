@@ -19,7 +19,7 @@
     <!-- Player Images -->
     <script src="{{ url_for('static', filename='cartola_imgs/player_images_by_id.js') }}"></script>
     <!-- Design System -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/aero-theme.css', v='7') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/aero-theme.css', v='8') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/scout-crossing.css', v='12') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modal-scout-history.css', v='14') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ui-enhancements.css', v='3') }}">
@@ -248,6 +248,24 @@
                         <div class="px-2 py-1 text-[10px] text-text-muted">Carregando times...</div>
                     </div>
                 </div>
+
+                <section id="sidebarProbablesSource" class="sidebar-probables-source" aria-label="Fonte de prováveis do time" hidden>
+                    <div class="sidebar-probables-heading">
+                        <span><i class="fas fa-signal"></i> Prováveis</span>
+                        <small>Fonte usada em todos os cálculos</small>
+                    </div>
+                    <div class="sidebar-probables-toggle" role="group" aria-label="Escolher fonte de prováveis">
+                        <button type="button" data-source="globo" aria-pressed="false" title="Prováveis oficiais do Globo / Cartola">
+                            <img src="{{ url_for('static', filename='img/fonte-provaveis-globo.png') }}" alt="">
+                            <span>Globo</span>
+                        </button>
+                        <button type="button" data-source="provaveisdocartola" aria-pressed="false" title="Prováveis do Cartola">
+                            <img src="{{ url_for('static', filename='img/fonte-provaveis-cartola.png') }}" alt="">
+                            <span>Externo</span>
+                        </button>
+                    </div>
+                    <p class="sidebar-probables-status" role="status" aria-live="polite"></p>
+                </section>
             </div>
 
             <!-- Conta -->
@@ -696,6 +714,7 @@
     <script src="{{ url_for('static', filename='js/aero-dropdowns.js', v='1') }}"></script>
     {% block scripts %}{% endblock %}
     <script src="{{ url_for('static', filename='js/ui-enhancements.js', v='2') }}"></script>
+    <script src="{{ url_for('static', filename='js/sidebar-probables-source.js', v='1') }}"></script>
     {% if modulo is defined and pesos_padrao is defined %}
     <script id="idealWeightDefaults" type="application/json">{{ pesos_padrao | tojson }}</script>
     <script src="{{ url_for('static', filename='js/weight-editor.js', v='3') }}"></script>

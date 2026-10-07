@@ -64,9 +64,6 @@
             </div>
         </div>
         
-        {% set modulo_recalcular_funcao = 'recalcularTreinadores' %}
-        {% include 'components/fonte_provaveis_modulo.html' %}
-
         {% if not permissions.editarPesosModulos %}
         <!-- Overlay de bloqueio para edição de pesos -->
         <div class="flex flex-wrap items-center justify-center gap-2 p-3 border-b border-dark-blue-700/50">
@@ -638,7 +635,8 @@ async function carregarDados(forcarRecalculo = false) {
                 body: JSON.stringify({
                     ranking_data: resultados,
                     rodada_atual: data.rodada_atual,
-                    configuration_id: data.configuration_id
+                    configuration_id: data.configuration_id,
+                    probables_source: data.probables_source || 'globo'
                 })
             });
             

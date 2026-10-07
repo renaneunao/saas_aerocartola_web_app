@@ -1360,6 +1360,33 @@ button[class*="from-blue-500"]:hover { border-color:rgba(82,230,255,.55) !import
 }
 #timesList .sidebar-team-item:hover { color: #f4fbff; background: rgba(0,229,255,.08); border-color: rgba(0,229,255,.18); transform: translateY(-1px); }
 #timesList .sidebar-team-item.is-selected { color: #e7fbff; background: rgba(0,229,255,.11); border-color: rgba(0,229,255,.38); box-shadow: 0 0 10px rgba(0,229,255,.06); }
+.sidebar-probables-source {
+  margin: .48rem .3rem .1rem;
+  padding: .48rem .48rem .38rem;
+  border: 1px solid rgba(0,229,255,.12);
+  border-radius: .7rem;
+  background: linear-gradient(135deg, rgba(11,27,43,.82), rgba(8,15,27,.72));
+}
+.sidebar-probables-source[hidden] { display: none; }
+.sidebar-probables-heading { display: flex; align-items: baseline; justify-content: space-between; gap: .35rem; margin-bottom: .35rem; }
+.sidebar-probables-heading > span { color: #bcebf2; font-size: calc(.62rem * var(--sidebar-density)); font-weight: 800; }
+.sidebar-probables-heading > span i { margin-right: .25rem; color: #00e5ff; }
+.sidebar-probables-heading small { color: #71869e; font-size: calc(.48rem * var(--sidebar-density)); white-space: nowrap; }
+.sidebar-probables-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: .25rem; }
+.sidebar-probables-toggle button {
+  display: inline-flex; min-width: 0; min-height: calc(1.8rem * var(--sidebar-density));
+  align-items: center; justify-content: center; gap: .28rem; padding: .2rem .35rem;
+  border: 1px solid rgba(120,150,180,.13); border-radius: .48rem; color: #91a6bd;
+  background: rgba(5,12,22,.62); cursor: pointer; font-size: calc(.57rem * var(--sidebar-density));
+  font-weight: 750; transition: .16s ease;
+}
+.sidebar-probables-toggle button:hover { color: #effeff; border-color: rgba(0,229,255,.3); background: rgba(0,229,255,.07); }
+.sidebar-probables-toggle button.is-selected { color: #eafcff; border-color: rgba(0,229,255,.42); background: rgba(0,140,165,.18); box-shadow: inset 0 0 12px rgba(0,229,255,.06); }
+.sidebar-probables-toggle button:disabled { opacity: .52; cursor: wait; }
+.sidebar-probables-toggle img { width: calc(1.05rem * var(--sidebar-density)); height: calc(1.05rem * var(--sidebar-density)); object-fit: contain; border-radius: .2rem; }
+.sidebar-probables-status { min-height: .65rem; margin: .25rem 0 0; color: #64d8e7; font-size: calc(.49rem * var(--sidebar-density)); line-height: 1.2; text-align: center; }
+.sidebar-probables-status:empty { display: none; }
+.sidebar-probables-status.is-error { color: #fda4af; }
 #timesList .team-shield-sidebar {
   width: calc(2.15rem * var(--sidebar-density));
   height: calc(2.15rem * var(--sidebar-density));

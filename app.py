@@ -308,6 +308,21 @@ def _probable_status_filter(conn, user_id, team_id, season, round_number, alias=
         source,
     )
 
+
+def _ranking_uses_probables_source(ranking_data, source):
+    """Só considera um ranking atual se todos os atletas vieram da fonte ativa."""
+    if isinstance(ranking_data, dict):
+        ranking_data = ranking_data.get('ranking', ranking_data.get('resultados', []))
+    return (
+        isinstance(ranking_data, list)
+        and bool(ranking_data)
+        and all(
+            isinstance(player, dict)
+            and player.get('_aero_probables_source') == source
+            for player in ranking_data
+        )
+    )
+
 # Timezone: Brasília (America/Sao_Paulo)
 try:
     from zoneinfo import ZoneInfo
@@ -1801,6 +1816,8 @@ def api_modulos_status():
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        fonte_provaveis = _get_probables_source(conn, user['id'], team_id)
+
         # Buscar rodada atual
         cursor.execute(
             'SELECT rodada_id FROM acf_partidas WHERE temporada = %s '
@@ -1827,15 +1844,23 @@ def api_modulos_status():
         for modulo in modulos:
             posicao_id = posicao_map[modulo]
             cursor.execute("""
-                SELECT COUNT(*) > 0 as calculado
+                SELECT ranking_data
                 FROM acw_rankings_teams
-                WHERE team_id = %s
+                WHERE user_id = %s AND team_id = %s
                   AND rodada_atual = %s
                   AND posicao_id = %s
-            """, (team_id, rodada_atual, posicao_id))
+                ORDER BY created_at DESC, id DESC
+                LIMIT 1
+            """, (user['id'], team_id, rodada_atual, posicao_id))
             
             result = cursor.fetchone()
-            status[modulo] = bool(result[0]) if result else False
+            ranking_data = result[0] if result else None
+            if isinstance(ranking_data, str):
+                try:
+                    ranking_data = json.loads(ranking_data)
+                except (json.JSONDecodeError, TypeError):
+                    ranking_data = []
+            status[modulo] = _ranking_uses_probables_source(ranking_data, fonte_provaveis)
         
         # Verificar se todos foram calculados
         todos_calculados = all(status.values())
@@ -1844,7 +1869,8 @@ def api_modulos_status():
             'status': status,
             'todos_calculados': todos_calculados,
             'rodada_atual': rodada_atual,
-            'team_id': team_id
+            'team_id': team_id,
+            'fonte_provaveis': fonte_provaveis
         })
     except Exception as e:
         print(f"Erro ao verificar status dos módulos: {e}")
@@ -2091,6 +2117,11 @@ def api_salvar_ranking(modulo):
         # Salvar ranking
         conn = get_db_connection()
         try:
+            fonte_provaveis = _get_probables_source(conn, user['id'], team_id)
+            fonte_calculada = data.get('probables_source')
+            if fonte_calculada and fonte_calculada != fonte_provaveis:
+                return jsonify({'error': 'A fonte de prováveis mudou durante o cálculo. Recalcule este módulo.'}), 409
+
             availability = _get_player_availability_rules(
                 conn, user['id'], team_id, get_temporada_atual(), int(rodada_atual)
             )
@@ -2098,6 +2129,9 @@ def api_salvar_ranking(modulo):
                 jogador for jogador in ranking_data
                 if jogador.get('atleta_id') not in availability['saved_ids']
             ]
+            for jogador in ranking_data:
+                if isinstance(jogador, dict):
+                    jogador['_aero_probables_source'] = fonte_provaveis
             from models.user_rankings import save_team_ranking
             ranking_id = save_team_ranking(
                 conn,
@@ -4069,9 +4103,12 @@ def api_modulo_dados(modulo):
                 rodada_atual=rodada_atual
             )
             if rankings:
-                ranking_salvo = rankings[0]  # Pegar o mais recente
+                registro_ranking = rankings[0]  # Pegar o mais recente
+                ranking_salvo = registro_ranking if _ranking_uses_probables_source(registro_ranking.get('ranking_data'), probable_source) else None
+                if ranking_salvo is None:
+                    print(f"[API] Ranking {modulo} ignorado: fonte salva diverge da fonte ativa ({probable_source})")
                 # Converter ranking_data para lista se for dict
-                ranking_data = ranking_salvo.get('ranking_data', [])
+                ranking_data = ranking_salvo.get('ranking_data', []) if ranking_salvo else []
                 # Garantir que seja uma lista
                 if isinstance(ranking_data, dict):
                     # Se for dict, tentar extrair lista
@@ -4096,7 +4133,7 @@ def api_modulo_dados(modulo):
                 )
                 if rankings_sem_config:
                     ranking_dict = rankings_sem_config[0]
-                    ranking_data = ranking_dict.get('ranking_data', [])
+                    ranking_data = ranking_dict.get('ranking_data', []) if _ranking_uses_probables_source(ranking_dict.get('ranking_data'), probable_source) else []
                     # Garantir que seja uma lista
                     if isinstance(ranking_data, dict):
                         ranking_data = ranking_data.get('ranking', ranking_data.get('resultados', []))
@@ -4172,7 +4209,8 @@ def api_modulo_dados(modulo):
             'escalacoes_data': escalacoes_data,
             'pesos': pesos,
             'ranking_salvo': ranking_para_json,  # Usar versão validada
-            'configuration_id': config.get('id')
+            'configuration_id': config.get('id'),
+            'probables_source': probable_source
         })
         
     except Exception as e:
@@ -4565,7 +4603,11 @@ def api_escalacao_config():
             posicao_capitao = data.get('posicao_capitao', 'atacantes')
             posicao_reserva_luxo = data.get('posicao_reserva_luxo', 'atacantes')
             prioridades = normalize_priorities(data.get('prioridades') or 'atacantes,laterais,meias,zagueiros,goleiros,treinadores')
-            fonte_provaveis = data.get('fonte_provaveis', 'globo')
+            config_atual = get_user_escalacao_config(conn, user['id'], team_id)
+            fonte_provaveis = data.get(
+                'fonte_provaveis',
+                (config_atual or {}).get('fonte_provaveis', 'globo')
+            )
             if fonte_provaveis not in {'globo', 'provaveisdocartola'}:
                 return jsonify({'error': 'Fonte de prováveis inválida'}), 400
             if fonte_provaveis == 'provaveisdocartola':
@@ -4701,6 +4743,9 @@ def api_escalacao_dados():
                 rodada_atual=rodada_atual
             )
             if rankings:
+                if not _ranking_uses_probables_source(rankings[0].get('ranking_data'), probable_source):
+                    print(f"[ESCALACAO] Ranking {pos_nome} ignorado: fonte salva diverge da fonte ativa ({probable_source})")
+                    continue
                 ranking_data = rankings[0].get('ranking_data', [])
                 if isinstance(ranking_data, list) and len(ranking_data) > 0:
                     # Normalizar campos: garantir que preco_num exista
