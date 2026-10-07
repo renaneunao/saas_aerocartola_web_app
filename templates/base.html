@@ -21,8 +21,8 @@
     <!-- Design System -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/aero-theme.css', v='6') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/scout-crossing.css', v='12') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal-scout-history.css', v='11') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/ui-enhancements.css', v='1') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/modal-scout-history.css', v='12') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ui-enhancements.css', v='2') }}">
     {% if modulo is defined and pesos_padrao is defined %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/weight-editor.css', v='4') }}">
     {% endif %}
@@ -121,10 +121,10 @@
     <!-- Scripts de UI (precisam carregar antes do conteúdo) -->
     <script src="{{ url_for('static', filename='js/plan-permissions.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui-components.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/escalar_todos_times.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/escalar_todos_times.js', v='2') }}"></script>
     <script src="{{ url_for('static', filename='js/position-ui.js') }}"></script>
     <script src="{{ url_for('static', filename='js/global-ui.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/modal-scout-history.js', v='7') }}"></script>
+    <script src="{{ url_for('static', filename='js/modal-scout-history.js', v='8') }}"></script>
 
     <!-- ================================================================
          SIDEBAR — Glass Neon Dark
@@ -695,7 +695,7 @@
 
     <script src="{{ url_for('static', filename='js/aero-dropdowns.js', v='1') }}"></script>
     {% block scripts %}{% endblock %}
-    <script src="{{ url_for('static', filename='js/ui-enhancements.js', v='1') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui-enhancements.js', v='2') }}"></script>
     {% if modulo is defined and pesos_padrao is defined %}
     <script id="idealWeightDefaults" type="application/json">{{ pesos_padrao | tojson }}</script>
     <script src="{{ url_for('static', filename='js/weight-editor.js', v='3') }}"></script>

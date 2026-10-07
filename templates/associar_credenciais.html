@@ -10,10 +10,9 @@
             </div>
             <div>
                 <p class="mb-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">Novo vínculo</p>
-                <h1 class="text-2xl font-bold text-white sm:text-3xl">Adicionar outro time</h1>
+                <h1 class="text-2xl font-bold text-white sm:text-3xl">{{ 'Adicionar primeiro time' if first_team else 'Adicionar outro time' }}</h1>
                 <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-300">
-                    Entre com sua Conta Globo e confirme o hCaptcha. O Aero Cartola fará a associação automaticamente,
-                    sem pedir que você copie tokens do navegador.
+                    Entre com sua Conta Globo e confirme o hCaptcha. O Aero Cartola fará a associação automaticamente.
                 </p>
             </div>
         </div>

@@ -1043,6 +1043,7 @@ def _opponent_conceded_scouts(
     }
     for mando, items in by_mando.items():
         summaries[mando]["historico"] = items[:8]
+        summaries[mando]["historico_completo"] = items
 
     mando_relevante = ""
     if mando_jogador == "casa":

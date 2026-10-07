@@ -21,7 +21,15 @@
                 <p class="modal-scout-history-kicker">O que o adversário cede</p>
                 <h5>Produção da posição contra essa defesa</h5>
             </div>
-            <span>média por partida · atletas que entraram em campo</span>
+            <label class="modal-scout-history-limit">Jogos recentes
+                <select data-ceded-history-limit aria-label="Quantidade de jogos recentes">
+                    <option value="5" selected>Últimos 5</option>
+                    <option value="10">Últimos 10</option>
+                    <option value="15">Últimos 15</option>
+                    <option value="20">Últimos 20</option>
+                    <option value="all">Todos</option>
+                </select>
+            </label>
         </div>
         <div class="modal-scout-history-ceded-columns">
             <section class="modal-scout-history-ceded-column">

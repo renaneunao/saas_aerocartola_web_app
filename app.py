@@ -602,6 +602,11 @@ def register():
 def associar_credenciais():
     """Página para associar um time usando o gateway interno."""
     user = get_current_user()
+    conn = get_db_connection()
+    try:
+        first_team = not bool(get_all_user_teams(conn, user['id']))
+    finally:
+        close_db_connection(conn)
 
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
@@ -616,17 +621,17 @@ def associar_credenciais():
             close_db_connection(conn)
         if not allowed:
             flash(message, 'error')
-            return render_template('associar_credenciais.html', current_user=user), 403
+            return render_template('associar_credenciais.html', current_user=user, first_team=first_team), 403
 
         if not email or not password or not captcha:
             flash('Informe email, senha e confirme o hCaptcha.', 'error')
-            return render_template('associar_credenciais.html', current_user=user)
+            return render_template('associar_credenciais.html', current_user=user, first_team=first_team)
 
         gateway_url = app.config['ASSOCIAR_TIME_GATEWAY_URL']
         gateway_secret = app.config['ASSOCIAR_TIME_GATEWAY_SECRET']
         if not gateway_url or not gateway_secret:
             flash('O gateway de associação ainda não está configurado.', 'error')
-            return render_template('associar_credenciais.html', current_user=user)
+            return render_template('associar_credenciais.html', current_user=user, first_team=first_team)
 
         try:
             import requests
@@ -649,12 +654,12 @@ def associar_credenciais():
             if not response.ok or not data.get('ok'):
                 message = data.get('error') or 'O gateway não conseguiu associar o time.'
                 flash(message, 'error')
-                return render_template('associar_credenciais.html', current_user=user)
+                return render_template('associar_credenciais.html', current_user=user, first_team=first_team)
 
             team_id = data.get('team_id')
             if not team_id:
                 flash('O gateway não retornou o identificador do time.', 'error')
-                return render_template('associar_credenciais.html', current_user=user)
+                return render_template('associar_credenciais.html', current_user=user, first_team=first_team)
 
             session['selected_team_id'] = int(team_id)
             display_name = data.get('team_name') or 'novo time'
@@ -671,7 +676,7 @@ def associar_credenciais():
             import traceback
             traceback.print_exc()
 
-    return render_template('associar_credenciais.html', current_user=user)
+    return render_template('associar_credenciais.html', current_user=user, first_team=first_team)
 
 @app.route('/perfil', methods=['GET', 'POST'])
 @login_required

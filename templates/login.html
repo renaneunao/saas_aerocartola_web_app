@@ -37,6 +37,13 @@
         .glass { background: rgba(11, 17, 32, 0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(0, 229, 255, 0.08); }
         .tab-active { color: #fff; border-bottom: 2px solid #00E5FF; }
         .tab-inactive { color: #64748B; border-bottom: 2px solid transparent; }
+        .login-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:3rem 1rem; }
+        .login-layout { width:min(1160px,100%); display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); align-items:center; gap:clamp(2rem,6vw,5rem); }
+        .login-brand { width:100%; text-align:center; }
+        .login-brand img { display:block; width:100%; aspect-ratio:1.55; object-fit:fill; border-radius:22px; border:1px solid rgba(0,229,255,.18); box-shadow:0 18px 60px rgba(0,0,0,.28),0 0 38px rgba(0,229,255,.08); }
+        .login-auth-column { display:flex; justify-content:center; min-width:0; }
+        .login-auth-content { width:min(100%,500px); }
+        @media(max-width:767px) { .login-screen { padding:1.5rem 1rem; } .login-layout { max-width:500px; grid-template-columns:1fr; gap:1.35rem; } .login-brand img { aspect-ratio:1.75; border-radius:18px; } .login-brand p { margin-top:.8rem; font-size:.9rem; } .login-auth-column { width:100%; } }
         input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus {
             -webkit-text-fill-color: white;
             -webkit-box-shadow: 0 0 0px 1000px rgba(11, 17, 32, 0.5) inset;
@@ -52,16 +59,14 @@
         <div class="absolute -bottom-24 left-1/2 w-96 h-96 bg-neon-blue/8 rounded-full blur-[120px] animate-pulse" style="animation-delay: -1s;"></div>
     </div>
 
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative z-10">
-        <div class="max-w-md w-full space-y-8 animate-slide-up">
-            <!-- Logo -->
-            <div class="text-center">
-                <div class="flex items-center justify-center mb-4">
-                    <img src="{{ url_for('static', filename='img/aero-cartola-logo.png') }}" alt="Aero Cartola" 
-                         class="w-full max-w-xs h-44 sm:h-52 object-fill drop-shadow-[0_0_20px_rgba(0,229,255,0.15)]">
-                </div>
+    <div class="login-screen relative z-10">
+        <div class="login-layout">
+            <section class="login-brand">
+                <img src="{{ url_for('static', filename='img/aero-cartola-logo.png') }}" alt="Aero Cartola">
                 <p class="text-text-secondary font-light">Estratégia avançada para mitar no Cartola</p>
-            </div>
+            </section>
+            <div class="login-auth-column">
+              <div class="login-auth-content space-y-8 animate-slide-up">
 
             <!-- Auth Card -->
             <div class="glass rounded-3xl shadow-2xl overflow-hidden">
@@ -182,6 +187,8 @@
                 <p class="text-text-muted text-xs">
                     Ao entrar, você concorda com nossos <a href="#" class="text-text-secondary hover:underline">Termos</a> e <a href="#" class="text-text-secondary hover:underline">Privacidade</a>.
                 </p>
+            </div>
+              </div>
             </div>
         </div>
     </div>

@@ -190,10 +190,6 @@ class EscalarTodosTimes {
             throw new Error('Nenhum time cadastrado');
         }
         
-        if (times.length === 1) {
-            throw new Error('Você precisa ter mais de um time cadastrado para usar esta funcionalidade');
-        }
-        
         this.log(`📋 ${times.length} times encontrados`, 'info');
         return times;
     }
@@ -301,7 +297,10 @@ class EscalarTodosTimes {
         try {
             this.updateProgress(0, 'Iniciando...');
             
-            // 1. Carregar scripts de cálculo ANTES de tudo
+            // Verificar a lista antes de carregar scripts ou trocar o time ativo.
+            const times = await this.buscarTodosTimes();
+
+            // 1. Carregar scripts de cálculo ANTES de processar os times
             await this.carregarScriptsCalculo();
             
             // Verificar se os scripts foram carregados
@@ -312,8 +311,6 @@ class EscalarTodosTimes {
             // 2. Salvar time original
             await this.salvarTimeOriginal();
             
-            // 3. Buscar todos os times
-            const times = await this.buscarTodosTimes();
             this.timesTotal = times.length;
             this.timesProcessados = 0;
             
@@ -698,14 +695,17 @@ document.addEventListener('DOMContentLoaded', function() {
             showToast(mensagem, resultado.falhas === 0 ? 'success' : 'warning', 5000);
             
         } catch (error) {
-            addLog(`❌ ERRO: ${error.message}`, 'error');
-            updateProgress(0, 'Erro ao executar escalação de todos os times');
+            const noTeams = /Nenhum time cadastrado/i.test(error.message);
+            const message = noTeams ? 'Adicione um time antes de usar a escalação de todos.' : error.message;
+            addLog(noTeams ? `⚠️ ${message}` : `❌ ERRO: ${message}`, noTeams ? 'warning' : 'error');
+            updateProgress(0, noTeams ? 'Nenhum time disponível' : 'Erro ao executar escalação de todos os times');
             
             // Mostrar botão de fechar mesmo em caso de erro
             document.getElementById('btnFecharContainerTodos').style.display = 'block';
             
             // Mostrar alerta
-            showAlert('Erro ao Escalar Todos os Times', error.message, 'error');
+            if (noTeams) showToast(message, 'warning', 4500);
+            else showAlert('Erro ao Escalar Todos os Times', message, 'error');
         }
     }
 });

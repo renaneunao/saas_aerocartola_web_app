@@ -18,8 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const setOpen = (open) => {
       body.hidden = !open;
       button.setAttribute('aria-expanded', String(open));
-      button.textContent = open ? 'Recolher −' : 'Expandir +';
+      button.innerHTML = open ? '<i class="fas fa-chevron-up" aria-hidden="true"></i>' : '<i class="fas fa-chevron-down" aria-hidden="true"></i>';
       button.setAttribute('aria-label', `${open ? 'Recolher' : 'Expandir'} ${title.textContent.trim()}`);
+      button.title = `${open ? 'Recolher' : 'Expandir'} ${title.textContent.trim()}`;
     };
     button.addEventListener('click', () => setOpen(body.hidden));
     head.append(button);
