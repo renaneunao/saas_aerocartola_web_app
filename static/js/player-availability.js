@@ -60,9 +60,10 @@
   function actionButton(item, rule, label, icon, tone, disabled = false) {
     const active = item.rule === rule;
     const pending = state.pending.has(String(item.atleta_id));
+    const decisionLabel = rule === 'poupar' ? 'Cravado: poupado' : 'Cravado: vai jogar';
     return `<button type="button" data-action="${rule}" data-athlete="${item.atleta_id}" ${disabled || pending ? 'disabled' : ''}
       class="rounded-lg px-2.5 py-1.5 text-[11px] border transition ${active ? `${tone} border-current bg-current/10` : 'border-white/10 text-text-secondary hover:text-white hover:border-white/30'} ${disabled ? 'opacity-30 cursor-not-allowed' : ''}">
-      <i class="fas ${pending ? 'fa-spinner fa-spin' : icon} mr-1"></i>${pending ? 'Salvando…' : active ? 'Marcado' : label}</button>`;
+      <i class="fas ${pending ? 'fa-spinner fa-spin' : icon} mr-1"></i>${pending ? 'Salvando…' : active ? decisionLabel : label}</button>`;
   }
 
   function render() {
@@ -81,7 +82,7 @@
         <td class="px-4 py-3 text-right text-neon-cyan">${Number(item.pontos_num || 0).toFixed(2)}</td>
         <td class="px-4 py-3 text-right text-neon-green">C$ ${Number(item.preco_num || 0).toFixed(2)}</td>
         <td class="px-4 py-3"><span class="${statusClass} text-xs font-medium">${escapeHtml(item.status_nome || 'Desconhecido')}</span></td>
-        <td class="px-4 py-3"><div class="flex justify-end gap-2">${actionButton(item, 'poupar', 'Poupar', 'fa-ban', 'text-neon-red')}${actionButton(item, 'cravado', 'Cravar', 'fa-lock', 'text-neon-green', nullStatus || !nonProbable)}${item.rule ? `<button type="button" data-action="clear" data-athlete="${item.atleta_id}" ${state.pending.has(String(item.atleta_id)) ? 'disabled' : ''} class="rounded-lg px-2.5 py-1.5 text-[11px] border border-white/10 text-text-muted hover:text-white disabled:opacity-30"><i class="fas fa-xmark mr-1"></i>Limpar</button>` : ''}</div></td>
+        <td class="px-4 py-3"><div class="flex justify-end gap-2">${actionButton(item, 'poupar', 'Cravar poupado', 'fa-lock', 'text-neon-red')}${actionButton(item, 'cravado', 'Cravar que joga', 'fa-lock', 'text-neon-green', nullStatus || !nonProbable)}${item.rule ? `<button type="button" data-action="clear" data-athlete="${item.atleta_id}" ${state.pending.has(String(item.atleta_id)) ? 'disabled' : ''} class="rounded-lg px-2.5 py-1.5 text-[11px] border border-white/10 text-text-muted hover:text-white disabled:opacity-30"><i class="fas fa-xmark mr-1"></i>Limpar</button>` : ''}</div></td>
       </tr>`;
     }).join('') : '<tr><td colspan="8" class="px-4 py-12 text-center text-text-muted">Nenhum jogador encontrado para este filtro.</td></tr>';
   }
@@ -127,7 +128,7 @@
       const response = await fetch('/api/player-availability', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ team_id: state.teamId, athlete_id: athleteId, rule, temporada: state.season, rodada: state.round }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Não foi possível salvar a regra.');
-      feedback(rule === 'poupar' ? 'Jogador marcado para ser poupado.' : 'Jogador cravado como provável para a escalação.', 'info');
+      feedback(rule === 'poupar' ? 'Decisão cravada: jogador será poupado nesta rodada.' : 'Decisão cravada: jogador vai jogar nesta rodada.', 'info');
     } catch (error) {
       item.rule = previousRule;
       throw error;

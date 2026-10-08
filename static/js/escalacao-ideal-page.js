@@ -40,6 +40,7 @@
     availabilityBusy: false,
     probablesSource: 'globo'
   };
+  let pitchResizeObserver = null;
 
   window.prioridadesOrdenadas = ['atacantes', 'laterais', 'meias', 'zagueiros', 'goleiros', 'treinadores'];
   window.configCarregada = false;
@@ -511,18 +512,36 @@
 
   function renderField(result) {
     const formation = $('formationSelect')?.value || '4-3-3';
+    const counts = FORMATION_COUNTS[formation] || FORMATION_COUNTS['4-3-3'];
+    const denseFormation = Math.max(counts.meias, counts.atacantes, counts.zagueiros + counts.laterais) >= 5;
     return '<div class="ideal-field ideal-field--' + formation.replace('-', '') + '" role="group" aria-label="Escalação no campo, formação ' + escapeHtml(formation) + '">' +
       '<div class="bg" aria-hidden="true"></div><div class="vignette" aria-hidden="true"></div>' +
       '<div class="ai-fx" aria-hidden="true"><div class="ai-grid"></div><div class="ai-scan"></div><div class="ai-radar"></div><div class="ai-dots"></div></div>' +
       '<svg class="pass-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true"><defs><filter id="idealPassGlow"><feGaussianBlur stdDeviation="2" result="b"></feGaussianBlur><feMerge><feMergeNode in="b"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter></defs><line class="pl" x1="0" y1="0" x2="0" y2="0"></line><line class="pl" x1="0" y1="0" x2="0" y2="0"></line><line class="pl" x1="0" y1="0" x2="0" y2="0"></line></svg>' +
       '<div class="ideal-field-tag"><span>titulares</span><span>' + escapeHtml(formation) + '</span></div>' +
-      '<div class="ideal-field-rows">' +
+      '<div class="ideal-field-canvas' + (denseFormation ? ' is-dense-formation' : '') + '"><div class="ideal-field-rows">' +
         '<div class="ideal-field-row ideal-field-row-attack">' + fieldGroup(result, 'atacantes') + '</div>' +
         '<div class="ideal-field-row ideal-field-row-midfield">' + fieldGroup(result, 'meias') + '</div>' +
         defenseLayout(result) +
         '<div class="ideal-field-row ideal-field-row-goalkeeper">' + fieldGroup(result, 'goleiros') + '</div>' +
       '</div><div class="ideal-field-coach">' + fieldGroup(result, 'treinadores', 'ideal-field-group-coach') + '</div>' +
-      fieldSubmitButton() + '</div>';
+      fieldSubmitButton() + '</div></div>';
+  }
+
+  function syncPitchScale() {
+    const field = $('escalacaoContent')?.querySelector('.ideal-field');
+    if (field) field.style.setProperty('--ideal-pitch-scale', String(field.clientWidth / 720));
+  }
+
+  function observePitchSize() {
+    pitchResizeObserver?.disconnect();
+    const field = $('escalacaoContent')?.querySelector('.ideal-field');
+    if (!field) return;
+    syncPitchScale();
+    if (typeof ResizeObserver === 'function') {
+      pitchResizeObserver = new ResizeObserver(syncPitchScale);
+      pitchResizeObserver.observe(field);
+    }
   }
 
   function renderBench(result) {
@@ -664,6 +683,7 @@
     const balance = patrimonio - safeNumber(result.custoTotal);
     content.innerHTML = `<div class="ideal-metrics"><section class="ideal-financial-card" aria-label="Resumo financeiro da escalação"><div class="ideal-financial-item patrimonio"><span>Patrimônio</span><strong>${money(patrimonio)}</strong></div><i aria-hidden="true">|</i><div class="ideal-financial-item cost"><span>Preço do time</span><strong>${money(result.custoTotal)}</strong></div><i aria-hidden="true">|</i><div class="ideal-financial-item balance"><span>Saldo restante</span><strong>${money(balance)}</strong></div></section><section class="ideal-metric points" title="Estimativa com base nas projeções dos titulares e do treinador"><span>Pontuação projetada</span><strong>${safeNumber(result.pontuacaoTotal).toFixed(2)} pts</strong><em>Estimativa da escalação</em></section></div><div class="ideal-field-layout">${renderField(result)}${renderBench(result)}</div>`;
     panel.classList.remove('hidden');
+    observePitchSize();
     refreshSubmitButton();
   }
 
@@ -885,6 +905,11 @@
     const picker = $('playerPicker');
     picker.hidden = false; picker.setAttribute('aria-hidden', 'false');
     document.body.classList.add('ideal-picker-open');
+    // No PC, levar o foco para a busca evita deixar o hover preso no card
+    // quando a troca é fechada. Em touch, preserve a abertura sem teclado.
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      $('pickerName')?.focus({ preventScroll: true });
+    }
   }
 
   function closePicker() {
@@ -1088,6 +1113,7 @@
   }
 
   function bindEvents() {
+    window.addEventListener('resize', syncPitchScale, { passive: true });
     const isTouchSurface = () => Boolean(window.matchMedia?.('(hover: none), (pointer: coarse)').matches);
     const closeTouchCards = (except = null) => {
       document.querySelectorAll('.ideal-card-actions.is-touch-portal').forEach(panel => {
