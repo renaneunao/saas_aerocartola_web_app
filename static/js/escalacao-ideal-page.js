@@ -38,7 +38,11 @@
     picker: null,
     teamChanged: false,
     availabilityBusy: false,
-    probablesSource: 'globo'
+    probablesSource: 'globo',
+    currentLineup: null,
+    isShowingCurrent: false,
+    currentComparison: null,
+    idealEscalacao: null
   };
   let pitchResizeObserver = null;
 
@@ -620,7 +624,14 @@
       atleta: player.apelido || player.nome || 'atleta',
       timeAlterado: state.teamChanged
     });
-    recomputeResult();
+    if (state.isShowingCurrent) {
+      result.titulares ||= {};
+      result.reservas ||= {};
+      result.custoTotal = POSITION_ORDER.flatMap(position => result.titulares[position] || []).reduce((total, player) => total + price(player), 0);
+      result.pontuacaoTotal = POSITION_ORDER.flatMap(position => result.titulares[position] || []).reduce((total, player) => total + points(player) * (player.eh_capitao ? 1.5 : 1), 0);
+    } else {
+      recomputeResult();
+    }
     exibirResultado(window.ultimaEscalacao, state.clubes);
   }
 
@@ -659,16 +670,18 @@
       console.warn('[AERO][Escalação] envio bloqueado por permissão ou botão ausente', diagnostics);
       return;
     }
-    const canSend = diagnostics.complete;
+    const canSend = diagnostics.complete && !state.isShowingCurrent;
     const label = state.teamChanged
       ? '<i class="fas fa-paper-plane"></i> Enviar time alterado'
       : '<i class="fas fa-paper-plane"></i> Enviar escalação';
     buttons.forEach((button) => {
-      button.innerHTML = button.id === 'fieldSubmitBtn'
+      button.innerHTML = state.isShowingCurrent
+        ? '<i class="fas fa-check"></i><span>Escalação atual</span>'
+        : button.id === 'fieldSubmitBtn'
         ? (state.teamChanged ? '<i class="fas fa-paper-plane"></i><span>Enviar time alterado</span>' : '<i class="fas fa-paper-plane"></i><span>Enviar escalação</span>')
         : label;
       button.disabled = !canSend;
-      button.title = canSend ? 'Enviar esta escalação para o Cartola FC' : 'Complete todas as posições antes de enviar';
+      button.title = state.isShowingCurrent ? 'Esta é a escalação já salva no Cartola' : canSend ? 'Enviar esta escalação para o Cartola FC' : 'Complete todas as posições antes de enviar';
     });
     console.debug('[AERO][Escalação] botões após atualização', buttons.map(button => ({ id: button.id, disabled: button.disabled, texto: button.textContent.trim() })));
   }
@@ -681,18 +694,70 @@
     recomputeResult();
     const patrimonio = safeNumber(result.patrimonio || state.data?.patrimonio);
     const balance = patrimonio - safeNumber(result.custoTotal);
-    content.innerHTML = `<div class="ideal-metrics"><section class="ideal-financial-card" aria-label="Resumo financeiro da escalação"><div class="ideal-financial-item patrimonio"><span>Patrimônio</span><strong>${money(patrimonio)}</strong></div><i aria-hidden="true">|</i><div class="ideal-financial-item cost"><span>Preço do time</span><strong>${money(result.custoTotal)}</strong></div><i aria-hidden="true">|</i><div class="ideal-financial-item balance"><span>Saldo restante</span><strong>${money(balance)}</strong></div></section><section class="ideal-metric points" title="Estimativa com base nas projeções dos titulares e do treinador"><span>Pontuação projetada</span><strong>${safeNumber(result.pontuacaoTotal).toFixed(2)} pts</strong><em>Estimativa da escalação</em></section></div><div class="ideal-field-layout">${renderField(result)}${renderBench(result)}</div>`;
+    const currentNotice = state.isShowingCurrent ? `<div class="ideal-lineup-state ${state.currentComparison?.matches ? 'is-matching' : 'is-different'}"><strong>${state.currentComparison?.matches ? 'Sua escalação atual corresponde ao ideal calculado.' : 'Sua escalação atual está diferente do ideal calculado.'}</strong><span>${state.currentComparison?.matches ? 'Você já está com o time recomendado nesta rodada.' : 'O campo mostra seu time salvo no Cartola. Recalcule para conferir e enviar uma nova escalação ideal.'}</span></div>` : '';
+    content.innerHTML = `${currentNotice}<div class="ideal-metrics"><section class="ideal-financial-card" aria-label="Resumo financeiro da escalação"><div class="ideal-financial-item patrimonio"><span>Patrimônio</span><strong>${money(patrimonio)}</strong></div><i aria-hidden="true">|</i><div class="ideal-financial-item cost"><span>Preço do time</span><strong>${money(result.custoTotal)}</strong></div><i aria-hidden="true">|</i><div class="ideal-financial-item balance"><span>Saldo restante</span><strong>${money(balance)}</strong></div></section><section class="ideal-metric points" title="Estimativa com base nas projeções dos titulares e do treinador"><span>${state.isShowingCurrent ? 'Pontuação da escalação atual (estimada)' : 'Pontuação projetada'}</span><strong>${safeNumber(result.pontuacaoTotal).toFixed(2)} pts</strong><em>${state.isShowingCurrent ? 'Estimativa com as médias disponíveis' : 'Estimativa da escalação'}</em></section></div><div class="ideal-field-layout">${renderField(result)}${renderBench(result)}</div>`;
+    const title = document.querySelector('.ideal-result-title');
+    if (title) title.innerHTML = `<i class="fas fa-futbol"></i> ${state.isShowingCurrent ? 'Escalação atual do Cartola' : 'Escalação ideal'}`;
+    const meta = document.querySelector('.ideal-result-meta');
+    if (meta) meta.textContent = state.isShowingCurrent ? `Time salvo na rodada ${state.data?.rodada_atual}.` : 'Revise o campo, o saldo e os sinais antes de enviar.';
     panel.classList.remove('hidden');
     observePitchSize();
     refreshSubmitButton();
   }
 
-  async function calcularEscalacao(recarregarDados = true) {
+  function makeCurrentLineup(data) {
+    const current = data.current_lineup;
+    const positions = { 1: 'goleiros', 2: 'laterais', 3: 'zagueiros', 4: 'meias', 5: 'atacantes', 6: 'treinadores' };
+    const lineup = { titulares: {}, reservas: {}, custoTotal: 0, pontuacaoTotal: 0, patrimonio: data.patrimonio, manualCaptainId: String(current?.captain_id || ''), formation_id: Number(current?.formation_id || 0), luxuryReserveId: String(current?.luxury_reserve_id || '') };
+    POSITION_ORDER.forEach(position => { lineup.titulares[position] = []; lineup.reservas[position] = []; });
+    const starterIds = new Set((current?.athlete_ids || []).map(String));
+    const reserveIds = new Set(Object.values(current?.reserve_ids || {}).map(String));
+    if (current?.luxury_reserve_id) reserveIds.add(String(current.luxury_reserve_id));
+    (current?.players || []).forEach(player => {
+      const position = positions[Number(player.posicao_id)];
+      if (!position) return;
+      const playerId = String(player.atleta_id);
+      if (starterIds.has(playerId)) {
+        lineup.titulares[position].push({ ...player, eh_capitao: playerId === String(current.captain_id || '') });
+      } else if (reserveIds.has(playerId)) {
+        lineup.reservas[position].push({
+          ...player,
+          eh_reserva_luxo: playerId === String(current.luxury_reserve_id || '')
+        });
+      }
+    });
+    lineup.custoTotal = POSITION_ORDER.flatMap(position => lineup.titulares[position]).reduce((sum, player) => sum + price(player), 0);
+    lineup.pontuacaoTotal = POSITION_ORDER.flatMap(position => lineup.titulares[position]).reduce((sum, player) => sum + points(player) * (player.eh_capitao ? 1.5 : 1), 0);
+    if (current?.formation_id) {
+      const formation = ({ 3: '4-3-3', 1: '4-4-2', 2: '3-5-2', 4: '3-4-3', 5: '4-5-1', 7: '5-3-2', 6: '5-4-1' })[Number(current.formation_id)];
+      if (formation && $('formationSelect')) $('formationSelect').value = formation;
+    }
+    return lineup;
+  }
+
+  function compareLineups(current, ideal) {
+    if (!current || !ideal) return null;
+    const idsByPosition = lineup => POSITION_ORDER.map(position => `${position}:${(lineup.titulares?.[position] || []).map(idOf).sort().join(',')}|r:${(lineup.reservas?.[position] || []).map(idOf).sort().join(',')}`).join('|');
+    const captainId = lineup => POSITION_ORDER.flatMap(position => lineup.titulares?.[position] || []).find(player => player.eh_capitao)?.atleta_id;
+    const luxuryReserveId = lineup => String(lineup.luxuryReserveId || POSITION_ORDER.flatMap(position => lineup.reservas?.[position] || []).find(player => player.eh_reserva_luxo)?.atleta_id || '');
+    return {
+      matches: idsByPosition(current) === idsByPosition(ideal)
+        && String(captainId(current) || '') === String(captainId(ideal) || '')
+        && luxuryReserveId(current) === luxuryReserveId(ideal)
+        && Number(current.formation_id || 0) === Number(ideal.formation_id || 0)
+    };
+  }
+
+  async function calcularEscalacao(recarregarDados = true, options = {}) {
     const button = $('calcularBtn');
     if (button) button.disabled = true;
-    limparConsole();
-    $('resultadoPanel')?.classList.add('hidden');
-    showLoading('Calculando escalação ideal...');
+    if (!options.background) {
+      state.isShowingCurrent = false;
+      button?.classList.remove('ideal-needs-recalculation');
+      limparConsole();
+      $('resultadoPanel')?.classList.add('hidden');
+      showLoading('Calculando escalação ideal...');
+    }
     try {
       const data = recarregarDados || !state.data ? await loadData() : state.data;
       const escalador = new window.EscalacaoIdeal({
@@ -710,17 +775,23 @@
         fechar_defesa: $('fecharDefesaToggle').checked,
         hack_goleiro: $('hackGoleiroToggle').checked
       });
-      escalador.setLogCallback(message => adicionarLog(message, 'log'));
-      window.ultimaEscalacao = await escalador.calcular();
-      exibirResultado(window.ultimaEscalacao, data.clubes_dict);
-      adicionarLog('✓ Escalação pronta para revisão ou envio.', 'success');
+      escalador.setLogCallback(message => { if (!options.background) adicionarLog(message, 'log'); });
+      const ideal = await escalador.calcular();
+      state.idealEscalacao = ideal;
+      if (options.background) return ideal;
+      window.ultimaEscalacao = ideal;
+      exibirResultado(ideal, data.clubes_dict);
+      adicionarLog('✓ Escalação ideal pronta para revisão ou envio.', 'success');
     } catch (error) {
-      window.ultimaEscalacao = null;
+      if (!options.background) window.ultimaEscalacao = null;
       $('escalarBtn').disabled = true;
-      adicionarLog(`ERRO: ${error.message}`, 'error');
-      notify(error.message, 'error');
+      if (!options.background) {
+        adicionarLog(`ERRO: ${error.message}`, 'error');
+        notify(error.message, 'error');
+      }
+      return null;
     } finally {
-      hideLoading();
+      if (!options.background) hideLoading();
       if (button) button.disabled = false;
     }
   }
@@ -1233,11 +1304,43 @@
       });
       if (!(await verificarStatusModulos())) return;
       await carregarConfiguracoes();
-      await loadData();
+      const data = await loadData();
       await loadAvailabilityCandidates();
       bindEvents();
-      adicionarLog('Dados da rodada carregados. Calculando a escalação inicial...', 'info');
-      await calcularEscalacao(false);
+      const current = data.current_lineup;
+      if (current?.status === 'scaled' && current.players?.length) {
+        state.currentLineup = makeCurrentLineup(data);
+        state.isShowingCurrent = true;
+        window.ultimaEscalacao = state.currentLineup;
+        exibirResultado(state.currentLineup, data.clubes_dict);
+        adicionarLog('Escalação atual carregada do Cartola. Conferindo contra o cálculo ideal...', 'info');
+        const currentFormation = $('formationSelect').value;
+        $('formationSelect').value = data.config?.formation || '4-3-3';
+        const ideal = await calcularEscalacao(false, { background: true });
+        if (ideal) ideal.formation_id = ({ '4-4-2': 1, '3-5-2': 2, '4-3-3': 3, '3-4-3': 4, '4-5-1': 5, '5-4-1': 6, '5-3-2': 7 })[$('formationSelect').value] || 0;
+        $('formationSelect').value = currentFormation;
+        state.currentComparison = compareLineups(state.currentLineup, ideal);
+        window.ultimaEscalacao = state.currentLineup;
+        state.isShowingCurrent = true;
+        exibirResultado(state.currentLineup, data.clubes_dict);
+        if (state.currentComparison?.matches) refreshSubmitButton();
+        else $('calcularBtn')?.classList.add('ideal-needs-recalculation');
+      } else {
+        const content = $('escalacaoContent');
+        const panel = $('resultadoPanel');
+        const message = current?.status === 'not_scaled'
+          ? `Ainda não há escalação salva na rodada ${data.rodada_atual}. Calcule a escalação ideal e envie ao Cartola.`
+          : 'Não foi possível confirmar a escalação atual do Cartola. Calcule uma escalação ideal para continuar.';
+        if (content && panel) {
+          content.innerHTML = `<div class="ideal-empty ideal-current-empty"><div><i class="fas fa-clipboard-list"></i><h3>${current?.status === 'not_scaled' ? 'Você ainda não escalou nesta rodada' : 'Escalação atual indisponível'}</h3><p>${escapeHtml(message)}</p><button type="button" class="ideal-btn ideal-btn-primary" onclick="calcularEscalacao()"><i class="fas fa-calculator"></i> Calcular escalação ideal</button></div></div>`;
+          panel.classList.remove('hidden');
+          const title = document.querySelector('.ideal-result-title');
+          if (title) title.innerHTML = '<i class="fas fa-futbol"></i> Escalação da rodada';
+          const meta = document.querySelector('.ideal-result-meta');
+          if (meta) meta.textContent = `Rodada ${data.rodada_atual}`;
+        }
+        adicionarLog(current?.status === 'not_scaled' ? 'O Cartola ainda não registra escalação para a rodada atual.' : 'Não foi possível ler o estado da escalação no Cartola.', current?.status === 'not_scaled' ? 'info' : 'warning');
+      }
     } catch (error) {
       adicionarLog(`ERRO ao carregar: ${error.message}`, 'error');
       notify(error.message, 'error');

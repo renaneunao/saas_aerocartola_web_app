@@ -169,6 +169,14 @@
 .ideal-main { min-width: 0; display: grid; gap: 16px; }
 .ideal-empty { min-height: 260px; display: grid; place-items: center; padding: 26px; color: #7790a8; text-align: center; }
 .ideal-empty i { display: block; margin-bottom: 12px; color: #4b6e89; font-size: 25px; }
+.ideal-lineup-state { display: grid; gap: 4px; margin: 0 0 14px; padding: 12px 15px; border: 1px solid rgba(255, 190, 82, .32); border-radius: 12px; background: rgba(255, 173, 61, .08); color: #f3c878; }
+.ideal-lineup-state strong { font-size: 13px; }
+.ideal-lineup-state span { color: #a9bacb; font-size: 11px; line-height: 1.5; }
+.ideal-lineup-state.is-matching { border-color: rgba(75, 230, 165, .32); background: rgba(75, 230, 165, .07); color: #65e8ae; }
+.ideal-current-empty h3 { margin: 0 0 8px; color: #e5f2ff; font-size: 18px; }
+.ideal-current-empty p { max-width: 480px; margin: 0 auto 16px; color: #9bb2c8; line-height: 1.55; }
+.ideal-current-empty .ideal-btn { margin: auto; }
+.ideal-actions #calcularBtn.ideal-needs-recalculation { outline: 2px solid rgba(91, 229, 255, .72); outline-offset: 2px; box-shadow: 0 0 0 5px rgba(72, 215, 245, .11), 0 8px 22px rgba(255, 161, 74, .22); }
 .ideal-result { position: relative; overflow: hidden; }
 .ideal-result-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 17px; border-bottom: 1px solid rgba(127, 191, 255, .12); }
 .ideal-result-title { display: flex; align-items: center; gap: 9px; color: #fff; font-size: 14px; font-weight: 850; }

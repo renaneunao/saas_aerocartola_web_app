@@ -4956,6 +4956,7 @@ def api_escalacao_dados():
         # Buscar patrimônio via API do Cartola
         patrimonio = 0
         patrimonio_error = None
+        current_lineup = {'status': 'unavailable'}
         
         if not team_id:
             patrimonio_error = "Time não selecionado"
@@ -4970,6 +4971,72 @@ def api_escalacao_dados():
                     # E também pode ter no nível raiz como time.patrimonio
                     if 'time' in team_data and isinstance(team_data['time'], dict):
                         time_info = team_data['time']
+                        # /auth/time é a fonte autenticada da escalação salva.
+                        # O Cartola sinaliza a rodada da última escalação por
+                        # rodada_time_id; só tratamos como atual quando coincide
+                        # com a rodada ativa desta temporada.
+                        rodada_time_id = time_info.get('rodada_time_id')
+                        ids_escalados = time_info.get('atletas') or team_data.get('atletas') or []
+                        if isinstance(ids_escalados, dict):
+                            ids_escalados = list(ids_escalados.keys())
+                        ids_escalados = [
+                            int(item.get('atleta_id', item.get('id'))) if isinstance(item, dict)
+                            and (item.get('atleta_id') or item.get('id')) else int(item)
+                            for item in ids_escalados
+                            if (isinstance(item, dict) and (item.get('atleta_id') or item.get('id')))
+                            or (str(item).isdigit())
+                        ]
+                        reservas_api = time_info.get('reservas') or team_data.get('reservas') or {}
+                        if isinstance(reservas_api, list):
+                            reservas_api = {
+                                str(item.get('posicao') or item.get('posicao_slug') or index): item
+                                for index, item in enumerate(reservas_api) if isinstance(item, dict)
+                            }
+                        reserva_ids = {}
+                        for position_key, reserve_value in (reservas_api.items() if isinstance(reservas_api, dict) else []):
+                            reserve_id = reserve_value.get('atleta_id', reserve_value.get('id')) if isinstance(reserve_value, dict) else reserve_value
+                            if str(reserve_id or '').isdigit():
+                                reserva_ids[str(position_key).lower()] = int(reserve_id)
+                        reserva_luxo_id = time_info.get('reserva_luxo_id') or time_info.get('reserva_luxo') or team_data.get('reserva_luxo_id')
+                        if isinstance(reserva_luxo_id, dict):
+                            reserva_luxo_id = reserva_luxo_id.get('atleta_id', reserva_luxo_id.get('id'))
+                        reserva_luxo_id = int(reserva_luxo_id) if str(reserva_luxo_id or '').isdigit() else None
+                        all_current_ids = list(dict.fromkeys(ids_escalados + list(reserva_ids.values()) + ([reserva_luxo_id] if reserva_luxo_id else [])))
+                        is_current_round = str(rodada_time_id or '') == str(rodada_atual)
+                        current_lineup = {
+                            'status': 'scaled' if is_current_round and ids_escalados else ('not_scaled' if rodada_time_id is not None and not is_current_round else 'unavailable'),
+                            'round_number': int(rodada_time_id) if str(rodada_time_id or '').isdigit() else None,
+                            'formation_id': time_info.get('esquema_id'),
+                            'captain_id': time_info.get('capitao_id'),
+                            'reserve_ids': reserva_ids,
+                            'luxury_reserve_id': reserva_luxo_id,
+                            'athlete_ids': ids_escalados if is_current_round else [],
+                            'players': []
+                        }
+                        if is_current_round and ids_escalados:
+                            placeholders = ','.join(['%s'] * len(all_current_ids))
+                            cursor.execute(f'''
+                                SELECT a.atleta_id, a.apelido, a.nome, a.clube_id,
+                                       a.posicao_id, a.pontos_num, a.media_num,
+                                       a.preco_num, a.jogos_num, a.status_id,
+                                       COALESCE(NULLIF(BTRIM(a.foto_custom), ''), a.foto) AS foto,
+                                       c.nome AS clube_nome, c.abreviacao AS clube_abrev
+                                FROM acf_atletas a
+                                LEFT JOIN acf_clubes c ON c.id = a.clube_id
+                                WHERE a.temporada = %s AND a.atleta_id IN ({placeholders})
+                            ''', [get_temporada_atual()] + all_current_ids)
+                            current_lineup['players'] = [{
+                                'atleta_id': row[0], 'apelido': row[1] or row[2] or '',
+                                'clube_id': row[3], 'posicao_id': int(row[4] or 0),
+                                'pontuacao_total': float(row[5] or row[6] or 0),
+                                'media': float(row[6] or 0), 'preco_num': float(row[7] or 0),
+                                'preco': float(row[7] or 0), 'jogos': int(row[8] or 0),
+                                'status_id': int(row[9] or 0), 'foto': row[10] or '',
+                                'clube_nome': row[11] or '', 'clube_abrev': row[12] or ''
+                            } for row in cursor.fetchall()]
+                            loaded_ids = {str(player['atleta_id']) for player in current_lineup['players']}
+                            starter_ids = set(map(str, ids_escalados))
+                            current_lineup['status'] = 'scaled' if starter_ids.issubset(loaded_ids) else 'unavailable'
                         # Tentar time_mercado.patrimonio primeiro (estrutura mais comum)
                         if 'time_mercado' in time_info and isinstance(time_info['time_mercado'], dict):
                             patrimonio = time_info['time_mercado'].get('patrimonio', 0)
@@ -5136,6 +5203,9 @@ def api_escalacao_dados():
         
         # Buscar dados dos clubes
         clubes_dict = {}
+        for player in current_lineup.get('players', []):
+            if player.get('clube_id'):
+                clube_ids_set.add(int(player['clube_id']))
         if clube_ids_set:
             placeholders = ','.join(['%s'] * len(clube_ids_set))
             cursor.execute(f'''
@@ -5196,6 +5266,7 @@ def api_escalacao_dados():
             'team_name': team_name,
             'team_shield_url': team_shield_url,
             'rodada_atual': rodada_atual,
+            'current_lineup': current_lineup,
             'probables_source': probable_source,
             'rankings_por_posicao': rankings_por_posicao,
             'todos_goleiros': todos_goleiros,  # Lista completa de goleiros para hack
