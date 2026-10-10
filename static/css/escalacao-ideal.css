@@ -2502,6 +2502,7 @@
 .ideal-player-status.is-doubt { color: #241700; background: #ffd166; }
 .ideal-player-status.is-unlikely { color: #fff; background: #ef476f; }
 .ideal-player-status.is-null { color: #e5e7eb; background: #64748b; }
+.ideal-player-status.is-unknown { color: #cbd5e1; background: #475569; }
 
 /* O aumento horizontal do campo também aumentou os cards. Reserve uma
    faixa inferior maior para que defesa e goleiro permaneçam dentro do campo,
@@ -2792,7 +2793,13 @@ select.aero-select.ideal-strategy-select:focus-visible {
   position: relative;
   top: -12px;
 }
+.ideal-goalkeeper-hack-slot { display: grid; justify-items: center; align-content: start; gap: 3px; width: max-content; max-width: 100%; flex: 0 0 auto; }
+.ideal-goalkeeper-hack-slot .ideal-player { width: var(--ideal-card-width, 88px); }
+.ideal-goalkeeper-hack-label { padding: 2px 8px; border: 1px solid rgba(92, 230, 255, .36); border-radius: 999px; color: #a8f3ff; background: rgba(6, 30, 43, .9); font-size: 9px; font-weight: 850; line-height: 1.2; letter-spacing: .035em; }
+.ideal-goalkeeper-hack-chip { color: #ffd166 !important; border-color: rgba(255, 209, 102, .48) !important; background: rgba(75, 48, 9, .82) !important; font-weight: 900; }
+.ideal-player.is-goalkeeper-hack-target { border-color: rgba(92, 230, 255, .52); }
 @media (max-width: 620px) {
+  .ideal-goalkeeper-hack-label { padding: 1px 6px; font-size: 7px; }
   .ideal-field-defense-line > .ideal-field-defense-lane.is-lateral {
     top: -7px;
   }
@@ -3023,6 +3030,49 @@ select.aero-select.ideal-strategy-select:focus-visible {
   min-height: 68px;
   gap: 5px 9px;
 }
+
+/* O painel de confrontos ocupa a grade inteira, como os cards do dashboard. */
+.ideal-picker-club-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; color:#7893aa; font-size:9px; font-weight:800; }
+.ideal-picker-club-heading button { padding:4px 9px; border:1px solid rgba(127,191,255,.2); border-radius:8px; color:#9eb8c9; background:rgba(127,191,255,.06); font-size:8px; font-weight:750; cursor:pointer; }
+.ideal-picker-club-heading button.is-active { border-color:rgba(82,230,255,.55); color:#77ecff; background:rgba(21,152,181,.14); }
+.ideal-picker-club-options { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; width:100%; max-height:340px; overflow:auto; padding:2px; }
+.ideal-picker-match-card { display:grid; grid-template-columns:minmax(0,1fr); align-content:start; gap:5px; width:100%; min-width:0; min-height:154px; padding:7px; border:1px solid rgba(127,191,255,.14); border-radius:11px; background:linear-gradient(145deg,rgba(17,35,54,.92),rgba(5,17,29,.96)); }
+.ideal-picker-match-card.is-invalid { border-color:rgba(251,191,36,.45); background:linear-gradient(145deg,rgba(62,45,21,.46),rgba(12,23,34,.96)); }
+.ideal-picker-matchup { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:3px; min-width:0; }
+.ideal-picker-match-team { display:flex; align-items:center; justify-content:center; gap:4px; min-width:0; min-height:37px; padding:4px; border:1px solid rgba(127,191,255,.1); border-radius:8px; color:#d7e6f0; background:rgba(3,13,25,.58); cursor:pointer; }
+.ideal-picker-match-team img,.ideal-picker-match-team > i { width:20px; height:20px; flex:0 0 20px; object-fit:contain; }
+.ideal-picker-match-team > i { display:grid; place-items:center; color:#7893aa; }
+.ideal-picker-match-team b { overflow:hidden; font-size:8px; text-overflow:ellipsis; white-space:nowrap; }
+.ideal-picker-match-team:hover,.ideal-picker-match-team.is-selected { border-color:rgba(82,230,255,.72); color:#81eeff; background:rgba(21,152,181,.18); box-shadow:inset 0 0 12px rgba(82,230,255,.07); }
+.ideal-picker-match-vs { color:#7890a5; font-size:9px; font-style:normal; font-weight:800; }
+.ideal-picker-invalid-badge { display:flex; align-items:center; justify-content:center; gap:4px; min-width:0; padding:3px 4px; border-radius:6px; color:#fcd778; background:rgba(120,79,12,.3); font-size:7px; font-weight:800; text-align:center; }
+.ideal-picker-favoritism { display:grid; gap:3px; min-width:0; padding-top:2px; }
+.ideal-picker-favoritism-heading { display:flex; align-items:center; justify-content:space-between; gap:4px; color:#8fa6b9; font-size:7px; }
+.ideal-picker-favoritism-heading b { overflow:hidden; color:#b8d6e3; font-size:7px; text-overflow:ellipsis; white-space:nowrap; }
+.ideal-picker-favoritism-heading span { color:#8ea4b6; white-space:nowrap; }
+.ideal-picker-favoritism-meter { position:relative; height:6px; overflow:hidden; border:1px solid rgba(148,163,184,.18); border-radius:99px; background:rgba(15,23,42,.84); }
+.ideal-picker-favoritism-meter::before { position:absolute; z-index:1; top:0; bottom:0; left:50%; width:1px; background:rgba(226,232,240,.45); content:""; }
+.ideal-picker-favoritism-meter i { position:absolute; top:0; bottom:0; width:var(--favoritismo-width,0%); border-radius:99px; background:#5cf2a5; }
+.ideal-picker-favoritism-meter.is-casa i { right:50%; background:#5cf2a5; }
+.ideal-picker-favoritism-meter.is-visitante i { left:50%; background:#67e8f9; }
+.ideal-picker-favoritism-meter.is-equilibrado i { left:50%; width:0; }
+.ideal-picker-favoritism-values { display:flex; justify-content:space-between; color:#8ba2b5; font:600 7px 'JetBrains Mono',monospace; }
+.ideal-picker-favoritism-values strong { color:#c9e6ef; }
+.ideal-picker-sg-bars { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding-top:3px; border-top:1px solid rgba(127,191,255,.1); }
+.ideal-picker-sg-bars > div { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:2px 4px; color:#8ba2b5; font-size:6px; }
+.ideal-picker-sg-bars b { color:#a6e9c5; font:700 7px 'JetBrains Mono',monospace; }
+.ideal-picker-sg-bars i { grid-column:1 / -1; height:4px; overflow:hidden; border-radius:99px; background:rgba(148,163,184,.16); }
+.ideal-picker-sg-bars em { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#177d67,#5cf2a5); }
+.ideal-picker-all-clubs { justify-self:auto; }
+@media (max-width:900px) { .ideal-picker-club-options { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media (max-width:620px) {
+  .ideal-picker-club-options { grid-template-columns:repeat(2,minmax(0,1fr)); max-height:270px; gap:6px; }
+  .ideal-picker-match-card { min-height:148px; padding:6px; }
+  .ideal-picker-match-team { min-height:34px; gap:3px; padding:3px 2px; }
+  .ideal-picker-match-team img,.ideal-picker-match-team > i { width:17px; height:17px; flex-basis:17px; }
+  .ideal-picker-match-team b { font-size:7px; }
+  .ideal-picker-invalid-badge { font-size:6px; }
+}
 .ideal-picker-player-visual { grid-column:1; grid-row:1; align-self:stretch; justify-content:center; }
 .ideal-picker-player-visual { flex-direction:row; gap:5px; }
 .ideal-picker-player-visual .ideal-player-avatar { width:48px !important; height:48px !important; }
@@ -3072,6 +3122,46 @@ select.aero-select.ideal-strategy-select:focus-visible {
 #escalacaoIdealPage .ideal-availability-choice-fixture .ideal-fixture-team img,
 #escalacaoIdealPage .ideal-availability-choice-fixture .ideal-fixture-team i { width:15px !important; height:15px !important; }
 #escalacaoIdealPage .ideal-availability-selected { margin-top:5px; border-color:rgba(82,230,255,.28); }
+
+/* Seletor de atletas ampliado: confrontos clicáveis e ordenação em cards. */
+.ideal-picker-sheet { width:min(1120px,96vw); max-height:min(900px,94vh); }
+.ideal-picker-filters { grid-template-columns:minmax(190px,.7fr) minmax(0,1.3fr); align-items:start; }
+.ideal-picker-filters > label:first-child { grid-column:1; }
+.ideal-picker-club-filter,
+.ideal-picker-sort-filter { display:grid; gap:6px; min-width:0; color:#7893aa; font-size:9px; font-weight:700; }
+.ideal-picker-club-filter { grid-column:1 / -1; }
+.ideal-picker-club-options { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; max-height:150px; overflow:auto; padding:2px; }
+.ideal-picker-match-card { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:stretch; min-width:0; padding:4px; border:1px solid rgba(127,191,255,.13); border-radius:10px; background:linear-gradient(145deg,rgba(18,38,58,.86),rgba(5,18,31,.92)); }
+.ideal-picker-match-card.is-single { grid-template-columns:1fr; }
+.ideal-picker-match-team { display:grid; justify-items:center; align-content:center; gap:2px; min-width:0; min-height:57px; padding:4px 2px; border:1px solid transparent; border-radius:7px; color:#b9cad8; background:transparent; cursor:pointer; }
+.ideal-picker-match-team img,.ideal-picker-match-team > i { width:25px; height:25px; object-fit:contain; }
+.ideal-picker-match-team > i { display:grid; place-items:center; color:#7893aa; }
+.ideal-picker-match-team b { max-width:100%; overflow:hidden; color:#d7e6f0; font-size:8px; text-overflow:ellipsis; white-space:nowrap; }
+.ideal-picker-match-team small { color:#8196a9; font-size:6px; font-weight:800; letter-spacing:.04em; }
+.ideal-picker-match-team:hover,.ideal-picker-match-team.is-selected { border-color:rgba(82,230,255,.72); background:rgba(21,152,181,.17); box-shadow:inset 0 0 12px rgba(82,230,255,.07); }
+.ideal-picker-match-team.is-selected b,.ideal-picker-match-team.is-selected small { color:#77ecff; }
+.ideal-picker-match-vs { align-self:center; color:#718aa0; font-size:10px; font-style:normal; }
+.ideal-picker-all-clubs { justify-self:start; display:flex; align-items:center; gap:6px; min-height:28px; padding:4px 9px; border:1px solid rgba(127,191,255,.18); border-radius:8px; color:#b8c9d7; background:rgba(127,191,255,.06); font-size:8px; font-weight:750; cursor:pointer; }
+.ideal-picker-all-clubs.is-selected { border-color:rgba(82,230,255,.65); color:#78ecff; background:rgba(21,152,181,.16); }
+.ideal-picker-sort-filter { grid-column:1 / -1; }
+.ideal-picker-sort-options { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:6px; }
+.ideal-picker-sort-options button { display:flex; align-items:center; justify-content:center; gap:6px; min-width:0; min-height:34px; padding:5px 7px; border:1px solid rgba(127,191,255,.14); border-radius:9px; color:#a7bdcd; background:linear-gradient(145deg,rgba(17,34,52,.9),rgba(6,18,31,.95)); font-size:9px; font-weight:750; cursor:pointer; }
+.ideal-picker-sort-options button i { color:#789bb2; font-size:10px; }
+.ideal-picker-sort-options button:hover,.ideal-picker-sort-options button.is-active { border-color:rgba(82,230,255,.58); color:#dffaff; background:linear-gradient(145deg,rgba(8,74,91,.58),rgba(8,35,51,.9)); box-shadow:inset 0 0 12px rgba(82,230,255,.06); }
+.ideal-picker-sort-options button.is-active i { color:#62e8ff; }
+.ideal-picker-scout-select { display:grid; grid-column:1 / -1; grid-template-columns:auto minmax(160px,260px); align-items:center; gap:8px; }
+.ideal-picker-scout-select[hidden] { display:none !important; }
+@media (max-width:760px) {
+  .ideal-picker-sheet { width:100%; max-height:96dvh; }
+  .ideal-picker-filters { grid-template-columns:minmax(0,1fr); }
+  .ideal-picker-filters > label:first-child,.ideal-picker-club-filter,.ideal-picker-sort-filter { grid-column:1; }
+  .ideal-picker-club-options { grid-template-columns:repeat(3,minmax(0,1fr)); max-height:128px; }
+  .ideal-picker-match-team { min-height:48px; }
+  .ideal-picker-match-team img,.ideal-picker-match-team > i { width:21px; height:21px; }
+  .ideal-picker-sort-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .ideal-picker-sort-options button { min-height:32px; gap:4px; font-size:8px; }
+  .ideal-picker-scout-select { grid-template-columns:auto minmax(0,1fr); }
+}
 
 @media (max-width: 620px) {
   #escalacaoIdealPage .ideal-metrics { grid-template-columns:minmax(0,1fr); gap:7px; }
@@ -3323,4 +3413,160 @@ select.aero-select.ideal-strategy-select:focus-visible {
     gap: 10px;
   }
   .ideal-bench-head { grid-column: 1 / -1; }
+}
+
+/* Final overrides: confronto como card largo, sem opção "todos" misturada à grade. */
+.ideal-picker-club-options { grid-template-columns:repeat(5,minmax(0,1fr)); width:100%; max-height:340px; gap:8px; }
+.ideal-picker-club-filter { grid-template-columns:minmax(0,1fr); }
+.ideal-picker-club-filter > .ideal-picker-club-heading,.ideal-picker-club-filter > .ideal-picker-club-options { grid-column:1 / -1; width:100%; }
+.ideal-picker-match-card { display:grid; grid-template-columns:minmax(0,1fr); align-content:start; width:100%; min-height:154px; padding:7px; gap:5px; border:1px solid rgba(127,191,255,.14); border-radius:11px; background:linear-gradient(145deg,rgba(17,35,54,.92),rgba(5,17,29,.96)); }
+.ideal-picker-match-card.is-invalid { border-color:rgba(251,191,36,.45); background:linear-gradient(145deg,rgba(62,45,21,.46),rgba(12,23,34,.96)); }
+.ideal-picker-matchup { display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:3px; }
+.ideal-picker-match-team { display:flex; align-items:center; justify-content:center; min-width:0; min-height:37px; gap:4px; padding:4px; border:1px solid rgba(127,191,255,.1); border-radius:8px; color:#d7e6f0; background:rgba(3,13,25,.58); cursor:pointer; }
+.ideal-picker-match-team img,.ideal-picker-match-team > i { width:20px; height:20px; flex:0 0 20px; object-fit:contain; }
+.ideal-picker-match-team:hover,.ideal-picker-match-team.is-selected { border-color:rgba(82,230,255,.72); color:#81eeff; background:rgba(21,152,181,.18); }
+.ideal-picker-invalid-badge { display:flex; justify-content:center; padding:3px 4px; border-radius:6px; color:#fcd778; background:rgba(120,79,12,.3); font-size:7px; font-weight:800; text-align:center; }
+.ideal-picker-favoritism { display:grid; gap:3px; min-width:0; }
+.ideal-picker-favoritism-heading,.ideal-picker-favoritism-values { display:flex; justify-content:space-between; gap:4px; color:#8fa6b9; font-size:7px; }
+.ideal-picker-favoritism-meter { position:relative; height:6px; overflow:hidden; border:1px solid rgba(148,163,184,.18); border-radius:99px; background:rgba(15,23,42,.84); }
+.ideal-picker-favoritism-meter::before { position:absolute; z-index:1; top:0; bottom:0; left:50%; width:1px; background:rgba(226,232,240,.45); content:""; }
+.ideal-picker-favoritism-meter i { position:absolute; top:0; bottom:0; width:var(--favoritismo-width,0%); border-radius:99px; background:#5cf2a5; }
+.ideal-picker-favoritism-meter.is-casa i { right:50%; }.ideal-picker-favoritism-meter.is-visitante i { left:50%; background:#67e8f9; }.ideal-picker-favoritism-meter.is-equilibrado i { left:50%; width:0; }
+.ideal-picker-sg-bars { display:grid; grid-template-columns:1fr 1fr; gap:6px; padding-top:3px; border-top:1px solid rgba(127,191,255,.1); }
+.ideal-picker-sg-bars > div { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:2px 4px; color:#8ba2b5; font-size:6px; }
+.ideal-picker-sg-bars > div > i { grid-column:1 / -1; height:4px; overflow:hidden; border-radius:99px; background:rgba(148,163,184,.16); }
+.ideal-picker-sg-bars em { display:block; height:100%; border-radius:inherit; background:linear-gradient(90deg,#177d67,#5cf2a5); }
+@media (max-width:900px) { .ideal-picker-club-options { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media (max-width:620px) { .ideal-picker-club-options { grid-template-columns:repeat(2,minmax(0,1fr)); max-height:270px; gap:6px; }.ideal-picker-match-card { min-height:148px; padding:6px; }.ideal-picker-match-team { min-height:34px; gap:3px; padding:3px 2px; }.ideal-picker-match-team img,.ideal-picker-match-team > i { width:17px; height:17px; flex-basis:17px; }.ideal-picker-match-team b { font-size:7px; }.ideal-picker-invalid-badge { font-size:6px; } }
+
+/* Status completo e leitura compacta nos resultados do seletor de atletas. */
+#pickerStatusOptions { display:flex; flex:1 1 0; flex-wrap:wrap; gap:5px; min-width:0; }
+#pickerStatusOptions button { padding:5px 9px; border:1px solid rgba(127,191,255,.16); border-radius:999px; color:#9bb1c3; background:rgba(11,25,40,.75); font-size:9px; cursor:pointer; }
+#pickerStatusOptions button.is-active { border-color:rgba(82,230,255,.5); color:#8cf0ff; background:rgba(21,152,181,.15); }
+.ideal-picker-player-entry { min-width:0; overflow:hidden; border:1px solid rgba(127,191,255,.11); border-radius:10px; background:rgba(3,13,25,.38); }
+.ideal-picker-results { grid-template-rows:none !important; grid-auto-rows:max-content !important; align-content:start !important; }
+.ideal-picker-player-entry { height:auto !important; min-height:86px; align-self:start; }
+.ideal-picker-player-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:stretch; gap:5px; padding:4px; }
+.ideal-picker-player-row .ideal-picker-player { grid-template-columns:68px minmax(0,1fr) auto 14px !important; min-height:78px; padding:7px !important; border:0; background:transparent; cursor:pointer; }
+.ideal-picker-player-row .ideal-picker-player:hover,.ideal-picker-player-entry.is-expanded .ideal-picker-player { background:rgba(82,230,255,.055); }
+.ideal-picker-player-row .ideal-picker-player-visual .ideal-player-avatar { width:38px !important; height:38px !important; }
+.ideal-picker-player-row .ideal-picker-metric { min-width:56px; padding:4px 5px; }
+.ideal-picker-row-chevron { align-self:center; color:#70899c; font-size:10px; transition:transform .18s ease,color .18s ease; }
+.ideal-picker-player-entry.is-expanded .ideal-picker-row-chevron { color:#72eaff; transform:rotate(180deg); }
+.ideal-picker-select-player { display:flex; align-items:center; justify-content:center; align-self:center; gap:5px; min-width:91px; min-height:34px; padding:6px 10px; border:1px solid rgba(82,230,255,.35); border-radius:8px; color:#8cecff; background:rgba(21,152,181,.13); font-size:9px; font-weight:800; white-space:nowrap; cursor:pointer; }
+.ideal-picker-select-player:hover { border-color:rgba(82,230,255,.7); background:rgba(21,152,181,.23); }
+.ideal-picker-inline-slot { padding:0 9px 9px; }
+.ideal-picker-inline-detail { display:grid; gap:9px; padding:10px; border:1px solid rgba(82,230,255,.13); border-radius:9px; background:linear-gradient(140deg,rgba(11,30,45,.88),rgba(5,15,27,.9)); }
+.ideal-picker-detail-head { display:flex; align-items:center; justify-content:space-between; gap:8px; color:#d9f6ff; font-size:11px; }
+.ideal-picker-detail-head .ideal-btn { min-height:28px; padding:4px 8px; font-size:9px; }
+.ideal-picker-detail-metrics { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
+.ideal-picker-detail-metrics > span { display:grid; gap:3px; padding:6px 8px; border:1px solid rgba(127,191,255,.12); border-radius:7px; background:rgba(127,191,255,.035); }
+.ideal-picker-detail-metrics small,.ideal-picker-detail-section > b small { color:#819caf; font-size:8px; }
+.ideal-picker-detail-metrics b { color:#74e9b0; font:700 11px 'JetBrains Mono',monospace; }
+.ideal-picker-detail-section { display:grid; gap:6px; color:#b8d7e4; font-size:9px; }
+.ideal-picker-score-chart { display:grid; grid-template-columns:repeat(10,minmax(0,1fr)); align-items:end; gap:4px; min-height:54px; padding:5px 4px 0; border-bottom:1px solid rgba(127,191,255,.12); }
+.ideal-picker-chart-column { display:flex; min-width:0; height:49px; flex-direction:column; align-items:center; justify-content:flex-end; gap:3px; }
+.ideal-picker-chart-column i { width:min(100%,15px); height:var(--bar-height); min-height:3px; border-radius:3px 3px 0 0; background:#31d895; }
+.ideal-picker-chart-column i.is-negative { background:#fb6475; }.ideal-picker-chart-column i.is-zero { background:#53677a; }
+.ideal-picker-chart-column small { color:#7690a5; font-size:7px; }
+.ideal-picker-scout-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px 8px; }
+.ideal-picker-scout-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:2px 6px; padding:4px 6px; border-radius:5px; background:rgba(127,191,255,.035); }
+.ideal-picker-scout-row b { overflow:hidden; color:#a8c3d1; font-size:8px; text-overflow:ellipsis; white-space:nowrap; }
+.ideal-picker-scout-row > span { color:#59e5a6; font:700 9px 'JetBrains Mono',monospace; }
+.ideal-picker-scout-row small { grid-column:1 / -1; color:#738da2; font-size:7px; }
+.ideal-picker-detail-muted,.ideal-picker-detail-loading { margin:0; color:#849bad; font-size:9px; }
+.ideal-picker-match-card { min-height:0 !important; align-content:start; gap:3px; padding:5px !important; }
+.ideal-picker-match-team { min-height:32px; padding:2px 3px; }
+.ideal-picker-favoritism { gap:2px; }
+.ideal-picker-sg-bars { gap:4px; padding-top:2px; }
+.ideal-picker-match-card .ideal-picker-invalid-badge { padding:2px 3px; }
+@media (max-width:620px) {
+  .ideal-picker-detail-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .ideal-picker-scout-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .ideal-picker-player-row .ideal-picker-player { grid-template-columns:46px minmax(0,1fr) auto 12px !important; min-height:72px; }
+  .ideal-picker-player-row .ideal-picker-player-visual .ideal-player-avatar { width:34px !important; height:34px !important; }
+  .ideal-picker-player-row .ideal-picker-metric { min-width:46px; padding:3px 4px; }
+  .ideal-picker-select-player { min-width:68px; min-height:32px; padding:5px 6px; font-size:8px; }
+  .ideal-picker-match-card { min-height:0 !important; }
+}
+
+/* O seletor prioriza a lista: confrontos no topo, atletas à esquerda e
+   controles num painel lateral no desktop; em touch os controles recolhem. */
+.ideal-picker-sheet { grid-template-rows:auto auto minmax(0,1fr) auto !important; }
+.ideal-picker-filters { display:block; min-height:0; padding:8px 0 10px; }
+.ideal-picker-club-filter { display:grid; grid-template-columns:minmax(0,1fr); gap:5px; }
+.ideal-picker-club-options { max-height:190px; grid-template-columns:repeat(5,minmax(0,1fr)); gap:5px; }
+.ideal-picker-match-card { min-height:0 !important; }
+.ideal-picker-match-team { min-height:29px; }
+.ideal-picker-match-team img,.ideal-picker-match-team > i { width:19px; height:19px; }
+.ideal-picker-workspace { display:grid; grid-template-columns:minmax(0,1fr) 254px; gap:10px; min-height:0; overflow:hidden; }
+.ideal-picker-list-panel { display:grid; grid-template-rows:auto minmax(0,1fr); gap:5px; min-width:0; min-height:0; }
+.ideal-picker-list-panel .ideal-picker-rule { margin:0; padding:6px 8px; font-size:9px; }
+.ideal-picker-results { min-height:0; max-height:none; overflow:auto; grid-template-rows:none !important; grid-auto-rows:max-content !important; align-content:start !important; gap:5px; padding:1px 4px 8px 0; }
+.ideal-picker-controls { min-width:0; min-height:0; overflow:hidden; border:1px solid rgba(127,191,255,.12); border-radius:10px; background:rgba(4,15,27,.68); }
+.ideal-picker-controls > summary { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:9px 10px; color:#c5dce8; font-size:10px; font-weight:800; cursor:pointer; list-style:none; }
+.ideal-picker-controls > summary::-webkit-details-marker { display:none; }
+.ideal-picker-controls > summary i:first-child { color:#65ddf0; }
+.ideal-picker-controls[open] > summary { border-bottom:1px solid rgba(127,191,255,.11); }
+.ideal-picker-controls[open] > summary i:last-child { transform:rotate(180deg); }
+.ideal-picker-controls-body { display:grid; gap:12px; max-height:calc(100% - 38px); overflow:auto; padding:10px; }
+.ideal-picker-controls .ideal-picker-sort-filter { display:grid; grid-column:auto; gap:6px; color:#829db1; font-size:9px; font-weight:800; }
+.ideal-picker-controls .ideal-picker-sort-options { grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; }
+.ideal-picker-controls .ideal-picker-sort-options button { justify-content:flex-start; min-height:31px; font-size:8px; }
+.ideal-picker-controls .ideal-picker-scout-select { grid-template-columns:1fr; gap:4px; }
+.ideal-picker-controls .ideal-picker-status-filter { display:grid; grid-template-columns:1fr; gap:6px; padding:0; border:0; background:transparent; }
+.ideal-picker-controls .ideal-picker-status-filter > span { color:#829db1; font-size:9px; font-weight:800; }
+.ideal-picker-controls .ideal-picker-status-options { display:block; }
+.ideal-picker-controls #pickerStatusOptions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:5px; }
+.ideal-picker-controls #pickerStatusOptions button { min-height:28px; padding:4px 6px; font-size:8px; }
+.ideal-picker-controls .ideal-picker-price-limit { display:grid; grid-template-columns:1fr; gap:4px; min-height:0; padding:8px; }
+.ideal-picker-controls .ideal-picker-price-limit[hidden] { display:none !important; }
+.ideal-picker-player-entry { min-height:72px; }
+.ideal-picker-player-row .ideal-picker-player { min-height:64px; grid-template-columns:54px minmax(0,1fr) auto 13px !important; }
+.ideal-picker-player-row .ideal-picker-player-visual .ideal-player-avatar { width:36px !important; height:36px !important; }
+@media (max-width:760px) {
+  .ideal-picker-sheet { grid-template-rows:auto auto minmax(0,1fr) auto !important; }
+  .ideal-picker-filters { padding-top:5px; }
+  .ideal-picker-club-options { grid-template-columns:repeat(3,minmax(0,1fr)); max-height:116px; }
+  .ideal-picker-workspace { grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; gap:6px; }
+  .ideal-picker-list-panel { grid-row:1; }
+  .ideal-picker-controls { grid-row:2; max-height:42vh; overflow:auto; }
+  .ideal-picker-controls:not([open]) { height:38px; }
+  .ideal-picker-controls-body { max-height:35vh; }
+  .ideal-picker-controls #pickerStatusOptions { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .ideal-picker-controls .ideal-picker-sort-options { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+
+/* Histórico legível e filtros de status intencionais em desktop e celular. */
+.ideal-picker-score-chart { grid-template-columns:repeat(10,minmax(0,1fr)); min-height:68px; gap:2px; padding:5px 2px 0; }
+.ideal-picker-chart-column { height:63px; gap:2px; }
+.ideal-picker-chart-score { max-width:100%; color:#c8dce8; font:600 8px 'JetBrains Mono',monospace; line-height:1; white-space:nowrap; }
+.ideal-picker-chart-column i { flex:0 0 auto; }
+.ideal-picker-chart-column small { font-size:7px; line-height:1; }
+.ideal-picker-detail-metrics { grid-template-columns:repeat(6,minmax(0,1fr)); }
+.ideal-picker-scout-row { grid-template-rows:auto auto; }
+.ideal-picker-scout-row > span { align-self:center; }
+.ideal-picker-scout-row small { grid-column:1 / -1; }
+.ideal-picker-status-options { display:grid; gap:6px; }
+.ideal-picker-controls #pickerStatusOptions { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.ideal-picker-controls #pickerStatusCravados { width:100%; min-height:29px; border:1px dashed rgba(82,230,255,.34); border-radius:8px; color:#86dff0; background:rgba(21,152,181,.07); font-size:8px; font-weight:800; cursor:pointer; }
+.ideal-picker-controls #pickerStatusCravados.is-active { border-style:solid; border-color:rgba(82,230,255,.65); color:#dffaff; background:rgba(21,152,181,.2); }
+.ideal-picker-club-options { max-height:none !important; overflow:visible !important; }
+@media (max-width:760px) {
+  .ideal-picker-club-options { grid-template-columns:repeat(3,minmax(0,1fr)); max-height:none !important; overflow:visible !important; gap:4px; }
+  .ideal-picker-match-card { gap:2px; padding:4px !important; }
+  .ideal-picker-match-team { min-height:25px; gap:2px; padding:1px; }
+  .ideal-picker-match-team img,.ideal-picker-match-team > i { width:16px; height:16px; flex-basis:16px; }
+  .ideal-picker-match-team b { font-size:6px; }
+  .ideal-picker-match-vs { font-size:7px; }
+  .ideal-picker-favoritism-heading,.ideal-picker-favoritism-values { font-size:6px; }
+  .ideal-picker-favoritism-heading b { font-size:6px; }
+  .ideal-picker-sg-bars { gap:2px; }
+  .ideal-picker-sg-bars > div { font-size:5px; }
+  .ideal-picker-sg-bars b { font-size:6px; }
+  .ideal-picker-detail-metrics { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .ideal-picker-score-chart { min-height:65px; gap:1px; }
+  .ideal-picker-chart-column { height:60px; gap:2px; }
+  .ideal-picker-chart-score { font-size:6px; letter-spacing:-.04em; }
+  .ideal-picker-chart-column small { font-size:6px; }
 }

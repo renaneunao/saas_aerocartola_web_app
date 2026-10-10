@@ -4690,6 +4690,7 @@ def api_escalacao_dados():
         )
         probable_source = _get_probables_source(conn, user['id'], team_id)
         source_status_dict = {}
+        source_status_text_dict = {}
         if probable_source == 'provaveisdocartola':
             cursor.execute('''
                 SELECT pm.atleta_id, pf.status
@@ -4710,14 +4711,20 @@ def api_escalacao_dados():
                     ORDER BY cm.rodada_id DESC LIMIT 1
                 ) tm ON TRUE
                 JOIN acf_atletas live ON live.atleta_id = pm.atleta_id
-                  AND live.temporada = pf.temporada AND live.status_id <> 6
+                  AND live.temporada = pf.temporada
                   AND live.clube_id = tm.clube_id
                 WHERE pf.temporada = %s AND pf.rodada_id = %s AND pf.fonte = %s
                   AND pf.ativo = TRUE AND pm.atleta_id IS NOT NULL
             ''', (get_temporada_atual(), rodada_atual, 'provaveisdocartola'))
+            external_status_map = {'provavel': 7, 'duvida': 2, 'improvavel': 3, 'suspenso': 5, 'lesionado': 5, 'fora': 6, 'nulo': 6}
+            source_status_rows = cursor.fetchall()
+            source_status_text_dict = {
+                str(row[0]): str(row[1] or '').strip().lower()
+                for row in source_status_rows
+            }
             source_status_dict = {
-                str(row[0]): {'provavel': 7, 'duvida': 2, 'improvavel': 3, 'suspenso': 5, 'lesionado': 5, 'fora': 6}.get(str(row[1]), 2)
-                for row in cursor.fetchall()
+                athlete_id: external_status_map.get(source_status, 0)
+                for athlete_id, source_status in source_status_text_dict.items()
             }
         
         # Buscar configuração padrão do usuário para este time
@@ -4852,13 +4859,17 @@ def api_escalacao_dados():
                         else:
                             jogador_norm['status_id'] = 0  # Status desconhecido
                         jogador_norm['source_status_id'] = source_status_dict.get(atleta_key)
+                        jogador_norm['source_status'] = source_status_text_dict.get(atleta_key, '')
                         jogador_norm['probables_source'] = probable_source
                         # Quando a fonte externa está ativa, o vínculo mapeado
                         # é a autoridade para disponibilidade. Não bloquear o
                         # status "fora" (6): ele precisa substituir também um
                         # status oficial diferente para o mesmo atleta.
-                        if jogador_norm['source_status_id'] is not None:
-                            jogador_norm['status_id'] = jogador_norm['source_status_id']
+                        if probable_source == 'provaveisdocartola':
+                            # A fonte ativa é a autoridade do status. Se o
+                            # atleta ainda não tiver vínculo/registro externo,
+                            # não mascarar a lacuna com o status oficial.
+                            jogador_norm['status_id'] = jogador_norm['source_status_id'] if jogador_norm['source_status_id'] is not None else 0
 
                         # O ranking salvo é um snapshot. Foto customizada é
                         # dado vivo da tabela de atletas e precisa prevalecer
@@ -5031,7 +5042,9 @@ def api_escalacao_dados():
                                 'pontuacao_total': float(row[5] or row[6] or 0),
                                 'media': float(row[6] or 0), 'preco_num': float(row[7] or 0),
                                 'preco': float(row[7] or 0), 'jogos': int(row[8] or 0),
-                                'status_id': int(row[9] or 0), 'foto': row[10] or '',
+                                'status_id': (source_status_dict.get(str(row[0]), 0) if probable_source == 'provaveisdocartola' else int(row[9] or 0)),
+                                'source_status': source_status_text_dict.get(str(row[0]), ''),
+                                'probables_source': probable_source, 'foto': row[10] or '',
                                 'clube_nome': row[11] or '', 'clube_abrev': row[12] or ''
                             } for row in cursor.fetchall()]
                             loaded_ids = {str(player['atleta_id']) for player in current_lineup['players']}
@@ -5104,7 +5117,9 @@ def api_escalacao_dados():
         
         for row in rows_goleiros:
             if row and len(row) >= 8:
-                status_id = int(row[4]) if row[4] else 0
+                status_id = (source_status_dict.get(str(row[0]), 0)
+                             if probable_source == 'provaveisdocartola'
+                             else int(row[4]) if row[4] else 0)
                 
                 # Contar por status
                 if status_id in [2, 7]:
@@ -5119,6 +5134,8 @@ def api_escalacao_dados():
                     'preco_num': float(row[3]) if row[3] else 0,
                     'preco': float(row[3]) if row[3] else 0,
                     'status_id': status_id,
+                    'source_status': source_status_text_dict.get(str(row[0]), ''),
+                    'probables_source': probable_source,
                     'pontuacao_total': 0,
                     'foto': row[5] or '',
                     'foto_url': row[5] or '',
@@ -5223,17 +5240,17 @@ def api_escalacao_dados():
                     'escudo_url': escudo_url
                 }
         
-        # Buscar adversários (partidas válidas da rodada)
+        # Buscar os confrontos da rodada, incluindo partidas inválidas/adiadas.
         cursor.execute('''
-            SELECT clube_casa_id, clube_visitante_id
+            SELECT clube_casa_id, clube_visitante_id, valida
             FROM acf_partidas
-            WHERE rodada_id = %s AND temporada = %s AND valida = TRUE
+            WHERE rodada_id = %s AND temporada = %s
         ''', (rodada_atual, get_temporada_atual()))
         partidas = cursor.fetchall()
         
         adversarios_dict = {}
         mando_por_clube = {}
-        for casa_id, visitante_id in partidas:
+        for casa_id, visitante_id, _valida in partidas:
             adversarios_dict[casa_id] = visitante_id
             adversarios_dict[visitante_id] = casa_id
             mando_por_clube[str(casa_id)] = 'casa'
@@ -5260,6 +5277,48 @@ def api_escalacao_dados():
                     'escudo_url': get_team_shield(clube_id, size='45x45')
                 }
 
+        # Todos os dez confrontos entram no seletor, inclusive partidas
+        # marcadas como inválidas/adiadas. Elas continuam filtráveis, mas são
+        # identificadas visualmente para não confundir o usuário.
+        confronto_diferencas = []
+        confrontos_rodada = []
+        for casa_id, visitante_id, valida in partidas:
+            casa_id, visitante_id = int(casa_id), int(visitante_id)
+            casa = clubes_dict.get(casa_id, {})
+            visitante = clubes_dict.get(visitante_id, {})
+            casa_peso = float(peso_jogo_por_clube.get(str(casa_id), 0) or 0)
+            visitante_peso = float(peso_jogo_por_clube.get(str(visitante_id), 0) or 0)
+            diferenca = casa_peso - visitante_peso
+            confronto_diferencas.append(abs(diferenca))
+            casa_sg = float(peso_sg_por_clube.get(str(casa_id), 0) or 0)
+            visitante_sg = float(peso_sg_por_clube.get(str(visitante_id), 0) or 0)
+            casa_sg = casa_sg * 100 if casa_sg <= 1 else casa_sg
+            visitante_sg = visitante_sg * 100 if visitante_sg <= 1 else visitante_sg
+            confrontos_rodada.append({
+                'casa': {
+                    'id': casa_id, 'nome': casa.get('nome', 'Time'),
+                    'abreviacao': casa.get('abreviacao', '---'),
+                    'escudo_url': casa.get('escudo_url', ''),
+                    'favoritismo': casa_peso,
+                    'saldo_percent': round(max(0.0, min(100.0, casa_sg)), 1),
+                },
+                'visitante': {
+                    'id': visitante_id, 'nome': visitante.get('nome', 'Time'),
+                    'abreviacao': visitante.get('abreviacao', '---'),
+                    'escudo_url': visitante.get('escudo_url', ''),
+                    'favoritismo': visitante_peso,
+                    'saldo_percent': round(max(0.0, min(100.0, visitante_sg)), 1),
+                },
+                'valida': bool(valida),
+                'favoritismo_lado': 'casa' if diferenca > 0 else 'visitante' if diferenca < 0 else 'equilibrado',
+                '_favoritismo_diferenca': abs(diferenca),
+            })
+        favoritismo_maximo = max(confronto_diferencas, default=0.0) or 1.0
+        for confronto in confrontos_rodada:
+            confronto['favoritismo_bar_percent'] = round(
+                min(50.0, confronto.pop('_favoritismo_diferenca') / favoritismo_maximo * 50.0), 2
+            )
+
         response_data = {
             'team_id': team_id,
             'temporada_atual': get_temporada_atual(),
@@ -5272,6 +5331,7 @@ def api_escalacao_dados():
             'todos_goleiros': todos_goleiros,  # Lista completa de goleiros para hack
             'adversarios_dict': adversarios_dict,
             'mando_por_clube': mando_por_clube,
+            'confrontos_rodada': confrontos_rodada,
             'config': {
                 'formation': escalacao_config['formation'] if escalacao_config else '4-3-3',
                 'hack_goleiro': escalacao_config['hack_goleiro'] if escalacao_config else False,

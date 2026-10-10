@@ -2,7 +2,7 @@
 {% block title %}Escalação Ideal - Cartola Aero{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/escalacao-ideal.css', v='42') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/escalacao-ideal.css', v='49') }}">
 
 <div id="escalacaoIdealPage"
      class="ideal-page"
@@ -162,23 +162,29 @@
         <button class="ideal-icon-btn" type="button" data-picker-close aria-label="Fechar"><i class="fas fa-times"></i></button>
       </header>
       <div class="ideal-picker-filters">
-        <label><span>Nome</span><input id="pickerName" class="ideal-input" type="search" placeholder="Buscar"></label>
-        <label class="ideal-picker-club-filter"><span>Time</span><select id="pickerClub" class="ideal-select aero-select"><option value="">Todos</option></select><span id="pickerClubFixture" class="ideal-picker-club-fixture"><span class="ideal-picker-club-empty">Escolha um time para ver o confronto</span></span></label>
-        <label><span>Ordenar por</span><select id="pickerSort" class="ideal-select aero-select"><option value="expected">Previsão de pontos</option><option value="average">Média</option><option value="price_asc">Preço: menor primeiro</option><option value="price_desc">Preço: maior primeiro</option><option value="scout">Scout selecionado</option><option value="name">Nome</option></select></label>
-        <label><span>Scout para ordenar</span><select id="pickerScout" class="ideal-select aero-select"><option value="">Escolha o scout</option></select></label>
-        <div class="ideal-picker-status-filter" aria-label="Filtrar disponibilidade">
-          <span>Disponibilidade</span>
-          <div class="ideal-picker-status-options">
-            <button type="button" data-picker-status="provaveis" aria-pressed="true" class="is-active">Prováveis</button>
-            <button type="button" data-picker-status="todos" aria-pressed="false">Todos</button>
-            <button type="button" data-picker-status="cravados" aria-pressed="false">Cravados</button>
-            <button type="button" data-picker-status="duvidas" aria-pressed="false">Dúvidas</button>
-          </div>
-        </div>
-        <div id="playerPickerPriceLimit" class="ideal-picker-price-limit" aria-live="polite"><span>Preço máximo</span><strong>—</strong></div>
+        <div class="ideal-picker-club-filter"><div class="ideal-picker-club-heading"><span>Confrontos da rodada</span><button id="pickerAllClubs" type="button" aria-pressed="true">Todos os times</button></div><div id="pickerClubOptions" class="ideal-picker-club-options"></div></div>
       </div>
-      <div id="playerPickerRule" class="ideal-picker-rule"></div>
-      <div id="playerPickerResults" class="ideal-picker-results"></div>
+      <div class="ideal-picker-workspace">
+        <section class="ideal-picker-list-panel" aria-label="Jogadores disponíveis">
+          <div id="playerPickerRule" class="ideal-picker-rule"></div>
+          <div id="playerPickerResults" class="ideal-picker-results"></div>
+        </section>
+        <details id="pickerControls" class="ideal-picker-controls">
+          <summary><i class="fas fa-sliders"></i><span>Filtros e ordenação</span><i class="fas fa-chevron-down"></i></summary>
+          <div class="ideal-picker-controls-body">
+            <div class="ideal-picker-sort-filter"><span>Ordenar por</span><div id="pickerSortOptions" class="ideal-picker-sort-options" aria-label="Ordenar jogadores">
+              <button type="button" data-picker-sort="expected" aria-pressed="true" class="is-active"><i class="fas fa-chart-line"></i><span>Prevista</span></button>
+              <button type="button" data-picker-sort="average" aria-pressed="false"><i class="fas fa-wave-square"></i><span>Média</span></button>
+              <button type="button" data-picker-sort="price_asc" aria-pressed="false"><i class="fas fa-arrow-down-wide-short"></i><span>Menor preço</span></button>
+              <button type="button" data-picker-sort="price_desc" aria-pressed="false"><i class="fas fa-arrow-up-wide-short"></i><span>Maior preço</span></button>
+              <button type="button" data-picker-sort="scout" aria-pressed="false"><i class="fas fa-crosshairs"></i><span>Scout</span></button>
+              <button type="button" data-picker-sort="name" aria-pressed="false"><i class="fas fa-arrow-down-a-z"></i><span>Nome</span></button>
+            </div><label id="pickerScoutWrap" class="ideal-picker-scout-select" hidden><span>Scout</span><select id="pickerScout" class="ideal-select aero-select"><option value="">Escolha o scout</option></select></label></div>
+            <div class="ideal-picker-status-filter" aria-label="Filtrar disponibilidade"><span>Disponibilidade</span><div class="ideal-picker-status-options"><div id="pickerStatusOptions"></div><button id="pickerStatusCravados" type="button" data-picker-status="cravados" aria-pressed="false">Cravados</button></div></div>
+            <div id="playerPickerPriceLimit" class="ideal-picker-price-limit" aria-live="polite" hidden><span>Preço máximo</span><strong>—</strong></div>
+          </div>
+        </details>
+      </div>
       <footer class="ideal-picker-footer">
         <button id="removePlayerBtn" class="ideal-btn ideal-btn-danger" type="button"><i class="fas fa-trash-alt"></i> Remover desta posição</button>
         <button class="ideal-btn ideal-btn-quiet" type="button" data-picker-close>Cancelar</button>
@@ -196,5 +202,5 @@
 <script src="{{ url_for('static', filename='js/escalacao_ideal.js', v='2') }}"></script>
 <script src="{{ url_for('static', filename='js/escalacao_rapida.js', v='3') }}"></script>
 <script src="{{ url_for('static', filename='js/modulos-calculo-todos.js', v='1') }}"></script>
-<script src="{{ url_for('static', filename='js/escalacao-ideal-page.js', v='27') }}"></script>
+<script src="{{ url_for('static', filename='js/escalacao-ideal-page.js', v='33') }}"></script>
 {% endblock %}
