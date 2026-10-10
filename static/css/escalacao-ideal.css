@@ -3570,3 +3570,34 @@ select.aero-select.ideal-strategy-select:focus-visible {
   .ideal-picker-chart-score { font-size:6px; letter-spacing:-.04em; }
   .ideal-picker-chart-column small { font-size:6px; }
 }
+
+/* O selo Hack não deve aumentar a caixa flex nem levantar o cartão do goleiro.
+   A largura móvel acompanha a dos demais atletas do campo (62px). */
+.ideal-goalkeeper-hack-slot {
+  position: relative;
+  display: block;
+  width: var(--ideal-card-width, 62px);
+  height: auto;
+  flex: 0 0 var(--ideal-card-width, 62px);
+  align-self: flex-end;
+}
+.ideal-goalkeeper-hack-slot > .ideal-player {
+  display: block;
+  box-sizing: border-box;
+  width: 100% !important;
+  min-width: 0;
+  flex: none;
+}
+.ideal-goalkeeper-hack-slot > .ideal-goalkeeper-hack-label {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+@media (max-width:620px) {
+  #escalacaoIdealPage .ideal-goalkeeper-hack-slot {
+    width: 62px;
+    flex-basis: 62px;
+  }
+}
