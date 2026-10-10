@@ -1,0 +1,43 @@
+.aero-install-banner[hidden] { display:none !important; }
+.aero-install-banner {
+    position:relative; display:flex; align-items:center; gap:12px; padding:16px 44px 16px 16px;
+    margin:0 0 20px; border:1px solid rgba(0,229,255,.2); border-radius:16px;
+    background:linear-gradient(120deg,rgba(11,29,52,.96),rgba(11,17,32,.96)); color:#EDF2FA;
+    box-shadow:0 8px 28px rgba(0,0,0,.15); font-family:Inter,sans-serif;
+}
+.aero-install-logo { flex:none; width:52px; height:52px; border-radius:12px; }
+.aero-install-copy { flex:1; min-width:0; }
+.aero-install-copy strong { display:block; font-size:14px; line-height:1.4; }
+.aero-install-copy p { margin:4px 0 0; color:#94A3B8; font-size:12px; line-height:1.5; }
+.aero-install-action {
+    flex:none; border:1px solid rgba(0,229,255,.35); border-radius:10px; padding:10px 14px;
+    background:rgba(0,229,255,.1); color:#00E5FF; font-size:13px; font-weight:600; cursor:pointer;
+}
+.aero-install-action:hover { background:rgba(0,229,255,.18); }
+.aero-install-action:disabled { opacity:.6; cursor:wait; }
+.aero-install-close {
+    display:grid; place-items:center; width:36px; height:36px; border:0; border-radius:10px;
+    background:transparent; color:#94A3B8; font-size:15px; cursor:pointer;
+}
+.aero-install-banner > .aero-install-close { position:absolute; top:6px; right:6px; }
+.aero-install-close:hover { background:rgba(148,163,184,.1); color:#EDF2FA; }
+.aero-install-action:focus-visible, .aero-install-close:focus-visible { outline:2px solid #00E5FF; outline-offset:3px; }
+.aero-install-dialog {
+    width:min(420px,calc(100% - 32px)); max-height:calc(100dvh - 32px); overflow:auto; box-sizing:border-box;
+    margin:auto; padding:20px; border:1px solid rgba(0,229,255,.25); border-radius:18px;
+    background:#0B1120; color:#EDF2FA; box-shadow:0 24px 80px rgba(0,0,0,.5); font-family:Inter,sans-serif;
+}
+.aero-install-dialog::backdrop { background:rgba(6,11,20,.78); }
+.aero-install-dialog header { display:flex; align-items:center; gap:10px; }
+.aero-install-dialog header img { border-radius:10px; flex:none; }
+.aero-install-dialog h2 { margin:0; flex:1; font-size:16px; line-height:1.4; }
+.aero-install-dialog header .aero-install-close { flex:none; }
+.aero-install-dialog p { margin:16px 0; color:#94A3B8; font-size:13px; line-height:1.6; }
+.aero-install-dialog ol { margin:0; padding-left:22px; list-style:decimal; }
+.aero-install-dialog li { margin:12px 0; font-size:14px; line-height:1.6; }
+.aero-install-dialog > .aero-install-action { width:100%; margin-top:16px; }
+@media(max-width:600px) {
+    .aero-install-banner { display:grid; grid-template-columns:44px minmax(0,1fr); gap:10px; padding:14px 38px 14px 14px; }
+    .aero-install-logo { width:44px; height:44px; }
+    .aero-install-banner > .aero-install-action { grid-column:1 / -1; width:100%; }
+}

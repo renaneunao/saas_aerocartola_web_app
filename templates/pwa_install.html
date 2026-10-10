@@ -1,0 +1,19 @@
+<aside id="aeroInstallBanner" class="aero-install-banner" hidden aria-label="Adicionar Aero Cartola à tela inicial">
+    <img class="aero-install-logo" src="{{ url_for('static', filename='img/app-icons/icon-192.png', v='1') }}" alt="Logo Aero Cartola" width="52" height="52">
+    <div class="aero-install-copy">
+        <strong>Aero Cartola na sua tela inicial</strong>
+        <p>Acesse seu time direto pelo ícone da aplicação.</p>
+    </div>
+    <button id="aeroInstallAction" class="aero-install-action" type="button">Adicionar atalho</button>
+    <button id="aeroInstallDismiss" class="aero-install-close" type="button" aria-label="Não mostrar convite novamente">✕</button>
+</aside>
+<dialog id="aeroInstallHelp" class="aero-install-dialog" aria-labelledby="aeroInstallHelpTitle">
+    <header>
+        <img src="{{ url_for('static', filename='img/app-icons/icon-192.png', v='1') }}" alt="" width="48" height="48">
+        <h2 id="aeroInstallHelpTitle">Adicionar Aero Cartola</h2>
+        <button id="aeroInstallHelpClose" class="aero-install-close" type="button" aria-label="Fechar instruções">✕</button>
+    </header>
+    <p id="aeroInstallHelpIntro"></p>
+    <ol id="aeroInstallHelpSteps"></ol>
+    <button id="aeroInstallHelpDone" class="aero-install-action" type="button">Entendi</button>
+</dialog>
